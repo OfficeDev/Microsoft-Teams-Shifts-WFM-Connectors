@@ -1,0 +1,42 @@
+{
+    "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.5/MicrosoftTeams.schema.json",
+    "manifestVersion": "1.5",
+    "version": "1.2.0",
+    "id": "f8e70947-71d4-483f-91e3-88cb4de36a7a",
+    "packageName": "com.jda.shifts.tab",
+    "developer": {
+        "name": "Microsoft",
+        "websiteUrl": "https://www.microsoft.com",
+        "privacyUrl": "https://go.microsoft.com/fwlink/?LinkId=521839",
+        "termsOfUseUrl": "https://go.microsoft.com/fwlink/?LinkID=206977"
+    },
+    "icons": {
+        "color": "color.png",
+        "outline": "outline.png"
+    },
+    "name": {
+        "short": "Shifts",
+        "full": "JDA Shifts"
+    },
+    "description": {
+        "short": "JDA Workforce Management Shifts Integration",
+        "full": "Links JDA Workforce Management and Microsoft Teams"
+    },
+    "accentColor": "#FFFFFF",
+    "configurableTabs": [
+        {
+            "configurationUrl": "https://editme.azurewebsites.net/app?theme={theme}",
+            "canUpdateConfiguration": false,
+            "scopes": [
+                "team"
+            ]
+        }
+    ],
+    "permissions": [
+        "identity"
+    ],
+    "validDomains": [
+        "editme.azurewebsites.net",
+        "login.microsoftonline.com"
+    ]
+}

@@ -1,0 +1,639 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "JdaPersonaOpenApi",
+    "contact": {},
+    "version": "1.0.0"
+  },
+  "host": "www.jda.com",
+  "basePath": "/",
+  "schemes": [
+    "http"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/scheduledShifts/site/{siteId}/laborWeek": {
+      "get": {
+        "summary": "WeekShifts",
+        "description": "Gets the full set of shifts for the specified site and week. If no businessDate is specified then the method returns the data for the current week.",
+        "operationId": "GetSiteShiftsForWeek",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "siteId",
+            "in": "path",
+            "description": "The ID of the site to get the scheduled shifts for.",
+            "required": true,
+            "type": "integer",
+            "format": "int32",
+            "exclusiveMaximum": false,
+            "exclusiveMinimum": false
+          },
+          {
+            "name": "businessDate",
+            "in": "query",
+            "description": "The date in format yyyy-mm-dd being any date within the labor week",
+            "required": false,
+            "type": "string",
+            "format": "date"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the json containing the scheduled shifts for the week",
+            "schema": {
+              "$ref": "#/definitions/WeekShifts"
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "type": "integer",
+          "format": "int32"
+        }
+      ]
+    },
+    "/users/{employeeId}": {
+      "get": {
+        "summary": "User",
+        "description": "Gets the user with the specified ID",
+        "operationId": "GetUserById",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "employeeId",
+            "in": "path",
+            "description": "The ID of the user to get",
+            "required": true,
+            "type": "integer",
+            "format": "int32",
+            "exclusiveMaximum": false,
+            "exclusiveMinimum": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the json for the specified user",
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "parameters": [
+        {
+          "name": "employeeId",
+          "in": "path",
+          "required": true,
+          "type": "integer",
+          "format": "int32"
+        }
+      ]
+    },
+    "/jobs/{jobId}": {
+      "get": {
+        "summary": "Job",
+        "description": "Gets the job with the specified ID",
+        "operationId": "GetJobById",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "jobId",
+            "in": "path",
+            "description": "The ID of the job to get",
+            "required": true,
+            "type": "integer",
+            "format": "int32",
+            "exclusiveMaximum": false,
+            "exclusiveMinimum": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the json for the specified job",
+            "schema": {
+              "$ref": "#/definitions/Job"
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "parameters": [
+        {
+          "name": "jobId",
+          "in": "path",
+          "required": true,
+          "type": "integer",
+          "format": "int32"
+        }
+      ]
+    },
+    "/departments/{departmentId}/": {
+      "get": {
+        "summary": "Department",
+        "description": "Gets the department with the specified ID",
+        "operationId": "GetDepartmentById",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "departmentId",
+            "in": "path",
+            "description": "The ID of the department to get",
+            "required": true,
+            "type": "integer",
+            "format": "int32",
+            "exclusiveMaximum": false,
+            "exclusiveMinimum": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the json for the specified department",
+            "schema": {
+              "$ref": "#/definitions/Department"
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "parameters": [
+        {
+          "name": "departmentId",
+          "in": "path",
+          "required": true,
+          "type": "integer",
+          "format": "int32"
+        }
+      ]
+    },
+    "/sites/{siteId}": {
+      "get": {
+        "summary": "Site",
+        "description": "Gets the site with the specified ID",
+        "operationId": "GetSiteById",
+        "responses": {
+          "200": {
+            "description": "Returns the json for the specfied site",
+            "schema": {
+              "$ref": "#/definitions/Site"
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "type": "integer",
+          "format": "int32"
+        }
+      ]
+    },
+    "/users": {
+      "get": {
+        "summary": "Get Users",
+        "description": "Retrieve a list of users using a list of the users internal IDs",
+        "operationId": "GetUsers",
+        "responses": {
+          "200": {
+            "description": "The list of users",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/User"
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "userIds",
+          "in": "query",
+          "required": true,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "/departments": {
+      "get": {
+        "summary": "List Departments",
+        "description": "Retrieve all departments for a site using the site’s internal ID.",
+        "operationId": "ListDepartments",
+        "responses": {
+          "200": {
+            "description": "Returns the list of departments for the site.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Department"
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "siteIdFilter",
+          "in": "query",
+          "description": "The site's internal ID",
+          "required": true,
+          "type": "integer",
+          "format": "int32"
+        }
+      ]
+    },
+    "/jobs": {
+      "get": {
+        "summary": "List Jobs",
+        "description": "Retrieve all jobs for a site using the site’s internal ID.",
+        "operationId": "ListJobs",
+        "responses": {
+          "200": {
+            "description": "Returns the list of jobs.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Job"
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "siteIdFilter",
+          "in": "query",
+          "description": "The internal ID of the site.",
+          "required": true,
+          "type": "integer",
+          "format": "int32"
+        }
+      ]
+    },
+    "/scheduledShifts/employee/{employeeId}/laborWeek": {
+      "get": {
+        "summary": "Employee shifts for week",
+        "description": "Gets the full set of shifts for the specified employee and week. If no businessDate is specified then the method returns the data for the current week.",
+        "operationId": "GetEmployeeShiftsForWeek",
+        "parameters": [
+          {
+            "name": "businessDate",
+            "in": "query",
+            "description": "The date in format yyyy-mm-dd being any date within the labor week",
+            "required": false,
+            "type": "string",
+            "format": "date"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the json containing the scheduled shifts for the week",
+            "schema": {
+              "$ref": "#/definitions/WeekShifts"
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "employeeId",
+          "in": "path",
+          "required": true,
+          "type": "integer",
+          "format": "int32"
+        }
+      ]
+    },
+    "/clockEmployees/site/{siteId}/laborWeek": {
+      "get": {
+        "summary": "Get Site Employees",
+        "description": "Gets the assigned employees for the site for the specified labor week.",
+        "operationId": "GetSiteEmployees",
+        "parameters": [
+          {
+            "name": "businessDate",
+            "in": "query",
+            "description": "The date in format yyyy-mm-dd being any date within the labor week",
+            "required": false,
+            "type": "string",
+            "format": "date"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The collection of site employees for the given week",
+            "schema": {
+              "$ref": "#/definitions/SiteEmployees"
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "siteId",
+          "in": "path",
+          "required": true,
+          "type": "integer",
+          "format": "int32"
+        }
+      ]
+    }
+  },
+  "definitions": {
+    "Name": {
+      "title": "Name",
+      "description": "Defines a Name",
+      "type": "object",
+      "properties": {
+        "loginName": {
+          "type": "string"
+        },
+        "firstName": {
+          "type": "string"
+        },
+        "lastName": {
+          "type": "string"
+        }
+      }
+    },
+    "Department": {
+      "title": "RootTypeforDepartment",
+      "description": "Defines a department",
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer",
+          "x-nullable": false
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "Job": {
+      "title": "RootTypeforJob",
+      "description": "Defines a job",
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer",
+          "x-nullable": false
+        },
+        "name": {
+          "type": "string"
+        },
+        "displayCode": {
+          "type": "string"
+        },
+        "jobCode": {
+          "type": "string"
+        },
+        "departmentID": {
+          "format": "int32",
+          "type": "integer"
+        }
+      }
+    },
+    "ScheduledDetail": {
+      "title": "RootTypeforScheduledDetail",
+      "description": "Defines the detail of a schedule",
+      "type": "object",
+      "properties": {
+        "detailTypeCode": {
+          "type": "string"
+        },
+        "startTime": {
+          "format": "date-time",
+          "type": "string",
+          "x-nullable": false
+        },
+        "endTime": {
+          "format": "date-time",
+          "type": "string",
+          "x-nullable": false
+        }
+      }
+    },
+    "ScheduledJob": {
+      "title": "RootTypeforScheduledJob",
+      "description": "Defines a scheduled job",
+      "type": "object",
+      "properties": {
+        "startTime": {
+          "format": "date-time",
+          "type": "string",
+          "x-nullable": false
+        },
+        "endTime": {
+          "format": "date-time",
+          "type": "string",
+          "x-nullable": false
+        },
+        "jobId": {
+          "format": "int32",
+          "type": "integer",
+          "x-nullable": false
+        },
+        "scheduledDetail": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ScheduledDetail"
+          }
+        }
+      }
+    },
+    "ScheduledShift": {
+      "title": "RootTypeforScheduledShift",
+      "description": "Defines a scheduled shift.",
+      "type": "object",
+      "properties": {
+        "scheduledShiftId": {
+          "format": "int32",
+          "type": "integer",
+          "x-nullable": false
+        },
+        "employeeId": {
+          "format": "int32",
+          "type": "integer",
+          "x-nullable": false
+        },
+        "startTime": {
+          "format": "date-time",
+          "type": "string",
+          "x-nullable": false
+        },
+        "endTime": {
+          "format": "date-time",
+          "type": "string",
+          "x-nullable": false
+        },
+        "siteId": {
+          "format": "int32",
+          "type": "integer",
+          "x-nullable": false
+        },
+        "scheduledJobs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ScheduledJob"
+          }
+        }
+      }
+    },
+    "WeekShifts": {
+      "title": "RootTypeforWeekShifts",
+      "description": "Defines the collection of scheduled shifts for a week",
+      "type": "object",
+      "properties": {
+        "siteId": {
+          "format": "int32",
+          "type": "integer",
+          "x-nullable": false
+        },
+        "startOfLaborWeek": {
+          "format": "date-time",
+          "type": "string",
+          "x-nullable": false
+        },
+        "scheduledShifts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ScheduledShift"
+          }
+        }
+      }
+    },
+    "User": {
+      "title": "RootTypeforUser",
+      "description": "Defines a user",
+      "required": [
+        "name",
+        "userID"
+      ],
+      "type": "object",
+      "properties": {
+        "userID": {
+          "format": "int32",
+          "type": "integer",
+          "x-nullable": false
+        },
+        "name": {
+          "$ref": "#/definitions/Name"
+        }
+      }
+    },
+    "Site": {
+      "title": "Root Type for Site",
+      "description": "Defines a site",
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer",
+          "x-nullable": false
+        },
+        "name": {
+          "type": "string"
+        },
+        "longName": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "openedDate": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "timeZoneAssignmentID": {
+          "format": "int32",
+          "type": "integer"
+        }
+      },
+      "example": "{\n    \"id\": 1000105,\n    \"name\": \"0002 - Bucktown\",\n    \"longName\": \"0002 - Bucktown\",\n    \"status\": \"Open\",\n    \"openedDate\": \"2016-01-04T00:00:00\",\n    \"timeZoneAssignmentID\": 1000101\n}"
+    },
+    "SiteEmployees": {
+      "title": "Root Type for SiteEmployees",
+      "description": "The root of the SiteEmployees type's schema.",
+      "required": [
+        "clockEmployees",
+        "siteId",
+        "startOfLaborWeek"
+      ],
+      "type": "object",
+      "properties": {
+        "siteId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "startOfLaborWeek": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "clockEmployees": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SiteEmployee"
+          }
+        }
+      },
+      "example": "{\n    \"siteId\": 1000105,\n    \"startOfLaborWeek\": \"2019-05-26T00:00:00\",\n    \"clockEmployees\": [\n        {\n            \"employeeId\": 1000103,\n            \"firstName\": \"Tamara\",\n            \"lastName\": \"Grant\",\n            \"displayName\": \"tagra Grant\",\n            \"canWorkUnassignedJobs\": false,\n            \"isManager\": true\n        }\n    ]\n}"
+    },
+    "SiteEmployee": {
+      "title": "Root Type for SiteEmployee",
+      "description": "The root of the SiteEmployee type's schema.",
+      "required": [
+        "employeeId"
+      ],
+      "type": "object",
+      "properties": {
+        "employeeId": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "firstName": {
+          "type": "string"
+        },
+        "lastName": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "canWorkUnassignedJobs": {
+          "type": "boolean"
+        },
+        "isManager": {
+          "type": "boolean"
+        }
+      },
+      "example": "{\n    \"employeeId\": 1000103,\n    \"firstName\": \"Tamara\",\n    \"lastName\": \"Grant\",\n    \"displayName\": \"tagra Grant\",\n    \"canWorkUnassignedJobs\": false,\n    \"isManager\": true\n}"
+    }
+  }
+}

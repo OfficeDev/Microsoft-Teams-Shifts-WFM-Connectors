@@ -1,0 +1,1 @@
+A teams app is a zip file containing a manifest and any resources required such as icons.  This defines the appearance of the app within teams and what features it requires.

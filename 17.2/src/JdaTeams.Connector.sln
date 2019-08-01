@@ -1,0 +1,66 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28822.285
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JdaTeams.Connector", "JdaTeams.Connector\JdaTeams.Connector.csproj", "{C4ECACD5-C0FF-4602-A4C3-E6CB8B3BB9EA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JdaTeams.Connector.JdaPersona", "JdaTeams.Connector.JdaPersona\JdaTeams.Connector.JdaPersona.csproj", "{BFE4F17E-31F7-464E-899D-525B8772A7AD}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JdaTeams.Connector.MicrosoftGraph", "JdaTeams.Connector.MicrosoftGraph\JdaTeams.Connector.MicrosoftGraph.csproj", "{228B2040-98A4-47F5-B160-5E60F2E4FDA3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JdaTeams.Connector.AzureStorage", "JdaTeams.Connector.AzureStorage\JdaTeams.Connector.AzureStorage.csproj", "{31F2BA21-9396-4A30-B20E-229251BDEB95}"
+EndProject
+Project("{151D2E53-A2C4-4D7D-83FE-D05416EBD58E}") = "JdaTeams.Connector.Infrastructure", "JdaTeams.Connector.Infrastructure\JdaTeams.Connector.Infrastructure.deployproj", "{AC3325B9-FDEB-483C-AB93-A1E6E3C93632}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JdaTeams.Connector.Functions", "JdaTeams.Connector.Functions\JdaTeams.Connector.Functions.csproj", "{DAC8C2B4-2388-4F0C-82D0-001650B34FB9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{88D7B0EF-04D5-4708-B914-693C0A6334AE}"
+	ProjectSection(SolutionItems) = preProject
+		..\azure-pipelines.yaml = ..\azure-pipelines.yaml
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JdaTeams.Connector.AzureKeyVault", "JdaTeams.Connector.AzureKeyVault\JdaTeams.Connector.AzureKeyVault.csproj", "{B109BC02-7592-4B9B-B320-F27983334203}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C4ECACD5-C0FF-4602-A4C3-E6CB8B3BB9EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C4ECACD5-C0FF-4602-A4C3-E6CB8B3BB9EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C4ECACD5-C0FF-4602-A4C3-E6CB8B3BB9EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C4ECACD5-C0FF-4602-A4C3-E6CB8B3BB9EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BFE4F17E-31F7-464E-899D-525B8772A7AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BFE4F17E-31F7-464E-899D-525B8772A7AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BFE4F17E-31F7-464E-899D-525B8772A7AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BFE4F17E-31F7-464E-899D-525B8772A7AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{228B2040-98A4-47F5-B160-5E60F2E4FDA3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{228B2040-98A4-47F5-B160-5E60F2E4FDA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{228B2040-98A4-47F5-B160-5E60F2E4FDA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{228B2040-98A4-47F5-B160-5E60F2E4FDA3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{31F2BA21-9396-4A30-B20E-229251BDEB95}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{31F2BA21-9396-4A30-B20E-229251BDEB95}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{31F2BA21-9396-4A30-B20E-229251BDEB95}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{31F2BA21-9396-4A30-B20E-229251BDEB95}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AC3325B9-FDEB-483C-AB93-A1E6E3C93632}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC3325B9-FDEB-483C-AB93-A1E6E3C93632}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC3325B9-FDEB-483C-AB93-A1E6E3C93632}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC3325B9-FDEB-483C-AB93-A1E6E3C93632}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DAC8C2B4-2388-4F0C-82D0-001650B34FB9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DAC8C2B4-2388-4F0C-82D0-001650B34FB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DAC8C2B4-2388-4F0C-82D0-001650B34FB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DAC8C2B4-2388-4F0C-82D0-001650B34FB9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B109BC02-7592-4B9B-B320-F27983334203}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B109BC02-7592-4B9B-B320-F27983334203}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B109BC02-7592-4B9B-B320-F27983334203}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B109BC02-7592-4B9B-B320-F27983334203}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {47E4F087-E647-4980-9CC4-361B331B345B}
+	EndGlobalSection
+EndGlobal
