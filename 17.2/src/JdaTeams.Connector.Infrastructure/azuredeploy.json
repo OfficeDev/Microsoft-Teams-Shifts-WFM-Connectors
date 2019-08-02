@@ -1,0 +1,316 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "clientId": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "clientSecret": {
+      "type": "securestring",
+      "defaultValue": ""
+    },
+    "frequencySeconds": {
+      "type": "int",
+      "defaultValue": 600
+    },
+    "pastWeeks": {
+      "type": "int",
+      "defaultValue": 1
+    },
+    "futureWeeks": {
+      "type": "int",
+      "defaultValue": 3
+    },
+    "consumptionPlanName": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "functionsAppName": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "functionsStorageAccountName": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "applicationStorageAccountName": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "applicationInsightsName": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "keyVaultName": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "deleteShiftsCacheAfterDays": {
+      "type": "int",
+      "defaultValue": 62
+    },
+    "clearScheduleEnabled": {
+      "type": "bool",
+      "defaultValue": false
+    },
+    "draftShiftsEnabled": {
+      "type": "bool",
+      "defaultValue": true
+    },
+    "jdaBaseAddress": {
+      "type": "string",
+      "defaultValue": ""
+    },
+    "shiftsAppUrl": {
+      "type": "string",
+      "defaultValue": "https://teams.microsoft.com/_#/apps/42f6c1da-a241-483a-a3cc-4f5be9185951/sections/shifts"
+    },
+    "startDayOfWeek": {
+      "type": "int",
+      "defaultValue": 0
+    },
+    "userPrincipalNameFormatString": {
+      "type": "string",
+      "defaultValue": "{0}@editme.com"
+    }
+  },
+  "variables": {
+    "consumptionPlanName": "[if(empty(parameters('consumptionPlanName')), concat(resourceGroup().name, 'pln'), parameters('consumptionPlanName'))]",
+    "functionsAppName": "[if(empty(parameters('functionsAppName')), concat(resourceGroup().name, 'fun'), parameters('functionsAppName'))]",
+    "functionsStorageAccountName": "[if(empty(parameters('functionsStorageAccountName')), concat(resourceGroup().name, 'fns'), parameters('functionsStorageAccountName'))]",
+    "applicationStorageAccountName": "[if(empty(parameters('applicationStorageAccountName')), concat(resourceGroup().name, 'aps'), parameters('applicationStorageAccountName'))]",
+    "applicationInsightsName": "[if(empty(parameters('applicationInsightsName')), concat(resourceGroup().name, 'ain'), parameters('applicationInsightsName'))]",
+    "keyVaultName": "[if(empty(parameters('keyVaultName')), concat(resourceGroup().name, 'kev'), parameters('keyVaultName'))]"
+  },
+  "resources": [
+    {
+      "type": "microsoft.insights/components",
+      "kind": "web",
+      "name": "[variables('applicationInsightsName')]",
+      "apiVersion": "2015-05-01",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "Application_Type": "web",
+        "Request_Source": "IbizaWebAppExtensionCreate"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "name": "[variables('keyVaultName')]",
+      "apiVersion": "2016-10-01",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "sku": {
+          "family": "A",
+          "name": "Standard"
+        },
+        "tenantId": "[subscription().tenantId]",
+        "accessPolicies": []
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "sku": {
+        "name": "Standard_LRS",
+        "tier": "Standard"
+      },
+      "kind": "Storage",
+      "name": "[variables('functionsStorageAccountName')]",
+      "apiVersion": "2018-07-01",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "defaultAction": "Allow"
+        },
+        "supportsHttpsTrafficOnly": true,
+        "encryption": {
+          "services": {
+            "blob": {
+              "enabled": true
+            }
+          },
+          "keySource": "Microsoft.Storage"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "sku": {
+        "name": "Standard_LRS",
+        "tier": "Standard"
+      },
+      "kind": "StorageV2",
+      "name": "[variables('applicationStorageAccountName')]",
+      "apiVersion": "2018-07-01",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "defaultAction": "Allow"
+        },
+        "supportsHttpsTrafficOnly": true,
+        "encryption": {
+          "services": {
+            "blob": {
+              "enabled": true
+            }
+          },
+          "keySource": "Microsoft.Storage"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "sku": {
+        "name": "Y1",
+        "tier": "Dynamic",
+        "size": "Y1",
+        "family": "Y",
+        "capacity": 0
+      },
+      "kind": "functionapp",
+      "name": "[variables('consumptionPlanName')]",
+      "apiVersion": "2016-09-01",
+      "location": "[resourceGroup().location]",
+      "scale": null,
+      "properties": {
+        "name": "[variables('consumptionPlanName')]"
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "kind": "functionapp",
+      "name": "[variables('functionsAppName')]",
+      "apiVersion": "2016-08-01",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('consumptionPlanName'))]",
+        "siteConfig": {
+          "cors": {
+            "allowedOrigins": [
+              "*"
+            ]
+          },
+          "appSettings": [
+            {
+              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "value": "[reference(concat('microsoft.insights/components/', variables('applicationInsightsName')), '2015-05-01').InstrumentationKey]"
+            },
+            {
+              "name": "AzureWebJobsStorage",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('functionsStorageAccountName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('functionsStorageAccountName')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value, ';EndpointSuffix=core.windows.net')]"
+            },
+            {
+              "name": "ConnectionString",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('applicationStorageAccountName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('applicationStorageAccountName')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value, ';EndpointSuffix=core.windows.net')]"
+            },
+            {
+              "name": "KeyVaultConnectionString",
+              "value": "[concat('https://', variables('keyVaultName'), '.vault.azure.net')]"
+            },
+            {
+              "name": "FUNCTIONS_WORKER_RUNTIME",
+              "value": "dotnet"
+            },
+            {
+              "name": "FUNCTIONS_EXTENSION_VERSION",
+              "value": "~2"
+            },
+            {
+              "name": "ClientId",
+              "value": "[parameters('clientId')]"
+            },
+            {
+              "name": "ClientSecret",
+              "value": "[parameters('clientSecret')]"
+            },
+            {
+              "name": "FrequencySeconds",
+              "value": "[parameters('frequencySeconds')]"
+            },
+            {
+              "name": "PastWeeks",
+              "value": "[parameters('pastWeeks')]"
+            },
+            {
+              "name": "FutureWeeks",
+              "value": "[parameters('futureWeeks')]"
+            },
+            {
+              "name": "ClearScheduleEnabled",
+              "value": "[parameters('clearScheduleEnabled')]"
+            },
+            {
+              "name": "DraftShiftsEnabled",
+              "value": "[parameters('draftShiftsEnabled')]"
+            },
+            {
+              "name": "JdaBaseAddress",
+              "value": "[parameters('jdaBaseAddress')]"
+            },
+            {
+              "name": "ShiftsAppUrl",
+              "value": "[parameters('shiftsAppUrl')]"
+            },
+            {
+              "name": "StartDayOfWeek",
+              "value": "[parameters('startDayOfWeek')]"
+            },
+            {
+              "name": "UserPrincipalNameFormatString",
+              "value": "[parameters('userPrincipalNameFormatString')]"
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', variables('consumptionPlanName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('functionsStorageAccountName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('applicationStorageAccountName'))]"
+      ]
+    },
+    {
+      "name": "[concat(variables('applicationStorageAccountName'), '/default')]",
+      "type": "Microsoft.Storage/storageAccounts/managementPolicies",
+      "apiVersion": "2019-04-01",
+      "dependsOn": [
+        "[variables('applicationStorageAccountName')]"
+      ],
+      "properties": {
+        "policy": {
+          "rules": [
+            {
+              "name": "expireCachedShifts",
+              "enabled": true,
+              "type": "Lifecycle",
+              "definition": {
+                "filters": {
+                  "blobTypes": [
+                    "blockBlob"
+                  ],
+                  "prefixMatch": [
+                    "shifts"
+                  ]
+                },
+                "actions": {
+                  "baseBlob": {
+                    "delete": {
+                      "daysAfterModificationGreaterThan": "[parameters('deleteShiftsCacheAfterDays')]"
+                    }
+                  },
+                  "snapshot": {
+                    "delete": {
+                      "daysAfterCreationGreaterThan": "[parameters('deleteShiftsCacheAfterDays')]"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

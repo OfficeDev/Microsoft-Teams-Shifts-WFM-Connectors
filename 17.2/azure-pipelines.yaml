@@ -1,0 +1,30 @@
+pool:
+  vmImage: VS2017-Win2016
+variables:
+  configuration: Release
+trigger:
+  branches:
+    include:
+    - master
+    - feature/*
+    - release/*
+    - patch/*
+  paths:
+    exclude:
+    - app
+    - web
+steps:
+- script: dotnet build --configuration $(configuration)
+  workingDirectory: src
+  continueOnError: false
+- script: dotnet publish JdaTeams.Connector.Functions.csproj --configuration $(configuration) --output $(build.artifactstagingdirectory)/JdaTeams.Connector.Functions
+  workingDirectory: src/JdaTeams.Connector.Functions
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: $(build.artifactstagingdirectory)/JdaTeams.Connector.Functions
+    includeRootFolder: false
+    archiveFile: $(build.artifactstagingdirectory)/JdaTeams.Connector.Functions.$(build.buildid).zip 
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathtoPublish: $(build.artifactstagingdirectory)/JdaTeams.Connector.Functions.$(build.buildid).zip
+    artifactName: JdaTeams.Connector.Functions
