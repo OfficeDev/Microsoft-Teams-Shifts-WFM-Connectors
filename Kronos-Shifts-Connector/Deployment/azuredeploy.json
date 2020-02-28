@@ -128,6 +128,14 @@
             "metadata": {
                 "description": "The number of days in the future to sync the data for the first time from Kronos to Shifts."
             }
+        },
+        "gitRepoUrl": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "gitBranch": {
+            "type": "string",
+            "defaultValue": "master"
         }
     },
     "variables": {
@@ -371,7 +379,22 @@
                 "identity": {
                     "type": "SystemAssigned"
                 }
-            }
+            },
+            "resources":[
+                {
+                    "apiVersion": "2015-08-01",
+                    "name": "web",
+                    "type": "sourcecontrols",
+                    "dependsOn": [
+                        "[concat('Microsoft.Web/sites/', variables('configAppName'))]"
+                    ],
+                    "properties": {
+                        "RepoUrl": "[parameters('gitRepoUrl')]",
+                        "branch": "[parameters('gitBranch')]",
+                        "IsManualIntegration": true
+                    }
+                }
+            ]
         },
         {
             "type": "Microsoft.Web/sites",
@@ -517,7 +540,22 @@
                 "identity": {
                     "type": "SystemAssigned"
                 }
-            }
+            },
+            "resources":[
+                {
+                    "apiVersion": "2015-08-01",
+                    "name": "web",
+                    "type": "sourcecontrols",
+                    "dependsOn": [
+                        "[concat('Microsoft.Web/sites/', variables('apiAppName'))]"
+                    ],
+                    "properties": {
+                        "RepoUrl": "[parameters('gitRepoUrl')]",
+                        "branch": "[parameters('gitBranch')]",
+                        "IsManualIntegration": true
+                    }
+                }
+            ]
         },
         {
             "name": "[variables('keyVaultName')]",
