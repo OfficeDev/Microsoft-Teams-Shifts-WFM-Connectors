@@ -42,6 +42,11 @@ The Shifts-Kronos Integration application has the following components built usi
 ## Deployment
 Following section explains necessary steps to deploy Shifts-Kronos Integration application
 
+### Prerequisites
+To begin with, you will need to ensure following perequisites:
+
+[![Deploy to Azure](https://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FOfficeDev%2FMicrosoft-Teams-Shifts-WFM-Connectors%2Fv-prkris%2Fkronos-shifts-connector-initial-release%2FDeployment%2Fazuredeploy.json)
+
 # Legal notice
 
 Please read the license terms applicable to this [license](https://github.com/OfficeDev/Microsoft-Teams-Shifts-WFM-Connectors/blob/master/LICENSE). In addition to these terms, you agree to the following: 
