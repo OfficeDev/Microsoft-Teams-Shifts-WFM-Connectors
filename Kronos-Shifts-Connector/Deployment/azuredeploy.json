@@ -131,7 +131,7 @@
         },
         "gitRepoUrl": {
             "type": "string",
-            "defaultValue": ""
+            "defaultValue": "https://github.com/OfficeDev/Microsoft-Teams-Shifts-WFM-Connectors/tree/v-prkris/kronos-shifts-connector-initial-release/Kronos-Shifts-Connector"
         },
         "gitBranch": {
             "type": "string",
