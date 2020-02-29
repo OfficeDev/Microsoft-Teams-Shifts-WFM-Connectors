@@ -45,7 +45,28 @@ Following section explains necessary steps to deploy Shifts-Kronos Integration a
 ### Prerequisites
 To begin with, you will need to ensure following perequisites:
 
-[![Deploy to Azure](https://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FOfficeDev%2FMicrosoft-Teams-Shifts-WFM-Connectors%2Fv-prkris%2Fkronos-shifts-connector-initial-release%2FDeployment%2Fazuredeploy.json)
+1. Kronos WFC 8.1 - Access to Kronos WFC 8.1 System with following details:  
+* Kronos WFC endpoint
+* SuperUser Name
+* SuperUser password  
+
+Review and ensure users, org levels and jobs are properly setup in Kronos system
+
+2. Microsoft Teams Shifts App - Access to Teams Deployment with Shifts App
+* Tenant ID
+* Tenant Admin credentials
+
+Review and ensure AAD users, Teams, and Scheduling Groups are properly setup in Teams Shifts App  
+
+3. Microsoft Azure environment to host Shifts-Kronos Integration App - An Azure subscription where you can create the following resources:  
+* App services
+* App service plan
+* Azure Table storage account
+* Azure Blob storage
+* Azure Key Value
+* Application Insights
+
+[![Deploy to Azure](https://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FOfficeDev%2FMicrosoft-Teams-Shifts-WFM-Connectors%2Fmaster%2FDeployment%2Fazuredeploy.json)
 
 # Legal notice
 
