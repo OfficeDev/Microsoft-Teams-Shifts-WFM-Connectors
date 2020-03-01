@@ -228,6 +228,27 @@ User Creation through the Teams Admin Portal
 **Figure 10.** Home page of the Teams Admin portal
 ![figure10](images/figure10.png)
 
+4. From Figure 10, navigate to the Users page by clicking on the option that reads *Users* in the left hand blade. The screen should resemble the following below:
+
+**Figure 11.** The users landing page
+![figure11](images/figure11.png)
+
+5. In the text above the table, there is a mention of "Admin center > Users". That is the location where you should go to add users to the tenant. Clicking on the "Admin center > Users" hyperlink in Figure 11 above should yield in the page below:
+
+**Figure 12.** The page to add or remove users
+![figure12](images/figure12.png)
+
+### Setting up the Recurrence for the Azure Logic App
+1.	Post ARM Template deployment, the outputs section would have necessary URLs
+2.	Open the Logic App in the designer in another tab on your browser
+3.	Add the recurrence
+4.	Set the time on the recurrence
+5.	Choose an integer value
+6.	Choose an interval (i.e. Second, Minute, Hour, Day, Week, Month) – it is recommended to select minutes as you would want to give enough time to perform the sync operations (for ex: 15 mins)
+
+## Configuration App Workflow
+The Configuration Web App serves as a helpful aid to establish the necessary configurations to properly integrate an instance of Kronos WFC v8.1 with Shifts app. It further helps to create mapping between Kronos and Shifts users as well as Kronos departments and Shifts teams.
+
 # Legal notice
 
 Please read the license terms applicable to this [license](https://github.com/OfficeDev/Microsoft-Teams-Shifts-WFM-Connectors/blob/master/LICENSE). In addition to these terms, you agree to the following: 
