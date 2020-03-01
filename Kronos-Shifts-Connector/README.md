@@ -156,6 +156,78 @@ Here are the following requirements to correctly deploy the **Shifts-Kronos Inte
 11.	Once the deployment has finished, you would have the option to navigate to the resource group to ensure all resources are deployed correctly
 12.	Smoke test – this step is required to ensure that all the code has been properly deployed
 
+## Post ARM Template Deployment Steps
+The following actions are to be done post deployment to ensure that all the information is being exchanged correctly between the resources in the newly created resource group:
+1.	Access Policy Setup in Azure Key Vault
+2.	Setting up the Redirect URIs
+3.	Logout URL setting in App Registration
+4.	Uploading Excel files into Azure Blob storage
+5.	User creation through the Teams Admin portal
+6.	Establishing the necessary recurrence for the Azure Logic App
+
+### Access Policy Setup in Azure Key Vault
+1.	Using the system assigned identity for both the deployed API web app service and the deployed Configuration Web App service – this is taken care of through the ARM template
+2.	Ensuring to have the principalId of the app registration as well for the access policy
+3.	Outlining the details of establishing necessary AAD users to have access to the deployed Azure Key Vault
+
+### Setting up the Redirect URIs
+* Once the ARM Template deployment is successful, there would be an output screen that will show the necessary URL for the Configuration Web App service. Copy that URL into an application such as Notepad  
+* Navigate to the App Registration created earlier  
+* In Figure 2, click on the text next to the text that reads Redirect URIs  
+* There is a chance that the screen may not have any redirect URIs. You would need to set those now. 
+
+**Figure 5.** Redirect URIs being set already
+![figure5](images/figure5.png)
+
+* For any new app registrations, the redirect URIs may not be set
+* You need to properly take the Configuration Web App service URL that is deployed as part of the ARM Template deployment and paste that URL here
+* Subsequently, you need to have paste that same URL, and append “/signin-oidc”. With doing so, the tenant admin when logging into the Configuration Web App, will be authenticated using OpenIdConnect  
+* Once all the changes are made, ensure to commit the changes through clicking on the button that reads Save
+
+### Logout URL setting in App Registration
+1.	Log on to the Azure portal
+2.	Navigate to the application registration recently created (refer to the screenshots above)
+3.	On the left-hand side, click on the option that reads Manifest
+4.	In the code window that appears, scroll down until you read the JSON attribute: logoutUrl
+Refer to the screenshot:
+
+**Figure 6.** Application Registration Manifest window
+![figure6](images/figure6.png)
+
+5.	The value for the logoutUrl is the URL of the Configuration Web App service that was deployed through the ARM Template
+6.	Copy and paste the URL from step 5 as the value for the logoutUrl
+7.	Once the changes have been made, the save button at the top of the screenshot in step 4 will transition from a disabled state to an enabled state
+8.	Click on the Save button to properly commit the changes made
+
+### Uploading Excel Template files into Azure Blob Storage
+Once the ARM Template deployment is successful, one final operation is to ensure that the Excel template files are uploaded to the Azure Blob storage that has been provisioned through the ARM Template. The steps below outline the procedure:
+
+1.	Log onto the Azure portal, and sign in using your administrator credentials
+2.	Navigate to the resource group that was created at the time of ARM Template deployment
+3.	Navigate to the storage account that was created from the ARM Template deployment. The screen should resemble the figure below: 
+
+**Figure 7.** Storage account overview
+![figure7](images/figure7.png)
+
+4.	Navigate into the containers, by clicking on the link that reads *Containers* from Figure 7 above
+5.	Upon navigation to the containers, the ARM Template should provision a blob container called “templates”, and the screen should resemble below:
+
+**Figure 8.** Templates blob container
+![figure8](images/figure8.png)
+
+6. Navigate inside of the "templates" blob container, and the screen should resemble the next screenshot below: 
+
+**Figure 9.** Navigation inside of the "templates" blob.
+![figure9](images/figure9.png)
+
+User Creation through the Teams Admin Portal
+1.    Navigate to the [Microsoft Teams Admin Portal](https://admin.teams.microsoft.com)
+2.	Sign In with your AAD Tenant Admin credentials
+3.	You will be presented with the following view once the sign in is successful:
+
+**Figure 10.** Home page of the Teams Admin portal
+![figure10](images/figure10.png)
+
 # Legal notice
 
 Please read the license terms applicable to this [license](https://github.com/OfficeDev/Microsoft-Teams-Shifts-WFM-Connectors/blob/master/LICENSE). In addition to these terms, you agree to the following: 
