@@ -325,9 +325,66 @@ It is important to note that the time zone should be the same as the time zone o
 
 * After selecting the time zone and the closest city, proceed to click on the confirm button. You would be taken to a screen that looks like the screen grab in Figure 23.
 
-![figure22](images/figure22.png)
+**Figure 22.** Shifts user interface to view all the schedules  
+![figure22](images/figure22a.png)
 
+**Figure 23.** Creating the scheduling groups in Shifts user interface
+![figure23](images/figure23.png)
 
+Also add the members of corresponding scheduling group by referring the user to user mapping Excel. E.g. Adams, Donald should be added to the Technician scheduling group under the Pharmacy team.
+
+**Figure 24.** A Kronos User and the Org Job Path which identifies the user
+![figure24](images/figure24.png)
+
+Note: OrgJobPaths having same second last value are the same teams with different group name (Scheduling Group).  
+g.	After creating all the teams, schedules and scheduling groups again download 
+teams_department_usermapping.xlsx file on your machine which includes following details  
+h.	“Kronos Details” tab contains – KronosOrgJobPath, KronosWorkforceIntegrationId  
+i.	“Shift Team Details” tab contains - ShiftTeamId, ShiftTeamDisplayName, SchedulingGroupId, SchedulingGroupDisplayName
+
+2. Click on *Download Template* button. This action downloads the KronosShiftTeamDeptMappingTemplate.xlsx
+3.	Copy the details from teams_department_usermapping.xlsx file to KronosShiftTeamDeptMappingTemplate.xlsx. Ensure details from both Kronos and Shifts are mapped correctly in this file. Review and ensure following:  
+a.	All the columns are correctly populated   
+b.	All values are correctly mapped  
+c.	No missing values  
+d.	No duplicate rows
+ 
+Note: If a team has not been mapped (i.e. Meatpacking team), and the users under the Meatpacking team have been mapped, the data in Kronos WFC for the Meatpacking department will not be synced to the Meatpacking team on Shifts. In other words, those users will be skipped during the sync operations.
+
+**Figure 25.** Teams to Department Mapping screen
+![figure25](images/figure25.png)
+
+### Step 4: Perform first time sync
+Click on the Done button in Team to Department Mapping screen, which will initiate following workflows:  
+a.	Kronos to Shifts – Open Shift sync  
+b.	Kronos to Shifts – Approved or Declined Open Shift Request sync  
+c.	Kronos to Shifts – Approved Swap Shift Request sync  
+d.	Kronos to Shifts – Time Off Reason sync  
+e.	Kronos to Shifts – Approved or Declined Time Off Sync  
+f.	Shifts to Kronos – Time Off Request sync  
+g.	Kronos to Shifts – Shifts sync
+
+**Figure 26.** Team to Department Mapping screen with Done button
+![figure26](images/figure26.png)
+
+The first-time sync will be done using the parameters of *firstTimeSyncStartDate* and *firstTimeSyncEndDate* which have been defined in **Table 2**: ARM Template parameters. These are the dates that the Configuration Web App will sync the data from Kronos into Shifts. Subsequent data sync operations are handled through the logic app, and explained in the following section: *Data Sync through Logic App*. 
+
+# Data Sync through Logic App
+The ARM Template provisions the Azure logic app, and the Azure logic app will execute based upon the sync frequency, sync interval, and sync hour chosen by the tenant admin. There are couple key differences to note between syncing data via the done button, and syncing the data via the Azure logic app. When the logic app is triggered on a scheduled interval, the time period for syncing data will be automatically calculated using the parameters syncFromPreviousDays and syncToNextDays from config file which represent the number of days in the past, and the number of days in the future respectively. The point of reference for the calculations will be based on the current date at which the logic app is executing.
+FLW requests (Open Shift Request, Swap Shift Request) will be sync’d from Shifts to Kronos in synchronous manner using Shifts Outbound APIs and Kronos WFC 8.1 data submission (POST) APIs (logic app does not play any role in this sync)
+
+# Telemetry
+Shifts-Kronos Integration application utilizes Azure Application Insights to capture the necessary events and errors. It captures following properties:
+* Response from Kronos and Graph APIs – capturing necessary Id values.
+  * Success
+  * Errors
+* Events (sync from Kronos to Shifts, real-time outbound from Shifts to Kronos)
+  * Method names
+    * Parameters passed to methods
+  * Timestamps (at the time when events happen)  
+* Data properties (i.e. any IDs that are of interest to Graph API calls, or local data retrieval)  
+* Tenant ID – where applicable  
+* Outbound calls from Shifts to the Integration API Service
 
 
 # Legal notice
