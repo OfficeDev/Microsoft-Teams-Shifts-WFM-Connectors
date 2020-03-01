@@ -49,13 +49,11 @@ To begin with, you will need to ensure following perequisites:
 * Kronos WFC endpoint
 * SuperUser Name
 * SuperUser password  
-
 Review and ensure users, org levels and jobs are properly setup in Kronos system
 
 2. Microsoft Teams Shifts App - Access to Teams Deployment with Shifts App
 * Tenant ID
-* Tenant Admin credentials
-
+* Tenant Admin credentials  
 Review and ensure AAD users, Teams, and Scheduling Groups are properly setup in Teams Shifts App  
 
 3. Microsoft Azure environment to host Shifts-Kronos Integration App - An Azure subscription where you can create the following resources:  
@@ -65,6 +63,19 @@ Review and ensure AAD users, Teams, and Scheduling Groups are properly setup in 
 * Azure Blob storage
 * Azure Key Value
 * Application Insights
+
+### Register Azure AD Application
+This integration app uses [Microsoft Graph APIs](https://developer.microsoft.com/en-us/graph) to access users (FLWs & FLMs) and teams and their schedules from Microsoft Teams Shifts App. To use Microsoft Graph to read and write resources on behalf of a user, this integration app needs to be registered in Azure AD by following steps below.  This is required to use Microsoft identity platform endpoint for authentication and authorization with Microsoft Graph.
+1.	Log in to the Azure Portal for your subscription, and go to the "App registrations" blade here
+2.	Click on "New registration” and create an Azure AD application
+* **Name**: The name of your Teams app - if you are following the template for a default deployment, we recommend "Shifts-Kronos Integration"
+* **Supported account types**: Select "Accounts in any organizational directory (Any Azure AD directory - Multitenant)"
+* **Redirect URI based on ADAL / MSAL**: The URIs that will be accepted as destinations when returning authentication responses (tokens) after successfully authenticating users
+
+**Figure 1.** Azure AD Application Registration
+![figure1](images/figure1.png)
+
+
 
 [![Deploy to Azure](https://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FOfficeDev%2FMicrosoft-Teams-Shifts-WFM-Connectors%2Fmaster%2FDeployment%2Fazuredeploy.json)
 
