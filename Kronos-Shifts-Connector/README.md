@@ -386,6 +386,41 @@ Shifts-Kronos Integration application utilizes Azure Application Insights to cap
 * Tenant ID – where applicable  
 * Outbound calls from Shifts to the Integration API Service
 
+# Troubleshooting
+The following are common issues that tenant admins may encounter while following these steps to deploy the Shifts-Kronos Integration application:
+* Problems while deploying to Azure
+
+|Issue|Solution|
+|-----|--------|
+|Duplicate resource names|Ensure that at the time of deployment, the necessary resources have unique names.|
+
+* Problems while using Configuration Web App, or logic app (data does not sync, most likely due to Graph token expiry)
+
+|Issue|Solution|
+|-----|--------|
+|Graph token expiration - 401 Unauthorized|The Graph token may experie, and to resolve that: 1. Log out of the configuration web app. 2. Log back into the configuration web app.|
+
+* Problems while creating open shifts
+![figure27](images/figure27.png)
+
+|Error|Reason|
+|-----|------|
+|Sorry your change couldn't be completed|Above scenario may happen due to Kronos business rules: Ex: the number of working hours for the user should not be more than 40 hours for current week otherwise Kronos does not allow to create / submit the open shift request. If such request is initiated, the Workforce Integration sends error to Shifts and Shifts would not allow to submit such open shift request  **Solution:** FLW to choose and submit open shift requests after ensuring number of working hours quota for given duration|
+
+* Problem while creating swap shifts
+![figure28](images/figure28.png)
+
+|Error|Reason|
+|-----|------|
+|Sorry your change couldn't be completed|Swap shift request creation/submission success depends upon business rules on Kronos side so FLWs need to be aware of those before requesting Swap 1. Swap shift is not possible for past date in Shifts. If such request is initiated from Shifts, the Workforce Integration sends error to Shifts. Shifts will display a generic error message 2. Swap shift is not allowed in Kronos if user already has same shift as the requested shift. The Workforce Integration sends error to Shifts. Shifts will display a generic error message. 3. If User1 has requested User2 for a swap shift and user2 has requested the same shift to User 3, then one of the requests will get approved and other will be declined|
+
+# Best Practices
+The following tips are recommended as best practices when it comes to deploying the Shifts-Kronos Integration package from GitHub:
+1.	One instance of Kronos WFC corresponds to one instance of Teams
+2.	Fork the main Microsoft repo for the following reasons:  
+    * Any custom changes that are required, can be made on the forked copy of the Microsoft repository  
+    * Easy to deploy changes from the forked copy of the Microsoft repo on to Azure subscription
+
 
 # Legal notice
 
