@@ -75,6 +75,32 @@ This integration app uses [Microsoft Graph APIs](https://developer.microsoft.com
 **Figure 1.** Azure AD Application Registration
 ![figure1](images/figure1.png)
 
+3. Click on the "Register" button
+4. When the app is registered, you'll be taken to the app's "Overview" page. Copy the **Application (client) ID**; we will need it later. Verify that the "Supported account types" is set to **Multiple organizations**
+
+**Figure 2.** Azure Application Registration Overview page.
+![figure2](images/figure2.png)
+
+5. On the side rail in the Manage section, navigate to the "Certificates & secrets" section. In the Client secrets section, click on "+ New client secret". Add a description (Name of the secret) for the secret and select “Never” for Expires. Click "Add"
+
+![figure3](images/figure3.png)
+
+6. Once the client secret is created, copy its Value; we will need it later
+7. Navigate to the Authentication page that can be found in the left blade in Figure 3
+8. Under the section that reads *Implicit grant*, make sure that the check boxes for Access tokens and ID tokens are checked. The screen should resemble something like the screenshot that follows:
+
+![figure4](images/figure4.png)
+
+At this point you have the following unique values:
+* Application (client) ID
+* Client secret
+* Directory (Tenant) ID
+* Managed Object ID
+
+We recommend that you copy these values into a text file, using an application like Notepad. You will need these values later during the application deployment process.
+
+### Microsoft Graph API Permissions
+The table below outlines the required permissions necessary for the Azure AD application registration to successfully work end-to-end. These Graph API permissions should have their consent provided on the app registration:
 
 
 [![Deploy to Azure](https://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FOfficeDev%2FMicrosoft-Teams-Shifts-WFM-Connectors%2Fmaster%2FDeployment%2Fazuredeploy.json)
