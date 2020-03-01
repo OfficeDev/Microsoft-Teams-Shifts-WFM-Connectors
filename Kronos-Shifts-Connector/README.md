@@ -102,6 +102,27 @@ We recommend that you copy these values into a text file, using an application l
 ### Microsoft Graph API Permissions
 The table below outlines the required permissions necessary for the Azure AD application registration to successfully work end-to-end. These Graph API permissions should have their consent provided on the app registration:
 
+**Table 1.** The list of Microsoft Graph API permissions.
+
+|Scope|Application/Delegated|Function|
+|-----|---------------------|--------|
+|Group.Read.All|Delegated|Allows application to list groups and read properties and all group memberships on behalf of the signed-in user (tenant admin).|
+|Group.ReadWrite.All|Delegated|Allows the application to create groups and read all group properties and memberships on behalf of the signed-in user (tenant admin).|
+|WorkforceIntegration.Read.All|Delegated|Allows for workforce integrations to be retrieved from Microsoft Graph.|
+|WorkforceIntegration.ReadWrite.All|Delegated|Allows for workforce integrations to be created and registered with Microsoft Graph.|
+|offline_access|N/A|Enables for the Microsoft Graph token to be automatically refreshed|
+|Schedule.Read.All|Application|Read all schedule items.|
+|Schedule.ReadWrite.All|Application|Read and write all schedule items.|
+
+## Deploy Application to your Azure Subscription
+Here are the following requirements to correctly deploy the **Shifts-Kronos Integration** application to your Azure subscription: 
+1. An ARM Template published as part of the Microsoft GitHub package.
+2. Ensure to **properly** fork the main Microsoft repo to your account. This helps in three ways:
+   1. The forked copy does not impate the master branch in the Microsoft repository
+   2. Having a forked copy of the main repository, tenant admins can deploy from the forked repo
+   3. If there are changes that are required for your organization, you can always modify the code in your forked copy and re-deploy
+3. GitHub package containing the code for the Configuration Web App and the Integration Service API
+4. You will be prompted to click on the *Deploy to Azure* button below, and when prompted log in to your Azure subscription
 
 [![Deploy to Azure](https://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FOfficeDev%2FMicrosoft-Teams-Shifts-WFM-Connectors%2Fmaster%2FDeployment%2Fazuredeploy.json)
 
