@@ -3,10 +3,10 @@
 IF "%SITE_ROLE%" == "api" (
   deploy.api.cmd
 ) ELSE (
-  IF "%SITE_ROLE%" == "configuration" (
+  IF "%SITE_ROLE%" == "config" (
     deploy.configuration.cmd
   ) ELSE (
-    echo You have to set SITE_ROLE setting to either "api" or "configuration"
+    echo You have to set SITE_ROLE setting to either "api" or "config"
     exit /b 1
   )
 )

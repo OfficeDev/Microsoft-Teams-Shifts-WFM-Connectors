@@ -280,7 +280,7 @@
                     "appSettings": [
                         {
                             "name": "SITE_ROLE",
-                            "value": "configuration"
+                            "value": "config"
                         },
                         {
                             "name": "TenantId",
