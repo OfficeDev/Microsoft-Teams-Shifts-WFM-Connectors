@@ -761,16 +761,6 @@
                             },
                             "type": "Http"
                         }
-                    },
-                    "triggers": {
-                        "Recurrence":{
-                            "runtimeConfiguration":{
-                                "concurrency":{
-                                    "runs": 1
-                                }
-                            },
-                            "type": "Recurrence"
-                        }
                     }
                 }
             }
