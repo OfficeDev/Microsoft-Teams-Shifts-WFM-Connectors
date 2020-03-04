@@ -376,7 +376,7 @@
                         },
                         {
                             "name": "PROJECT",
-                            "value": "Kronos-Shifts-Connector/Microsoft.Teams.Shifts.Integration/Microsoft.Teams.Shifts.Integration.API/Microsoft.Teams.Shifts.Integration.API.csproj"
+                            "value": "Kronos-Shifts-Connector/Microsoft.Teams.Shifts.Integration/Microsoft.Teams.Shifts.Integration.Configuration/Microsoft.Teams.Shifts.Integration.Configuration.csproj"
                         }
                     ]
                 },

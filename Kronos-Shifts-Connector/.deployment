@@ -1,0 +1,3 @@
+[config]
+command = deploy.cmd
+PROJECT = Kronos-Shifts-Connector
