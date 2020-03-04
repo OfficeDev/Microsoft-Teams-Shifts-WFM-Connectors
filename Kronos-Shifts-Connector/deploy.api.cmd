@@ -68,6 +68,12 @@ echo "%DEPLOYMENT_TEMP%"
 echo Handling  ASP.NET Core Web Application deployment. 
 echo API project.
 
+call :ExecuteCmd nuget restore "%DEPLOYMENT_SOURCE%\Microsoft.Teams.Shifts.Integration\Microsoft.Teams.Shifts.Integration.sln" 
+
+
+
+echo done building project
+
 :: 1. Restore nuget packages
 call :ExecuteCmd dotnet restore "%DEPLOYMENT_SOURCE%\Microsoft.Teams.Shifts.Integration\Microsoft.Teams.Shifts.Integration.sln"
 IF !ERRORLEVEL! NEQ 0 goto error

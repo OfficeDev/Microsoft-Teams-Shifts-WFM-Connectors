@@ -1,6 +1,5 @@
 @if "%SCM_TRACE_LEVEL%" NEQ "4" @echo off 
 
-echo Deployment started.
 IF "%SITE_ROLE%" == "api" (
     echo API Deployment.
   deploy.api.cmd
