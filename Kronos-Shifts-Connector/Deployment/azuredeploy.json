@@ -129,6 +129,13 @@
                 "description": "The number of days in the future to sync the data for the first time from Kronos to Shifts."
             }
         },
+        "correctDateSpanForOutboundCalls": {
+            "type": "int",
+            "defaultValue": 100,
+            "metadata": {
+                "description": "This value will be able to accommodate for any requests that FLWs make for Swap Shift Requests, or Open Shift Requests in the Shifts UI."
+            }
+        },
         "gitRepoUrl": {
             "type": "string",
             "defaultValue": "https://github.com/OfficeDev/Microsoft-Teams-Shifts-WFM-Connectors"
@@ -534,6 +541,10 @@
                         {
                             "name": "principalId",
                             "value": "[parameters('managedAadAppObjectId')]"
+                        },
+                        {
+                            "name": "CorrectedDateSpanForOutboundCalls",
+                            "value": "[parameters('correctDateSpanForOutboundCalls')]"
                         }
                     ]
                 },
@@ -749,6 +760,16 @@
                             "runAfter": {
                             },
                             "type": "Http"
+                        }
+                    },
+                    "triggers": {
+                        "Recurrence":{
+                            "runtimeConfiguration":{
+                                "concurrency":{
+                                    "runs": 1
+                                }
+                            },
+                            "type": "Recurrence"
                         }
                     }
                 }
