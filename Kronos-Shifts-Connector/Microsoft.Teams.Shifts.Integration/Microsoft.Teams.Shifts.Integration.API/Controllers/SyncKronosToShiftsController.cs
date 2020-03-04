@@ -145,7 +145,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                 this.telemetryClient.TrackTrace($"{Resource.ProcessKronosToShiftsShiftsAsync} completed at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}" + " for isRequestFromLogicApp: " + isRequestFromLogicApp);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw;
             }
