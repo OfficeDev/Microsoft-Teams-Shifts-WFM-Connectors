@@ -69,13 +69,13 @@ echo Configuration project.
 
 :: 1. Restore nuget packages
 
-call :ExecuteCmd nuget restore "%DEPLOYMENT_SOURCE%\Microsoft.Teams.Shifts.Integration\Microsoft.Teams.Shifts.Integration.sln" 
+call :ExecuteCmd nuget restore "%DEPLOYMENT_SOURCE%\Kronos-Shifts-Connector\Microsoft.Teams.Shifts.Integration\Microsoft.Teams.Shifts.Integration.sln" 
 
-call :ExecuteCmd dotnet restore "%DEPLOYMENT_SOURCE%\Microsoft.Teams.Shifts.Integration\Microsoft.Teams.Shifts.Integration.sln"
+call :ExecuteCmd dotnet restore "%DEPLOYMENT_SOURCE%\Kronos-Shifts-Connector\Microsoft.Teams.Shifts.Integration\Microsoft.Teams.Shifts.Integration.sln"
 IF !ERRORLEVEL! NEQ 0 goto error
 
 :: 2. Build and publish
-call :ExecuteCmd dotnet publish "%DEPLOYMENT_SOURCE%\Microsoft.Teams.Shifts.Integration\Microsoft.Teams.Shifts.Integration.Configuration\Microsoft.Teams.Shifts.Integration.Configuration.csproj" --output "%DEPLOYMENT_TEMP%" --configuration Release 
+call :ExecuteCmd dotnet publish "%DEPLOYMENT_SOURCE%\Kronos-Shifts-Connector\Microsoft.Teams.Shifts.Integration\Microsoft.Teams.Shifts.Integration.Configuration\Microsoft.Teams.Shifts.Integration.Configuration.csproj" --output "%DEPLOYMENT_TEMP%" --configuration Release 
 IF !ERRORLEVEL! NEQ 0 goto error
 
 :: 3. KuduSync
