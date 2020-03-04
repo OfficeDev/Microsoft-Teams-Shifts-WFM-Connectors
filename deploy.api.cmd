@@ -68,12 +68,18 @@ echo "%DEPLOYMENT_TEMP%"
 echo Handling  ASP.NET Core Web Application deployment. 
 echo API project.
 
+call :ExecuteCmd nuget restore "%DEPLOYMENT_SOURCE%\Kronos-Shifts-Connector\Microsoft.Teams.Shifts.Integration\Microsoft.Teams.Shifts.Integration.sln" 
+
+
+
+echo done building project
+
 :: 1. Restore nuget packages
-call :ExecuteCmd dotnet restore "%DEPLOYMENT_SOURCE%\Microsoft.Teams.Shifts.Integration\Microsoft.Teams.Shifts.Integration.sln"
+call :ExecuteCmd dotnet restore "%DEPLOYMENT_SOURCE%\Kronos-Shifts-Connector\Microsoft.Teams.Shifts.Integration\Microsoft.Teams.Shifts.Integration.sln"
 IF !ERRORLEVEL! NEQ 0 goto error
 
 :: 2. Build and publish
-call :ExecuteCmd dotnet publish "%DEPLOYMENT_SOURCE%\Microsoft.Teams.Shifts.Integration\Microsoft.Teams.Shifts.Integration.API\Microsoft.Teams.Shifts.Integration.API.csproj" --output "%DEPLOYMENT_TEMP%" --configuration Release 
+call :ExecuteCmd dotnet publish "%DEPLOYMENT_SOURCE%\Kronos-Shifts-Connector\Microsoft.Teams.Shifts.Integration\Microsoft.Teams.Shifts.Integration.API\Microsoft.Teams.Shifts.Integration.API.csproj" --output "%DEPLOYMENT_TEMP%" --configuration Release 
 IF !ERRORLEVEL! NEQ 0 goto error
 
 :: 3. KuduSync
