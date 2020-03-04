@@ -1,0 +1,45 @@
+﻿@model  Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.ConfigEntityViewModel
+
+<table class="table table-responsive">
+    <thead>
+       <tr>
+           <th>Tenant ID</th>
+           @*<th>WFM Provider</th>*@
+           <th>Kronos Superuser Name</th>
+           @*<th>WFM Super User Password</th>*@
+           <th>Kronos API Endpoint</th>
+       </tr>
+    </thead>
+    <tbody>
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => Model.TenantId)
+                </td>
+                @*<td>
+                    @Html.DisplayFor(modelItem => item.WfmProvider)
+                </td>*@
+                <td>
+                    @Html.DisplayFor(modelItem => Model.WfmSuperUsername)
+                </td>
+                <td style="display: none">
+                    @Html.DisplayFor(modelItem => Model.WfmSuperUserPassword)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => Model.WfmApiEndpoint)
+                </td>
+                <td>
+                    @{ 
+                        var paramsDict = new Dictionary<string, string>()
+                        {
+                            { "tenantId", Model.TenantId },
+                            { "configurationId", Model.ConfigurationId }
+                        };
+                    }
+
+                    <a asp-controller="Home" asp-action="RegisterWorkforceIntegrationAsync" asp-all-route-data="paramsDict">Register</a> |
+                    <a asp-controller="Home" asp-action="DeleteWorkforceIntegrationAsync" onclick="return confirm('@Resources.WFIDeletePopUpMessage');" asp-all-route-data="paramsDict">Delete</a> |
+                    <a class="editIcon" href="javascript:void(0)" onclick="onEdit('@Model.WfmSuperUsername', '@Model.WfmSuperUserPassword', '@Model.WfmApiEndpoint', '@Model.ConfigurationId')">Edit</a>
+                </td>
+            </tr>
+    </tbody>
+</table>

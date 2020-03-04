@@ -1,0 +1,39 @@
+{
+  "version": "1.0",
+  "defaultProvider": "cdnjs",
+  "libraries": [
+    {
+      "provider": "cdnjs",
+      "library": "jquery@3.3.1",
+      "destination": "wwwroot/lib/jquery/",
+      "files": [
+        "jquery.min.js",
+        "jquery.js",
+        "jquery.min.map"
+      ]
+    },
+    {
+      "provider": "unpkg",
+      "library": "bootstrap@3.3.7",
+      "destination": "wwwroot/lib/bootstrap"
+    },
+    {
+      "provider": "cdnjs",
+      "library": "jquery-validation-unobtrusive@3.2.9",
+      "destination": "wwwroot/lib/jquery-validation-unobtrusive"
+    },
+    {
+      "provider": "unpkg",
+      "library": "jquery-validation@1.17.0",
+      "destination": "wwwroot/lib/jquery-validation/"
+    },
+    {
+      "library": "datatables@1.10.5",
+      "destination": "wwwroot/lib/datatables/",
+      "files": [
+        "js/jquery.dataTables.min.js",
+        "css/jquery.dataTables.min.css"
+      ]
+    }
+  ]
+}

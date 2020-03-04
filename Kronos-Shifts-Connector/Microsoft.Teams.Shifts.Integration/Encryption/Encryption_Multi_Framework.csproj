@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+   <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
+   <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+   <AssemblyName>Microsoft.Teams.Shifts.Encryption</AssemblyName>
+   <RootNamespace>Microsoft.Teams.Shifts.Encryption</RootNamespace>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
+   <DefineConstants>NETSTANDARD;NETSTANDARD20</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)'=='net45'">
+    <DefineConstants>NETFULL;NET45</DefineConstants>
+  </PropertyGroup>
+  
+   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <DefineConstants>DEBUG</DefineConstants>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <Optimize>true</Optimize>
+    <DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Bond.CSharp" Version="8.0.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.8">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+  </ItemGroup>
+</Project>
