@@ -292,6 +292,10 @@
                             "value": "Kronos-Shifts-Connector/deploy.config.cmd"
                         },
                         {
+                            "name": "ASPNETCORE_DETAILEDERRORS",
+                            "value": true
+                        },
+                        {
                             "name": "TenantId",
                             "value": "[parameters('teamsTenantId')]"
                         },
@@ -435,6 +439,10 @@
                         {
                             "name": "DEPLOYMENT_SCRIPT",
                             "value": "Kronos-Shifts-Connector/deploy.api.cmd"
+                        },
+                        {
+                            "name": "ASPNETCORE_DETAILEDERRORS",
+                            "value": true
                         },
                         {
                             "name": "GraphApiUrl",
@@ -654,36 +662,6 @@
                     "enabled": true
                 },
                 "value": "[parameters('aadAppClientSecret')]"
-            }
-        },
-        {
-            "type": "Microsoft.KeyVault/vaults/secrets",
-            "apiVersion": "2016-10-01",
-            "name": "[concat(variables('keyVaultName'), '/SyncStartDate')]",
-            "location": "westus2",
-            "dependsOn": [
-                "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
-            ],
-            "properties": {
-                "attributes": {
-                    "enabled": true
-                },
-                "value": "[parameters('firstTimeSyncStartDate')]"
-            }
-        },
-        {
-            "type": "Microsoft.KeyVault/vaults/secrets",
-            "apiVersion": "2016-10-01",
-            "name": "[concat(variables('keyVaultName'), '/SyncEndDate')]",
-            "location": "westus2",
-            "dependsOn": [
-                "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
-            ],
-            "properties": {
-                "attributes": {
-                    "enabled": true
-                },
-                "value": "[parameters('firstTimeSyncEndDate')]"
             }
         },
         {
