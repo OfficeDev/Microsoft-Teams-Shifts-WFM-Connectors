@@ -287,7 +287,7 @@
                     "appSettings": [
                         {
                             "name": "DEPLOYMENT_SCRIPT",
-                            "value": "Kronos-Shifts-Connector/deploy.config.cmd"
+                            "value": "Kronos-Shifts-Connector\\\\deploy.config.cmd"
                         },
                         {
                             "name": "TenantId",
@@ -432,7 +432,7 @@
                     "appSettings": [
                         {
                             "name": "DEPLOYMENT_SCRIPT",
-                            "value": "Kronos-Shifts-Connector/deploy.api.comd"
+                            "value": "Kronos-Shifts-Connector\\\\deploy.api.comd"
                         },
                         {
                             "name": "GraphApiUrl",
