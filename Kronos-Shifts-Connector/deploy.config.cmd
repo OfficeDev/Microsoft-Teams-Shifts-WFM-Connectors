@@ -18,6 +18,8 @@ IF %ERRORLEVEL% NEQ 0 (
 :: Setup
 :: -----
 
+echo The current directory is %CD%
+
 setlocal enabledelayedexpansion
 
 SET ARTIFACTS=%~dp0%..\artifacts
