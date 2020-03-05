@@ -1,0 +1,24 @@
+﻿@model Microsoft.Teams.Shifts.Integration.Configuration.Models.ShiftsTeamKronosDepartmentViewModel
+
+<form asp-controller="TeamDepartmentMapping" asp-action="SaveShiftsTeamKronosDepartmentMappingAsync" method="post" class="formToSubmit" style="margin-top:200px;">
+    <div class="row">
+        <div class="form-group" data-form-name="team">
+            <div class="col-lg-3">
+                @Html.LabelFor(model => model.ShiftsTeamName, htmlAttributes: new { @class = "font-bold" })
+                <span class="mandatoryField">*</span>
+            </div>
+            <div class="col-lg-6">
+                <select name="ShiftsTeamName" multiple size="4" class="form-control" asp-items="Model.ShiftTeams">
+                    <optgroup label="Select Shifts Team">
+                    </optgroup>
+                </select>
+            </div>
+            <div class="col-lg-offset-3 col-lg-5">
+                <div id="teamStorageStatusMessage" class="error-message"></div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <partial name="~/Views/TeamDepartmentMapping/_KronosDepartment.cshtml" />
+    </div>
+</form>

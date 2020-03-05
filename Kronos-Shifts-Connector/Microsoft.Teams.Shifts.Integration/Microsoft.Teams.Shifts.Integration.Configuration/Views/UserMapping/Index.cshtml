@@ -1,0 +1,234 @@
+﻿@model Microsoft.Teams.Shifts.Integration.Configuration.Models.UserMappingViewModel
+
+@{
+    ViewData["Title"] = "User Mapping";
+}
+
+<link rel="stylesheet" href="~/css/spinner.css" type="text/css" />
+<link rel="stylesheet" href="~/css/customizableStyle.css" type="text/css" />
+
+<script src="../lib/jquery/jquery.min.js"></script>
+
+<div id="messageHeader"></div>
+<h3>User to User Mapping</h3>
+<p style="margin-top: 20px;">
+    @Resources.UserToUserMappingPageInstructionText
+        <ol>
+            <li>@Resources.UserToUserMappingPageInstructionTextStep1</li>
+            <li>@Resources.UserToUserMappingPageInstructionTextStep2
+                <ul>
+                    <li>@Resources.UserToUserMappingPageInstructionTextSubStep2</li>
+                </ul>
+            </li>
+            <li>@Resources.UserToUserMappingPageInstructionTextStep3</li>
+        </ol>
+</p>
+
+<div class="row contentMargin" style="margin-top: -80px; margin-left: 20px;">
+    <div id="spinner" style="display: none">
+        <partial name="~/Views/Shared/_Spinner.cshtml" />
+    </div>
+
+    <div class="form-group">
+        <input type="button" id="exportBtnId" value="@Resources.ExportUserToUserMappingButtonText" class="btn btn-primary" onclick="location.href='@Url.Action("ExportToExcelAsync")'" />
+        <input type="button" id="downloadTempId" value="@Resources.DownloadTemplateoUserMappingButtonText" class="btn btn-primary" onclick="location.href='@Url.Action("DownloadTemplateAsync")'" />
+        <input type="button" id="importMappingId" value="@Resources.ImportUserToUserMappingButtonText" class="btn btn-primary" />
+        <input type="file" id="fileControlImport" name="file" style="display: none" onchange="fileSelectedEvent(this)" />
+
+        <div class="responseTxt"></div>
+        <div class="responseTxtSuccess"></div>
+    </div>
+    <br />
+    <div class="form-group" id="mappedUsersList"></div>
+    <div class="btn-group" style="float: right;margin-top:20px;">
+        <a asp-action="GoBack"><input type="button" value="@Resources.BackButtonText" class="btn btn-primary" /></a>
+        <a asp-action="GoToNext"><input type="button" value="@Resources.NextButtonText" class="btn btn-primary" /></a>
+    </div>
+</div>
+
+<script language="javascript" type="text/javascript">
+    $(function () {
+        //calling method to load or refresh the grid
+        loadOrRefreshGridUserMapp();
+        
+        //Event to trigger the file upload control on clicking of the drop area
+        $('#importMappingId').click(function () {
+            $('#fileControlImport').trigger('click');
+        });
+
+        
+    });
+ 
+    // Show spinner indicator on all AJAX calls
+    $(document).ajaxSend(function () {
+        $("#spinner").show();
+    });
+
+    // Hide spinner indicator when all AJAX calls stops
+    $(document).ajaxStop(function () {
+        $("#spinner").hide();
+    });
+
+    //function to load/refresh the grid showing user to user mapping
+    function loadOrRefreshGridUserMapp() {
+        $.ajax({
+            type: "GET",
+            url: '@Url.Action("GetUserMappingAsync")',
+            success: function (result) {
+                if (result != "") {
+                    $("#mappedUsersList").html(result);
+                }
+            }
+        });
+    }
+
+    //function to handle file selection for Import Mapping
+    function fileSelectedEvent(evt) {
+        $(".responseTxt").html("");
+
+        var fileUpload = $("#fileControlImport").get(0);
+        var files = fileUpload.files;
+
+        var fileName = files[0].name;
+        var ext = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
+        var allowedExt = ["xlsx", "xls"];
+
+
+
+        if (!(allowedExt.indexOf(ext) == -1)) {
+
+            var fileSize = 0.00;
+            fileSize = Math.round(files[0].size * 100 / 1048576) / 100;
+
+            if (fileSize > 0) {
+                var formData = new FormData();
+                formData.append("files", files[0]);
+
+                $.ajax({
+                    type: "POST",
+                    cache: false,
+                    url: '@Url.Action("ImportMappingAsync")',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    dataType: "json",
+                    success: function (jsonResponse) {
+                        if (jsonResponse.response) {
+                            var htmlDiv = ' <div class="alert alert-success alert-dismissible" role="alert">' +
+                                '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>' +
+                                "Imported Successfully" +
+                                '</div>'
+                            setTimeout(function () {
+                                $("#messageHeader").html(htmlDiv);
+                            })
+                            setTimeout(function () {
+                                $("#messageHeader").html("");
+                            }, 3000);
+                            loadOrRefreshGridUserMapp();
+                        }
+                        else {
+
+                            var htmlDiv = ' <div class="alert alert-danger alert-dismissible" role="alert">' +
+                                '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>' +
+                                "The File's data is inconsistent" +
+                                '</div>'
+                            setTimeout(function () {
+                                $("#messageHeader").html(htmlDiv);
+                            })
+                            setTimeout(function () {
+                                $("#messageHeader").html("");
+                            }, 3000);
+                        }
+                        $("#fileControlImport").prop("value", "");
+                    },
+                     error: function (jqXHR, exception) {
+                        var htmlDiv = ' <div class="alert alert-danger alert-dismissible" role="alert">' +
+                             '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>' +
+                             "Some error occurred" +
+                             '</div>'
+                         setTimeout(function () {
+                             $("#messageHeader").html(htmlDiv);
+                         })
+                         setTimeout(function () {
+                             $("#messageHeader").html("");
+                         }, 3000);
+                    }
+                });
+            }
+            else {
+               
+                var htmlDiv = ' <div class="alert alert-danger alert-dismissible" role="alert">' +
+                    '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>' +
+                    "The file has no content" +
+                    '</div>'
+                setTimeout(function () {
+                    $("#messageHeader").html(htmlDiv);
+                })
+                setTimeout(function () {
+                    $("#messageHeader").html("");
+                }, 3000);
+
+            }
+        }
+        else {
+         
+            var htmlDiv = ' <div class="alert alert-danger alert-dismissible" role="alert">' +
+                '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>' +
+                "Type of file is not supported." +
+                '</div>'
+            setTimeout(function () {
+                $("#messageHeader").html(htmlDiv);
+            })
+            setTimeout(function () {
+                $("#messageHeader").html("");
+            }, 3000);
+
+        }
+    }
+
+    function ajaxCallDeleteUserMapping(partitionKey, rowKey, element)
+    {
+        if (confirm("@Resources.UserMappingDeletePopUpMessage")) {
+
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("DeleteUserMappingAsync")',
+                dataType: "json",
+                data: {
+                    'partitionKey': partitionKey,
+                    'rowKey': rowKey
+                },
+                success: function (jsonResponse) {
+                    if (jsonResponse.response) {
+                        $(element).closest('tr').remove();
+                        var htmlDiv = ' <div class="alert alert-success alert-dismissible" role="alert">' +
+                            '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>' +
+                            "Deleted Successfully" +
+                            '</div>'
+                        setTimeout(function () {
+                            $("#messageHeader").html(htmlDiv);
+                        })
+                        setTimeout(function () {
+                            $("messageHeader").html("");
+                        }, 3000);
+                        loadOrRefreshGridUserMapp();
+                    }
+                },
+                error: function (jqXHR, exception) {
+
+                    var htmlDiv = ' <div class="alert alert-danger alert-dismissible" role="alert">' +
+                        '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>' +
+                        "Some error occured." +
+                        '</div>'
+                    setTimeout(function () {
+                        $("#messageHeader").html(htmlDiv);
+                    })
+                    setTimeout(function () {
+                        $("#messageHeader").html("");
+                    }, 3000);
+
+                }
+            });
+        }
+    }
+</script>

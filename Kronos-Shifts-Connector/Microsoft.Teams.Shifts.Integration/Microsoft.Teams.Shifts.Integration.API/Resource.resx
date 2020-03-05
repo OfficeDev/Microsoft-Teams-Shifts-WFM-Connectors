@@ -1,0 +1,370 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="InvalidKronosCredentials" xml:space="preserve">
+    <value>Unable to login kronos.</value>
+  </data>
+  <data name="IssueShiftsAccessToken" xml:space="preserve">
+    <value>Unable to fetch shifts access token. Please try to relogin.</value>
+  </data>
+  <data name="KronosURLNotPresent" xml:space="preserve">
+    <value>Kronos URL not present.</value>
+  </data>
+  <data name="NullMonthPartitionsMessage" xml:space="preserve">
+    <value>The month partitions are null. Please verify your data in Kronos accordingly</value>
+    <comment>The message to log into ApplicationInsights when the month partitions are null.</comment>
+  </data>
+  <data name="SetUpNotDoneMessage" xml:space="preserve">
+    <value>Please verify workforce integration, user mapping, team department mapping are done and sync start date and end date are in "M/dd/yyyy" format where start date &lt; end date.</value>
+    <comment>The message for checking the required setup tokens.</comment>
+  </data>
+  <data name="TeamDepartmentDetailsNotFoundMessage" xml:space="preserve">
+    <value>The team-department details cannot be found. Check the Team-Department mapping and try again.</value>
+    <comment>The message when there are no team department mapping details found.</comment>
+  </data>
+  <data name="SetupStatusMessage" xml:space="preserve">
+    <value>Setup done: {0}</value>
+    <comment>The message to log to telemetry to show whether or not the setup has been completed.</comment>
+  </data>
+  <data name="UserTeamNotExists" xml:space="preserve">
+    <value>Team does not exist for user</value>
+  </data>
+  <data name="WorkforceIntegrationAdminNotFound" xml:space="preserve">
+    <value>Unable to find the admin ID for workforce integration.</value>
+    <comment>The message that will be displayed when the Admin AAD Object ID is not found for a specific workforce integration.</comment>
+  </data>
+  <data name="InternalErrorCodeMessageText" xml:space="preserve">
+    <value>An internal error occurred which may cause the open shift request to be declined.</value>
+    <comment>The text which further explains what is going on.</comment>
+  </data>
+  <data name="InternalErrorCodeText" xml:space="preserve">
+    <value>InternalError</value>
+    <comment>The text for the InternalErrorCode</comment>
+  </data>
+  <data name="GeneralErrorCode" xml:space="preserve">
+    <value>Error</value>
+    <comment>The overall general error code</comment>
+  </data>
+  <data name="GeneralErrorMessageText" xml:space="preserve">
+    <value>An error has occurred, you may need to reissue your request again at a later time.</value>
+    <comment>A generic error message.</comment>
+  </data>
+  <data name="IncomingOpenShiftRequest" xml:space="preserve">
+    <value>IncomingOpenShiftRequest</value>
+    <comment>The incoming open shift request details.</comment>
+  </data>
+  <data name="SyncApprovedOrDeclinedOpenShiftRequests" xml:space="preserve">
+    <value>SyncApprovedOrDeclinedOpenShiftRequests</value>
+    <comment>The method in the OpenShiftRequest controller which syncs the approved or declined open shift requests from Kronos to Shifts</comment>
+  </data>
+  <data name="SyncOpenShiftsFromKronos" xml:space="preserve">
+    <value>SyncOpenShiftsFromKronos</value>
+    <comment>The method name in OpenShiftController that will sync open shift entities from Kronos to Shifts.</comment>
+  </data>
+  <data name="CreateEntryOpenShiftsEntityMapping" xml:space="preserve">
+    <value>CreateEntryOpenShiftsEntityMapping</value>
+    <comment>In the open shift controller, this method is responsible for creating an entry in the open shift mapping table</comment>
+  </data>
+  <data name="CreateNewOpenShiftMappingEntity" xml:space="preserve">
+    <value>CreateNewOpenShiftMappingEntity</value>
+  </data>
+  <data name="DeleteOrphanDataOpenShiftsEntityMapping" xml:space="preserve">
+    <value>DeleteOrphanDataOpenShiftsEntityMapping</value>
+    <comment>In the open shift controller, this method deletes any orphan open shifts.</comment>
+  </data>
+  <data name="GetOpenShiftResultsByOrgJobPathInBatch" xml:space="preserve">
+    <value>GetOpenShiftResultsByOrgJobPathInBatch</value>
+    <comment>In the open shift controller, this method processes users in a batch manner.</comment>
+  </data>
+  <data name="SyncShiftsFromKronos" xml:space="preserve">
+    <value>SyncShiftsFromKronos</value>
+    <comment>The method name in ShiftController that will sync shift entities from Kronos to Shifts.</comment>
+  </data>
+  <data name="ShiftsNotFoundtoSwap" xml:space="preserve">
+    <value>No swap shifts found to process</value>
+  </data>
+  <data name="Cancle" xml:space="preserve">
+    <value>Cancle</value>
+  </data>
+  <data name="KronosErrorStatus" xml:space="preserve">
+    <value>KronosErrorStatus</value>
+  </data>
+  <data name="RecipientShiftNotFound" xml:space="preserve">
+    <value>Recipient shift not found</value>
+  </data>
+  <data name="SenderShiftNotFound" xml:space="preserve">
+    <value>Sender shift not found</value>
+  </data>
+  <data name="SyncedFailed" xml:space="preserve">
+    <value>Something went wrong while syncing the shifts.</value>
+  </data>
+  <data name="DraftOpenShiftRequestSegmentTypeName" xml:space="preserve">
+    <value>Regular</value>
+  </data>
+  <data name="KronosOpenShiftStatusUpdateToSubmittedMessage" xml:space="preserve">
+    <value>Updating to submitted status.</value>
+  </data>
+  <data name="OpenShiftRequestApprovalMessage" xml:space="preserve">
+    <value>Approved</value>
+  </data>
+  <data name="OpenShiftRequestDeclinedMessage" xml:space="preserve">
+    <value>Declined</value>
+  </data>
+  <data name="GetShifts" xml:space="preserve">
+    <value>GetShifts</value>
+    <comment>The method name in the ShiftController.</comment>
+  </data>
+  <data name="GetTimeOffs" xml:space="preserve">
+    <value>GetTimeOffs</value>
+    <comment>The method to get the time off entities in the TimeOffController.</comment>
+  </data>
+  <data name="SyncSwapShiftsFromKronos" xml:space="preserve">
+    <value>SyncSwapShiftsFromKronos</value>
+  </data>
+  <data name="SyncTimeOffRequestsFromShiftsToKronos" xml:space="preserve">
+    <value>SyncTimeOffRequestsFromShiftsToKronos</value>
+  </data>
+  <data name="SubmitOpenShiftRequestToKronosAsync" xml:space="preserve">
+    <value>SubmitOpenShiftRequestToKronosAsync</value>
+  </data>
+  <data name="SyncApprovedOrDeclinedOpenShiftRequestsAsync" xml:space="preserve">
+    <value>SyncApprovedOrDeclinedOpenShiftRequestsAsync</value>
+  </data>
+  <data name="ProcessOpenShiftsAsync" xml:space="preserve">
+    <value>ProcessOpenShiftsAsync</value>
+  </data>
+  <data name="CreateEntryOpenShiftsEntityMappingAsync" xml:space="preserve">
+    <value>CreateEntryOpenShiftsEntityMappingAsync</value>
+  </data>
+  <data name="DeleteOrphanDataOpenShiftsEntityMappingAsync" xml:space="preserve">
+    <value>DeleteOrphanDataOpenShiftsEntityMappingAsync</value>
+  </data>
+  <data name="GetOpenShiftResultsByOrgJobPathInBatchAsync" xml:space="preserve">
+    <value>GetOpenShiftResultsByOrgJobPathInBatchAsync</value>
+  </data>
+  <data name="DurationInFullDay" xml:space="preserve">
+    <value>full_day</value>
+  </data>
+  <data name="DurationInHalfDay" xml:space="preserve">
+    <value>second_half_day</value>
+  </data>
+  <data name="DurationInHour" xml:space="preserve">
+    <value>hours</value>
+  </data>
+  <data name="EstablishHandshake" xml:space="preserve">
+    <value>EstablishHandshake</value>
+  </data>
+  <data name="MonthPartitionKeyStatus" xml:space="preserve">
+    <value>MonthPartitionKeyStatus</value>
+  </data>
+  <data name="ProcessOpenShiftsRequests" xml:space="preserve">
+    <value>ProcessOpenShiftsRequests</value>
+    <comment>The method to be able to process the open shift requests regardless if they have been approved or declined</comment>
+  </data>
+  <data name="EntityNotFoundWithRowKey" xml:space="preserve">
+    <value>Unable to find the entity with the RowKey: {0}</value>
+    <comment>This is a message to be logged in the event that a temporary shift could not be found.</comment>
+  </data>
+  <data name="PayloadReceivedDoesNotMeetConditions" xml:space="preserve">
+    <value>There was a payload received, but does not suffice any of the conditions for processing.</value>
+    <comment>This is a message to log to application insights saying that a payload has been received, but the payload does not meet any condition to be further processed.</comment>
+  </data>
+  <data name="RequestFromShiftsNotQualifiedToProcess" xml:space="preserve">
+    <value>A request is coming in from Shifts, but does not meet the necessary criteria for further processing: {0}.</value>
+    <comment>This message is a generic logging message to track that a request is coming in from Shifts, but it does not meet a condition to be processed further. The {0} placeholder would be for the incoming request Id.</comment>
+  </data>
+  <data name="InternalServerErrorMessage" xml:space="preserve">
+    <value>Internal Server Occurred</value>
+  </data>
+  <data name="AadGroupIdIsMissing" xml:space="preserve">
+    <value>The AAD Group Id (or the Team ID) is missing.</value>
+    <comment>The message that would be raised when the aadGroupId is null.</comment>
+  </data>
+  <data name="GenericNotAbleToRetrieveDataMessage" xml:space="preserve">
+    <value>{0} - Data cannot be retrieved at this time.</value>
+    <comment>This message is a generic message that will be showing whenever data cannot be retrieved</comment>
+  </data>
+  <data name="TokenNotPresentWithCurrentRequest" xml:space="preserve">
+    <value>Token is not present with the current request.</value>
+    <comment>The message that would be logged to Application Insights whenever there is a token related exception.</comment>
+  </data>
+  <data name="TokenOriginatingFromInvalidSource" xml:space="preserve">
+    <value>The token required for this API call could be coming from an invalid source.</value>
+    <comment>This is a message that will be displayed if the token for the Web API is coming from a source that is not part of the deployed resources.</comment>
+  </data>
+  <data name="SystemDeclined" xml:space="preserve">
+    <value>Request is declined by system</value>
+  </data>
+  <data name="InvalidSwapShiftState" xml:space="preserve">
+    <value>Swap Shift is not in pending with manager state. Swap Shift Request Id: {0} </value>
+    <comment>This is a telemetry logging for a Swap Shift Request that is not in a valid state for approval or decline. The {0} placeholder is for the SREQ, Swap Shift request ID.</comment>
+  </data>
+  <data name="NoSwapReqPending" xml:space="preserve">
+    <value>No requests present in pending state.</value>
+  </data>
+  <data name="SubmitSwapShiftRequestToKronosAsync" xml:space="preserve">
+    <value>SubmitSwapShiftRequestToKronosAsync</value>
+  </data>
+  <data name="ApproveOrDeclineSwapShiftRequestToKronosAsync" xml:space="preserve">
+    <value>ApproveOrDeclineSwapShiftRequestToKronosAsync</value>
+  </data>
+  <data name="AddSwapShiftApprovalAsync" xml:space="preserve">
+    <value>AddSwapShiftApprovalAsync</value>
+  </data>
+  <data name="DeclineSwapShiftRequestAsync" xml:space="preserve">
+    <value>DeclineSwapShiftRequestAsync</value>
+  </data>
+  <data name="CheckRequestStatus" xml:space="preserve">
+    <value>CheckRequestStatus</value>
+  </data>
+  <data name="KronosWFCOpenShiftRequestErrorCode" xml:space="preserve">
+    <value>OpenShiftRequestError</value>
+  </data>
+  <data name="OpenShiftNotFoundCode" xml:space="preserve">
+    <value>OpenShiftNotFound</value>
+  </data>
+  <data name="OpenShiftNotFoundMessage" xml:space="preserve">
+    <value>The open shift from MS Graph - {0} is not found.</value>
+    <comment>The {0} placeholder is for the Open Shift ID.</comment>
+  </data>
+  <data name="SetUpNotDoneCode" xml:space="preserve">
+    <value>SetUpNotDone</value>
+  </data>
+  <data name="ProcessOutboundOpenShiftRequestAsync" xml:space="preserve">
+    <value>ProcessOutboundOpenShiftRequestAsync</value>
+  </data>
+  <data name="MapPayCodeTimeOffReasonsAsync" xml:space="preserve">
+    <value>MapPayCodeTimeOffReasonsAsync</value>
+  </data>
+  <data name="ProcessKronosToShiftsShiftsAsync" xml:space="preserve">
+    <value>ProcessKronosToShiftsShiftsAsync</value>
+  </data>
+  <data name="ProcessShiftsAsync" xml:space="preserve">
+    <value>ProcessShiftsAsync</value>
+  </data>
+  <data name="ProcessSwapShiftsAsync" xml:space="preserve">
+    <value>ProcessSwapShiftsAsync</value>
+  </data>
+  <data name="ProcessTimeOffRequetsAsync" xml:space="preserve">
+    <value>ProcessTimeOffRequetsAsync</value>
+  </data>
+  <data name="ProcessTimeOffsAsync" xml:space="preserve">
+    <value>ProcessTimeOffsAsync</value>
+  </data>
+</root>

@@ -1,0 +1,241 @@
+﻿@{
+    ViewData["Title"] = "Team Department Mapping";
+}
+
+<link rel="stylesheet" href="~/css/spinner.css" type="text/css" />
+<link rel="stylesheet" href="~/css/customizableStyle.css" type="text/css" />
+<script src="../lib/jquery/jquery.min.js"></script>
+<div id="messageHeader"></div>
+<h3>Team and Department Mapping</h3>
+<p style="margin-top: 20px;">
+    @Resources.TeamDepartmentMappingPageInstructionText
+    <ol>
+        <li>@Resources.TeamDepartmentMappingPageInstructionTextStep1</li>
+        <li>
+            @Resources.TeamDepartmentMappingPageInstructionTextStep2
+        <ul>
+            <li>@Resources.TeamDepartmentMappingPageInstructionTextSubStep2</li>
+        </ul>
+    </li>
+    <li>@Resources.TeamDepartmentMappingPageInstructionTextStep3</li>
+</ol>
+</p>
+
+<div class="row contentMargin" style="margin-top: -80px; margin-left: 20px;">
+    <div id="spinner" style="display: none">
+        <partial name="~/Views/Shared/_Spinner.cshtml" />
+    </div>
+
+    <div class="form-group">
+        <input type="button" id="exportBtnIdTeamsMapp" value="@Resources.ExportUserToUserMappingButtonText" class="btn btn-primary" onclick="location.href='@Url.Action("ExportToExcelAsync")'" />
+        <input type="button" id="downloadTempIdTeamsMapp" value="@Resources.DownloadTemplateoUserMappingButtonText" class="btn btn-primary" onclick="location.href='@Url.Action("DownloadTemplateAsync")'" />
+        <input type="button" id="importMappingIdTeamsMapp" value="@Resources.ImportUserToUserMappingButtonText" class="btn btn-primary" />
+        <input type="file" id="fileControlImportTeamsMapp" name="file" style="display: none" onchange="fileSelectedEventTeamsMapp(this)" />
+
+        <div class="respTxtTeamsToDeptMapping"></div>
+        <div class="respTxtTeamsToDeptMappingSuccess"></div>
+    </div>
+    <br />
+    <div id="teamDepartmentList"></div>
+    <div class="btn-group" style="float: right;margin-top:20px;">
+        <a asp-action="GoBack"><input type="button" value="@Resources.BackButtonText" class="btn btn-primary" /></a>
+        <a asp-action="SyncDataFirstTimeAsync"><input type="button" value="@Resources.DoneButtonText" class="btn btn-success" /></a>
+    </div>
+</div>
+<script type="text/javascript">
+    $(function () {
+        //calling method to load or refresh the grid
+        loadOrRefreshGridTeamAndDeptMapp();
+
+        //Event to trigger the file upload control on clicking of the drop area
+        $('#importMappingIdTeamsMapp').click(function () {
+            $('#fileControlImportTeamsMapp').trigger('click');
+        });
+    });
+
+    //function to load/refresh the grid showing user to user mapping
+    function loadOrRefreshGridTeamAndDeptMapp() {
+         $.ajax({
+            type: "GET",
+            url: '@Url.Action("GetTeamDepartmentMappingAsync")',
+            success: function (result) {
+                if (result != "") {
+                    $("#teamDepartmentList").html(result);
+                }
+            }
+        });
+
+    }
+
+    // Show spinner indicator on all AJAX calls
+    $(document).ajaxSend(function () {
+        $("#spinner").show();
+    });
+
+    // Hide spinner indicator when all AJAX calls stops
+    $(document).ajaxStop(function () {
+        $("#spinner").hide();
+    });
+
+    //function to handle file selection for Import Mapping
+        function fileSelectedEventTeamsMapp(evt) {
+            $(".respTxtTeamsToDeptMapping").html("");
+            $(".respTxtTeamsToDeptMappingSuccess").html("");
+
+        var fileUpload = $("#fileControlImportTeamsMapp").get(0);
+        var files = fileUpload.files;
+
+        var fileName = files[0].name;
+        var ext = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
+        var allowedExt = ["xlsx", "xls"];
+
+            if (!(allowedExt.indexOf(ext) == -1)) {
+
+                var fileSize = 0.00;
+                fileSize = Math.round(files[0].size * 100 / 1048576) / 100;
+                if (fileSize > 0) {
+                    var formData = new FormData();
+                    formData.append("files", files[0]);
+                    $.ajax({
+                        type: "POST",
+                        cache: false,
+                        url: '@Url.Action("ImportMappingAsync")',
+                        data: formData,
+                        contentType: false,
+                        processData: false,
+                        dataType: "json",
+                        success: function (jsonResponse) {
+                            console.log(jsonResponse)
+                            if (jsonResponse.isWorkforceIntegrationPresent) {
+                                if (jsonResponse.response) {
+                                    
+                                    $(".respTxtTeamsToDeptMapping").html("");
+                                    var htmlDiv = ' <div class="alert alert-success alert-dismissible" role="alert">' +
+                                        '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>' +
+                                        "Imported Successfully" +
+                                        '</div>'
+                                    setTimeout(function () {
+                                        $("#messageHeader").html(htmlDiv);
+                                    })
+                                    setTimeout(function () {
+                                        $("#messageHeader").html("");
+                                    }, 3000);
+                                    loadOrRefreshGridTeamAndDeptMapp();
+                                }
+                                else {
+                                    $(".respTxtTeamsToDeptMappingSuccess").html("");
+                                    var htmlDiv = ' <div class="alert alert-danger alert-dismissible" role="alert">' +
+                                        '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>' +
+                                        "The File's data is inconsistent" +
+                                        '</div>'
+                                    setTimeout(function () {
+                                        $("#messageHeader").html(htmlDiv);
+                                    })
+                                    setTimeout(function () {
+                                        $("#messageHeader").html("");
+                                    }, 3000);
+                                }
+                            }
+                            else {
+                                $(".respTxtTeamsToDeptMapping").html(jsonResponse.error);
+                            }
+                            $("#fileControlImportTeamsMapp").prop("value", "");
+                        },
+                        error: function (jqXHR, exception) {
+                            console.log(jsonResponse)
+                            var htmlDiv = ' <div class="alert alert-danger alert-dismissible" role="alert">' +
+                                '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>' +
+                                "Some error occured." +
+                                '</div>'
+                            setTimeout(function () {
+                                $("#messageHeader").html(htmlDiv);
+                            })
+                            setTimeout(function () {
+                                $("#messageHeader").html("");
+                            }, 3000);
+                            setTimeout(function () {
+                                $(".respTxtTeamsToDeptMapping").html("");
+                            }, 3000);
+                        }
+                    });
+                }
+                else {
+                    var htmlDiv = ' <div class="alert alert-danger alert-dismissible" role="alert">' +
+                        '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>' +
+                        "The file has no content." +
+                        '</div>'
+                    setTimeout(function () {
+                        $("#messageHeader").html(htmlDiv);
+                    })
+                    setTimeout(function () {
+                        $("#messageHeader").html("");
+                    }, 3000);
+                }
+            }
+            else {
+                var htmlDiv = ' <div class="alert alert-danger alert-dismissible" role="alert">' +
+                    '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>' +
+                    "Type of file is not supported." +
+                    '</div>'
+                setTimeout(function () {
+                    $("#messageHeader").html(htmlDiv);
+                })
+                setTimeout(function () {
+                    $("#messageHeader").html("");
+                }, 3000);
+            }
+    }
+
+    function ajaxCallDeleteTeamDeptMapping(partitionKey, rowKey, element)
+    {
+      if (confirm("@Resources.TeamMappingDeletePopUpMessage")) {
+        $.ajax({
+              type: "POST",
+              url: '@Url.Action("DeleteTeamsDeptMappingAsync")',
+              dataType: "json",
+              data: {
+                  'partitionKey': partitionKey,
+                  'rowKey': rowKey
+              },
+              success: function (jsonResponse) {
+                  if (jsonResponse.response) {
+                      $(element).closest('tr').remove();
+                      var htmlDiv = ' <div class="alert alert-success alert-dismissible" role="alert">' +
+                          '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>' +
+                          "Deleted successfully." +
+                          '</div>'
+                      setTimeout(function () {
+                          $("#messageHeader").html(htmlDiv);
+                      })
+                      setTimeout(function () {
+                          $("#messageHeader").html("");
+                      }, 3000);
+                      $(".respTxtTeamsToDeptMapping").html("");
+                      setTimeout(function () {
+                          $(".respTxtTeamsToDeptMappingSuccess").html("");
+                      }, 3000);
+                      loadOrRefreshGridTeamAndDeptMapp();
+                  }
+                  else {
+                      $(".respTxtTeamsToDeptMappingSuccess").html("");
+                      setTimeout(function () {
+                          $(".respTxtTeamsToDeptMapping").html("");
+                      }, 3000);
+                  }
+              },
+              error: function (jqXHR, exception) {
+                  var htmlDiv = ' <div class="alert alert-danger alert-dismissible" role="alert">' +
+                      '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button>' +
+                      "Some error occured." +
+                      '</div>'
+                  setTimeout(function () {
+                      $("#messageHeader").html(htmlDiv);
+                  })
+                  setTimeout(function () {
+                      $("#messageHeader").html("");
+                  }, 3000);
+              }
+        });
+    }
+    }
+</script>

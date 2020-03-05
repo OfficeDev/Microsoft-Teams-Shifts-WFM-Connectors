@@ -1,0 +1,37 @@
+{
+  "@odata.context": "https://graph.microsoft.com/beta/$metadata#teams/$entity",
+  "id": "8f7d2a10-bdb2-4002-8dba-e9f8703a1a15",
+  "displayName": "Kronos Shift Test Team",
+  "description": "Kronos Shift Test Team",
+  "internalId": "19:e7d26dd9846542edafec88b318ea7016@thread.skype",
+  "webUrl": "https://teams.microsoft.com/l/team/19:e7d26dd9846542edafec88b318ea7016%40thread.skype/conversations?groupId=8f7d2a10-bdb2-4002-8dba-e9f8703a1a15&tenantId=cd584aa4-73da-4df0-bba1-80cfcd00a796",
+  "isArchived": false,
+  "memberSettings": {
+    "allowCreateUpdateChannels": true,
+    "allowCreatePrivateChannels": true,
+    "allowDeleteChannels": true,
+    "allowAddRemoveApps": true,
+    "allowCreateUpdateRemoveTabs": true,
+    "allowCreateUpdateRemoveConnectors": true
+  },
+  "guestSettings": {
+    "allowCreateUpdateChannels": false,
+    "allowDeleteChannels": false
+  },
+  "messagingSettings": {
+    "allowUserEditMessages": true,
+    "allowUserDeleteMessages": true,
+    "allowOwnerDeleteMessages": true,
+    "allowTeamMentions": true,
+    "allowChannelMentions": true
+  },
+  "funSettings": {
+    "allowGiphy": true,
+    "giphyContentRating": "moderate",
+    "allowStickersAndMemes": true,
+    "allowCustomMemes": true
+  },
+  "discoverySettings": {
+    "showInTeamsSearchAndSuggestions": true
+  }
+}

@@ -1,0 +1,68 @@
+﻿@model List<Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.AllUserMappingEntity>
+
+    <link href="../lib/datatables/css/jquery.dataTables.min.css" rel="stylesheet" />
+    <script src="../lib/datatables/js/jquery.dataTables.min.js"></script>
+    <table id="userMappTbl" class="table table-responsive dataTable no-footer">
+        <thead>
+            <tr>
+                @*
+                <th>Team Department Mapping ID</th>*@
+                <th>Kronos OrgJobPath</th>
+                <th>Kronos Person Number</th>
+                <th>Kronos User Name</th>
+                <th>Shifts AAD Object Id</th>
+                <th>Shifts User Display Name</th>
+                <th>Shifts User Principle Name</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Count != 0)
+            {
+            foreach (var item in Model)
+            {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.PartitionKey)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.RowKey)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.KronosUserName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.ShiftUserAadObjectId)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.ShiftUserDisplayName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.ShiftUserUpn)
+                </td>
+                <td>
+                    <input type="button" value="Delete" class="btn btn-primary deleteBtnTeamsDeptMapp" onclick="ajaxCallDeleteUserMapping('@item.PartitionKey', '@item.RowKey', this)" />
+                </td>
+            </tr>
+            }
+            }
+            else
+            {
+            <tr>
+                <td style="text-align:center;" colspan="6">
+                    No Records found
+                </td>
+            </tr>
+            }
+        </tbody>
+    </table>
+<script language="javascript" type="text/javascript">
+    $(document).ready(function (){
+        $("#userMappTbl").dataTable({
+            "columnDefs": [{
+                "defaultContent": "-",
+                "targets": "_all"
+            }]
+        });
+    });
+</script>

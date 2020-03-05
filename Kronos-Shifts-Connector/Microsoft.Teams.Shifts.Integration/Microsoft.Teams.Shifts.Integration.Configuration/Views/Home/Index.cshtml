@@ -1,0 +1,237 @@
+﻿@model Microsoft.Teams.Shifts.Integration.Configuration.Models.HomeViewModel
+
+@{
+    ViewData["Title"] = "Home";
+}
+
+<style>
+    #updateBtn, #cancelBtn{
+        margin-left: 2%;
+        display: none;
+        float: left;
+    }
+    .buttonsDiv{
+        width: 100%
+    }
+</style>
+
+<link rel="stylesheet" href="~/css/spinner.css" type="text/css" />
+<link rel="stylesheet" href="~/css/customizableStyle.css" type="text/css" />
+<script src="../lib/jquery/jquery.min.js"></script>
+
+@if (ViewBag.IsUserLoggedIn != null && ViewBag.IsUserLoggedIn)
+{
+    <h3>Configuration Details</h3>
+    <p style="padding-top: 20px;">@Resources.HomePageInstructionText</p>
+
+    <div class="row contentMargin" style="margin-top: -100px; margin-left: 20px;">
+        <div id="spinner" style="display: none">
+            <partial name="~/Views/Shared/_Spinner.cshtml" />
+        </div>
+
+        <form asp-controller="Home" asp-action="ParseAndSaveDataAsync" method="post" class="form-horizontal formToSubmit">
+            <div class="form-group" data-form-name="tenant">
+                <div class="col-lg-3">
+                    @Html.LabelFor(model => model.TenantId, htmlAttributes: new { @class = "font-bold control-label" })
+                    <span class="mandatoryField">*</span>
+                    <span class="glyphicon glyphicon-info-sign infoSignMargin" data-toggle="tooltip" title="@Resources.TenantIdToolTipHoverMessage"></span>
+                </div>
+                <div class="col-lg-5">
+                    <input id="TenantId" name="TenantId" class="form-control tenantIdTextBox toggleTextBox" type="text" placeholder="Enter tenant ID." readonly="readonly" value=@ViewBag.TenantId>
+                    @*@Html.TextBoxFor(model => model.TenantId, htmlAttributes: new { @class = "form-control tenantIdTextBox toggleTextBox", @placeholder = "Enter Tenant ID." })
+                        @Html.ValidationMessageFor(model => model.TenantId, "", htmlAttributes: new { @class = "error-message" })*@
+                </div>
+                <div class="col-lg-1">
+                    <span id="tenantStorageStatusIcon"></span>
+                </div>
+                <div class="col-lg-offset-3 col-lg-5">
+                    <div id="tenantStorageStatusMessage" class="error-message"></div>
+                </div>
+            </div>          
+            <div class="form-group" data-form-name="wfmSuperUsername">
+                <div class="col-lg-3">
+                    @Html.LabelFor(model => model.WfmSuperUsername, htmlAttributes: new { @class = "font-bold control-label" })
+                    <span class="mandatoryField">*</span>
+                    <span class="glyphicon glyphicon-info-sign infoSignMargin" data-toggle="tooltip" title="@Resources.WfmSuperUsernameToolTipHoverMessage"></span>
+                </div>
+                <div class="col-lg-5">
+                    @Html.TextBoxFor(model => model.WfmSuperUsername, htmlAttributes: new { @class = "form-control wfmSuperUserNameTextBox toggleTextBox", @placeholder = "Enter the Kronos Superuser Name." })
+                    @Html.ValidationMessageFor(model => model.WfmSuperUsername, "", htmlAttributes: new { @class = "error-message" })
+                </div>
+                <div class="col-lg-1">
+                    <span id="wfmSuperUsernameStorageStatusIcon"></span>
+                </div>
+                <div class="col-lg-offset-3 col-lg-5">
+                    <div id="wfmSuperUsernameStorageStatusMessage" class="error-message"></div>
+                </div>
+            </div>
+            <div class="form-group" data-form-name="wfmSuperUserPassword">
+                <div class="col-lg-3">
+                    @Html.LabelFor(model => model.WfmSuperUserPassword, htmlAttributes: new { @class = "font-bold control-label" })
+                    <span class="mandatoryField">*</span>
+                    <span class="glyphicon glyphicon-info-sign infoSignMargin" data-toggle="tooltip" title="@Resources.WfmSuperUserPasswordToolTipHoverMessage"></span>
+                </div>
+                <div class="col-lg-5">
+                    @Html.TextBoxFor(model => model.WfmSuperUserPassword, htmlAttributes: new { @class = "form-control wfmSuperUserPasswordTextBox toggleTextBox", @placeholder = "Enter the Kronos Superuser Password.", @type = "password" })
+                    @Html.ValidationMessageFor(model => model.WfmSuperUserPassword, "", htmlAttributes: new { @class = "error-message" })
+                </div>
+                <div class="col-lg-1">
+                    <span id="wfmSuperUserPasswordStorageStatusIcon"></span>
+                </div>
+                <div class="col-lg-offset-3 col-lg-5">
+                    <div id="wfmSuperUserPasswordStorageStatusMessage" class="error-message"></div>
+                </div>
+            </div>
+            <div class="form-group" data-form-name="wfmApiEndpoint">
+                <div class="col-lg-3">
+                    @Html.LabelFor(model => model.WfmApiEndpoint, htmlAttributes: new { @class = "font-bold control-label" })
+                    <span class="mandatoryField">*</span>
+                    <span class="glyphicon glyphicon-info-sign infoSignMargin" data-toggle="tooltip" title="@Resources.WfmApiEndpointToolTipHoverMessage"></span>
+                </div>
+                <div class="col-lg-5">
+                    @Html.TextBoxFor(model => model.WfmApiEndpoint, htmlAttributes: new { @class = "form-control kronosApiTextBox toggleTextBox", @placeholder = "Enter the Kronos API Endpoint." })
+                    @Html.ValidationMessageFor(model => model.WfmApiEndpoint, "", htmlAttributes: new { @class = "error-message" })
+                </div>
+                <div class="col-lg-1">
+                    <span id="wfmApiEndpointStorageStatusIcon"></span>
+                </div>
+                <div class="col-lg-offset-3 col-lg-5">
+                    <div id="wfmApiEndpointStorageStatusMessage" class="error-message"></div>
+                </div>
+                @Html.HiddenFor(model => model.ConfigurationId)
+            </div>
+            <div class="buttonsDiv input-group input-group-lg" style="margin-left: -15px;">
+                <button type="submit" class="btn btn-primary" id="submitBtn">Submit</button>
+
+                <button type="button" class="btn btn-primary" id="updateBtn" onclick="onUpdateClick()">Update</button>
+
+                <button type="button" class="btn btn-primary" id="cancelBtn" onclick="onCancelEdit()">Cancel</button>
+            </div>
+        </form>
+
+        <div id="configsList" style="margin-left: -10px; margin-top: 10px;"></div>
+        <div class="btn-group" style="margin-left: 1050px;">
+            <a asp-action="GoToNext"><input type="button" value="@Resources.NextButtonText" class="btn btn-primary" /></a>
+        </div>
+    </div>
+}
+
+<script type="text/javascript">
+    $(function () {
+        $.ajax({
+            type: "GET",
+            url: '@Url.Action("GetConfigurationsAsync")',
+            success: function (result) {
+                if (result === "") {
+                    $('#submitBtn').prop('disabled', false);
+                } else {
+                    $("#configsList").html(result);
+                    setTimeout(function () {
+                        $('#submitBtn').prop('disabled', true);
+                    }, 1000);
+                }
+            }
+        });
+    });
+
+    // Display a green tick when save is success
+    function onSaveSuccess() {
+        var currentFormName = $(this).closest(".formToSubmit").find(".form-group").attr("data-form-name");
+        clearStatusIconAndMessage(currentFormName);
+        saveSuccessIcon(currentFormName+"StorageStatusIcon");
+        // toggleToEdit(currentFormName);
+    }
+
+    // Display a red cross with error text message when save is not success due to error
+    function onSaveFailure(errorText) {
+        var currentFormName = $(this).closest(".formToSubmit").find(".form-group").attr("data-form-name");
+        clearStatusIconAndMessage(currentFormName);
+        saveFailureIconAndText(currentFormName + "StorageStatusIcon", currentFormName+"StorageStatusMessage", errorText.statusText);
+    }
+
+    // Perform changes when Edit related UI has to be displayed
+    function toggleToEdit(section) {
+        $("#" + section + "SubmitButton").val("Edit");
+        $("." + section + "IdTextBox").attr("disabled", "disabled");
+        $("." + section + "TextBox").attr("disabled", "disabled");
+    }
+
+    // Provide the div whose icon and color needs to be changed on successful save
+    function saveSuccessIcon(statusIconId) {
+        $("#" + statusIconId + "").addClass("glyphicon glyphicon-ok").addClass("storageStatusIcon-success");
+    }
+
+    // Provide the div whose icon, color and text needs to be changed due to failure while save
+    function saveFailureIconAndText(statusIconId, statusMessageId, errorText) {
+        $("#" + statusIconId + "").addClass("glyphicon glyphicon-remove").addClass("storageStatusIcon-failure");
+        $("#" + statusMessageId + "").addClass("error-message alert alert-danger").text(errorText);
+    }
+
+    // Clear icon and message
+    function clearStatusIconAndMessage(section) {
+        $("#" + section + "StorageStatusIcon").removeAttr("class");
+        $("#" + section + "StorageStatusMessage").removeAttr("class").text("");
+    }
+
+    // Check if the button text is Edit or Ok then proceed to either form submit or disable textbox of respective section
+    // such as teams or knowledgebase
+    $(".toggleToEditButton").click(function () {
+        var currentElement = $(this);
+        var currentForm = currentElement.closest(".formToSubmit");
+        if (currentElement.val() === "Edit") {
+            currentForm.find(".toggleTextBox").removeAttr("disabled");
+            currentElement.val("OK");
+        }
+        else {
+            currentForm.submit();
+        }
+    });
+
+    // Show spinner indicator on all AJAX calls
+    $(document).ajaxSend(function () {
+        $("#spinner").show();
+    });
+
+    // Hide spinner indicator when all AJAX calls stops
+    $(document).ajaxStop(function () {
+        $("#spinner").hide();
+    });
+
+    $(document).ready(function () {
+        document.getElementById("#submitBtn").disabled = false;
+    });
+
+    function onEdit(name, pass, endPoint, configId) {
+
+        //hiding elements on edit click
+        $("#configsList").css("display", "none");
+        $("#submitBtn").css("display", "none");
+
+        //showing update and cancel buttons on edit click
+        $("#updateBtn").css("display", "block");
+        $("#cancelBtn").css("display", "block");
+
+        $("#WfmSuperUsername").val(name);
+        $("#WfmSuperUserPassword").val(pass);
+        $("#WfmApiEndpoint").val(endPoint);
+        $("#ConfigurationId").val(configId);
+    }
+
+    function onCancelEdit() {
+        //showing elements on edit click
+        $("#configsList").css("display", "block");
+        $("#submitBtn").css("display", "block");
+
+        //hiding update and cancel buttons on edit click
+        $("#updateBtn").css("display", "none");
+        $("#cancelBtn").css("display", "none");
+
+        $("#WfmSuperUsername").val("");
+        $("#WfmSuperUserPassword").val("");
+        $("#WfmApiEndpoint").val("");
+    }
+
+    function onUpdateClick() {
+        $(".formToSubmit").submit();
+    }
+</script>

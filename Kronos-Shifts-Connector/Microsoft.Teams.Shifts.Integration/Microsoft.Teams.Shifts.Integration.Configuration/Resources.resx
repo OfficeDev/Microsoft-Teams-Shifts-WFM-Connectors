@@ -1,0 +1,314 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="TenantIdToolTipHoverMessage" xml:space="preserve">
+    <value>This is an auto populated value representing your O365 Tenant.</value>
+    <comment>The tooltip hover message for the TenantId.</comment>
+  </data>
+  <data name="WfmApiEndpointToolTipHoverMessage" xml:space="preserve">
+    <value>Please provide the Kronos WFC API Endpoint.</value>
+    <comment>The tooltip hover message for entering the Kronos API Endpoint.</comment>
+  </data>
+  <data name="WfmProviderToolTipHoverMessage" xml:space="preserve">
+    <value>Please enter the name of your Workforce Management provider. For example, if you plan to register Kronos WFC, enter KronosWFC. Once you are satisfied, fill in the other details and click on Register.</value>
+    <comment>The tooltip hover message for the Workforce Management provider.</comment>
+  </data>
+  <data name="WfmSuperUsernameToolTipHoverMessage" xml:space="preserve">
+    <value>Please provide the Kronos Super Username.</value>
+    <comment>The tooltip hover message for entering the Kronos Super Username.</comment>
+  </data>
+  <data name="WfmSuperUserPasswordToolTipHoverMessage" xml:space="preserve">
+    <value>Please provide the Kronos Super User Password.</value>
+    <comment>The tooltip hover message for entering the Kronos Super User Password.</comment>
+  </data>
+  <data name="TokenCacheReuseExceptionMessage" xml:space="preserve">
+    <value>The cached token cache is for a different user! Make sure the token cache factory is registered as Scoped!</value>
+    <comment>The exception message for different user token cache.</comment>
+  </data>
+  <data name="HomePageInstructionText" xml:space="preserve">
+    <value>Please fill out the form below in order to setup your instance of Kronos WFC 8 to work with Shifts. This is a one-time setup. It is required that you provide the correct SuperUser credentials for Kronos. Once all information has been entered, click on Submit.</value>
+    <comment>The instruction text for the home page.</comment>
+  </data>
+  <data name="TeamDepartmentMappingPageInstructionText" xml:space="preserve">
+    <value>In order to properly map the team &amp; department between Shifts and Kronos, please follow the steps below:</value>
+    <comment>The instruction text for the team to department mapping page.</comment>
+  </data>
+  <data name="UserToUserMappingPageInstructionText" xml:space="preserve">
+    <value>In order to properly map the users between AAD and Kronos, please follow the steps below:</value>
+    <comment>The instruction text for the user to user mapping page.</comment>
+  </data>
+  <data name="ImportTeamToDepartmentMappingButtonText" xml:space="preserve">
+    <value>Import Mapping</value>
+    <comment>The button text to import the team to department mapping.</comment>
+  </data>
+  <data name="ImportUserToUserMappingButtonText" xml:space="preserve">
+    <value>Import Mapping</value>
+    <comment>The button text to import the user to user mapping.</comment>
+  </data>
+  <data name="ConfigurationSavedSuccessNextStepsText" xml:space="preserve">
+    <value>Configuration has been successfully saved! Click on the Register link to register the Kronos Workforce Integration with Microsoft Graph.</value>
+    <comment>This content is for having the necessary next steps outlined when the WFI registration has been successful.</comment>
+  </data>
+  <data name="ErrorNotificationHeaderText" xml:space="preserve">
+    <value>Error</value>
+    <comment>This header text is for when there is an error</comment>
+  </data>
+  <data name="KronosErrorContentText" xml:space="preserve">
+    <value>Unable to login with the provided credentials for Kronos. Please correct and try again!</value>
+    <comment>If there is an error logging into Kronos, this is the message that gets thrown.</comment>
+  </data>
+  <data name="SuccessNotificationHeaderText" xml:space="preserve">
+    <value>Success</value>
+    <comment>This header text is for when there is a success</comment>
+  </data>
+  <data name="WFIRegSuccessContentText" xml:space="preserve">
+    <value>{0} has been successfully registered!</value>
+    <comment>The content for the successfully registered workforce integration, and the {0} placeholder represents the DisplayName of the response after the WFI has been registered.</comment>
+  </data>
+  <data name="WFIRegSuccessHeaderText" xml:space="preserve">
+    <value>Workforce Integration Registration Success</value>
+    <comment>This is the header when the workforce integration is registered correctly</comment>
+  </data>
+  <data name="BackButtonText" xml:space="preserve">
+    <value>Back</value>
+    <comment>The button text to move to the previous page</comment>
+  </data>
+  <data name="DoneButtonText" xml:space="preserve">
+    <value>Done</value>
+    <comment>The button text to signify that all of the necessary mappings are done</comment>
+  </data>
+  <data name="NextButtonText" xml:space="preserve">
+    <value>Next</value>
+    <comment>The button text to move to the next page</comment>
+  </data>
+  <data name="NoWfiIdExistsContentText" xml:space="preserve">
+    <value>There is no Workforce Integration ID to delete. Please make sure that you have an ID in order to delete it.</value>
+    <comment>The content text to display if the configuration entity does not have a workforce integration ID associated to it.</comment>
+  </data>
+  <data name="WfiDeletionSuccessText" xml:space="preserve">
+    <value>The workforce integration: {0} has been deleted successfully!</value>
+    <comment>The content to display when the workforce integration has been deleted successfully from the system.</comment>
+  </data>
+  <data name="WFIGeneralHeaderText" xml:space="preserve">
+    <value>Workforce Integration Registration</value>
+    <comment>This header text is for anything related to the Workforce Integration entity</comment>
+  </data>
+  <data name="ConfigurationEntityDeletionSuccessContent" xml:space="preserve">
+    <value>The configuration has been successfully deleted from the system.</value>
+    <comment>The message that the configuration has been deleted from the system.</comment>
+  </data>
+  <data name="FirstTimeSyncSuccessText" xml:space="preserve">
+    <value>Entities has been successfully synced!</value>
+    <comment>Message to show that the entities has been successfully synced.</comment>
+  </data>
+  <data name="ExportUserToUserMappingButtonText" xml:space="preserve">
+    <value>Export</value>
+    <comment>The Export button text in User to user mapping view</comment>
+  </data>
+  <data name="SpreadsheetContentType" xml:space="preserve">
+    <value>application/vnd.openxmlformats-officedocument.spreadsheetml.sheet</value>
+    <comment>The content type for spreadsheet document</comment>
+  </data>
+  <data name="DownloadTemplateoUserMappingButtonText" xml:space="preserve">
+    <value>Download Template</value>
+    <comment>The text for DownloadTemplate button in UserToUserMapping view</comment>
+  </data>
+  <data name="SetUpNotDoneMessage" xml:space="preserve">
+    <value>Please verify workforce integration, user mapping, team department mapping are done.</value>
+  </data>
+  <data name="SetUpSuccessfulMessage" xml:space="preserve">
+    <value>The sync has initiated successfully.</value>
+    <comment>The message when the data sync is successfully initiated.</comment>
+  </data>
+  <data name="UpdateNotificationHeaderText" xml:space="preserve">
+    <value>Updated successfully!</value>
+    <comment>The update successfull popup text</comment>
+  </data>
+  <data name="KronosShiftUserMappingXML" xml:space="preserve">
+    <value>kronos_shift_usermapping.xlsx</value>
+  </data>
+  <data name="TeamsDepartmentMappingXML" xml:space="preserve">
+    <value>teams_department_usermapping.xlsx</value>
+  </data>
+  <data name="SaveShiftsTeamKronosDepartmentMappingAsync" xml:space="preserve">
+    <value>SaveShiftsTeamKronosDepartmentMappingAsync</value>
+  </data>
+  <data name="WFIRegFailedContentText" xml:space="preserve">
+    <value>{0} has been failed to register!</value>
+  </data>
+  <data name="WFIRegFailedHeaderText" xml:space="preserve">
+    <value>Workforce Integration Failed to Register!</value>
+  </data>
+  <data name="WorkforceIntegrationNotRegister" xml:space="preserve">
+    <value>Workforce Integration is not registered. Please register workforce integration.</value>
+  </data>
+  <data name="WfiDeletionFailed" xml:space="preserve">
+    <value>The workforce integration {0} failed to delete.</value>
+  </data>
+  <data name="NoOfColumnsInExcel" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="WFIAlreadyRegHeaderText" xml:space="preserve">
+    <value>Workforce Integration {0} is already registered.</value>
+  </data>
+  <data name="WFIDeleteFailedDueToTeamDeptMappingText" xml:space="preserve">
+    <value>Please make sure to delete all the mapped Team/Department before deleting Workforce Integration {0}.</value>
+  </data>
+  <data name="WFIDeletePopUpMessage" xml:space="preserve">
+    <value>Are you sure you want to delete the selected workforce integration?</value>
+  </data>
+  <data name="UserMappingDeletePopUpMessage" xml:space="preserve">
+    <value>Are you sure you want to delete the user mapping?</value>
+  </data>
+  <data name="TeamMappingDeletePopUpMessage" xml:space="preserve">
+    <value>Are you sure you want to delete the selected team?</value>
+  </data>
+  <data name="UserToUserMappingPageInstructionTextStep1" xml:space="preserve">
+    <value>Click on the export button - this exports user details in both AAD and Kronos, and will download a file to your local downloads folder.</value>
+  </data>
+  <data name="UserToUserMappingPageInstructionTextStep2" xml:space="preserve">
+    <value>Click on the download template button - this will generate an empty Excel file that contains the following columns: (KronosOrgJobPath, KronosPersonNumber, KronosUserName, ShiftAADObjectId, ShiftUserDisplayName, ShiftUserPrincipalName)</value>
+  </data>
+  <data name="UserToUserMappingPageInstructionTextStep3" xml:space="preserve">
+    <value>Once the users have been mapped in the template file, click on the import mapping button, select the template file that you recently modified and upload.</value>
+  </data>
+  <data name="UserToUserMappingPageInstructionTextSubStep2" xml:space="preserve">
+    <value>Make sure to populate this template file with the users that are going to be mapped. Select respective user details from the exported excel.</value>
+  </data>
+  <data name="TeamDepartmentMappingPageInstructionTextStep1" xml:space="preserve">
+    <value>Click on the export button - this exports team &amp; department details in both Shifts and Kronos, and will download a file to your local downloads folder.</value>
+  </data>
+  <data name="TeamDepartmentMappingPageInstructionTextStep2" xml:space="preserve">
+    <value>Click on the download template button - this will generate an empty Excel file that contains the following columns: (WorkforceIntegrationId, KronosOrgJobPath, ShiftTeamId, ShiftTeamName, ShiftSchedulingGroupId, ShiftSchedulingGroupName)</value>
+  </data>
+  <data name="TeamDepartmentMappingPageInstructionTextStep3" xml:space="preserve">
+    <value>Once the team &amp; department have been mapped in the template file, click on the import mapping button, select the template file that you recently modified and upload.</value>
+  </data>
+  <data name="TeamDepartmentMappingPageInstructionTextSubStep2" xml:space="preserve">
+    <value>Make sure to populate this template file with the team &amp; department that are going to be mapped. Select respective team &amp; department details from the exported excel.</value>
+  </data>
+  <data name="TeamDetailsResponseNullOrEmpty" xml:space="preserve">
+    <value>Unable to get the teamDetailsResponse</value>
+    <comment>The message to show when the request to get team details fails.</comment>
+  </data>
+  <data name="SyncKronosToShiftsError" xml:space="preserve">
+    <value>The sync could not be initiated.</value>
+    <comment>Error message when sync is initiated through done button and endpoint throws an error.</comment>
+  </data>
+</root>

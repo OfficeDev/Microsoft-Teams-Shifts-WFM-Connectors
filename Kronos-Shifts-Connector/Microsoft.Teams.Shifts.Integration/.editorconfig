@@ -1,0 +1,10 @@
+﻿[*.cs]
+
+# IDE0008: Use explicit type
+csharp_style_var_elsewhere = true:silent
+
+# IDE0003: Remove qualification
+dotnet_style_qualification_for_method = true:silent
+
+# CA1724: The type name OpenShiftRequest conflicts in whole or in part with the namespace name 'Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift.OpenShiftRequest'. Change either name to eliminate the conflict.
+dotnet_diagnostic.CA1724.severity = warning

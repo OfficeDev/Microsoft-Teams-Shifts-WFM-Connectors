@@ -1,0 +1,80 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29613.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Teams.Shifts.Integration.Configuration", "Microsoft.Teams.Shifts.Integration.Configuration\Microsoft.Teams.Shifts.Integration.Configuration.csproj", "{D905E2EC-73B7-4A47-82B5-58CDACF5ED7E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Teams.Shifts.Integration.BusinessLogic", "Microsoft.Teams.Shifts.Integration.Common\Microsoft.Teams.Shifts.Integration.BusinessLogic.csproj", "{CD5E9375-3DC5-4134-A8A0-5B9CFF5BE9F7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Kronos", "Kronos", "{0D44DEAC-1877-4646-8B57-0F1B6BD9B426}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Teams.App.KronosWfc.Service", "Microsoft.Teams.App.KronosWfc.Service\Microsoft.Teams.App.KronosWfc.Service.csproj", "{EEEE133B-08D5-4F99-901E-47CCD9E683BD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Teams.App.KronosWfc.Models", "Microsoft.Teams.App.KronosWfc.Models\Microsoft.Teams.App.KronosWfc.Models.csproj", "{FF9A5FD4-B8E5-4D98-80BF-BE9275EB015F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Teams.App.KronosWfc.Common", "Microsoft.Teams.App.KronosWfc.Common\Microsoft.Teams.App.KronosWfc.Common.csproj", "{02B8C38A-B983-48E7-AA29-24B54D15D442}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Teams.App.KronosWfc.BusinessLogic", "Microsoft.Teams.App.KronosWfc.BusinessLogic\Microsoft.Teams.App.KronosWfc.BusinessLogic.csproj", "{730932B8-3A36-4ECE-BD47-CCBEAAE6FDD9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Teams.Shifts.Integration.API", "Microsoft.Teams.Shifts.Integration.API\Microsoft.Teams.Shifts.Integration.API.csproj", "{51E64B0A-720E-413D-8D6C-9F880037E1BD}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Encryption_Multi_Framework", "Encryption\Encryption_Multi_Framework.csproj", "{7500FAFE-0685-4808-BFBE-AF0CB1430ACF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{DE74A07B-6D35-4AC6-AA88-831D6FD99F69}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D905E2EC-73B7-4A47-82B5-58CDACF5ED7E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D905E2EC-73B7-4A47-82B5-58CDACF5ED7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D905E2EC-73B7-4A47-82B5-58CDACF5ED7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D905E2EC-73B7-4A47-82B5-58CDACF5ED7E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CD5E9375-3DC5-4134-A8A0-5B9CFF5BE9F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CD5E9375-3DC5-4134-A8A0-5B9CFF5BE9F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CD5E9375-3DC5-4134-A8A0-5B9CFF5BE9F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CD5E9375-3DC5-4134-A8A0-5B9CFF5BE9F7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EEEE133B-08D5-4F99-901E-47CCD9E683BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EEEE133B-08D5-4F99-901E-47CCD9E683BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EEEE133B-08D5-4F99-901E-47CCD9E683BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EEEE133B-08D5-4F99-901E-47CCD9E683BD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF9A5FD4-B8E5-4D98-80BF-BE9275EB015F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF9A5FD4-B8E5-4D98-80BF-BE9275EB015F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF9A5FD4-B8E5-4D98-80BF-BE9275EB015F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF9A5FD4-B8E5-4D98-80BF-BE9275EB015F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{02B8C38A-B983-48E7-AA29-24B54D15D442}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{02B8C38A-B983-48E7-AA29-24B54D15D442}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{02B8C38A-B983-48E7-AA29-24B54D15D442}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{02B8C38A-B983-48E7-AA29-24B54D15D442}.Release|Any CPU.Build.0 = Release|Any CPU
+		{730932B8-3A36-4ECE-BD47-CCBEAAE6FDD9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{730932B8-3A36-4ECE-BD47-CCBEAAE6FDD9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{730932B8-3A36-4ECE-BD47-CCBEAAE6FDD9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{730932B8-3A36-4ECE-BD47-CCBEAAE6FDD9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{51E64B0A-720E-413D-8D6C-9F880037E1BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51E64B0A-720E-413D-8D6C-9F880037E1BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51E64B0A-720E-413D-8D6C-9F880037E1BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51E64B0A-720E-413D-8D6C-9F880037E1BD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7500FAFE-0685-4808-BFBE-AF0CB1430ACF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7500FAFE-0685-4808-BFBE-AF0CB1430ACF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7500FAFE-0685-4808-BFBE-AF0CB1430ACF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7500FAFE-0685-4808-BFBE-AF0CB1430ACF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{EEEE133B-08D5-4F99-901E-47CCD9E683BD} = {0D44DEAC-1877-4646-8B57-0F1B6BD9B426}
+		{FF9A5FD4-B8E5-4D98-80BF-BE9275EB015F} = {0D44DEAC-1877-4646-8B57-0F1B6BD9B426}
+		{02B8C38A-B983-48E7-AA29-24B54D15D442} = {0D44DEAC-1877-4646-8B57-0F1B6BD9B426}
+		{730932B8-3A36-4ECE-BD47-CCBEAAE6FDD9} = {0D44DEAC-1877-4646-8B57-0F1B6BD9B426}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E2334DED-B222-4284-9282-F354CA908ABA}
+	EndGlobalSection
+EndGlobal
