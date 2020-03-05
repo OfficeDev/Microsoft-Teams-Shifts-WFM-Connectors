@@ -555,6 +555,10 @@
                         {
                             "name": "CorrectedDateSpanForOutboundCalls",
                             "value": "[parameters('correctDateSpanForOutboundCalls')]"
+                        },
+                        {
+                            "name": "ClientId",
+                            "value": "[parameters('aadAppClientId')]"
                         }
                     ]
                 },
