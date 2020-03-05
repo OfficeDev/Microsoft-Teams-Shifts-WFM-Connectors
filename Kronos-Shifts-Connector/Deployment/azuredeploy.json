@@ -286,8 +286,8 @@
                     "alwaysOn": true,
                     "appSettings": [
                         {
-                            "name": "SITE_ROLE",
-                            "value": "config"
+                            "name": "DEPLOYMENT_SCRIPT",
+                            "value": "Kronos-Shifts-Connect/deploy.config.cmd"
                         },
                         {
                             "name": "TenantId",
@@ -431,8 +431,8 @@
                     "alwaysOn": true,
                     "appSettings": [
                         {
-                            "name": "SITE_ROLE",
-                            "value": "api"
+                            "name": "DEPLOYMENT_SCRIPT",
+                            "value": "Kronos-Shifts-Connector/deploy.api.comd"
                         },
                         {
                             "name": "GraphApiUrl",
