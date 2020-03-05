@@ -176,7 +176,9 @@
         "kronosQueryDateSpanFormat": "MM/dd/yyyy",
         "logicAppAudience": "[parameters('aadAppClientId')]",
         "logicAppAuthenticationType": "ActiveDirectoryOAuth",
-        "keyVaultUrl": "[concat('https://', variables('keyVaultName'), '.vault.azure.net')]"
+        "keyVaultUrl": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/')]",
+        "defaultKronosUsername": "test",
+        "defaultKronosPassword": "test"
     },
     "resources": [
         {
@@ -727,6 +729,36 @@
                     "enabled": true
                 },
                 "value": "[parameters('teamsTenantId')]"
+            }
+        },
+        {
+            "type": "Microsoft.KeyVault/vaults/secrets",
+            "apiVersion": "2016-10-01",
+            "name": "[concat(variables('keyVaultName'), '/WorkforceSuperUserName')]",
+            "location": "westus2",
+            "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+            ],
+            "properties": {
+                "attributes": {
+                    "enabled": true
+                },
+                "value": "[variables('defaultKronosUserName')]"
+            }
+        },
+        {
+            "type": "Microsoft.KeyVault/vaults/secrets",
+            "apiVersion": "2016-10-01",
+            "name": "[concat(variables('keyVaultName'), '/WorkforceSuperUserPassword')]",
+            "location": "westus2",
+            "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+            ],
+            "properties": {
+                "attributes": {
+                    "enabled": true
+                },
+                "value": "[variables('defaultKronosPassword')]"
             }
         },
         {
