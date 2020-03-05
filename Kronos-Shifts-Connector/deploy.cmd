@@ -1,7 +1,9 @@
 @if "%SCM_TRACE_LEVEL%" NEQ "4" @echo off 
 
+echo Current Directory is %CD%
+
 IF "%SITE_ROLE%" == "api" (
-    echo API Deployment.
+  echo API Deployment.
   deploy.api.cmd
 ) ELSE (
   IF "%SITE_ROLE%" == "config" (

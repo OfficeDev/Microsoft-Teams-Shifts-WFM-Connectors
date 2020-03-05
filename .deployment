@@ -1,2 +1,2 @@
 [config]
-command = deploy.cmd
+command = Kronos-Shifts-Connector/deploy.cmd
