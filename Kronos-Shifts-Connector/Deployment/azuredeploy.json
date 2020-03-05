@@ -525,6 +525,10 @@
                             "value": "RedisCacheConfiguration"
                         },
                         {
+                            "name": "RedisCacheInstanceName",
+                            "value": "[variables('redisCacheName')]"
+                        },
+                        {
                             "name": "SyncFromPreviousDays",
                             "value": "[parameters('syncFromPreviousDays')]"
                         },
