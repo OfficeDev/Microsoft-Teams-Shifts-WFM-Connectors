@@ -244,25 +244,38 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             List<PayCodeToTimeOffReasonsMappingEntity> timeOffRequestsPayCodeList,
             List<GlobalTimeOffRequestItem> globalTimeOffRequestDetails)
         {
+            this.telemetryClient.TrackTrace($"ProcessTimeOffEntitiesBatchAsync start at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
+
             foreach (var item in processKronosUsersQueueInBatch)
             {
                 foreach (var timeOffRequestItem in timeOffResponseDetails.Where(x => x.Employee.PersonIdentity.PersonNumber == item.KronosPersonNumber))
                 {
                     if (timeOffRequestItem.StatusName.Equals(ApiConstants.ApprovedStatus, StringComparison.Ordinal))
                     {
+                        this.telemetryClient.TrackTrace($"ProcessTimeOffEntitiesBatchAsync look up count: {lookUpData.Count} ");
+
                         if (lookUpData.Count == 0)
                         {
                             var timeOffReasonId = timeOffReasons.
                                 Where(t => t.RowKey == timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName && t.PartitionKey == item.ShiftTeamId).FirstOrDefault();
-                            timeOffNotFoundList.Add(timeOffRequestItem);
-                            userModelNotFoundList.Add(item);
-                            kronosPayCodeList.Add(timeOffReasonId);
+                            this.telemetryClient.TrackTrace($"ProcessTimeOffEntitiesBatchAsync PaycodeName : {timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName} ");
+                            this.telemetryClient.TrackTrace($"ProcessTimeOffEntitiesBatchAsync ReqId : {timeOffRequestItem.Id} ");
+                            if (timeOffReasonId != null)
+                            {
+                                timeOffNotFoundList.Add(timeOffRequestItem);
+                                userModelNotFoundList.Add(item);
+                                kronosPayCodeList.Add(timeOffReasonId);
+                            }
                         }
                         else
                         {
                             var kronosUniqueIdExists = lookUpData.Where(x => x.KronosRequestId == timeOffRequestItem.Id);
                             var monthPartitions = Utility.GetMonthPartition(
                                 timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.StartDate, timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.EndDate);
+
+                            this.telemetryClient.TrackTrace($"ProcessTimeOffEntitiesBatchAsync PaycodeName : {timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName} ");
+                            this.telemetryClient.TrackTrace($"ProcessTimeOffEntitiesBatchAsync ReqId : {timeOffRequestItem.Id} ");
+
                             if (kronosUniqueIdExists.Any() && kronosUniqueIdExists.FirstOrDefault().StatusName == ApiConstants.SubmitRequests)
                             {
                                 var timeOffReasonId = timeOffReasons.
@@ -280,9 +293,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             {
                                 var timeOffReasonId = timeOffReasons.
                                     Where(t => t.RowKey == timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName && t.PartitionKey == item.ShiftTeamId).FirstOrDefault();
-                                timeOffNotFoundList.Add(timeOffRequestItem);
-                                userModelNotFoundList.Add(item);
-                                kronosPayCodeList.Add(timeOffReasonId);
+                                if (timeOffReasonId != null)
+                                {
+                                    timeOffNotFoundList.Add(timeOffRequestItem);
+                                    userModelNotFoundList.Add(item);
+                                    kronosPayCodeList.Add(timeOffReasonId);
+                                }
                             }
                         }
                     }
@@ -319,6 +335,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 timeOffNotFoundList,
                 kronosPayCodeList,
                 monthPartitionKey).ConfigureAwait(false);
+
+            this.telemetryClient.TrackTrace($"ProcessTimeOffEntitiesBatchAsync ended at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
         }
 
         /// <summary>
@@ -464,7 +482,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             // create entries from not found list
             for (int i = 0; i < timeOffNotFoundList.Count && kronosPayCodeList?.Count > 0; i++)
             {
-                if (kronosPayCodeList[i].TimeOffReasonId != null)
+                if (kronosPayCodeList[i]?.TimeOffReasonId != null)
                 {
                     var timeOff = new TimeOff
                     {
@@ -527,6 +545,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             string monthPartitionKey,
             List<GlobalTimeOffRequestItem> globalTimeOffRequestDetails)
         {
+            this.telemetryClient.TrackTrace($"ApproveTimeOffRequestAsync start at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
             for (int i = 0; i < timeOffLookUpEntriesFoundList.Count; i++)
             {
                 var timeOffReqCon = new TimeOffRequestItem
@@ -591,6 +610,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     }
                 }
             }
+
+            this.telemetryClient.TrackTrace($"ApproveTimeOffRequestAsync ended at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
         }
 
         /// <summary>
@@ -609,6 +630,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             string accessToken,
             string monthPartitionKey)
         {
+            this.telemetryClient.TrackTrace($"DeclineTimeOffRequestAsync start at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
             var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
             httpClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", accessToken);
@@ -638,6 +660,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     this.AddorUpdateTimeOffMappingAsync(timeOffMappingEntity);
                 }
             }
+
+            this.telemetryClient.TrackTrace($"DeclineTimeOffRequestAsync start at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
         }
 
         /// <summary>
