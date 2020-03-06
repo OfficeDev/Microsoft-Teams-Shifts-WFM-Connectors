@@ -292,10 +292,6 @@
   <data name="InternalServerErrorMessage" xml:space="preserve">
     <value>Internal Server Occurred</value>
   </data>
-  <data name="AadGroupIdIsMissing" xml:space="preserve">
-    <value>The AAD Group Id (or the Team ID) is missing.</value>
-    <comment>The message that would be raised when the aadGroupId is null.</comment>
-  </data>
   <data name="GenericNotAbleToRetrieveDataMessage" xml:space="preserve">
     <value>{0} - Data cannot be retrieved at this time.</value>
     <comment>This message is a generic message that will be showing whenever data cannot be retrieved</comment>

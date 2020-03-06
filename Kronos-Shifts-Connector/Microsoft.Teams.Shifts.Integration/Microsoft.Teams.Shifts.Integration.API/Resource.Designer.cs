@@ -61,15 +61,6 @@ namespace Microsoft.Teams.Shifts.Integration.API {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The AAD Group Id (or the Team ID) is missing..
-        /// </summary>
-        public static string AadGroupIdIsMissing {
-            get {
-                return ResourceManager.GetString("AadGroupIdIsMissing", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to AddSwapShiftApprovalAsync.
         /// </summary>
         public static string AddSwapShiftApprovalAsync {
