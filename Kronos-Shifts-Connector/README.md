@@ -124,7 +124,7 @@ Here are the following requirements to correctly deploy the **Shifts-Kronos Inte
 3. GitHub package containing the code for the Configuration Web App and the Integration Service API
 4. You will be prompted to click on the *Deploy to Azure* button below, and when prompted log in to your Azure subscription
 
-[![Deploy to Azure](https://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FOfficeDev%2FMicrosoft-Teams-Shifts-WFM-Connectors%2Fmaster%2FDeployment%2Fazuredeploy.json)  
+[![Deploy to Azure](https://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FOfficeDev%2FMicrosoft-Teams-Shifts-WFM-Connectors%2Fmaster%2FKronos-Shifts-Connector%2FDeployment%2Fazuredeploy.json)  
 5. It will navigate to the form for filling the template parameters  
 6. Select a subscription and a resource group - it is recommended to create a new resource group  
 7. Fill in the values for the parameters of the ARM Template. They are defined in the table below:
@@ -440,4 +440,8 @@ When you submit a pull request, a CLA bot will automatically determine whether y
 
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact opencode@microsoft.com with any additional questions or comments. 
 
+<<<<<<< HEAD
  
+=======
+ 
+>>>>>>> master
