@@ -87,7 +87,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// </summary>
         /// <param name="isRequestFromLogicApp">Checks if request is coming from logic app or portal.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        internal async Task ProcessTimeOffRequetsAsync(string isRequestFromLogicApp)
+        internal async Task ProcessTimeOffRequestsAsync(string isRequestFromLogicApp)
         {
             this.telemetryClient.TrackTrace($"{Resource.ProcessTimeOffRequetsAsync} starts at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)} for isRequestFromLogicApp: " + isRequestFromLogicApp);
 

@@ -18,7 +18,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Teams.App.KronosWfc.Common;
     using Microsoft.Teams.Shifts.Encryption.Encryptors;
-    using Microsoft.Teams.Shifts.Integration.API.Common;
     using Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI;
     using Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
@@ -116,11 +115,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         [Route("/v1/teams/{aadGroupId}/update")]
         public async Task<ActionResult> UpdateTeam([FromRoute] string aadGroupId)
         {
-            if (string.IsNullOrEmpty(aadGroupId))
-            {
-                throw new Exception(Resource.AadGroupIdIsMissing);
-            }
-
             this.telemetryClient.TrackTrace("IncomingRequest, starts for method: UpdateTeam - " + DateTime.Now.ToString(CultureInfo.InvariantCulture));
 
             // Step 1 - Obtain the secret from the database.
@@ -427,9 +421,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     // FLW2 has approved the swap shift, updates the status in Kronos to submitted and request goes to manager for approval.
                     else if (requestState == ApiConstants.ShiftsPending && requestAssignedTo == ApiConstants.ShiftsManager)
                     {
-                        // PKR - This current logic is okay to keep in one method. However, I feel that this could be one of the causes
-                        // for the 409 and other errors which are not so clear. Solution: Break this up into specific methods to give
-                        // clear execution path.
                         integrationResponseSwap = await this.swapShiftController.ApproveOrDeclineSwapShiftRequestToKronosAsync(swapRequest, aadGroupId).ConfigureAwait(false);
                         responseModelList.Add(integrationResponseSwap);
                     }
@@ -437,9 +428,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     // FLW2 has declined the swap shift, updates the status in Kronos to refused.
                     else if (requestState == ApiConstants.Declined && requestAssignedTo == ApiConstants.ShiftsRecipient)
                     {
-                        // PKR - This logic is okay to keep into one method. However, I feel that this could be one of the causes
-                        // for the 409 and other errors that are not so clear. Solution: Break this up into specific methods to give
-                        // clear execution path.
                         integrationResponseSwap = await this.swapShiftController.ApproveOrDeclineSwapShiftRequestToKronosAsync(swapRequest, aadGroupId).ConfigureAwait(false);
                         responseModelList.Add(integrationResponseSwap);
                     }
@@ -596,19 +584,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 {
                     this.telemetryClient.TrackTrace($"Shift mapping has failed for {finalOpenShiftRequest.Id}: " + ex.InnerException.ToString());
                 }
-                else
-                {
-                    this.telemetryClient.TrackTrace($"Shift mapping has resulted in some type of error with the following: {ex.StackTrace.ToString(CultureInfo.InvariantCulture)}");
-                }
 
-                // String should be coming from RESX file - Internal error occurred, saying that open shift request could be declined.
-                var error = new ResponseError()
-                {
-                    Code = Resource.InternalErrorCodeText,
-                    Message = Resource.InternalErrorCodeMessageText,
-                };
+                this.telemetryClient.TrackTrace($"Shift mapping has resulted in some type of error with the following: {ex.StackTrace.ToString(CultureInfo.InvariantCulture)}");
 
-                integrationResponse = GenerateResponse(jsonModel.Requests.First().Id, HttpStatusCode.BadRequest, null, error);
                 throw;
             }
 
@@ -703,11 +681,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 }
                 catch (Exception ex)
                 {
-                    if (ex is NullReferenceException)
-                    {
-                        this.telemetryClient.TrackException(ex.InnerException);
-                    }
-
                     var exceptionProps = new Dictionary<string, string>()
                     {
                         { "NewFirstShiftId", newShiftFirst.Id },
@@ -715,7 +688,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     };
 
                     this.telemetryClient.TrackException(ex, exceptionProps);
-                    integrationResponse = GenerateResponse(swapShiftRequest.Id, HttpStatusCode.InternalServerError, null, null);
                     throw;
                 }
             }
