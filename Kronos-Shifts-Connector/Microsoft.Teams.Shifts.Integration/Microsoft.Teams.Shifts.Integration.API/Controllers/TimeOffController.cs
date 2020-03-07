@@ -256,13 +256,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                         if (lookUpData.Count == 0)
                         {
-                            // Performing the query using the RowKey as the paycode name from Kronos; and the PartitionKey as the TeamID.
+                            // Getting a TimeOffReasonId object based on the TimeOff paycode from Kronos and the team ID in Shifts.
                             var timeOffReasonId = timeOffReasons.
                                 Where(t => t.RowKey == timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName && t.PartitionKey == item.ShiftTeamId).FirstOrDefault();
                             this.telemetryClient.TrackTrace($"ProcessTimeOffEntitiesBatchAsync PaycodeName : {timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName}, Kronos request ID : {timeOffRequestItem.Id}");
-                            
-                            // The null check is being performed on the timeOffReasonId because there may be chances where
-                            // all of the Kronos paycodes have not been mapped to a specific team on the Shifts side.
+
+                            // Ideally, the TimeOffReasonId object is not null. However, if there is a chance that either the
+                            // team ID from Shifts or the paycode name from Kronos is null, we will log in telemetry accordingly.
                             if (timeOffReasonId != null)
                             {
                                 timeOffNotFoundList.Add(timeOffRequestItem);
@@ -271,7 +271,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             }
                             else
                             {
-                                // Track in telemetry saying that the TimeOffReason cannot be found.
+                                // Track in telemetry saying that the TimeOffReasonId cannot be found.
                                 this.telemetryClient.TrackTrace($"Cannot find the TimeOffReason corresponding to the Kronos paycode: {timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName}, Kronos request ID: {timeOffRequestItem.Id}");
                             }
                         }
