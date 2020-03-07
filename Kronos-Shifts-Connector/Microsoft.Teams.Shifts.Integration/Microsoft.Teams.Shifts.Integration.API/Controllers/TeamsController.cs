@@ -359,7 +359,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                         break;
 
-                        // The code below handles the system declined request.
+                    // The code below handles the system declined request.
                     default:
                         {
                             var integrationResponse = new ShiftsIntegResponse();
@@ -442,7 +442,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     // Manager has approved the request in Kronos.
                     else if (requestState == ApiConstants.ShiftsApproved && requestAssignedTo == ApiConstants.ShiftsManager)
                     {
-                       responseModelList = await this.ProcessSwapShiftRequestApprovalAsync(jsonModel, aadGroupId).ConfigureAwait(false);
+                        responseModelList = await this.ProcessSwapShiftRequestApprovalAsync(jsonModel, aadGroupId).ConfigureAwait(false);
                     }
 
                     // There is a System decline with the Swap Shift Request
@@ -580,12 +580,16 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             }
             catch (Exception ex)
             {
+                // Logging when the inner exception is not null - including the open shift request ID.
                 if (ex.InnerException != null)
                 {
                     this.telemetryClient.TrackTrace($"Shift mapping has failed for {finalOpenShiftRequest.Id}: " + ex.InnerException.ToString());
+                    this.telemetryClient.TrackException(ex.InnerException);
                 }
 
-                this.telemetryClient.TrackTrace($"Shift mapping has resulted in some type of error with the following: {ex.StackTrace.ToString(CultureInfo.InvariantCulture)}");
+                // Logging the exception regardless, and making sure to add the open shift request ID as well.
+                this.telemetryClient.TrackTrace($"Shift mapping has resulted in some type of error with the following: {ex.StackTrace.ToString(CultureInfo.InvariantCulture)}, happening with open shift request ID: {finalOpenShiftRequest.Id}");
+                this.telemetryClient.TrackException(ex);
 
                 throw;
             }
