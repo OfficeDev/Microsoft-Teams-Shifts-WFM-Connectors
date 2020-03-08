@@ -285,8 +285,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                             if (kronosUniqueIdExists.Any() && kronosUniqueIdExists.FirstOrDefault().StatusName == ApiConstants.SubmitRequests)
                             {
-                                // Again here, looking up the TimeOffReasons using the RowKey as the paycode name from Kronos;
-                                // PartitionKey is the TeamID.
+                                // Getting a TimeOffReasonId object based on the TimeOff paycode from Kronos and the team ID in Shifts.
                                 var timeOffReasonId = timeOffReasons.
                                     Where(t => t.RowKey == timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName && t.PartitionKey == item.ShiftTeamId).FirstOrDefault();
 
@@ -301,15 +300,22 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             }
                             else
                             {
-                                // Looking up the necessary TimeOffReason using the RowKey as the Kronos paycode name,
-                                // PartitionKey as the TeamID.
+                                // Getting a TimeOffReasonId object based on the TimeOff paycode from Kronos and the team ID in Shifts.
                                 var timeOffReasonId = timeOffReasons.
                                     Where(t => t.RowKey == timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName && t.PartitionKey == item.ShiftTeamId).FirstOrDefault();
+
+                                // Ideally, the TimeOffReasonId object is not null. However, if there is a chance that either the
+                                // team ID from Shifts or the paycode name from Kronos is null, we will log in telemetry accordingly.
                                 if (timeOffReasonId != null)
                                 {
                                     timeOffNotFoundList.Add(timeOffRequestItem);
                                     userModelNotFoundList.Add(item);
                                     kronosPayCodeList.Add(timeOffReasonId);
+                                }
+                                else
+                                {
+                                    // Track in telemetry saying that the TimeOffReasonId cannot be found.
+                                    this.telemetryClient.TrackTrace($"Cannot find the TimeOffReason corresponding to the Kronos paycode: {timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName}, Kronos request ID: {timeOffRequestItem.Id}");
                                 }
                             }
                         }
@@ -320,6 +326,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     {
                         var reqDetails = lookUpData.Where(c => c.KronosRequestId == timeOffRequestItem.Id).FirstOrDefault();
                         var timeOffReasonIdtoUpdate = timeOffReasons.Where(t => t.RowKey == timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName && t.PartitionKey == item.ShiftTeamId).FirstOrDefault();
+
                         if (reqDetails != null && timeOffReasonIdtoUpdate != null && reqDetails.StatusName == ApiConstants.SubmitRequests)
                         {
                             await this.DeclineTimeOffRequestAsync(
@@ -328,6 +335,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                     reqDetails.ShiftsRequestId,
                                     accessToken,
                                     monthPartitionKey).ConfigureAwait(false);
+                        }
+                        else
+                        {
+                            this.telemetryClient.TrackTrace("There are details missing to decline the time off request.");
                         }
                     }
                 }
