@@ -11,6 +11,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using System.Reflection;
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights;
+    using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Teams.Shifts.Integration.API.Common;
@@ -115,17 +116,17 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                 // Sync open shifts from Kronos to Shifts.
                 await this.openShiftController.ProcessOpenShiftsAsync(isRequestFromLogicApp).ConfigureAwait(false);
-
                 this.telemetryClient.TrackTrace($"{Resource.ProcessOpenShiftsAsync} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
             }
             catch (Exception ex)
             {
                 this.telemetryClient.TrackException(ex);
+                this.telemetryClient.TrackTrace($"An error has happened when syncing the open shifts: {ex.Message}", SeverityLevel.Error);
             }
 
             try
             {
-                // Sync open shift requests from Kronos to Shifts.
+                // Sync open shifts requests from Kronos to Shifts.
                 await this.openShiftRequestController.ProcessOpenShiftsRequests(isRequestFromLogicApp).ConfigureAwait(false);
                 isOpenShiftRequestSyncSuccessful = true;
                 this.telemetryClient.TrackTrace($"{Resource.ProcessOpenShiftsRequests} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
@@ -134,6 +135,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             {
                 isOpenShiftRequestSyncSuccessful = false;
                 this.telemetryClient.TrackException(ex);
+                this.telemetryClient.TrackTrace($"An error has happened when syncing the open shift requests: {ex.Message}", SeverityLevel.Error);
             }
 
             try
@@ -147,11 +149,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             {
                 isSwapShiftRequestSyncSuccessful = false;
                 this.telemetryClient.TrackException(ex);
+                this.telemetryClient.TrackTrace($"An error has happened when syncing the swap shift requests: {ex.Message}", SeverityLevel.Error);
             }
 
             try
             {
-                // Sync timeoff reasons from Kronos to Shifts.
+                // Sync timeoffreasons from Kronos to Shifts.
                 await this.timeOffReasonController.MapPayCodeTimeOffReasonsAsync().ConfigureAwait(false);
                 isMapPayCodeTimeOffReasonsSuccessful = true;
                 this.telemetryClient.TrackTrace($"{Resource.MapPayCodeTimeOffReasonsAsync} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
@@ -160,33 +163,34 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             {
                 isMapPayCodeTimeOffReasonsSuccessful = false;
                 this.telemetryClient.TrackException(ex);
+                this.telemetryClient.TrackTrace($"An error has happened when syncing the timeoff reasons: {ex.Message}", SeverityLevel.Error);
             }
 
-            // Sync TimeOff and TimeOffRequest only if Paycodes in Kronos synced successfully.
+            // Sync timeoff and timeoff requests only if paycodes in Kronos synced successfully.
             if (isMapPayCodeTimeOffReasonsSuccessful)
             {
                 try
                 {
                     // Sync timeoff from Kronos to Shifts.
                     await this.timeOffController.ProcessTimeOffsAsync(isRequestFromLogicApp).ConfigureAwait(false);
-
                     this.telemetryClient.TrackTrace($"{Resource.ProcessTimeOffsAsync} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
                 }
                 catch (Exception ex)
                 {
                     this.telemetryClient.TrackException(ex);
+                    this.telemetryClient.TrackTrace($"An error has happened when syncing the timeoffs: {ex.Message}", SeverityLevel.Error);
                 }
 
                 try
                 {
                     // Sync timeoff requests from Kronos to Shifts.
                     await this.timeOffRequestsController.ProcessTimeOffRequestsAsync(isRequestFromLogicApp).ConfigureAwait(false);
-
                     this.telemetryClient.TrackTrace($"{Resource.SyncTimeOffRequestsFromShiftsToKronos} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
                 }
                 catch (Exception ex)
                 {
                     this.telemetryClient.TrackException(ex);
+                    this.telemetryClient.TrackTrace($"An error has happened when syncing the timeoff requests: {ex.Message}", SeverityLevel.Error);
                 }
             }
             else
@@ -194,12 +198,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 this.telemetryClient.TrackTrace($"Skipping the sync of both TimeOff and TimeOff Request entities as there may have been an error with the Kronos paycode and Shifts timeoff reason mapping. Status:  {isMapPayCodeTimeOffReasonsSuccessful}");
             }
 
-            // sync Shifts from Kronos to Shifts only if open shift request and swap shift request sync is successful.
+            // Sync shifts from Kronos to Shifts only if open shift request and swap shift request sync is successful.
             if (isSwapShiftRequestSyncSuccessful && isOpenShiftRequestSyncSuccessful)
             {
                 // Sync shifts from Kronos to Shifts.
                 await this.shiftController.ProcessShiftsAsync(isRequestFromLogicApp).ConfigureAwait(false);
-
                 this.telemetryClient.TrackTrace($"{Resource.ProcessShiftsAsync} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
             }
 
