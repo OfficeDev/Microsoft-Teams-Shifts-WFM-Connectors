@@ -177,8 +177,8 @@
         "logicAppAudience": "[parameters('aadAppClientId')]",
         "logicAppAuthenticationType": "ActiveDirectoryOAuth",
         "keyVaultUrl": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/')]",
-        "defaultKronosUsername": "test",
-        "defaultKronosPassword": "test"
+        "defaultKronosUsername": "mdiaz",
+        "defaultKronosPassword": "mdiaz"
     },
     "resources": [
         {
