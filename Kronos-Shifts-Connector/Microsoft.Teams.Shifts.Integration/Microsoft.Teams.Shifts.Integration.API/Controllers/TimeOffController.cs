@@ -261,8 +261,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 Where(t => t.RowKey == timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName && t.PartitionKey == item.ShiftTeamId).FirstOrDefault();
                             this.telemetryClient.TrackTrace($"ProcessTimeOffEntitiesBatchAsync PaycodeName : {timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName}, Kronos request ID : {timeOffRequestItem.Id}");
 
-                            // Ideally, the TimeOffReasonId object is not null. However, if there is a chance that either the
-                            // team ID from Shifts or the paycode name from Kronos is null, we will log in telemetry accordingly.
+                            // Ideally, the TimeOffReasonId object is not null. However, this is an additional check.
                             if (timeOffReasonId != null)
                             {
                                 timeOffNotFoundList.Add(timeOffRequestItem);
@@ -289,10 +288,20 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 var timeOffReasonId = timeOffReasons.
                                     Where(t => t.RowKey == timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName && t.PartitionKey == item.ShiftTeamId).FirstOrDefault();
 
-                                timeOffLookUpEntriesFoundList.Add(kronosUniqueIdExists.FirstOrDefault());
-                                userModelList.Add(item);
-                                timeOffRequestsPayCodeList.Add(timeOffReasonId);
-                                globalTimeOffRequestDetails.Add(timeOffRequestItem);
+                                // Kronos API does not return all the PayCodes present in Kronos UI. For such cases TimeOffReason mapping
+                                // will be null and that TimeOffs will not be synced.
+                                if (timeOffReasonId != null)
+                                {
+                                    timeOffLookUpEntriesFoundList.Add(kronosUniqueIdExists.FirstOrDefault());
+                                    userModelList.Add(item);
+                                    timeOffRequestsPayCodeList.Add(timeOffReasonId);
+                                    globalTimeOffRequestDetails.Add(timeOffRequestItem);
+                                }
+                                else
+                                {
+                                    // Track in telemetry saying that the TimeOffReasonId cannot be found.
+                                    this.telemetryClient.TrackTrace($"Cannot find the TimeOffReason corresponding to the Kronos paycode: {timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName}, Kronos request ID: {timeOffRequestItem.Id}");
+                                }
                             }
                             else if (kronosUniqueIdExists.Any() || monthPartitions?.FirstOrDefault() != monthPartitionKey)
                             {
@@ -304,8 +313,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 var timeOffReasonId = timeOffReasons.
                                     Where(t => t.RowKey == timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName && t.PartitionKey == item.ShiftTeamId).FirstOrDefault();
 
-                                // Ideally, the TimeOffReasonId object is not null. However, if there is a chance that either the
-                                // team ID from Shifts or the paycode name from Kronos is null, we will log in telemetry accordingly.
+                                // Ideally, the TimeOffReasonId object is not null. However, this is an additional check.
                                 if (timeOffReasonId != null)
                                 {
                                     timeOffNotFoundList.Add(timeOffRequestItem);
@@ -338,7 +346,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         }
                         else
                         {
-                            this.telemetryClient.TrackTrace("There are details missing to decline the time off request.");
+                            this.telemetryClient.TrackTrace("The declined timeoff request is not submitted from Shifts or timeOff reason selected while submitting" +
+                                "is not a valid paycode. Hence mapping is not present for TimeOffReason and Paycode.");
                         }
                     }
                 }
