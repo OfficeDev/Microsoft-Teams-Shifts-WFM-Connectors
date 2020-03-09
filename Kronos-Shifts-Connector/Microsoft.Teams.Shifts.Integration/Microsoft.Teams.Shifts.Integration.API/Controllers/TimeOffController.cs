@@ -96,7 +96,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <returns>A <see cref="Task{TResult}"/> representing the result of the asynchronous operation.</returns>
         internal async Task ProcessTimeOffsAsync(string isRequestFromLogicApp)
         {
-            this.telemetryClient.TrackTrace($"{Resource.ProcessTimeOffsAsync} starts at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)} for isRequestFromLogicApp:  {isRequestFromLogicApp}");
+            this.telemetryClient.TrackTrace($"{Resource.ProcessTimeOffsAsync} started, isRequestFromLogicApp: {isRequestFromLogicApp}");
 
             var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
 
@@ -207,7 +207,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 this.telemetryClient.TrackTrace("SyncTimeOffsFromKronos - " + Resource.SetUpNotDoneMessage);
             }
 
-            this.telemetryClient.TrackTrace($"{Resource.ProcessTimeOffsAsync} ended at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)} for isRequestFromLogicApp:  {isRequestFromLogicApp}");
+            this.telemetryClient.TrackTrace($"{Resource.ProcessTimeOffsAsync} ended; isRequestFromLogicApp: {isRequestFromLogicApp}");
         }
 
         /// <summary>
@@ -244,33 +244,64 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             List<PayCodeToTimeOffReasonsMappingEntity> timeOffRequestsPayCodeList,
             List<GlobalTimeOffRequestItem> globalTimeOffRequestDetails)
         {
+            this.telemetryClient.TrackTrace($"ProcessTimeOffEntitiesBatchAsync started.");
+
             foreach (var item in processKronosUsersQueueInBatch)
             {
                 foreach (var timeOffRequestItem in timeOffResponseDetails.Where(x => x.Employee.PersonIdentity.PersonNumber == item.KronosPersonNumber))
                 {
                     if (timeOffRequestItem.StatusName.Equals(ApiConstants.ApprovedStatus, StringComparison.Ordinal))
                     {
+                        this.telemetryClient.TrackTrace($"ProcessTimeOffEntitiesBatchAsync look up count: {lookUpData.Count} ");
+
                         if (lookUpData.Count == 0)
                         {
+                            // Getting a TimeOffReasonId object based on the TimeOff paycode from Kronos and the team ID in Shifts.
                             var timeOffReasonId = timeOffReasons.
                                 Where(t => t.RowKey == timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName && t.PartitionKey == item.ShiftTeamId).FirstOrDefault();
-                            timeOffNotFoundList.Add(timeOffRequestItem);
-                            userModelNotFoundList.Add(item);
-                            kronosPayCodeList.Add(timeOffReasonId);
+                            this.telemetryClient.TrackTrace($"ProcessTimeOffEntitiesBatchAsync PaycodeName : {timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName}, Kronos request ID : {timeOffRequestItem.Id}");
+
+                            // Ideally, the TimeOffReasonId object is not null. However, this is an additional check.
+                            if (timeOffReasonId != null)
+                            {
+                                timeOffNotFoundList.Add(timeOffRequestItem);
+                                userModelNotFoundList.Add(item);
+                                kronosPayCodeList.Add(timeOffReasonId);
+                            }
+                            else
+                            {
+                                // Track in telemetry saying that the TimeOffReasonId cannot be found.
+                                this.telemetryClient.TrackTrace($"Cannot find the TimeOffReason corresponding to the Kronos paycode: {timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName}, Kronos request ID: {timeOffRequestItem.Id}");
+                            }
                         }
                         else
                         {
                             var kronosUniqueIdExists = lookUpData.Where(x => x.KronosRequestId == timeOffRequestItem.Id);
                             var monthPartitions = Utility.GetMonthPartition(
                                 timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.StartDate, timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.EndDate);
+
+                            this.telemetryClient.TrackTrace($"ProcessTimeOffEntitiesBatchAsync PaycodeName : {timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName}, ReqId : {timeOffRequestItem.Id}");
+
                             if (kronosUniqueIdExists.Any() && kronosUniqueIdExists.FirstOrDefault().StatusName == ApiConstants.SubmitRequests)
                             {
+                                // Getting a TimeOffReasonId object based on the TimeOff paycode from Kronos and the team ID in Shifts.
                                 var timeOffReasonId = timeOffReasons.
                                     Where(t => t.RowKey == timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName && t.PartitionKey == item.ShiftTeamId).FirstOrDefault();
-                                timeOffLookUpEntriesFoundList.Add(kronosUniqueIdExists.FirstOrDefault());
-                                userModelList.Add(item);
-                                timeOffRequestsPayCodeList.Add(timeOffReasonId);
-                                globalTimeOffRequestDetails.Add(timeOffRequestItem);
+
+                                // Kronos API does not return all the PayCodes present in Kronos UI. For such cases TimeOffReason mapping
+                                // will be null and that TimeOffs will not be synced.
+                                if (timeOffReasonId != null)
+                                {
+                                    timeOffLookUpEntriesFoundList.Add(kronosUniqueIdExists.FirstOrDefault());
+                                    userModelList.Add(item);
+                                    timeOffRequestsPayCodeList.Add(timeOffReasonId);
+                                    globalTimeOffRequestDetails.Add(timeOffRequestItem);
+                                }
+                                else
+                                {
+                                    // Track in telemetry saying that the TimeOffReasonId cannot be found.
+                                    this.telemetryClient.TrackTrace($"Cannot find the TimeOffReason corresponding to the Kronos paycode: {timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName}, Kronos request ID: {timeOffRequestItem.Id}");
+                                }
                             }
                             else if (kronosUniqueIdExists.Any() || monthPartitions?.FirstOrDefault() != monthPartitionKey)
                             {
@@ -278,11 +309,22 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             }
                             else
                             {
+                                // Getting a TimeOffReasonId object based on the TimeOff paycode from Kronos and the team ID in Shifts.
                                 var timeOffReasonId = timeOffReasons.
                                     Where(t => t.RowKey == timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName && t.PartitionKey == item.ShiftTeamId).FirstOrDefault();
-                                timeOffNotFoundList.Add(timeOffRequestItem);
-                                userModelNotFoundList.Add(item);
-                                kronosPayCodeList.Add(timeOffReasonId);
+
+                                // Ideally, the TimeOffReasonId object is not null. However, this is an additional check.
+                                if (timeOffReasonId != null)
+                                {
+                                    timeOffNotFoundList.Add(timeOffRequestItem);
+                                    userModelNotFoundList.Add(item);
+                                    kronosPayCodeList.Add(timeOffReasonId);
+                                }
+                                else
+                                {
+                                    // Track in telemetry saying that the TimeOffReasonId cannot be found.
+                                    this.telemetryClient.TrackTrace($"Cannot find the TimeOffReason corresponding to the Kronos paycode: {timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName}, Kronos request ID: {timeOffRequestItem.Id}");
+                                }
                             }
                         }
                     }
@@ -292,6 +334,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     {
                         var reqDetails = lookUpData.Where(c => c.KronosRequestId == timeOffRequestItem.Id).FirstOrDefault();
                         var timeOffReasonIdtoUpdate = timeOffReasons.Where(t => t.RowKey == timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName && t.PartitionKey == item.ShiftTeamId).FirstOrDefault();
+
                         if (reqDetails != null && timeOffReasonIdtoUpdate != null && reqDetails.StatusName == ApiConstants.SubmitRequests)
                         {
                             await this.DeclineTimeOffRequestAsync(
@@ -300,6 +343,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                     reqDetails.ShiftsRequestId,
                                     accessToken,
                                     monthPartitionKey).ConfigureAwait(false);
+                        }
+                        else
+                        {
+                            this.telemetryClient.TrackTrace("The declined timeoff request is not submitted from Shifts or timeOff reason selected while submitting" +
+                                "is not a valid paycode. Hence mapping is not present for TimeOffReason and Paycode.");
                         }
                     }
                 }
@@ -319,6 +367,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 timeOffNotFoundList,
                 kronosPayCodeList,
                 monthPartitionKey).ConfigureAwait(false);
+
+            this.telemetryClient.TrackTrace($"ProcessTimeOffEntitiesBatchAsync ended.");
         }
 
         /// <summary>
@@ -461,10 +511,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 { "CallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
             };
 
+            this.telemetryClient.TrackTrace("AddTimeOffRequestAsync started", telemetryProps);
+
             // create entries from not found list
             for (int i = 0; i < timeOffNotFoundList.Count && kronosPayCodeList?.Count > 0; i++)
             {
-                if (kronosPayCodeList[i].TimeOffReasonId != null)
+                if (kronosPayCodeList[i]?.TimeOffReasonId != null)
                 {
                     var timeOff = new TimeOff
                     {
@@ -505,7 +557,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     telemetryProps.Add("TimeOffReason for " + timeOffNotFoundList[i].Id, "NotFound");
                 }
 
-                this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, telemetryProps);
+                this.telemetryClient.TrackTrace("AddTimeOffRequestAsync ended", telemetryProps);
             }
         }
 
@@ -527,6 +579,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             string monthPartitionKey,
             List<GlobalTimeOffRequestItem> globalTimeOffRequestDetails)
         {
+            this.telemetryClient.TrackTrace($"ApproveTimeOffRequestAsync started.");
             for (int i = 0; i < timeOffLookUpEntriesFoundList.Count; i++)
             {
                 var timeOffReqCon = new TimeOffRequestItem
@@ -591,6 +644,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     }
                 }
             }
+
+            this.telemetryClient.TrackTrace($"ApproveTimeOffRequestAsync ended.");
         }
 
         /// <summary>
@@ -609,6 +664,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             string accessToken,
             string monthPartitionKey)
         {
+            this.telemetryClient.TrackTrace($"DeclineTimeOffRequestAsync started.");
             var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
             httpClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", accessToken);
@@ -638,6 +694,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     this.AddorUpdateTimeOffMappingAsync(timeOffMappingEntity);
                 }
             }
+
+            this.telemetryClient.TrackTrace($"DeclineTimeOffRequestAsync ended.");
         }
 
         /// <summary>
