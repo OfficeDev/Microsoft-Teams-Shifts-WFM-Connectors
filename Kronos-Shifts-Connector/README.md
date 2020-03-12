@@ -168,7 +168,14 @@ The following actions are to be done post deployment to ensure that all the info
 6.	Establishing the necessary recurrence for the Azure Logic App
 
 ### Access Policy Setup in Azure Key Vault
-Once the ARM Template deployment succeeds, it is important that you still add one more access policy to the Azure KeyVault resource. This time, the policy is to allow you as the Azure Administrator to properly monitor the Azure KeyVault.
+Once the ARM Template deployment succeeds, it is important that you still add one more access policy to the Azure KeyVault resource. This time, the policy is to allow you as the Azure Administrator to properly monitor the Azure KeyVault. In order to setup your administrative access to the Azure KeyVault follow the steps below: 
+1. Log on to the Azure portal
+2. Navigate to the resource group that has been created as part of the ARM template deployment
+
+**Figure 4.** Resource Group view.
+![image29](images/figure29.png)
+
+3. Navigate inside of the KeyVault resource. You should search for an icon that has a key inside of a circle as shown in the screenshot in the previous step.
 
 ### Setting up the Redirect URIs
 * Once the ARM Template deployment is successful, there would be an output screen that will show the necessary URL for the Configuration Web App service. Copy that URL into an application such as Notepad  
