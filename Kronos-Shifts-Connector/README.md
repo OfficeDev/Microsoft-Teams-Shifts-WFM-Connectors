@@ -168,9 +168,7 @@ The following actions are to be done post deployment to ensure that all the info
 6.	Establishing the necessary recurrence for the Azure Logic App
 
 ### Access Policy Setup in Azure Key Vault
-1.	Using the system assigned identity for both the deployed API web app service and the deployed Configuration Web App service – this is taken care of through the ARM template
-2.	Ensuring to have the principalId of the app registration as well for the access policy
-3.	Outlining the details of establishing necessary AAD users to have access to the deployed Azure Key Vault
+Once the ARM Template deployment succeeds, it is important that you still add one more access policy to the Azure KeyVault resource. This time, the policy is to allow you as the Azure Administrator to properly monitor the Azure KeyVault.
 
 ### Setting up the Redirect URIs
 * Once the ARM Template deployment is successful, there would be an output screen that will show the necessary URL for the Configuration Web App service. Copy that URL into an application such as Notepad  
