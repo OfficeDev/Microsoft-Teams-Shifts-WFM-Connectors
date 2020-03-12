@@ -1,5 +1,5 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
         "baseResourceName": {
@@ -270,9 +270,11 @@
             "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
                 "[resourceId('Microsoft.Insights/components/', variables('configAppInsightsName'))]",
-                "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
                 "[resourceId('Microsoft.Cache/Redis', variables('redisCacheName'))]"
             ],
+            "identity": {
+                "type": "SystemAssigned"
+            },
             "properties": {
                 "name": "[variables('configAppName')]",
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
@@ -388,12 +390,9 @@
                             "value": "[parameters('managedAadAppObjectId')]"
                         }
                     ]
-                },
-                "identity": {
-                    "type": "SystemAssigned"
                 }
             },
-            "resources":[
+            "resources": [
                 {
                     "apiVersion": "2015-08-01",
                     "name": "web",
@@ -419,9 +418,11 @@
                 "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
                 "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
                 "[resourceId('Microsoft.Insights/components/', variables('apiAppInsightsName'))]",
-                "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
                 "[resourceId('Microsoft.Cache/Redis', variables('redisCacheName'))]"
             ],
+            "identity": {
+                "type": "SystemAssigned"
+            },
             "properties": {
                 "name": "[variables('apiAppName')]",
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
@@ -565,12 +566,9 @@
                             "value": "[parameters('aadAppClientId')]"
                         }
                     ]
-                },
-                "identity": {
-                    "type": "SystemAssigned"
                 }
             },
-            "resources":[
+            "resources": [
                 {
                     "apiVersion": "2015-08-01",
                     "name": "web",
@@ -587,18 +585,53 @@
             ]
         },
         {
-            "name": "[variables('keyVaultName')]",
             "type": "Microsoft.KeyVault/vaults",
-            "apiVersion": "2016-10-01",
+            "apiVersion": "2018-02-14",
+            "name": "[variables('keyVaultName')]",
             "location": "[parameters('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.Web/sites/', variables('apiAppName'))]",
+                "[concat('Microsoft.Web/sites/', variables('configAppName'))]"
+            ],
+            "tags": {
+                "displayName": "KeyVault"
+            },
             "properties": {
-                "sku": {
-                    "family": "A",
-                    "name": "Standard"
-                },
+                "enabledForDeployment": "true",
+                "enabledForTemplateDeployment": "true",
+                "enabledForDiskEncryption": "true",
                 "tenantId": "[subscription().tenantId]",
-                "enabledForTemplateDeployment": true,
                 "accessPolicies": [
+                    {
+                        "objectId": "[reference(concat('Microsoft.Web/sites/', variables('apiAppName')), '2018-02-01', 'Full').identity.principalId]",
+                        "tenantId": "[subscription().tenantId]",
+                        "permissions": {
+                            "secrets": [
+                                "all"
+                            ],
+                            "keys": [
+                                "all"
+                            ],
+                            "certificates": [
+                                "all"
+                            ]
+                        }
+                    },
+                    {
+                        "objectId": "[reference(concat('Microsoft.Web/sites/', variables('configAppName')), '2018-02-01', 'Full').identity.principalId]",
+                        "tenantId": "[subscription().tenantId]",
+                        "permissions": {
+                            "secrets": [
+                                "all"
+                            ],
+                            "keys": [
+                                "all"
+                            ],
+                            "certificates": [
+                                "all"
+                            ]
+                        }
+                    },
                     {
                         "tenantId": "[subscription().tenantId]",
                         "objectId": "[parameters('managedAadAppObjectId')]",
@@ -639,7 +672,17 @@
                             ]
                         }
                     }
-                ]
+                ],
+                "sku": {
+                    "name": "Standard",
+                    "family": "A"
+                },
+                "networkAcls": {
+                    "value": {
+                        "defaultAction": "Allow",
+                        "bypass": "AzureServices"
+                    }
+                }
             }
         },
         {
@@ -729,7 +772,7 @@
                 "attributes": {
                     "enabled": true
                 },
-                "value": "[variables('defaultKronosUserName')]"
+                "value": "[variables('defaultKronosUsername')]"
             }
         },
         {
