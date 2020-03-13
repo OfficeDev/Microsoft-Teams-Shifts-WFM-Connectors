@@ -158,9 +158,10 @@ Here are the following requirements to correctly deploy the **Shifts-Kronos Inte
 
 8.	Agree to the Azure terms and conditions by clicking on the check box *I agree to the terms and conditions stated above* located at the bottom of the page
 9.	Click on *Purchase* to start the deployment
-10.	Wait for the deployment to finish. You can check the progress of the deployment from the *Notifications* pane of the Azure Portal
+10.	Wait for the deployment to finish. You can check the progress of the deployment from the *Notifications* pane of the Azure portal
 11.	Once the deployment has finished, you would have the option to navigate to the resource group to ensure all resources are deployed correctly
-12.	Smoke test – this step is required to ensure that all the code has been properly deployed
+12. Upon a successful deployment you would be presented with a screen that shows a large green check mark and a phrase similar to *Your deployment completed successfully*
+13. Smoke test – this step is required to ensure that all the code has been properly deployed
 
 ## Post ARM Template Deployment Steps
 The following actions are to be done post deployment to ensure that all the information is being exchanged correctly between the resources in the newly created resource group:
