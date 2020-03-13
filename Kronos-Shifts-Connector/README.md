@@ -229,7 +229,7 @@ Once the ARM Template deployment succeeds, it is important that you still add on
 * In Figure 2, click on the text next to the text that reads Redirect URIs  
 * There is a chance that the screen may not have any redirect URIs. You would need to set those now. 
 
-**Figure 6.** Redirect URIs being set already
+**Figure 15.** Redirect URIs being set already
 ![figure5](images/figure5.png)
 
 * For any new app registrations, the redirect URIs may not be set
@@ -244,7 +244,7 @@ Once the ARM Template deployment succeeds, it is important that you still add on
 4.	In the code window that appears, scroll down until you read the JSON attribute: logoutUrl
 Refer to the screenshot:
 
-**Figure 7.** Application Registration Manifest window
+**Figure 16.** Application Registration Manifest window
 ![figure6](images/figure6.png)
 
 5.	The value for the logoutUrl is the URL of the Configuration Web App service that was deployed through the ARM Template
@@ -259,18 +259,18 @@ Once the ARM Template deployment is successful, one final operation is to ensure
 2.	Navigate to the resource group that was created at the time of ARM Template deployment
 3.	Navigate to the storage account that was created from the ARM Template deployment. The screen should resemble the figure below: 
 
-**Figure 8.** Storage account overview
+**Figure 17.** Storage account overview
 ![figure7](images/figure7.png)
 
 4.	Navigate into the containers, by clicking on the link that reads *Containers* from Figure 7 above
 5.	Upon navigation to the containers, the ARM Template should provision a blob container called “templates”, and the screen should resemble below:
 
-**Figure 9.** Templates blob container
+**Figure 19.** Templates blob container
 ![figure8](images/figure8.png)
 
 6. Navigate inside of the "templates" blob container, and the screen should resemble the next screenshot below: 
 
-**Figure 10.** Navigation inside of the "templates" blob.
+**Figure 19.** Navigation inside of the "templates" blob.
 ![figure9](images/figure9.png)
 
 User Creation through the Teams Admin Portal
@@ -278,26 +278,74 @@ User Creation through the Teams Admin Portal
 2.	Sign In with your AAD Tenant Admin credentials
 3.	You will be presented with the following view once the sign in is successful:
 
-**Figure 11.** Home page of the Teams Admin portal
+**Figure 20.** Home page of the Teams Admin portal
 ![figure10](images/figure10.png)
 
 4. From Figure 10, navigate to the Users page by clicking on the option that reads *Users* in the left hand blade. The screen should resemble the following below:
 
-**Figure 12.** The users landing page
+**Figure 21.** The users landing page
 ![figure11](images/figure11.png)
 
 5. In the text above the table, there is a mention of "Admin center > Users". That is the location where you should go to add users to the tenant. Clicking on the "Admin center > Users" hyperlink in Figure 11 above should yield in the page below:
 
-**Figure 13.** The page to add or remove users
+**Figure 22.** The page to add or remove users
 ![figure12](images/figure12.png)
 
-### Setting up the Recurrence for the Azure Logic App
-1.	Post ARM Template deployment, the outputs section would have necessary URLs
-2.	Open the Logic App in the designer in another tab on your browser
-3.	Add the recurrence
-4.	Set the time on the recurrence
-5.	Choose an integer value
-6.	Choose an interval (i.e. Second, Minute, Hour, Day, Week, Month) – it is recommended to select minutes as you would want to give enough time to perform the sync operations (for ex: 15 mins)
+### Setting up the Recurrence and Concurrency for the Azure Logic App
+In this section you are going to set 2 aspects of the logic app: recurrence and the concurrency. The reason for setting the recurrence is to have a repeated occurrence of the data sync between Kronos WFC and Microsoft Shifts to happen on a specific interval of time. The reason for setting the concurrency is to prevent the logic app from running multiple times within a specific time window.
+
+1.	Navigate to the resource group that has been create through the ARM Template Deployment
+2. Click on the resource which has the text `-logicApp` appended at the end of the name. Your screen should resemble the following:
+
+**Figure 23.** Logic app in resource group.
+![image42](images/figure42.png)
+
+3. Navigate to the logic app, and you should be redirected to the following view:  
+**Figure 24.** Logic app home page on the Azure portal.  
+![image43](images/figure43.png)
+
+4. From the screenshot in the previous step, select on the *Edit* label. You should be able to find that label next to a pencil icon. Once you click that, you should then be redirected to a user interface that contains 1 step like the screenshot that follows:
+
+**Figure 25.** Logic App Designer.
+![image44](images/figure44.png)
+
+5. Here, you will search for *Recurrence*, as defined below. You will need to type in the text box where the text reads *Search connectors and triggers*.
+
+**Figure 26.** Searching for recurrence.
+![image45](images/figure45.png)
+
+6. Click on *Recurrence* as shown in **Figure 26**, and you would be shown a view like so:  
+   
+**Figure 27.** Populating the recurrence schedule for the logic app.
+![image46](images/figure46.png)
+
+7. Next, provide a value for the interval and let the value of frequency be minute. It is recommended to provide the value of 15 such that the logic app will run 4 times within the span of 1 hour. Also, having 15 minute intervals allows for complete syncing of data.
+
+**Figure 28.** Establishing the 15 minute intervals for the logic app.
+![image47](images/figure47.png)
+
+8. Now, to set the concurrency - in the blue rectangle which reads *Recurrence*, click on the ellipses at the top right hand corner. See below:
+
+**Figure 29.** Clicking on the ellipsis.
+![image48](images/figure48.png)
+
+9. Next, click on the option that reads *Settings* (which can be seen in **Figure 29.**). You would be shown the following:
+
+**Figure 30**. Establishing the concurrency.
+![image49](images/figure49.png)
+
+10. Under the *Concurrency Control* subheader, there is a toggle button near the text that reads *Limit* and switch it from *Off* to *On*  
+
+**Figure 31.** Turning on the concurrency control.
+![image50](images/figure50.png)
+
+11. Finally, change the slider value from the above screenshot, from 25 to 1. This will then allow for having 1 run of the logic app to happen every 15 minutes.
+
+**Figure 32.** Setting the value for the concurrency control.
+![image51](images/figure51.png)
+
+12. From the above screenshot, click on the *Done* button, and at which point, in the top left corner, under the text that reads *Logic App Designer*, the *Save* button will also be enabled.
+13. Click on the *Save* button to commit all the changes.
 
 ## Configuration App Workflow
 The Configuration Web App serves as a helpful aid to establish the necessary configurations to properly integrate an instance of Kronos WFC v8.1 with Shifts app. It further helps to create mapping between Kronos and Shifts users as well as Kronos departments and Shifts teams.
