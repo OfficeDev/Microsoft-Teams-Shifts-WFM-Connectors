@@ -128,29 +128,33 @@ Here are the following requirements to correctly deploy the **Shifts-Kronos Inte
 
 [![Deploy to Azure](https://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FOfficeDev%2FMicrosoft-Teams-Shifts-WFM-Connectors%2Fmaster%2FKronos-Shifts-Connector%2FDeployment%2Fazuredeploy.json)  
 5. It will navigate to the form for filling the template parameters  
-6. Select a subscription and a resource group - it is recommended to create a new resource group  
-7. Fill in the values for the parameters of the ARM Template. They are defined in the table below:
+6. The figure below shows the form once the *Deploy to Azure* button is clicked
+
+![image52](images/figure52.png)
+
+7. Select a subscription and a resource group - it is recommended to create a new resource group  
+8. Fill in the values for the parameters of the ARM Template. They are defined in the table below:
 
 **Table 2.** The ARM Template parameters
 |Parameter Name|Description|
 |--------------|-----------|
-|baseResourceName|This is a standard name to be used across all resources.|
-|aadAppClientId|This is the Client ID from the app registration.|
-|aadAppClientSecret|This is the Client Secret from the app registration.|
-|managedAadAppObjectId|This is the AAD Object ID of the app registration.|
-|teamsTenantId|This is the Tenant ID of your Teams tenant, and it can be different than the tenant ID of the Azure sub where the Shifts-Kronos Integration package is deployed.|
-|firstTimeSyncStartDate|This is the start date of the first-time data sync between Kronos and Shifts.|
-|firstTimeSyncEndDate|This is the end date of the first-time data sync between Kronos and Shifts.|
-|Location|This is the data center for all the resources that will be deployed through the ARM Template. Make sure that you select a location that can host Application Insights, Azure Table Storage, Azure Key Vault, and Redis Cache.|
-|storageAccountType|This is the storage grade for the Azure table storage account.|
-|Sku|This is the payment tier of the various resources.|
-|planSize|The size of the hosting plan required for the API web app service and the Configuration Web App service.|
-|processNumberOfUsersInBatch|When syncing the shift entities between Kronos and Shifts, the transfer is done based on users in a batch manner. The default value is 100 and can be changed at the time of deployment.|
-|processNumberOfOrgJobsInBatch|When syncing the open shift entities between Kronos and Shifts, the transfer is done based on the org job paths in a batch manner. The default value is 50 and can be changed at the time of deployment.|
-|syncFromPreviousDays|The number of days in the past for subsequent syncs between Kronos and Shifts.|
-|syncToNextDays|The number of days in the future for subsequent syncs between Kronos and Shifts.|
-|gitRepoUrl|The public GitHub repository URL.|
-|gitBranch|The specific branch from which the code can be deployed. The recommended value is master, however, at the time of deployment this value can be changed.|
+|baseResourceName|This is a standard name to be used across all resources|
+|aadAppClientId|This is the Client ID from the app registration|
+|aadAppClientSecret|This is the Client Secret from the app registration|
+|managedAadAppObjectId|This is the AAD Object ID of the app registration|
+|teamsTenantId|This is the Tenant ID of your Teams tenant, and it can be different than the tenant ID of the Azure sub where the Shifts-Kronos Integration package is deployed|
+|firstTimeSyncStartDate|This is the start date of the first-time data sync between Kronos and Shifts|
+|firstTimeSyncEndDate|This is the end date of the first-time data sync between Kronos and Shifts|
+|Location|This is the data center for all the resources that will be deployed through the ARM Template. Make sure that you select a location that can host Application Insights, Azure Table Storage, Azure Key Vault, and Redis Cache|
+|storageAccountType|This is the storage grade for the Azure table storage account|
+|Sku|This is the payment tier of the various resources|
+|planSize|The size of the hosting plan required for the API web app service and the Configuration Web App service|
+|processNumberOfUsersInBatch|When syncing the shift entities between Kronos and Shifts, the transfer is done based on users in a batch manner. The default value is 100 and can be changed at the time of deployment|
+|processNumberOfOrgJobsInBatch|When syncing the open shift entities between Kronos and Shifts, the transfer is done based on the org job paths in a batch manner. The default value is 50 and can be changed at the time of deployment|
+|syncFromPreviousDays|The number of days in the past for subsequent syncs between Kronos and Shifts|
+|syncToNextDays|The number of days in the future for subsequent syncs between Kronos and Shifts|
+|gitRepoUrl|The public GitHub repository URL|
+|gitBranch|The specific branch from which the code can be deployed. The recommended value is master, however, at the time of deployment this value can be changed|
 
 8.	Agree to the Azure terms and conditions by clicking on the check box *I agree to the terms and conditions stated above* located at the bottom of the page
 9.	Click on *Purchase* to start the deployment
