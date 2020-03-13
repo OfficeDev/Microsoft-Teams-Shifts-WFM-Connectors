@@ -180,7 +180,48 @@ Once the ARM Template deployment succeeds, it is important that you still add on
 **Figure 5.** KeyVault resource.
 ![image31](images/figure31.png)
 
-4. Once you navigate to the KeyVault resource, on the left hand side in Figure 5, find an option that reads *Access policies*. This is where you will modify the access policies so that you as an admin can be able to change other access policies as required. Click on the option that reads *Access policies*.
+4. Once you navigate to the KeyVault resource, on the left hand side in Figure 5, find an option that reads *Access policies*. This is where you will modify the access policies so that you as an admin can be able to change other access policies as required. Click on the option that reads *Access policies*. Your screen should resemble like something below:
+
+**Figure 6.** Current Access policies on the Azure KeyVault.
+![image33](images/figure33.png)
+5. The screen that you would see will definitely be different than the one shown here. However, you should still be able to see the option that reads *Add access policy*.  
+6. Click on that link and you should be taken here:
+
+**Figure 7.** Adding the Azure KeyVault access policy.
+![image34](images/figure34.png)
+7. Follow the below instructions before clicking on the *Add* button in blue  
+   * Under the label, *Configure from template (optional)* click the dropdown and you should see the following screenshot:
+
+**Figure 8.** Selecting the template for setting the access policy.
+![image35](images/figure35.png)
+   * Select the first value in the above screenshot.
+
+8. Once you have selected the value that reads *Key, Secret, & Certificate Management*, the screen should resemble something like the following:
+
+**Figure 9.** Selecting the template.
+![image36](images/figure36.png)
+9. In the above figure, the next step is to select the principal. In this case, the principal is in fact your Azure admin account. Proceed further by clicking on the red star under the label that reads *Select principal*. There should be a rectangular window that opens to the right hand side.
+
+**Figure 10.** Searching for a new principal.
+![image37](images/figure37.png)
+10. In the text box on the right hand side of the screen, type your Azure admin account email.
+
+**Figure 11.** Finding the Azure admin account.
+![image38](images/figure38.png)
+11. From the screenshot above, make sure to select the account that matches the string that you input to search. *Note*: It is recommended to search using the email address as opposed to the name of the account.  
+12. Once you have selected the account, your screen should resemble the below:
+
+**Figure 12.** Account selection.
+![image39](images/figure39.png)
+13. On the bottom right hand side of the screen, click on the button in blue that reads *Select*. Your screen should then look like this:
+
+**Figure 13.** Before selecting the Add button.
+![image40](images/figure40.png)
+14. Now click on the *Add* button, and you would be automatically redirected to the page which is shown in **Figure 6**. However, now you would see 4 access policies which would be similar to what is shown below:
+
+**Figure 14.** All Azure KeyVault access policies are configured.
+![image41](images/figure41.png)
+*Note*: There may be a difference in the names of the applications and the app registration. The main purpose is to ensure that there are a total of ***4*** access policies that are configured.
 
 ### Setting up the Redirect URIs
 * Once the ARM Template deployment is successful, there would be an output screen that will show the necessary URL for the Configuration Web App service. Copy that URL into an application such as Notepad  
