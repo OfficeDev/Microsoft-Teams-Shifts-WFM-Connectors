@@ -357,7 +357,7 @@ On successful sign-in you will see home page as shown below. Perform following s
 * Click Register link for Workforce Integration Registration, it registers application with Shifts Workforce Integration
 By registering a Workforce Integration with Microsoft Graph, Shifts APIs can make real-time outbound calls when an FLW requests to take an Open Shift, or when two FLWs are requesting to Swap Shifts with each other. Without registering a Workforce Integration with Microsoft Graph, Shifts APIs will not make outbound calls, nor would any data be synced from Kronos WFC into Shifts.
 
-**Figure 14.** Home page of the Configuration Web App
+**Figure 33.** Home page of the Configuration Web App
 ![figure13](images/figure13.png)
 
 ### Step 2: Kronos users to Shifts users mapping
@@ -374,7 +374,7 @@ You can access users mapping screen which will help you map users between Kronos
 * No duplicate rows
 4. When users have been successfully imported, the tenant admins can be able to delete a user mapping through click on the button that reads Delete in the event an erroneous mapping has been established. To re-establish the correct mapping, you can reimport the template and duplicate records will not be imported.
 
-**Figure 15.** User to User Mapping Screen
+**Figure 34.** User to User Mapping Screen
 ![figure14](images/figure14.png)
 
 ### Step 3: Kronos departments to Shifts teams mapping
@@ -382,59 +382,59 @@ Access Kronos departments to Shifts teams mapping screen to map departments to t
 1.	Click on the Export button. This action downloads the teams_department_usermapping.xlsx file on your machine which includes following details
       1. “Kronos Details” tab contains – KronosOrgJobPath, KronosWorkforceIntegrationId as below
 
-**Figure 16.** Sample screenshot from the exported Kronos departments
+**Figure 35.** Sample screenshot from the exported Kronos departments
 ![figure15](images/figure15.png)
 
    2. Need to create the shift teams and scheduling group using above path where second last value in each row is the team name and last value in each row is scheduling group name.
 
 E.g. In below OrgJobPath **Frontend** will be a team name and **Cashier** will be the scheduling group name. Corporate/Grocery/Region 1/District 1/Store 0404/**Frontend/Cashier**.  Navigate to your [Teams instance](https://teams.microsoft.com/) and go to Teams tab, click on Join or create a team, and create a team with above specified name.
 
-**Figure 17.** Screenshot for creating a team in Teams
+**Figure 36.** Screenshot for creating a team in Teams
 ![figure16](images/figure16.png)
 
 3. Provide the name of the team
 
-**Figure 18.** The Teams creation window
+**Figure 37.** The Teams creation window
 ![figure17](images/figure17.png)
 
 4. After successful team creation add the members in the team as per Kronos OrgJobPath  
 
-**Figure 19.** User interface in Teams to add users to a team
+**Figure 38.** User interface in Teams to add users to a team
 ![figure18](images/figure18.png)
 
 5. Navigate to Shifts, app create the Schedule of the above created team as shown below:
    1. Log on to Microsoft Teams
    2. Navigate to the Shifts app as shown in the screenshot below:
 
-**Figure 20.** The main UI in Teams, then logging into the Shifts app
+**Figure 39.** The main UI in Teams, then logging into the Shifts app
 ![figure19](images/figure19.png)  
 
 3. Once you navigate into Shifts, you can view all the schedules for an entire team or create a new schedule for a team. The figure below shows the schedules that are available for teams that have already been created. To get to the screenshot in Figure 22, follow the steps below:  
    * In the Shifts app, if you are creating a schedule for a team for the first time, you would be presented with a screen that lists out all the teams in your Teams instance. The screenshot would be like the one below:
 
-**Figure 21.** Creating a new schedule for a team
+**Figure 40.** Creating a new schedule for a team
 ![figure20](images/figure20.png)
 
 Note: If you have created teams and schedules before, make sure in Figure 22 below, make sure to scroll all the way to the bottom and click on the option that reads New schedule, there should be a plus icon there.
 
 * Once you click on create from Figure 20, you will be presented with another screen that will enable you to set the time zone for the schedule
 
-**Figure 22.** Setting the time zone for the schedule of the team
+**Figure 41.** Setting the time zone for the schedule of the team
 ![figure21](images/figure21.png)
 
 It is important to note that the time zone should be the same as the time zone of your Kronos WFC instance. This way when entities (i.e. Open Shifts, Time Off, Shifts) are synced, the start and end times are showing the same in both systems.
 
 * After selecting the time zone and the closest city, proceed to click on the confirm button. You would be taken to a screen that looks like the screen grab in Figure 23.
 
-**Figure 23.** Shifts user interface to view all the schedules  
+**Figure 42.** Shifts user interface to view all the schedules  
 ![figure22](images/figure22a.png)
 
-**Figure 24.** Creating the scheduling groups in Shifts user interface
+**Figure 43.** Creating the scheduling groups in Shifts user interface
 ![figure23](images/figure23.png)
 
 Also add the members of corresponding scheduling group by referring the user to user mapping Excel. E.g. Adams, Donald should be added to the Technician scheduling group under the Pharmacy team.
 
-**Figure 25.** A Kronos User and the Org Job Path which identifies the user
+**Figure 44.** A Kronos User and the Org Job Path which identifies the user
 ![figure24](images/figure24.png)
 
 Note: OrgJobPaths having same second last value are the same teams with different group name (Scheduling Group).  
@@ -452,7 +452,7 @@ d.	No duplicate rows
  
 Note: If a team has not been mapped (i.e. Meatpacking team), and the users under the Meatpacking team have been mapped, the data in Kronos WFC for the Meatpacking department will not be synced to the Meatpacking team on Shifts. In other words, those users will be skipped during the sync operations.
 
-**Figure 26.** Teams to Department Mapping screen
+**Figure 45.** Teams to Department Mapping screen
 ![figure25](images/figure25.png)
 
 ### Step 4: Perform first time sync
@@ -465,7 +465,7 @@ e.	Kronos to Shifts – Approved or Declined Time Off Sync
 f.	Shifts to Kronos – Time Off Request sync  
 g.	Kronos to Shifts – Shifts sync
 
-**Figure 27.** Team to Department Mapping screen with Done button
+**Figure 46.** Team to Department Mapping screen with Done button
 ![figure26](images/figure26.png)
 
 The first-time sync will be done using the parameters of *firstTimeSyncStartDate* and *firstTimeSyncEndDate* which have been defined in **Table 2**: ARM Template parameters. These are the dates that the Configuration Web App will sync the data from Kronos into Shifts. Subsequent data sync operations are handled through the logic app, and explained in the following section: *Data Sync through Logic App*. 
