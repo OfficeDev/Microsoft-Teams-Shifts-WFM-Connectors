@@ -136,6 +136,18 @@
                 "description": "This value will be able to accommodate for any requests that FLWs make for Swap Shift Requests, or Open Shift Requests in the Shifts UI."
             }
         },
+        "kronosUserName": {
+            "type": "string",
+            "metadata": {
+                "description": "Please enter the Kronos WFC SuperUser name here."
+            }
+        },
+        "kronosPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Please enter the Kronos WFC SuperUser password here."
+            }
+        },
         "gitRepoUrl": {
             "type": "string",
             "defaultValue": "https://github.com/OfficeDev/Microsoft-Teams-Shifts-WFM-Connectors"
@@ -176,9 +188,7 @@
         "kronosQueryDateSpanFormat": "MM/dd/yyyy",
         "logicAppAudience": "[parameters('aadAppClientId')]",
         "logicAppAuthenticationType": "ActiveDirectoryOAuth",
-        "keyVaultUrl": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/')]",
-        "defaultKronosUsername": "mdiaz",
-        "defaultKronosPassword": "mdiaz"
+        "keyVaultUrl": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/')]"
     },
     "resources": [
         {
@@ -607,13 +617,38 @@
                         "tenantId": "[subscription().tenantId]",
                         "permissions": {
                             "secrets": [
-                                "all"
+                                "Get",
+                                "List",
+                                "Update",
+                                "Create",
+                                "Import",
+                                "Delete",
+                                "Recover",
+                                "Backup",
+                                "Restore"
                             ],
                             "keys": [
-                                "all"
+                                "Get",
+                                "List",
+                                "Set",
+                                "Delete",
+                                "Recover",
+                                "Backup",
+                                "Restore"
                             ],
                             "certificates": [
-                                "all"
+                                "get",
+                                "list",
+                                "delete",
+                                "create",
+                                "import",
+                                "update",
+                                "managecontacts",
+                                "manageissuers",
+                                "getissuers",
+                                "listissuers",
+                                "setissuers",
+                                "deleteissuers"
                             ]
                         }
                     },
@@ -622,13 +657,38 @@
                         "tenantId": "[subscription().tenantId]",
                         "permissions": {
                             "secrets": [
-                                "all"
+                                "Get",
+                                "List",
+                                "Update",
+                                "Create",
+                                "Import",
+                                "Delete",
+                                "Recover",
+                                "Backup",
+                                "Restore"
                             ],
                             "keys": [
-                                "all"
+                                "Get",
+                                "List",
+                                "Set",
+                                "Delete",
+                                "Recover",
+                                "Backup",
+                                "Restore"
                             ],
                             "certificates": [
-                                "all"
+                                "get",
+                                "list",
+                                "delete",
+                                "create",
+                                "import",
+                                "update",
+                                "managecontacts",
+                                "manageissuers",
+                                "getissuers",
+                                "listissuers",
+                                "setissuers",
+                                "deleteissuers"
                             ]
                         }
                     },
@@ -645,7 +705,13 @@
                                 "Delete",
                                 "Recover",
                                 "Backup",
-                                "Restore"
+                                "Restore",
+                                "Decrypt",
+                                "Encrypt",
+                                "UnwrapKey",
+                                "WrapKey",
+                                "Verify",
+                                "Sign"
                             ],
                             "secrets": [
                                 "Get",
@@ -772,7 +838,7 @@
                 "attributes": {
                     "enabled": true
                 },
-                "value": "[variables('defaultKronosUsername')]"
+                "value": "[parameters('kronosUserName')]"
             }
         },
         {
@@ -787,7 +853,7 @@
                 "attributes": {
                     "enabled": true
                 },
-                "value": "[variables('defaultKronosPassword')]"
+                "value": "[parameters('kronosPassword')]"
             }
         },
         {
