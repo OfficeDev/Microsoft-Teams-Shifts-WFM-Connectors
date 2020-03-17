@@ -188,9 +188,7 @@
         "kronosQueryDateSpanFormat": "MM/dd/yyyy",
         "logicAppAudience": "[parameters('aadAppClientId')]",
         "logicAppAuthenticationType": "ActiveDirectoryOAuth",
-        "keyVaultUrl": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/')]",
-        "secretsPermissions": "get, list, update, create, import, delete, recover, backup, restore",
-        "keysPermissions": "get, list, set, delete, recover, backup, restore"
+        "keyVaultUrl": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/')]"
     },
     "resources": [
         {
@@ -618,8 +616,8 @@
                         "objectId": "[reference(concat('Microsoft.Web/sites/', variables('apiAppName')), '2018-02-01', 'Full').identity.principalId]",
                         "tenantId": "[subscription().tenantId]",
                         "permissions": {
-                            "secrets": "[array(variables('secretsPermissions'))]",
-                            "keys": "[array(variables('keysPermissions'))]",
+                            "secrets": ["get", "list", "update", "create", "import", "delete", "recover", "backup", "restore"],
+                            "keys": [ "get", "list", "set", "delete", "recover", "backup", "restore"],
                             "certificates": [
                                 "get",
                                 "list",
@@ -739,7 +737,6 @@
             "type": "Microsoft.KeyVault/vaults/secrets",
             "apiVersion": "2016-10-01",
             "name": "[concat(variables('keyVaultName'), '/ClientId')]",
-            "location": "westus2",
             "dependsOn": [
                 "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
             ],
@@ -754,7 +751,6 @@
             "type": "Microsoft.KeyVault/vaults/secrets",
             "apiVersion": "2016-10-01",
             "name": "[concat(variables('keyVaultName'), '/ClientSecret')]",
-            "location": "westus2",
             "dependsOn": [
                 "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
             ],
@@ -769,7 +765,6 @@
             "type": "Microsoft.KeyVault/vaults/secrets",
             "apiVersion": "2016-10-01",
             "name": "[concat(variables('keyVaultName'), '/RedisCacheConfiguration')]",
-            "location": "westus2",
             "dependsOn": [
                 "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
             ],
@@ -784,7 +779,6 @@
             "type": "Microsoft.KeyVault/vaults/secrets",
             "apiVersion": "2016-10-01",
             "name": "[concat(variables('keyVaultName'), '/StorageConnectionString')]",
-            "location": "westus2",
             "dependsOn": [
                 "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
             ],
@@ -799,7 +793,6 @@
             "type": "Microsoft.KeyVault/vaults/secrets",
             "apiVersion": "2016-10-01",
             "name": "[concat(variables('keyVaultName'), '/TenantId')]",
-            "location": "westus2",
             "dependsOn": [
                 "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
             ],
@@ -814,7 +807,6 @@
             "type": "Microsoft.KeyVault/vaults/secrets",
             "apiVersion": "2016-10-01",
             "name": "[concat(variables('keyVaultName'), '/WorkforceSuperUserName')]",
-            "location": "westus2",
             "dependsOn": [
                 "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
             ],
@@ -829,7 +821,6 @@
             "type": "Microsoft.KeyVault/vaults/secrets",
             "apiVersion": "2016-10-01",
             "name": "[concat(variables('keyVaultName'), '/WorkforceSuperUserPassword')]",
-            "location": "westus2",
             "dependsOn": [
                 "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
             ],
