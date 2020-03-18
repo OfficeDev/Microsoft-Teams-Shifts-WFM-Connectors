@@ -104,12 +104,9 @@ The table below outlines the required permissions necessary for the Azure AD app
 
 |Scope|Application/Delegated|Function|
 |-----|---------------------|--------|
-|Group.Read.All|Delegated|Allows application to list groups and read properties and all group memberships on behalf of the signed-in user (tenant admin)|
 |Group.ReadWrite.All|Delegated|Allows the application to create groups and read all group properties and memberships on behalf of the signed-in user (tenant admin)|
-|WorkforceIntegration.Read.All|Delegated|Allows for workforce integrations to be retrieved from Microsoft Graph|
 |WorkforceIntegration.ReadWrite.All|Delegated|Allows for workforce integrations to be created and registered with Microsoft Graph|
 |offline_access|N/A|Enables for the Microsoft Graph token to be automatically refreshed|
-|Schedule.Read.All|Application|Read all schedule items|
 |Schedule.ReadWrite.All|Application|Read and write all schedule items|
 |User.Read|Delegated|Sign in and read user profile|
 |User.Read.All|Delegated|Read all users' full profiles|
