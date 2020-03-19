@@ -74,17 +74,17 @@ This integration app uses [Microsoft Graph APIs](https://developer.microsoft.com
 
 ![Azure AD Application Registration](images/figure1.png)
 
-1. Click on the "Register" button
-2. When the app is registered, you'll be taken to the app's "Overview" page. Copy the **Application (client) ID**; we will need it later. Verify that the "Supported account types" is set to **Multiple organizations**
+3. Click on the "Register" button
+4. When the app is registered, you'll be taken to the app's "Overview" page. Copy the **Application (client) ID**; we will need it later. Verify that the "Supported account types" is set to **Multiple organizations**
 
 ![Azure Application Registration Overview page](images/figure2.png)
 
-1. On the side rail in the Manage section, navigate to the "Certificates & secrets" section. In the Client secrets section, click on "+ New client secret". Add a description (Name of the secret) for the secret and select “Never” for Expires. Click "Add"
+5. On the side rail in the Manage section, navigate to the "Certificates & secrets" section. In the Client secrets section, click on "+ New client secret". Add a description (Name of the secret) for the secret and select “Never” for Expires. Click "Add"
 
 ![Adding a new secret](images/figure3.png)
 
 6. Once the client secret is created, copy its Value; we will need it later
-7. Navigate to the Authentication page that can be found in the left blade in Figure 3
+7. Navigate to the Authentication page that can be found in the left blade in the figure under step 4.
 8. Under the section that reads *Implicit grant*, make sure that the check boxes for Access tokens and ID tokens are checked. The screen should resemble something like the screenshot that follows:
 
 ![Ensuring the proper authentication settings](images/figure4.png)
@@ -213,17 +213,16 @@ Once the ARM Template deployment succeeds, it is important that you still add on
 *Note*: There may be a difference in the names of the applications and the app registration. The main purpose is to ensure that there are a total of ***4*** access policies that are configured.
 
 ### Setting up the Redirect URIs
-* Once the ARM Template deployment is successful, there would be an output screen that will show the necessary URL for the Configuration Web App service. Copy that URL into an application such as Notepad  
-* Navigate to the App Registration created earlier  
-* In Figure 2, click on the text next to the text that reads Redirect URIs  
-* There is a chance that the screen may not have any redirect URIs. You would need to set those now. 
+1. Once the ARM Template deployment is successful, there would be an output screen that will show the necessary URL for the Configuration Web App service. Copy that URL into an application such as Notepad  
+2. Navigate to the App Registration created earlier as noted in the section *Register Azure AD Application*.
+3. In the screenshot under step 4 in the section *Register Azure AD Application*, click on the text that reads *Redirect URIs*.
+4. There is a chance that the screen may not have any redirect URIs. You would need to set those now. 
 
 ![Redirect URIs already set](images/figure5.png)
 
-* For any new app registrations, the redirect URIs may not be set
-* You need to properly take the Configuration Web App service URL that is deployed as part of the ARM Template deployment and paste that URL here
-* Subsequently, you need to add a new URL; paste that same URL that was copied from the outputs of the ARM Template deployment, and append “/signin-oidc”. By doing so, the tenant admin when logging into the Configuration Web App, will be authenticated using OpenIdConnect 
-* Once all the changes are made, ensure to commit the changes through clicking on the button that reads Save
+5. You need to properly take the Configuration Web App service URL that is deployed as part of the ARM Template deployment and paste that URL here
+6. Subsequently, you need to add a new URL; paste that same URL that was copied from the outputs of the ARM Template deployment, and append “/signin-oidc”. By doing so, the tenant admin when logging into the Configuration Web App, will be authenticated using OpenIdConnect 
+7. Once all the changes are made, ensure to commit the changes through clicking on the button that reads Save
 
 ### Logout URL setting in App Registration
 1.	Log on to the Azure portal
@@ -248,7 +247,7 @@ Once the ARM Template deployment is successful, one final operation is to ensure
 
 ![Storage account overview](images/figure7.png)
 
-4.	Navigate into the containers, by clicking on the link that reads *Containers* from Figure 7 above
+4.	Navigate into the containers, by clicking on the link that reads *Containers* from the figure above
 5.	Upon navigation to the containers, the ARM Template should provision a blob container called “templates”, and the screen should resemble below:
 
 ![Templates blob container](images/figure8.png)
@@ -263,7 +262,7 @@ Once the ARM Template deployment is successful, one final operation is to ensure
 
 ![Home page of the Teams Admin portal](images/figure10.png)
 
-4. From Figure 10, navigate to the Users page by clicking on the option that reads *Users* in the left hand blade. The screen should resemble the following below:
+4. From the figure above, navigate to the Users page by clicking on the option that reads *Users* in the left hand blade. The screen should resemble the following below:
 
 ![The users landing page](images/figure11.png)
 
