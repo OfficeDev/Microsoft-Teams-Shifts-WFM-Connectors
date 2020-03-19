@@ -480,7 +480,8 @@ The following tips are recommended as best practices when it comes to deploying 
 2.	Fork the main Microsoft repo for the following reasons:  
     * Any custom changes that are required, can be made on the forked copy of the Microsoft repository  
     * Easy to deploy changes from the forked copy of the Microsoft repo on to Azure subscription
-3. For the FLM (First Line Manager) operations such as: approving time off requests; approving open shift requests; approving swap shift requests; creating open shifts; creating shifts; etc. are to be conducted in Kronos WFC only.
+3. For the FLM (First Line Manager) operations such as: approving time off requests; approving open shift requests; approving swap shift requests; creating open shifts; creating shifts; etc. are to be conducted in Kronos WFC only.  
+   1. If the FLM approves any of the above mentioned requests, it has a consequence of causing data inconsistency between Microsoft Shifts, and Kronos WFC.
 
 # Legal notice
 
