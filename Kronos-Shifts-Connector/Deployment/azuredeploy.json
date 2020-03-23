@@ -617,7 +617,7 @@
             },
             "properties": {
                 "enabledForDeployment": "false",
-                "enabledForTemplateDeployment": "true",
+                "enabledForTemplateDeployment": "false",
                 "enabledForDiskEncryption": "false",
                 "tenantId": "[subscription().tenantId]",
                 "accessPolicies": [
@@ -632,18 +632,6 @@
                                 "get", "list", "delete", "backup", "restore", "create"
                             ],
                             "certificates": [
-                                "get",
-                                "list",
-                                "delete",
-                                "create",
-                                "import",
-                                "update",
-                                "managecontacts",
-                                "manageissuers",
-                                "getissuers",
-                                "listissuers",
-                                "setissuers",
-                                "deleteissuers"
                             ]
                         }
                     },
@@ -658,18 +646,6 @@
                                 "get", "list", "delete", "backup", "restore", "create" 
                             ],
                             "certificates": [
-                                "get",
-                                "list",
-                                "delete",
-                                "create",
-                                "import",
-                                "update",
-                                "managecontacts",
-                                "manageissuers",
-                                "getissuers",
-                                "listissuers",
-                                "setissuers",
-                                "deleteissuers"
                             ]
                         }
                     },
@@ -682,17 +658,7 @@
                                 "list",
                                 "update",
                                 "create",
-                                "import",
-                                "delete",
-                                "recover",
-                                "backup",
-                                "restore",
-                                "decrypt",
-                                "encrypt",
-                                "unwrapKey",
-                                "wrapKey",
-                                "verify",
-                                "sign"
+                                "delete"
                             ],
                             "secrets": [
                                 "get",
@@ -704,18 +670,6 @@
                                 "restore"
                             ],
                             "certificates": [
-                                "get",
-                                "list",
-                                "delete",
-                                "create",
-                                "import",
-                                "update",
-                                "managecontacts",
-                                "manageissuers",
-                                "getissuers",
-                                "listissuers",
-                                "setissuers",
-                                "deleteissuers"
                             ]
                         }
                     }
