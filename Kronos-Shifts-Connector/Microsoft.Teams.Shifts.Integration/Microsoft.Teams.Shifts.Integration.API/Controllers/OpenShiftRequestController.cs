@@ -504,9 +504,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                                 var approvalHttpResponse = await approvalHttpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
                                                 if (approvalHttpResponse.IsSuccessStatusCode)
                                                 {
-                                                    telemetryProps.Add("ShiftRequestId", entityToUpdate.RowKey);
-                                                    telemetryProps.Add("KronosRequestId", item.Id);
-                                                    this.telemetryClient.TrackTrace(Resource.ProcessOpenShiftsRequests, telemetryProps);
+                                                    this.telemetryClient.TrackTrace($"{Resource.ProcessOpenShiftsRequests} ShiftRequestId: {entityToUpdate.RowKey} KronosRequestId: {item.Id}");
                                                 }
                                                 else
                                                 {
