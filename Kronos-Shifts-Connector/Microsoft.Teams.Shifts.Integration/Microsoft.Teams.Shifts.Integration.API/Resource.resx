@@ -363,4 +363,28 @@
   <data name="ProcessTimeOffsAsync" xml:space="preserve">
     <value>ProcessTimeOffsAsync</value>
   </data>
+  <data name="UserMappingNotFound" xml:space="preserve">
+    <value>User is not mapped in Workforce Integration.</value>
+    <comment>The message will be displayed when the user is not mapped in WFI.</comment>
+  </data>
+  <data name="PassthroughHeaderNotPresent" xml:space="preserve">
+    <value>Passthrough header does not exist in request.</value>
+    <comment>The message when passthrough header is not present in outbound call.</comment>
+  </data>
+  <data name="PassthroughHeaderWFIIDMatched" xml:space="preserve">
+    <value>Outbound request is coming from correct WFIntegration</value>
+    <comment>The message will be logged when outbound call is coming from correct workforce integration.</comment>
+  </data>
+  <data name="PassthroughHeaderWFIIDMismatch" xml:space="preserve">
+    <value>Workforce Integration is incorrect.</value>
+    <comment>The message will be displayed when the outbound request is coming from some different workforceintegration.</comment>
+  </data>
+  <data name="PreventManageActionFromShifts" xml:space="preserve">
+    <value>Manager action is not allowed from Shifts.</value>
+    <comment>The message will be displayed when manager will try to perform some action from Shifts.</comment>
+  </data>
+  <data name="IncorrectArgumentType" xml:space="preserve">
+    <value>Please check the argument passed.</value>
+    <comment>The message that will be displayed when the argument passed to service is incorrect.</comment>
+  </data>
 </root>

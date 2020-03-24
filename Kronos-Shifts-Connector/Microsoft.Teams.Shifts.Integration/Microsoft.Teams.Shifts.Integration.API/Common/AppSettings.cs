@@ -57,14 +57,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         public string ClientSecret { get; }
 
         /// <summary>
-        /// Gets WfmSuperUsername.
+        /// Gets or sets WfmSuperUsername.
         /// </summary>
-        public string WfmSuperUsername { get; }
+        public string WfmSuperUsername { get; set; }
 
         /// <summary>
-        /// Gets WfmSuperUserPassword.
+        /// Gets or sets WfmSuperUserPassword.
         /// </summary>
-        public string WfmSuperUserPassword { get; }
+        public string WfmSuperUserPassword { get; set; }
 
         /// <summary>
         /// Gets ClientId.

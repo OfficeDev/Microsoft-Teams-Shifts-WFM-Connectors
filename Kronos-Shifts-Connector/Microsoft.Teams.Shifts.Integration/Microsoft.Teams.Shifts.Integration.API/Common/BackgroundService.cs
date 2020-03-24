@@ -40,7 +40,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// <returns>A task instance.</returns>
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            this.telemetryClient.TrackTrace($"BackgroundService StartAsync method start at: {DateTime.UtcNow.ToString("O", this.cultureInfoProvider)}");
+            this.telemetryClient.TrackTrace($"BackgroundService StartAsync method started");
 
             // Creating a linked token so that we can trigger cancellation outside of this token's cancellation
             this.tokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -48,7 +48,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
             {
                 try
                 {
-                    this.telemetryClient.TrackTrace($"BackgroundService Dequeue method start at: {DateTime.UtcNow.ToString("O", this.cultureInfoProvider)}");
+                    this.telemetryClient.TrackTrace("BackgroundService Dequeue method started.");
 
                     // Dequeuing a task and running it in background until the cancellation is triggered or task is completed
                     this.currentTask = this.taskWrapper.Dequeue(this.tokenSource.Token);
@@ -69,7 +69,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// <returns>A task instance.</returns>
         public async Task StopAsync(CancellationToken cancellationToken)
         {
-            this.telemetryClient.TrackTrace($"BackgroundService StopAsync method start at: {DateTime.UtcNow.ToString("O", this.cultureInfoProvider)}");
+            this.telemetryClient.TrackTrace("BackgroundService StopAsync method started");
 
             // Signal cancellation to the executing method
             this.tokenSource.Cancel();

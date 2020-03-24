@@ -6,6 +6,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Linq;
     using System.Reflection;
     using System.Threading.Tasks;
@@ -56,6 +57,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, getEntitiesProps);
 
             string monthPartitionFilter = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, monthPartition);
+            string startDateFilter = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, monthPartition);
             string rowKeyFilter = TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, rowKey);
 
             // Table query
@@ -128,10 +130,14 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// </summary>
         /// <param name="processKronosUsersInBatchList">List of KronosUserModel.</param>
         /// <param name="monthPartitionKey">Month Partition Value.</param>
+        /// <param name="queryStartDate">Query start date.</param>
+        /// <param name="queryEndDate">Query end date.</param>
         /// <returns>A Task.</returns>
         public async Task<List<TeamsShiftMappingEntity>> GetAllShiftMappingEntitiesInBatchAsync(
             IEnumerable<UserDetailsModel> processKronosUsersInBatchList,
-            string monthPartitionKey)
+            string monthPartitionKey,
+            string queryStartDate,
+            string queryEndDate)
         {
             if (processKronosUsersInBatchList is null)
             {
@@ -141,7 +147,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             var allShiftMappingEntitiesInBatch = new List<TeamsShiftMappingEntity>();
             var task = processKronosUsersInBatchList.Select(async item =>
             {
-                var response = await this.GetAllShiftMappingEntitiesInBatchAsync(item, monthPartitionKey).ConfigureAwait(false);
+                var response = await this.GetAllShiftMappingEntitiesInBatchAsync(item, monthPartitionKey, queryStartDate, queryEndDate).ConfigureAwait(false);
                 allShiftMappingEntitiesInBatch.AddRange(response);
             });
 
@@ -193,10 +199,14 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// </summary>
         /// <param name="userModel">The User Model.</param>
         /// <param name="monthPartitionKey">Month Partition Value.</param>
+        /// <param name="queryStartDate">Query start date.</param>
+        /// <param name="queryEndDate">Query end date.</param>
         /// <returns>A unit of execution that contains a list of shift mapping entities.</returns>
         private async Task<List<TeamsShiftMappingEntity>> GetAllShiftMappingEntitiesInBatchAsync(
             UserDetailsModel userModel,
-            string monthPartitionKey)
+            string monthPartitionKey,
+            string queryStartDate,
+            string queryEndDate)
         {
             if (userModel is null)
             {
@@ -212,12 +222,19 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
 
             this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, getEntitiesProps);
 
+            CultureInfo culture = CultureInfo.InvariantCulture;
+
             string userFilter = TableQuery.GenerateFilterCondition("KronosPersonNumber", QueryComparisons.Equal, userModel?.KronosPersonNumber);
             string monthPartitionFilter = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, monthPartitionKey);
+            string startDateFilter = TableQuery.GenerateFilterConditionForDate("ShiftStartDate", QueryComparisons.GreaterThanOrEqual, Convert.ToDateTime(queryStartDate, culture));
+            string endDateFilter = TableQuery.GenerateFilterConditionForDate("ShiftStartDate", QueryComparisons.LessThanOrEqual, Convert.ToDateTime(queryEndDate, culture).AddDays(1));
 
             // Table query
             TableQuery<TeamsShiftMappingEntity> query = new TableQuery<TeamsShiftMappingEntity>();
-            query.Where(TableQuery.CombineFilters(monthPartitionFilter, TableOperators.And, userFilter));
+            query.Where(TableQuery.CombineFilters(
+                TableQuery.CombineFilters(startDateFilter, TableOperators.And, endDateFilter),
+                TableOperators.And,
+                TableQuery.CombineFilters(monthPartitionFilter, TableOperators.And, userFilter)));
 
             // Results list
             var results = new List<TeamsShiftMappingEntity>();

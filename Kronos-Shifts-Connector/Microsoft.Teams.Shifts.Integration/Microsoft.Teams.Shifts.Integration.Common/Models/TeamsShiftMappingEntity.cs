@@ -4,6 +4,7 @@
 
 namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Models
 {
+    using System;
     using Microsoft.WindowsAzure.Storage.Table;
 
     /// <summary>
@@ -25,5 +26,10 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Models
         /// Gets or sets the KronosPersonNumber.
         /// </summary>
         public string KronosPersonNumber { get; set; }
+
+        /// <summary>
+        /// Gets or Sets the shift start date.
+        /// </summary>
+        public DateTime ShiftStartDate { get; set; }
     }
 }

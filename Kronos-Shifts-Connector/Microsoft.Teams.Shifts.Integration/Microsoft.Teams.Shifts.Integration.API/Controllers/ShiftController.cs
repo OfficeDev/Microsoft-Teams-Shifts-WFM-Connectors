@@ -140,7 +140,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                                 var lookUpData = await this.shiftMappingEntityProvider.GetAllShiftMappingEntitiesInBatchAsync(
                                     processKronosUsersQueueInBatch,
-                                    monthPartitionKey).ConfigureAwait(false);
+                                    monthPartitionKey,
+                                    queryStartDate,
+                                    queryEndDate).ConfigureAwait(false);
 
                                 // Get shift response for a batch of users.
                                 var shiftsResponse = await this.upcomingShiftsActivity.ShowUpcomingShiftsInBatchAsync(
@@ -287,7 +289,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 await this.DeleteOrphanDataShiftsEntityMappingAsync(accessToken, lookUpEntriesFoundList, userModelList, lookUpData).ConfigureAwait(false);
             }
 
-            await this.CreateEntryShiftsEntityMappingAsync(accessToken, userModelNotFoundList, shiftsNotFoundList, monthPartitionKey).ConfigureAwait(false);
+            // Get the Kronos WFC API Time Zone from App Settings.
+            var kronosTimeZoneId = this.appSettings.KronosTimeZone;
+            var kronosTimeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(kronosTimeZoneId);
+
+            await this.CreateEntryShiftsEntityMappingAsync(accessToken, userModelNotFoundList, shiftsNotFoundList, monthPartitionKey, kronosTimeZoneInfo).ConfigureAwait(false);
 
             this.telemetryClient.TrackTrace($"ShiftController - ProcessShiftEntitiesBatchAsync ended at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
         }
@@ -304,7 +310,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             string accessToken,
             List<UserDetailsModel> userModelNotFoundList,
             List<Shift> notFoundShifts,
-            string monthPartitionKey)
+            string monthPartitionKey,
+            TimeZoneInfo kronosTimeZoneInfo)
         {
             // create entries from not found list
             for (int i = 0; i < notFoundShifts.Count; i++)
@@ -326,7 +333,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                         var shiftResponse = JsonConvert.DeserializeObject<Models.Response.Shifts.Shift>(responseContent);
                         var shiftId = shiftResponse.Id;
-                        var shiftMappingEntity = this.CreateNewShiftMappingEntity(shiftResponse, notFoundShifts[i].KronosUniqueId, userModelNotFoundList[i]);
+                        var shiftMappingEntity = this.CreateNewShiftMappingEntity(shiftResponse, notFoundShifts[i].KronosUniqueId, userModelNotFoundList[i], kronosTimeZoneInfo);
                         await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(shiftMappingEntity, shiftId, monthPartitionKey).ConfigureAwait(false);
                         continue;
                     }
@@ -413,7 +420,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private TeamsShiftMappingEntity CreateNewShiftMappingEntity(
             Models.Response.Shifts.Shift responseModel,
             string uniqueId,
-            UserDetailsModel user)
+            UserDetailsModel user,
+            TimeZoneInfo kronosTimeZoneInfo)
         {
             var createNewShiftMappingEntityProps = new Dictionary<string, string>()
             {
@@ -429,6 +437,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 AadUserId = responseModel.UserId,
                 KronosUniqueId = uniqueId,
                 KronosPersonNumber = user.KronosPersonNumber,
+                ShiftStartDate = this.utility.UTCToKronosTimeZone(responseModel.SharedShift.StartDateTime),
             };
 
             this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, createNewShiftMappingEntityProps);

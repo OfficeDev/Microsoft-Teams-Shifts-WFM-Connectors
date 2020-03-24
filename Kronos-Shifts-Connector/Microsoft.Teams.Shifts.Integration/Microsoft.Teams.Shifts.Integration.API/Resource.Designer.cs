@@ -277,6 +277,15 @@ namespace Microsoft.Teams.Shifts.Integration.API {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Please check the argument passed..
+        /// </summary>
+        public static string IncorrectArgumentType {
+            get {
+                return ResourceManager.GetString("IncorrectArgumentType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An internal error occurred which may cause the open shift request to be declined..
         /// </summary>
         public static string InternalErrorCodeMessageText {
@@ -439,11 +448,47 @@ namespace Microsoft.Teams.Shifts.Integration.API {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Passthrough header does not exist in request..
+        /// </summary>
+        public static string PassthroughHeaderNotPresent {
+            get {
+                return ResourceManager.GetString("PassthroughHeaderNotPresent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Outbound request is coming from correct WFIntegration.
+        /// </summary>
+        public static string PassthroughHeaderWFIIDMatched {
+            get {
+                return ResourceManager.GetString("PassthroughHeaderWFIIDMatched", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Workforce Integration is incorrect..
+        /// </summary>
+        public static string PassthroughHeaderWFIIDMismatch {
+            get {
+                return ResourceManager.GetString("PassthroughHeaderWFIIDMismatch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There was a payload received, but does not suffice any of the conditions for processing..
         /// </summary>
         public static string PayloadReceivedDoesNotMeetConditions {
             get {
                 return ResourceManager.GetString("PayloadReceivedDoesNotMeetConditions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Manager action is not allowed from Shifts..
+        /// </summary>
+        public static string PreventManageActionFromShifts {
+            get {
+                return ResourceManager.GetString("PreventManageActionFromShifts", resourceCulture);
             }
         }
         
@@ -696,6 +741,15 @@ namespace Microsoft.Teams.Shifts.Integration.API {
         public static string TokenOriginatingFromInvalidSource {
             get {
                 return ResourceManager.GetString("TokenOriginatingFromInvalidSource", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to User is not mapped in Workforce Integration..
+        /// </summary>
+        public static string UserMappingNotFound {
+            get {
+                return ResourceManager.GetString("UserMappingNotFound", resourceCulture);
             }
         }
         

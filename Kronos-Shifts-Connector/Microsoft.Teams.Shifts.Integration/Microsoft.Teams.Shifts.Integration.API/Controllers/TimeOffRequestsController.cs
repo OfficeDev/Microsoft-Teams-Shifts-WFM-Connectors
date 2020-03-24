@@ -181,7 +181,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             {
                                 foreach (var item in timeOffRequestItems)
                                 {
-                                    var timeOffReqStartDate = this.utility.UTCToKronosKronosTimeZone(item.StartDateTime);
+                                    var timeOffReqStartDate = this.utility.UTCToKronosTimeZone(item.StartDateTime);
                                     if (timeOffReqStartDate < DateTime.ParseExact(queryStartDate, Common.Constants.DateFormat, CultureInfo.InvariantCulture)
                                         || timeOffReqStartDate > DateTime.ParseExact(queryEndDate, Common.Constants.DateFormat, CultureInfo.InvariantCulture).AddDays(1))
                                     {

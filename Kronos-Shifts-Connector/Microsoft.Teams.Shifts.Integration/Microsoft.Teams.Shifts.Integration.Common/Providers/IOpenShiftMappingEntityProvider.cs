@@ -39,10 +39,14 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// </summary>
         /// <param name="monthPartitionKey">The partition key to search.</param>
         /// <param name="schedulingGroupId">The scheduling group ID for the open shifts.</param>
+        /// <param name="queryStartDate">Query start date.</param>
+        /// <param name="queryEndDate">Query end date.</param>
         /// <returns>A unit of execution that contains a list of <see cref="AllOpenShiftMappingEntity"/>.</returns>
         Task<List<AllOpenShiftMappingEntity>> GetAllOpenShiftMappingEntitiesInBatch(
             string monthPartitionKey,
-            string schedulingGroupId);
+            string schedulingGroupId,
+            string queryStartDate,
+            string queryEndDate);
 
         /// <summary>
         /// Method definition to delete an open shift mapping entity by the Open Shift ID.

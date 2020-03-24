@@ -394,15 +394,22 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                         element.PersonNumber,
                         tenantId,
                         loginKronosResult.Jsession).ConfigureAwait(false);
+                    if (jobAssigmentResponse != null)
+                    {
+                        var jobDetails = jobAssigmentResponse.JobAssign.PrimaryLaborAccList.PrimaryLaborAcc.OrganizationPath;
 
-                    var jobDetails = jobAssigmentResponse.JobAssign.PrimaryLaborAccList.PrimaryLaborAcc.OrganizationPath;
-                    kronosUserModels.Add(
-                        new KronosUserModel()
-                        {
-                            KronosOrgJobPath = jobDetails,
-                            KronosPersonNumber = element.PersonNumber,
-                            KronosUserName = element.FullName,
-                        });
+                        kronosUserModels.Add(
+                            new KronosUserModel()
+                            {
+                                KronosOrgJobPath = jobDetails,
+                                KronosPersonNumber = element.PersonNumber,
+                                KronosUserName = element.FullName,
+                            });
+                    }
+                    else
+                    {
+                        this.telemetryClient.TrackTrace($"Unable to fetch job assignment for {element.PersonNumber} ");
+                    }
                 }
 
                 return kronosUserModels;

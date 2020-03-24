@@ -118,11 +118,12 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
 
                 return response;
             }
+#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception ex)
+#pragma warning restore CA1031 // Do not catch general exception types
             {
                 this.telemetryClient.TrackException(ex);
                 return null;
-                throw;
             }
         }
 
@@ -173,11 +174,12 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
                 this.telemetryClient.TrackTrace($"SwapShiftActivity - SubmitSwapShiftAsync ends: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}", telemetryProps);
                 return response;
             }
+#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception ex)
+#pragma warning restore CA1031 // Do not catch general exception types
             {
                 this.telemetryClient.TrackException(ex, telemetryProps);
                 return null;
-                throw;
             }
         }
 

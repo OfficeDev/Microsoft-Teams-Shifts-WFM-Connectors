@@ -38,5 +38,10 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Models
         /// Gets or sets the Shift User Name.
         /// </summary>
         public string ShiftUserDisplayName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the error.
+        /// </summary>
+        public string Error { get; set; }
     }
 }

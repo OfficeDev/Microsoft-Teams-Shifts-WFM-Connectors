@@ -223,5 +223,10 @@ namespace Microsoft.Teams.App.KronosWfc.Common
         /// Defines the status when FLW1 cancels the Swap Shift Request.
         /// </summary>
         public const string SwapShiftCancelled = "Cancelled";
+
+        /// <summary>
+        /// Error message when Kronos login is failed.
+        /// </summary>
+        public const string KronosFailedLogin = "Unable to login to Kronos. Please check credentials and try again.";
     }
 }

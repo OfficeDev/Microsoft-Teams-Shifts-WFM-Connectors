@@ -33,12 +33,12 @@
         </member>
         <member name="P:Microsoft.Teams.Shifts.Integration.API.Common.AppSettings.WfmSuperUsername">
             <summary>
-            Gets WfmSuperUsername.
+            Gets or sets WfmSuperUsername.
             </summary>
         </member>
         <member name="P:Microsoft.Teams.Shifts.Integration.API.Common.AppSettings.WfmSuperUserPassword">
             <summary>
-            Gets WfmSuperUserPassword.
+            Gets or sets WfmSuperUserPassword.
             </summary>
         </member>
         <member name="P:Microsoft.Teams.Shifts.Integration.API.Common.AppSettings.ClientId">
@@ -502,15 +502,6 @@
             <param name="orgJobPath">The OrgJobPath which is coming from DB.</param>
             <returns>Converted OrgJobPath.</returns>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.CreateShiftMappingEntity(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Shift,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.AllUserMappingEntity,System.String)">
-            <summary>
-            Having the ability to create a new TeamsShiftMappingEntity.
-            </summary>
-            <param name="shift">The Shift model.</param>
-            <param name="userMappingEntity">Details of user from User Mapping Entity table.</param>
-            <param name="kronosUniqueId">Kronos Unique Id corresponds to the shift.</param>
-            <returns>Mapping Entity associated with Team and Shift.</returns>
-        </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.CreateShiftMappingEntity(System.String,System.String,System.String)">
             <summary>
             Having the ability to create a new TeamsShiftMappingEntity.
@@ -661,12 +652,28 @@
             <param name="activity">The shift activity.</param>
             <returns>The end date/time to be rendered in the time zone that Shifts has been set up in.</returns>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.UTCToKronosKronosTimeZone(System.Nullable{System.DateTimeOffset})">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.UTCToKronosTimeZone(System.Nullable{System.DateTimeOffset})">
             <summary>
             This method converts UTC time to kronos timezone.
             </summary>
             <param name="dateTimeOffset">UTC nullable date time offset.</param>
             <returns>Kronos date time.</returns>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.UTCToKronosTimeZone(System.DateTime)">
+            <summary>
+            This method converts UTC time to kronos timezone.
+            </summary>
+            <param name="dateTime">Date time.</param>
+            <returns>Kronos date time.</returns>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.CreateShiftMappingEntity(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Shift,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.AllUserMappingEntity,System.String)">
+            <summary>
+            Having the ability to create a new TeamsShiftMappingEntity.
+            </summary>
+            <param name="shift">The Shift model.</param>
+            <param name="userMappingEntity">Details of user from User Mapping Entity table.</param>
+            <param name="kronosUniqueId">Kronos Unique Id corresponds to the shift.</param>
+            <returns>Mapping Entity associated with Team and Shift.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.GetKronosSessionAsync">
             <summary>
@@ -819,11 +826,12 @@
             <param name="shiftMappingEntityProvider">Shift entity mapping provider DI.</param>
             <param name="taskWrapper">Wrapper class instance for BackgroundTask.</param>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.OpenShiftRequestController.SubmitOpenShiftRequestToKronosAsync(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.OpenShiftRequestIS)">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.OpenShiftRequestController.SubmitOpenShiftRequestToKronosAsync(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.OpenShiftRequestIS,System.String)">
             <summary>
             Method to submit the Open Shift Request in Kronos.
             </summary>
             <param name="request">The request object that is coming in.</param>
+            <param name="teamsId">The Shifts team id.</param>
             <returns>Making sure to return a successful response code.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.OpenShiftRequestController.ProcessOpenShiftsRequests(System.String)">
@@ -864,7 +872,7 @@
             <param name="openShiftId">The MS Graph Open Shift ID.</param>
             <returns>A list of <see cref="T:Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift.OpenShiftRequest.ShiftSegment"/>.</returns>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.OpenShiftRequestController.GetAllMappedUserDetailsAsync(System.String,System.String)">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.OpenShiftRequestController.GetMappedUserDetailsAsync(System.String,System.String,System.String)">
             <summary>
             Gets a user model from shifts in order to return the Org Job Path.
             </summary>
@@ -911,7 +919,7 @@
             <param name="monthPartitionKey">The monthwise partition.</param>
             <returns>A unit of execution.</returns>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController.CreateEntryShiftsEntityMappingAsync(System.String,System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.UserDetailsModel},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.API.Models.Request.Shift},System.String)">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController.CreateEntryShiftsEntityMappingAsync(System.String,System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.UserDetailsModel},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.API.Models.Request.Shift},System.String,System.TimeZoneInfo)">
             <summary>
             Method that will create the new Shifts Entity Mapping.
             </summary>
@@ -931,7 +939,7 @@
             <param name="lookUpData">The Shifts look up data.</param>
             <returns>A unit of execution.</returns>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController.CreateNewShiftMappingEntity(Microsoft.Teams.Shifts.Integration.API.Models.Response.Shifts.Shift,System.String,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.UserDetailsModel)">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController.CreateNewShiftMappingEntity(Microsoft.Teams.Shifts.Integration.API.Models.Response.Shifts.Shift,System.String,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.UserDetailsModel,System.TimeZoneInfo)">
             <summary>
             Method that will create a new Shift Mapping entity to store in
             Azure table storage.
@@ -1029,15 +1037,16 @@
             <param name="accessToken">The Microsoft Graph Access token.</param>
             <returns>A type of <see cref="T:Microsoft.Graph.GraphServiceClient"/> which enables Graph API calls to be made through C# code.</returns>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.SwapShiftController.AddSwapShiftApprovalAsync(System.String,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.SwapShiftMappingEntity,System.String)">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.SwapShiftController.AddSwapShiftApprovalAsync(System.String,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.SwapShiftMappingEntity,System.String,System.String)">
             <summary>
             Method that posts an approved Swap Shift request to Shifts.
             </summary>
             <param name="accessToken">The Microsoft Graph access token.</param>
             <param name="swapShiftMappingEntity">The Swap Shift entity from database.</param>
             <param name="note">The necessary notes that are applicable to the Swap Shift request approval.</param>
+            <param name="wfIId">The workforce integration id.</param>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.SwapShiftController.DeclineSwapShiftRequestAsync(System.String,System.String,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.SwapShiftMappingEntity,System.String,System.String)">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.SwapShiftController.DeclineSwapShiftRequestAsync(System.String,System.String,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.SwapShiftMappingEntity,System.String,System.String,System.String)">
             <summary>
             Method that will decline a Swap Shift request in Shifts.
             </summary>
@@ -1046,6 +1055,7 @@
             <param name="swapShiftMappingEntity">The Swap Shift entity from database.</param>
             <param name="status">The status to post as part of the decline.</param>
             <param name="note">Applicable notes for the decline of the Swap Shift request.</param>
+            <param name="workforceIntegrationId">The workforce integration id.</param>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.SwapShiftController.GetSwapShiftResultsByUserAsync(System.Collections.Generic.List{System.String},System.String,System.String,System.String,System.String)">
             <summary>
@@ -1079,13 +1089,6 @@
             <param name="jsession">The JSession (Kronos "token").</param>
             <param name="queryDateSpan">Query date span for kronos details.</param>
             <returns>A unit of execution that contains the retracted response.</returns>
-        </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.SwapShiftController.GetAllMappedUserDetailsAsync(System.String)">
-            <summary>
-            This method gets all the mapped user details.
-            </summary>
-            <param name="workForceIntegrationId">The workforce integration ID.</param>
-            <returns>A unit of execution that returns a type of <see cref="T:System.Collections.Generic.IEnumerable`1"/>.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.SwapShiftController.CheckRequestStatus(System.String,System.String,Microsoft.Graph.GraphServiceClient)">
             <summary>
@@ -1203,7 +1206,7 @@
             <param name="request">The incoming request from Shifts UI that contains an encrypted payload.</param>
             <returns>A unit of execution which contains the RequestModel.</returns>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.ProcessOpenShiftRequest(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming.RequestModel,System.Collections.Generic.Dictionary{System.String,System.String})">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.ProcessOpenShiftRequest(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming.RequestModel,System.Collections.Generic.Dictionary{System.String,System.String},System.String,System.String,System.String)">
             <summary>
             Process open shift requests outbound calls.
             </summary>
@@ -1211,7 +1214,7 @@
             <param name="updateProps">telemetry properties.</param>
             <returns>Returns list of ShiftIntegResponse for request.</returns>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.ProcessSwapShiftRequest(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming.RequestModel,System.String)">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.ProcessSwapShiftRequest(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming.RequestModel,System.String,System.String,System.String)">
             <summary>
             Process swap shift requests outbound calls.
             </summary>
@@ -1236,13 +1239,22 @@
             <param name="aadGroupId">The team ID for which the Swap Shift request has been approved.</param>
             <returns>A unit of execution that contains the type of <see cref="T:Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels.ShiftsIntegResponse"/>.</returns>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.ProcessOutboundOpenShiftRequestAsync(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming.RequestModel,System.Collections.Generic.Dictionary{System.String,System.String})">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.ProcessOutboundOpenShiftRequestAsync(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.OpenShiftRequestIS,System.Collections.Generic.Dictionary{System.String,System.String},System.String)">
             <summary>
             Process outbound open shift request.
             </summary>
-            <param name="jsonModel">Request payload.</param>
+            <param name="openShiftRequest">Open shift request payload.</param>
             <param name="updateProps">Telemetry properties.</param>
+            <param name="teamsId">The Shifts team id.</param>
             <returns>Returns list of shiftIntegResponse.</returns>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.GenerateResponseToPreventAction(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming.RequestModel,System.String)">
+            <summary>
+            Generate response to prevent actions.
+            </summary>
+            <param name="jsonModel">The request payload.</param>
+            <param name="errorMessage">Error message to send while preventing action.</param>
+            <returns>List of ShiftsIntegResponse.</returns>
         </member>
         <member name="T:Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffController">
             <summary>
@@ -1437,7 +1449,7 @@
             <param name="httpClientFactory">http client.</param>
             <param name="taskWrapper">Wrapper class instance for BackgroundTask.</param>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffRequestsController.ProcessTimeOffRequetsAsync(System.String)">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffRequestsController.ProcessTimeOffRequestsAsync(System.String)">
             <summary>
             start timeoffrequests sync from Kronos and push it to Shifts.
             </summary>
@@ -2753,11 +2765,6 @@
               resource lookups using this strongly typed resource class.
             </summary>
         </member>
-        <member name="P:Microsoft.Teams.Shifts.Integration.API.Resource.AadGroupIdIsMissing">
-            <summary>
-              Looks up a localized string similar to The AAD Group Id (or the Team ID) is missing..
-            </summary>
-        </member>
         <member name="P:Microsoft.Teams.Shifts.Integration.API.Resource.AddSwapShiftApprovalAsync">
             <summary>
               Looks up a localized string similar to AddSwapShiftApprovalAsync.
@@ -2878,6 +2885,11 @@
               Looks up a localized string similar to IncomingOpenShiftRequest.
             </summary>
         </member>
+        <member name="P:Microsoft.Teams.Shifts.Integration.API.Resource.IncorrectArgumentType">
+            <summary>
+              Looks up a localized string similar to Please check the argument passed..
+            </summary>
+        </member>
         <member name="P:Microsoft.Teams.Shifts.Integration.API.Resource.InternalErrorCodeMessageText">
             <summary>
               Looks up a localized string similar to An internal error occurred which may cause the open shift request to be declined..
@@ -2968,9 +2980,29 @@
               Looks up a localized string similar to Declined.
             </summary>
         </member>
+        <member name="P:Microsoft.Teams.Shifts.Integration.API.Resource.PassthroughHeaderNotPresent">
+            <summary>
+              Looks up a localized string similar to Passthrough header does not exist in request..
+            </summary>
+        </member>
+        <member name="P:Microsoft.Teams.Shifts.Integration.API.Resource.PassthroughHeaderWFIIDMatched">
+            <summary>
+              Looks up a localized string similar to Outbound request is coming from correct WFIntegration.
+            </summary>
+        </member>
+        <member name="P:Microsoft.Teams.Shifts.Integration.API.Resource.PassthroughHeaderWFIIDMismatch">
+            <summary>
+              Looks up a localized string similar to Workforce Integration is incorrect..
+            </summary>
+        </member>
         <member name="P:Microsoft.Teams.Shifts.Integration.API.Resource.PayloadReceivedDoesNotMeetConditions">
             <summary>
               Looks up a localized string similar to There was a payload received, but does not suffice any of the conditions for processing..
+            </summary>
+        </member>
+        <member name="P:Microsoft.Teams.Shifts.Integration.API.Resource.PreventManageActionFromShifts">
+            <summary>
+              Looks up a localized string similar to Manager action is not allowed from Shifts..
             </summary>
         </member>
         <member name="P:Microsoft.Teams.Shifts.Integration.API.Resource.ProcessKronosToShiftsShiftsAsync">
@@ -3111,6 +3143,11 @@
         <member name="P:Microsoft.Teams.Shifts.Integration.API.Resource.TokenOriginatingFromInvalidSource">
             <summary>
               Looks up a localized string similar to The token required for this API call could be coming from an invalid source..
+            </summary>
+        </member>
+        <member name="P:Microsoft.Teams.Shifts.Integration.API.Resource.UserMappingNotFound">
+            <summary>
+              Looks up a localized string similar to User is not mapped in Workforce Integration..
             </summary>
         </member>
         <member name="P:Microsoft.Teams.Shifts.Integration.API.Resource.UserTeamNotExists">

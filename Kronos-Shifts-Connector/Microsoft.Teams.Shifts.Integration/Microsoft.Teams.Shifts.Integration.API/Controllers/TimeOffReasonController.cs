@@ -217,10 +217,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         {
             this.telemetryClient.TrackTrace($"{MethodBase.GetCurrentMethod().Name}");
 
-            TimeOffReasonRequest.TimeOffReason timeOffReason = new TimeOffReasonRequest.TimeOffReason();
-            timeOffReason.DisplayName = payCode;
-            timeOffReason.IconType = "plane";
-            timeOffReason.IsActive = true;
+            TimeOffReasonRequest.TimeOffReason timeOffReason = new TimeOffReasonRequest.TimeOffReason
+            {
+                DisplayName = payCode,
+                IconType = "plane",
+                IsActive = true,
+            };
             var requestString = JsonConvert.SerializeObject(timeOffReason);
 
             var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");

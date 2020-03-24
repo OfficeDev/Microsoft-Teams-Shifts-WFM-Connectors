@@ -56,11 +56,6 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             Models.RequestModels.WorkforceIntegration workforceIntegration,
             string accessToken)
         {
-            if (workforceIntegration is null)
-            {
-                throw new ArgumentNullException(nameof(workforceIntegration));
-            }
-
             var provider = CultureInfo.InvariantCulture;
             this.telemetryClient.TrackTrace(BusinessLogicResource.RegisterWorkforceIntegrationAsync + " called at " + DateTime.Now.ToString("o", provider));
 
@@ -103,9 +98,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             var requestUri = "users";
             do
             {
-                using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, requestUri)
-                {
-                })
+                using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, requestUri))
                 {
                     var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
                     if (response.IsSuccessStatusCode)

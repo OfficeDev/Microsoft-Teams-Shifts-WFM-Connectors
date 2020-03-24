@@ -74,14 +74,18 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Logon
                     string.Empty).ConfigureAwait(false);
 
                 Response logonResponse = this.ProcessResponse(tupleResponse.Item1);
-                logonResponse.Jsession = tupleResponse.Item2;
+
+                // Fetch the session of Kronos when login to Kronos is successful.
+                if (logonResponse != null)
+                {
+                    logonResponse.Jsession = tupleResponse.Item2;
+                }
+
                 return logonResponse;
             }
             catch (Exception ex)
             {
-                var msg = ex.ToString();
                 this.telemetryClient.TrackException(ex);
-                return null;
                 throw;
             }
         }
@@ -124,6 +128,13 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Logon
 
             XDocument xDoc = XDocument.Parse(strResponse);
             var xResponse = xDoc.Root.Descendants().FirstOrDefault(d => d.Name.LocalName.Equals(ApiConstants.Response, StringComparison.Ordinal));
+
+            // xResponse will be null when provided Kronos URL is incorrect.
+            if (xResponse == null)
+            {
+                return null;
+            }
+
             return XmlConvertHelper.DeserializeObject<Response>(xResponse.ToString());
         }
     }

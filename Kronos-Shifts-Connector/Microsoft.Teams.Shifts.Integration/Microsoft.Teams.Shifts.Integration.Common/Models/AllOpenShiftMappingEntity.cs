@@ -4,6 +4,7 @@
 
 namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Models
 {
+    using System;
     using Microsoft.WindowsAzure.Storage.Table;
     using Newtonsoft.Json;
 
@@ -35,5 +36,11 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Models
         /// </summary>
         [JsonProperty("OrgJobPath")]
         public string OrgJobPath { get; set; }
+
+        /// <summary>
+        /// Gets or sets the open shift start date.
+        /// </summary>
+        [JsonProperty("OpenShiftStartDate")]
+        public DateTime OpenShiftStartDate { get; set; }
     }
 }
