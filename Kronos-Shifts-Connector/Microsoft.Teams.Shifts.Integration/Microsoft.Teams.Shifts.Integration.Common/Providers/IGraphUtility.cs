@@ -38,7 +38,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// </summary>
         /// <param name="accessToken">Access Token.</param>
         /// <returns>The shift user.</returns>
-        Task<string> FetchShiftTeamDetailsAsync(
+        Task<List<ShiftTeams>> FetchShiftTeamDetailsAsync(
             string accessToken);
 
         /// <summary>
