@@ -627,10 +627,6 @@
                         "permissions": {
                             "secrets": [
                                 "get"
-                            ],
-                            "keys": [
-                            ],
-                            "certificates": [
                             ]
                         }
                     },
@@ -639,23 +635,7 @@
                         "tenantId": "[subscription().tenantId]",
                         "permissions": {
                             "secrets": [
-                                "get", "list", "delete", "set"
-                            ],
-                            "keys": [
-                            ],
-                            "certificates": [
-                            ]
-                        }
-                    },
-                    {
-                        "tenantId": "[subscription().tenantId]",
-                        "objectId": "[parameters('managedAadAppObjectId')]",
-                        "permissions": {
-                            "keys": [
-                            ],
-                            "secrets": [
-                            ],
-                            "certificates": [
+                                "get", "delete", "set"
                             ]
                         }
                     }
