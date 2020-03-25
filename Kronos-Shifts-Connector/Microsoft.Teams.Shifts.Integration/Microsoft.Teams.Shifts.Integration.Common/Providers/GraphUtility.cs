@@ -83,7 +83,6 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         {
             var fetchShiftUserDetailsProps = new Dictionary<string, string>()
             {
-                { "AccessToken", accessToken },
                 { "CallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
             };
 
@@ -144,7 +143,6 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         {
             var fetchShiftUserDetailsProps = new Dictionary<string, string>()
             {
-                { "AccessToken", accessToken },
                 { "CallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
             };
 
@@ -155,6 +153,8 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             var hcfClient = this.httpClientFactory.CreateClient("GraphBetaAPI");
             hcfClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
             hcfClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            // Filter group who has associated teams also.
             var requestUri = "groups?$filter=resourceProvisioningOptions";
             do
             {
