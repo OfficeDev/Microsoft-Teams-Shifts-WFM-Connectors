@@ -1,4 +1,4 @@
-﻿// <copyright file="OpenShiftRequestController.cs" company="Microsoft">
+// <copyright file="OpenShiftRequestController.cs" company="Microsoft">
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
@@ -185,7 +185,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                             // Builds out the Open Shift Segments prior to actual object being built.
                             // Take into account the activities of the open shift that has been retrieved
-                            // from the Graph API call made between lines 179-184.
+                            // from the Graph API call for open shift details.
                             var openShiftSegments = this.BuildKronosOpenShiftSegments(
                                     graphOpenShift.SharedOpenShift.Activities,
                                     queryingOrgJobPath,
@@ -193,8 +193,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                     graphOpenShift.Id);
 
                             // Step 3 - Create the necessary OpenShiftObj
-                            // Having the open shift segments which have been retrieved
-                            // from lines 199-203.
+                            // Having the open shift segments which have been retrieved.
                             var inputDraftOpenShiftRequest = new OpenShiftObj()
                             {
                                 StartDayNumber = Constants.StartDayNumberString,
