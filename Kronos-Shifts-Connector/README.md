@@ -22,6 +22,7 @@ The points noted below are to be considered as best practices to properly levera
 * Teams and Scheduling groups must be created in Shifts prior Teams to Department mapping step in Configuration Web App  
 * Done button on Configuration Web App should be used only for first time sync  
 * First time sync is expected to take longer time since it may sync data for larger time interval. The time would vary based on amount of data i.e. number of users, number of teams, number of entities (such as Shifts, TimeOffs, OpenShifts etc.) to be synced and date span of the Time interval for which the sync is happening. So, it may take time to reflect this complete data in Shifts. Done button click will initiate background process to complete the sync  
+* **FLMs should not approve/reject Time Off Requests in the Shifts UI. If FLMs perform such an action, the data being synced between Kronos WFC and Microsoft Shifts will be inconsistent between the two systems.**
 
 ## Solution Overview
 The Shifts-Kronos Integration application has the following components built using ASP.Net Core 2.2. Those need to be hosted on Microsoft Azure.  
@@ -72,24 +73,22 @@ This integration app uses [Microsoft Graph APIs](https://developer.microsoft.com
 * **Supported account types**: Select "Accounts in any organizational directory (Any Azure AD directory - Multitenant)"
 * **Redirect URI based on ADAL / MSAL**: The URIs that will be accepted as destinations when returning authentication responses (tokens) after successfully authenticating users
 
-**Figure 1.** Azure AD Application Registration
-![figure1](images/figure1.png)
+![Azure AD Application Registration](images/figure1.png)
 
 3. Click on the "Register" button
 4. When the app is registered, you'll be taken to the app's "Overview" page. Copy the **Application (client) ID**; we will need it later. Verify that the "Supported account types" is set to **Multiple organizations**
 
-**Figure 2.** Azure Application Registration Overview page.
-![figure2](images/figure2.png)
+![Azure Application Registration Overview page](images/figure2.png)
 
 5. On the side rail in the Manage section, navigate to the "Certificates & secrets" section. In the Client secrets section, click on "+ New client secret". Add a description (Name of the secret) for the secret and select “Never” for Expires. Click "Add"
 
-![figure3](images/figure3.png)
+![Adding a new secret](images/figure3.png)
 
 6. Once the client secret is created, copy its Value; we will need it later
-7. Navigate to the Authentication page that can be found in the left blade in Figure 3
+7. Navigate to the Authentication page that can be found in the left blade in the figure under step 4.
 8. Under the section that reads *Implicit grant*, make sure that the check boxes for Access tokens and ID tokens are checked. The screen should resemble something like the screenshot that follows:
 
-![figure4](images/figure4.png)
+![Ensuring the proper authentication settings](images/figure4.png)
 
 At this point you have the following unique values:
 * Application (client) ID
@@ -106,13 +105,12 @@ The table below outlines the required permissions necessary for the Azure AD app
 
 |Scope|Application/Delegated|Function|
 |-----|---------------------|--------|
-|Group.Read.All|Delegated|Allows application to list groups and read properties and all group memberships on behalf of the signed-in user (tenant admin).|
-|Group.ReadWrite.All|Delegated|Allows the application to create groups and read all group properties and memberships on behalf of the signed-in user (tenant admin).|
-|WorkforceIntegration.Read.All|Delegated|Allows for workforce integrations to be retrieved from Microsoft Graph.|
-|WorkforceIntegration.ReadWrite.All|Delegated|Allows for workforce integrations to be created and registered with Microsoft Graph.|
+|Group.ReadWrite.All|Delegated|Allows the application to create groups and read all group properties and memberships on behalf of the signed-in user (tenant admin)|
+|WorkforceIntegration.ReadWrite.All|Delegated|Allows for workforce integrations to be created and registered with Microsoft Graph|
 |offline_access|N/A|Enables for the Microsoft Graph token to be automatically refreshed|
-|Schedule.Read.All|Application|Read all schedule items.|
-|Schedule.ReadWrite.All|Application|Read and write all schedule items.|
+|Schedule.ReadWrite.All|Application|Read and write all schedule items|
+|User.Read|Delegated|Sign in and read user profile|
+|User.Read.All|Delegated|Read all users' full profiles|
 
 ## Deploy Application to your Azure Subscription
 Here are the following requirements to correctly deploy the **Shifts-Kronos Integration** application to your Azure subscription: 
@@ -126,35 +124,40 @@ Here are the following requirements to correctly deploy the **Shifts-Kronos Inte
 
 [![Deploy to Azure](https://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FOfficeDev%2FMicrosoft-Teams-Shifts-WFM-Connectors%2Fmaster%2FKronos-Shifts-Connector%2FDeployment%2Fazuredeploy.json)  
 5. It will navigate to the form for filling the template parameters  
-6. Select a subscription and a resource group - it is recommended to create a new resource group  
-7. Fill in the values for the parameters of the ARM Template. They are defined in the table below:
+6. The figure below shows the form once the *Deploy to Azure* button is clicked
+
+![ARM Template form rendering in the Azure portal](images/figure52.png)
+
+7. Select a subscription and a resource group - it is recommended to create a new resource group  
+8. Fill in the values for the parameters of the ARM Template. They are defined in the table below:
 
 **Table 2.** The ARM Template parameters
 |Parameter Name|Description|
 |--------------|-----------|
-|baseResourceName|This is a standard name to be used across all resources.|
-|aadAppClientId|This is the Client ID from the app registration.|
-|aadAppClientSecret|This is the Client Secret from the app registration.|
-|managedAadAppObjectId|This is the AAD Object ID of the app registration.|
-|teamsTenantId|This is the Tenant ID of your Teams tenant, and it can be different than the tenant ID of the Azure sub where the Shifts-Kronos Integration package is deployed.|
-|firstTimeSyncStartDate|This is the start date of the first-time data sync between Kronos and Shifts.|
-|firstTimeSyncEndDate|This is the end date of the first-time data sync between Kronos and Shifts.|
-|Location|This is the data center for all the resources that will be deployed through the ARM Template. Make sure that you select a location that can host Application Insights, Azure Table Storage, Azure Key Vault, and Redis Cache.|
-|storageAccountType|This is the storage grade for the Azure table storage account.|
-|Sku|This is the payment tier of the various resources.|
-|planSize|The size of the hosting plan required for the API web app service and the Configuration Web App service.|
-|processNumberOfUsersInBatch|When syncing the shift entities between Kronos and Shifts, the transfer is done based on users in a batch manner. The default value is 100 and can be changed at the time of deployment.|
-|processNumberOfOrgJobsInBatch|When syncing the open shift entities between Kronos and Shifts, the transfer is done based on the org job paths in a batch manner. The default value is 50 and can be changed at the time of deployment.|
-|syncFromPreviousDays|The number of days in the past for subsequent syncs between Kronos and Shifts.|
-|syncToNextDays|The number of days in the future for subsequent syncs between Kronos and Shifts.|
-|gitRepoUrl|The public GitHub repository URL.|
-|gitBranch|The specific branch from which the code can be deployed. The recommended value is master, however, at the time of deployment this value can be changed.|
+|baseResourceName|This is a standard name to be used across all resources|
+|aadAppClientId|This is the Client ID from the app registration|
+|aadAppClientSecret|This is the Client Secret from the app registration|
+|managedAadAppObjectId|This is the AAD Object ID of the app registration|
+|teamsTenantId|This is the Tenant ID of your Teams tenant, and it can be different than the tenant ID of the Azure sub where the Shifts-Kronos Integration package is deployed|
+|firstTimeSyncStartDate|This is the start date of the first-time data sync between Kronos and Shifts|
+|firstTimeSyncEndDate|This is the end date of the first-time data sync between Kronos and Shifts|
+|Location|This is the data center for all the resources that will be deployed through the ARM Template. Make sure that you select a location that can host Application Insights, Azure Table Storage, Azure Key Vault, and Redis Cache|
+|storageAccountType|This is the storage grade for the Azure table storage account|
+|Sku|This is the payment tier of the various resources|
+|planSize|The size of the hosting plan required for the API web app service and the Configuration Web App service|
+|processNumberOfUsersInBatch|When syncing the shift entities between Kronos and Shifts, the transfer is done based on users in a batch manner. The default value is 100 and can be changed at the time of deployment|
+|processNumberOfOrgJobsInBatch|When syncing the open shift entities between Kronos and Shifts, the transfer is done based on the org job paths in a batch manner. The default value is 50 and can be changed at the time of deployment|
+|syncFromPreviousDays|The number of days in the past for subsequent syncs between Kronos and Shifts|
+|syncToNextDays|The number of days in the future for subsequent syncs between Kronos and Shifts|
+|gitRepoUrl|The public GitHub repository URL|
+|gitBranch|The specific branch from which the code can be deployed. The recommended value is master, however, at the time of deployment this value can be changed|
 
 8.	Agree to the Azure terms and conditions by clicking on the check box *I agree to the terms and conditions stated above* located at the bottom of the page
 9.	Click on *Purchase* to start the deployment
-10.	Wait for the deployment to finish. You can check the progress of the deployment from the *Notifications* pane of the Azure Portal
+10.	Wait for the deployment to finish. You can check the progress of the deployment from the *Notifications* pane of the Azure portal
 11.	Once the deployment has finished, you would have the option to navigate to the resource group to ensure all resources are deployed correctly
-12.	Smoke test – this step is required to ensure that all the code has been properly deployed
+12. Upon a successful deployment you would be presented with a screen that shows a large green check mark and a phrase similar to *Your deployment completed successfully*
+13. Smoke test – this step is required to ensure that all the code has been properly deployed
 
 ## Post ARM Template Deployment Steps
 The following actions are to be done post deployment to ensure that all the information is being exchanged correctly between the resources in the newly created resource group:
@@ -166,23 +169,61 @@ The following actions are to be done post deployment to ensure that all the info
 6.	Establishing the necessary recurrence for the Azure Logic App
 
 ### Access Policy Setup in Azure Key Vault
-1.	Using the system assigned identity for both the deployed API web app service and the deployed Configuration Web App service – this is taken care of through the ARM template
-2.	Ensuring to have the principalId of the app registration as well for the access policy
-3.	Outlining the details of establishing necessary AAD users to have access to the deployed Azure Key Vault
+Once the ARM Template deployment succeeds, it is important that you still add one more access policy to the Azure KeyVault resource. This time, the policy is to allow you as the Azure Administrator to properly monitor the Azure KeyVault. In order to setup your administrative access to the Azure KeyVault follow the steps below: 
+1. Log on to the Azure portal
+2. Navigate to the resource group that has been created as part of the ARM template deployment
+
+![Resource group created as part of the ARM Template](images/figure29.png)
+
+3. Navigate inside of the KeyVault resource. You should search for an icon that has a key inside of a circle as shown in the screenshot in the previous step.
+
+![KeyVault resource](images/figure31.png)
+
+4. Once you navigate to the KeyVault resource, on the left hand side in the above screenshot, find an option that reads *Access policies*. This is where you will modify the access policies so that you as an admin can be able to change other access policies as required. Click on the option that reads *Access policies*. Your screen should resemble like something below:
+
+![Current Access policies on the Azure KeyVault](images/figure33.png)
+5. The screen that you would see will definitely be different than the one shown here. However, you should still be able to see the option that reads *Add access policy*.  
+6. Click on that link and you should be taken here:
+
+![Adding the Azure KeyVault access policy](images/figure34.png)
+7. Follow the below instructions before clicking on the *Add* button in blue  
+   * Under the label, *Configure from template (optional)* click the dropdown and you should see the following screenshot:
+
+![Selecting the template for setting the access policy](images/figure35.png)
+   * Select the first value in the above screenshot.
+
+8. Once you have selected the value that reads *Key, Secret, & Certificate Management*, the screen should resemble something like the following:
+
+![Selecting the template](images/figure36.png)
+9. In the above figure, the next step is to select the principal. In this case, the principal is in fact your Azure admin account. Proceed further by clicking on the red star under the label that reads *Select principal*. There should be a rectangular window that opens to the right hand side.
+
+![Searching for the principal](images/figure37.png)
+10.  In the text box on the right hand side of the screen, type your Azure admin account email.
+
+![Searching for the Tenant Admin account](images/figure38.png)
+11.  From the screenshot above, make sure to select the account that matches the string that you input to search. *Note*: It is recommended to search using the email address as opposed to the name of the account.  
+12.  Once you have selected the account, your screen should resemble the below:
+
+![Selecting the Azure admin account](images/figure39.png)
+13. On the bottom right hand side of the screen, click on the button in blue that reads *Select*. Your screen should then look like this:
+
+![Prior to clicking the Add button](images/figure40.png)
+14.   Now click on the *Add* button, and you would be automatically redirected to the page which is shown in step 4. However, now you would see 4 access policies which would be similar to what is shown below:
+
+![All Azure KeyVault access policies are configured](images/figure41.png)
+*Note*: There may be a difference in the names of the applications and the app registration. The main purpose is to ensure that there are a total of ***4*** access policies that are configured.
 
 ### Setting up the Redirect URIs
-* Once the ARM Template deployment is successful, there would be an output screen that will show the necessary URL for the Configuration Web App service. Copy that URL into an application such as Notepad  
-* Navigate to the App Registration created earlier  
-* In Figure 2, click on the text next to the text that reads Redirect URIs  
-* There is a chance that the screen may not have any redirect URIs. You would need to set those now. 
+1. Once the ARM Template deployment is successful, there would be an output screen that will show the necessary URL for the Configuration Web App service. Copy that URL into an application such as Notepad  
+2. Navigate to the App Registration created earlier as noted in the section *Register Azure AD Application*.
+3. In the screenshot under step 4 in the section *Register Azure AD Application*, click on the text that reads *Redirect URIs*.
+4. There is a chance that the screen may not have any redirect URIs. You would need to set those now. 
 
-**Figure 5.** Redirect URIs being set already
-![figure5](images/figure5.png)
+![Redirect URIs already set](images/figure5.png)
 
-* For any new app registrations, the redirect URIs may not be set
-* You need to properly take the Configuration Web App service URL that is deployed as part of the ARM Template deployment and paste that URL here
-* Subsequently, you need to have paste that same URL, and append “/signin-oidc”. With doing so, the tenant admin when logging into the Configuration Web App, will be authenticated using OpenIdConnect  
-* Once all the changes are made, ensure to commit the changes through clicking on the button that reads Save
+5. You need to properly take the Configuration Web App service URL that is deployed as part of the ARM Template deployment and paste that URL here
+6. Subsequently, you need to add a new URL; paste that same URL that was copied from the outputs of the ARM Template deployment, and append “/signin-oidc”. By doing so, the tenant admin when logging into the Configuration Web App, will be authenticated using OpenIdConnect 
+7. Once all the changes are made, ensure to commit the changes through clicking on the button that reads Save
 
 ### Logout URL setting in App Registration
 1.	Log on to the Azure portal
@@ -191,8 +232,7 @@ The following actions are to be done post deployment to ensure that all the info
 4.	In the code window that appears, scroll down until you read the JSON attribute: logoutUrl
 Refer to the screenshot:
 
-**Figure 6.** Application Registration Manifest window
-![figure6](images/figure6.png)
+![Application Registration Manifest window](images/figure6.png)
 
 5.	The value for the logoutUrl is the URL of the Configuration Web App service that was deployed through the ARM Template
 6.	Copy and paste the URL from step 5 as the value for the logoutUrl
@@ -206,45 +246,78 @@ Once the ARM Template deployment is successful, one final operation is to ensure
 2.	Navigate to the resource group that was created at the time of ARM Template deployment
 3.	Navigate to the storage account that was created from the ARM Template deployment. The screen should resemble the figure below: 
 
-**Figure 7.** Storage account overview
-![figure7](images/figure7.png)
+![Storage account overview](images/figure7.png)
 
-4.	Navigate into the containers, by clicking on the link that reads *Containers* from Figure 7 above
+4.	Navigate into the containers, by clicking on the link that reads *Containers* from the figure above
 5.	Upon navigation to the containers, the ARM Template should provision a blob container called “templates”, and the screen should resemble below:
 
-**Figure 8.** Templates blob container
-![figure8](images/figure8.png)
+![Templates blob container](images/figure8.png)
+1. Navigate inside of the "templates" blob container, and the screen should resemble the next screenshot below: 
 
-6. Navigate inside of the "templates" blob container, and the screen should resemble the next screenshot below: 
+![Navigation inside of the templates blob](images/figure9.png)
 
-**Figure 9.** Navigation inside of the "templates" blob.
-![figure9](images/figure9.png)
-
-User Creation through the Teams Admin Portal
+### User Creation through the Teams Admin Portal
 1.    Navigate to the [Microsoft Teams Admin Portal](https://admin.teams.microsoft.com)
 2.	Sign In with your AAD Tenant Admin credentials
 3.	You will be presented with the following view once the sign in is successful:
 
-**Figure 10.** Home page of the Teams Admin portal
-![figure10](images/figure10.png)
+![Home page of the Teams Admin portal](images/figure10.png)
 
-4. From Figure 10, navigate to the Users page by clicking on the option that reads *Users* in the left hand blade. The screen should resemble the following below:
+4. From the figure above, navigate to the Users page by clicking on the option that reads *Users* in the left hand blade. The screen should resemble the following below:
 
-**Figure 11.** The users landing page
-![figure11](images/figure11.png)
+![The users landing page](images/figure11.png)
 
-5. In the text above the table, there is a mention of "Admin center > Users". That is the location where you should go to add users to the tenant. Clicking on the "Admin center > Users" hyperlink in Figure 11 above should yield in the page below:
+5. In the text above the table, there is a mention of "Admin center > Users". That is the location where you should go to add users to the tenant. Clicking on the "Admin center > Users" hyperlink in the screenshot above should yield in the page below:
 
-**Figure 12.** The page to add or remove users
-![figure12](images/figure12.png)
+![The page to add or remove users](images/figure12.png)
 
-### Setting up the Recurrence for the Azure Logic App
-1.	Post ARM Template deployment, the outputs section would have necessary URLs
-2.	Open the Logic App in the designer in another tab on your browser
-3.	Add the recurrence
-4.	Set the time on the recurrence
-5.	Choose an integer value
-6.	Choose an interval (i.e. Second, Minute, Hour, Day, Week, Month) – it is recommended to select minutes as you would want to give enough time to perform the sync operations (for ex: 15 mins)
+6. In order to add users, the screenshot in the previous step has a label that reads *Add a user*. Clicking on that label will show a form where you can enter in all the details.
+
+### Setting up the Recurrence and Concurrency for the Azure Logic App
+In this section you are going to set 2 aspects of the logic app: recurrence and the concurrency. The reason for setting the recurrence is to have a repeated occurrence of the data sync between Kronos WFC and Microsoft Shifts to happen on a specific interval of time. The reason for setting the concurrency is to prevent the logic app from running multiple times within a specific time window.
+
+1.	Navigate to the resource group that has been create through the ARM Template Deployment
+2. Click on the resource which has the text `-logicApp` appended at the end of the name. Your screen should resemble the following:
+
+![Logic app in resource group](images/figure42.png)
+
+3. Navigate to the logic app, and you should be redirected to the following view:  
+![Logic app home page on the Azure portal](images/figure43.png)
+
+4. From the screenshot in the previous step, select on the *Edit* label. You should be able to find that label next to a pencil icon. Once you click that, you should then be redirected to a user interface that contains 1 step like the screenshot that follows:
+
+![Logic App Designer](images/figure44.png)
+
+5. Here, you will search for *Recurrence*, as defined below. You will need to type in the text box where the text reads *Search connectors and triggers*.
+
+![Searching for recurrence](images/figure45.png)
+
+6. Click on *Recurrence* as shown in the previous step, and you would be shown a view like so:  
+   
+![Populating the recurrence schedule for the logic app](images/figure46.png)
+
+7. Next, provide a value for the interval and let the value of frequency be minute. It is recommended to provide the value of 15 such that the logic app will run 4 times within the span of 1 hour. Also, having 15 minute intervals allows for complete syncing of data.
+
+![Establish the 15 minute intervals for the logic app](images/figure47.png)
+
+8. Now, to set the concurrency - in the blue rectangle which reads *Recurrence*, click on the ellipses at the top right hand corner. See below:
+
+![Clicking on the ellipsis](images/figure48.png)
+
+9. Next, click on the option that reads *Settings* (which can be seen in the above figure). You would be shown the following:
+
+![Establishing the concurrency](images/figure49.png)
+
+10. Under the *Concurrency Control* subheader, there is a toggle button near the text that reads *Limit* and switch it from *Off* to *On*  
+
+![Turning on the concurrency control](images/figure50.png)
+
+11. Finally, change the slider value from the above screenshot, from 25 to 1. This will then allow for having 1 run of the logic app to happen every 15 minutes.
+
+![Setting the value for the concurrency control](images/figure51.png)
+
+12. From the above screenshot, click on the *Done* button, and at which point, in the top left corner, under the text that reads *Logic App Designer*, the *Save* button will also be enabled.
+13. Click on the *Save* button to commit all the changes.
 
 ## Configuration App Workflow
 The Configuration Web App serves as a helpful aid to establish the necessary configurations to properly integrate an instance of Kronos WFC v8.1 with Shifts app. It further helps to create mapping between Kronos and Shifts users as well as Kronos departments and Shifts teams.
@@ -256,8 +329,7 @@ On successful sign-in you will see home page as shown below. Perform following s
 * Click Register link for Workforce Integration Registration, it registers application with Shifts Workforce Integration
 By registering a Workforce Integration with Microsoft Graph, Shifts APIs can make real-time outbound calls when an FLW requests to take an Open Shift, or when two FLWs are requesting to Swap Shifts with each other. Without registering a Workforce Integration with Microsoft Graph, Shifts APIs will not make outbound calls, nor would any data be synced from Kronos WFC into Shifts.
 
-**Figure 13.** Home page of the Configuration Web App
-![figure13](images/figure13.png)
+![Home page of the Configuration Web App](images/figure13.png)
 
 ### Step 2: Kronos users to Shifts users mapping
 You can access users mapping screen which will help you map users between Kronos and Shifts. Perform following steps on this page:
@@ -273,68 +345,58 @@ You can access users mapping screen which will help you map users between Kronos
 * No duplicate rows
 4. When users have been successfully imported, the tenant admins can be able to delete a user mapping through click on the button that reads Delete in the event an erroneous mapping has been established. To re-establish the correct mapping, you can reimport the template and duplicate records will not be imported.
 
-**Figure 14.** User to User Mapping Screen
-![figure14](images/figure14.png)
+![User to User Mapping Screen](images/figure14.png)
 
 ### Step 3: Kronos departments to Shifts teams mapping
 Access Kronos departments to Shifts teams mapping screen to map departments to teams:
 1.	Click on the Export button. This action downloads the teams_department_usermapping.xlsx file on your machine which includes following details
       1. “Kronos Details” tab contains – KronosOrgJobPath, KronosWorkforceIntegrationId as below
 
-**Figure 15.** Sample screenshot from the exported Kronos departments
-![figure15](images/figure15.png)
+![Sample screenshot from the exported Kronos departments](images/figure15.png)
 
    2. Need to create the shift teams and scheduling group using above path where second last value in each row is the team name and last value in each row is scheduling group name.
 
 E.g. In below OrgJobPath **Frontend** will be a team name and **Cashier** will be the scheduling group name. Corporate/Grocery/Region 1/District 1/Store 0404/**Frontend/Cashier**.  Navigate to your [Teams instance](https://teams.microsoft.com/) and go to Teams tab, click on Join or create a team, and create a team with above specified name.
 
-**Figure 16.** Screenshot for creating a team in Teams
-![figure16](images/figure16.png)
+![Screenshot for creating a team in Teams](images/figure16.png)
 
 3. Provide the name of the team
 
-**Figure 17.** The Teams creation window
-![figure17](images/figure17.png)
+![The Teams creation window](images/figure17.png)
 
 4. After successful team creation add the members in the team as per Kronos OrgJobPath  
 
-**Figure 18.** User interface in Teams to add users to a team
-![figure18](images/figure18.png)
+![User interface in Teams to add users to a team](images/figure18.png)
 
 5. Navigate to Shifts, app create the Schedule of the above created team as shown below:
    1. Log on to Microsoft Teams
    2. Navigate to the Shifts app as shown in the screenshot below:
 
-**Figure 19.** The main UI in Teams, then logging into the Shifts app
-![figure19](images/figure19.png)  
+![The main UI in Teams, then logging into the Shifts app](images/figure19.png)  
 
-3. Once you navigate into Shifts, you can view all the schedules for an entire team or create a new schedule for a team. The figure below shows the schedules that are available for teams that have already been created. To get to the screenshot in Figure 22, follow the steps below:  
+6. Once you navigate into Shifts, you can view all the schedules for an entire team or create a new schedule for a team. The figure below shows the schedules that are available for teams that have already been created. To get to that screen, follow the steps below:  
    * In the Shifts app, if you are creating a schedule for a team for the first time, you would be presented with a screen that lists out all the teams in your Teams instance. The screenshot would be like the one below:
 
-**Figure 20.** Creating a new schedule for a team
-![figure20](images/figure20.png)
+![Creating a new schedule for a team](images/figure20.png)
 
-Note: If you have created teams and schedules before, make sure in Figure 22 below, make sure to scroll all the way to the bottom and click on the option that reads New schedule, there should be a plus icon there.
+Note: If you have created teams and schedules before, make sure in the figure below, make sure to scroll all the way to the bottom and click on the option that reads New schedule, there should be a plus icon there.
 
-* Once you click on create from Figure 20, you will be presented with another screen that will enable you to set the time zone for the schedule
+* Once you click on create from step 6, you will be presented with another screen that will enable you to set the time zone for the schedule
 
-**Figure 21.** Setting the time zone for the schedule of the team
-![figure21](images/figure21.png)
+![Setting the time zone for the schedule of the team](images/figure21.png)
 
 It is important to note that the time zone should be the same as the time zone of your Kronos WFC instance. This way when entities (i.e. Open Shifts, Time Off, Shifts) are synced, the start and end times are showing the same in both systems.
 
-* After selecting the time zone and the closest city, proceed to click on the confirm button. You would be taken to a screen that looks like the screen grab in Figure 23.
+* After selecting the time zone and the closest city, proceed to click on the confirm button. You would be taken to a screen that looks like the screen grab that is annotated with the text: *Viewing all schedules*.  
 
-**Figure 22.** Shifts user interface to view all the schedules  
-![figure22](images/figure22a.png)
+Viewing all schedules  
+![Shifts user interface to view all the schedules](images/figure22a.png)
 
-**Figure 23.** Creating the scheduling groups in Shifts user interface
-![figure23](images/figure23.png)
+![Creating the scheduling groups in Shifts user interface](images/figure23.png)
 
 Also add the members of corresponding scheduling group by referring the user to user mapping Excel. E.g. Adams, Donald should be added to the Technician scheduling group under the Pharmacy team.
 
-**Figure 24.** A Kronos User and the Org Job Path which identifies the user
-![figure24](images/figure24.png)
+![A Kronos User and the Org Job Path which identifies the user](images/figure24.png)
 
 Note: OrgJobPaths having same second last value are the same teams with different group name (Scheduling Group).  
 g.	After creating all the teams, schedules and scheduling groups again download 
@@ -342,8 +404,8 @@ teams_department_usermapping.xlsx file on your machine which includes following 
 h.	“Kronos Details” tab contains – KronosOrgJobPath, KronosWorkforceIntegrationId  
 i.	“Shift Team Details” tab contains - ShiftTeamId, ShiftTeamDisplayName, SchedulingGroupId, SchedulingGroupDisplayName
 
-2. Click on *Download Template* button. This action downloads the KronosShiftTeamDeptMappingTemplate.xlsx
-3.	Copy the details from teams_department_usermapping.xlsx file to KronosShiftTeamDeptMappingTemplate.xlsx. Ensure details from both Kronos and Shifts are mapped correctly in this file. Review and ensure following:  
+1. Click on *Download Template* button. This action downloads the KronosShiftTeamDeptMappingTemplate.xlsx
+2.	Copy the details from teams_department_usermapping.xlsx file to KronosShiftTeamDeptMappingTemplate.xlsx. Ensure details from both Kronos and Shifts are mapped correctly in this file. Review and ensure following:  
 a.	All the columns are correctly populated   
 b.	All values are correctly mapped  
 c.	No missing values  
@@ -351,8 +413,7 @@ d.	No duplicate rows
  
 Note: If a team has not been mapped (i.e. Meatpacking team), and the users under the Meatpacking team have been mapped, the data in Kronos WFC for the Meatpacking department will not be synced to the Meatpacking team on Shifts. In other words, those users will be skipped during the sync operations.
 
-**Figure 25.** Teams to Department Mapping screen
-![figure25](images/figure25.png)
+![Teams to Department Mapping screen](images/figure25.png)
 
 ### Step 4: Perform first time sync
 Click on the Done button in Team to Department Mapping screen, which will initiate following workflows:  
@@ -364,8 +425,7 @@ e.	Kronos to Shifts – Approved or Declined Time Off Sync
 f.	Shifts to Kronos – Time Off Request sync  
 g.	Kronos to Shifts – Shifts sync
 
-**Figure 26.** Team to Department Mapping screen with Done button
-![figure26](images/figure26.png)
+![Team to Department Mapping screen with Done button](images/figure26.png)
 
 The first-time sync will be done using the parameters of *firstTimeSyncStartDate* and *firstTimeSyncEndDate* which have been defined in **Table 2**: ARM Template parameters. These are the dates that the Configuration Web App will sync the data from Kronos into Shifts. Subsequent data sync operations are handled through the logic app, and explained in the following section: *Data Sync through Logic App*. 
 
@@ -394,21 +454,21 @@ The following are common issues that tenant admins may encounter while following
 |-----|--------|
 |Duplicate resource names|Ensure that at the time of deployment, the necessary resources have unique names.|
 
-* Problems while using Configuration Web App, or logic app (data does not sync, most likely due to Graph token expiry)
+* Problems while using Configuration Web App, or logic app (data does not sync, most likely due to Graph token expiration)
 
 |Issue|Solution|
 |-----|--------|
 |Graph token expiration - 401 Unauthorized|The Graph token may experie, and to resolve that: 1. Log out of the configuration web app. 2. Log back into the configuration web app.|
 
 * Problems while creating open shifts
-![figure27](images/figure27.png)
+![Problems while creating open shifts](images/figure27.png)
 
 |Error|Reason|
 |-----|------|
 |Sorry your change couldn't be completed|Above scenario may happen due to Kronos business rules: Ex: the number of working hours for the user should not be more than 40 hours for current week otherwise Kronos does not allow to create / submit the open shift request. If such request is initiated, the Workforce Integration sends error to Shifts and Shifts would not allow to submit such open shift request  **Solution:** FLW to choose and submit open shift requests after ensuring number of working hours quota for given duration|
 
-* Problem while creating swap shifts
-![figure28](images/figure28.png)
+* Problem while creating swap shift requests
+![Problem while creating swap shifts](images/figure28.png)
 
 |Error|Reason|
 |-----|------|
@@ -420,7 +480,8 @@ The following tips are recommended as best practices when it comes to deploying 
 2.	Fork the main Microsoft repo for the following reasons:  
     * Any custom changes that are required, can be made on the forked copy of the Microsoft repository  
     * Easy to deploy changes from the forked copy of the Microsoft repo on to Azure subscription
-
+3. For the FLM (First Line Manager) operations such as: approving time off requests; approving open shift requests; approving swap shift requests; creating open shifts; creating shifts; etc. are to be conducted in Kronos WFC only.  
+   1. If the FLM approves any of the above mentioned requests, it has a consequence of causing data inconsistency between Microsoft Shifts, and Kronos WFC.
 
 # Legal notice
 
