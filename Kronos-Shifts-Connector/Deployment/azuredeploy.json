@@ -1,5 +1,5 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
         "baseResourceName": {
@@ -136,6 +136,18 @@
                 "description": "This value will be able to accommodate for any requests that FLWs make for Swap Shift Requests, or Open Shift Requests in the Shifts UI."
             }
         },
+        "kronosUserName": {
+            "type": "string",
+            "metadata": {
+                "description": "Please enter the Kronos WFC SuperUser name here."
+            }
+        },
+        "kronosPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Please enter the Kronos WFC SuperUser password here."
+            }
+        },
         "gitRepoUrl": {
             "type": "string",
             "defaultValue": "https://github.com/OfficeDev/Microsoft-Teams-Shifts-WFM-Connectors"
@@ -176,9 +188,7 @@
         "kronosQueryDateSpanFormat": "MM/dd/yyyy",
         "logicAppAudience": "[parameters('aadAppClientId')]",
         "logicAppAuthenticationType": "ActiveDirectoryOAuth",
-        "keyVaultUrl": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/')]",
-        "defaultKronosUsername": "mdiaz",
-        "defaultKronosPassword": "mdiaz"
+        "keyVaultUrl": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/')]"
     },
     "resources": [
         {
@@ -186,6 +196,7 @@
             "apiVersion": "2017-10-01",
             "name": "[variables('redisCacheName')]",
             "location": "[parameters('location')]",
+            "comments": "This Redis cache is used for caching the Graph API token.",
             "properties": {
                 "sku": {
                     "name": "Standard",
@@ -205,6 +216,7 @@
             "type": "Microsoft.Storage/storageAccounts",
             "name": "[variables('storageAccountName')]",
             "location": "[parameters('location')]",
+            "comments": "This storage account is used for storing mapping information, map entities between Kronos and Shifts, and store the templates blob.",
             "apiVersion": "2018-02-01",
             "sku": {
                 "name": "[parameters('storageAccountType')]"
@@ -228,6 +240,7 @@
             "apiVersion": "2016-09-01",
             "name": "[variables('hostingPlanName')]",
             "location": "[parameters('location')]",
+            "comments": "This hosting plan is used for hosting the Configuration Web app and the Integration Service API.",
             "properties": {
                 "name": "[variables('hostingPlanName')]",
                 "hostingEnvironment": "",
@@ -246,6 +259,7 @@
             "name": "[variables('configAppInsightsName')]",
             "apiVersion": "2015-05-01",
             "location": "[parameters('location')]",
+            "comments": "This ApplicationInsights resource tracks telemetry for the Configuration Web app.",
             "kind": "",
             "properties": {
                 "Application_Type": "web"
@@ -256,6 +270,7 @@
             "name": "[variables('apiAppInsightsName')]",
             "apiVersion": "2015-05-01",
             "location": "[parameters('location')]",
+            "comments": "This ApplicationInsights resource tracks telemetry for the Integration Service API.",
             "kind": "",
             "properties": {
                 "Application_Type": "web"
@@ -266,13 +281,17 @@
             "apiVersion": "2016-08-01",
             "name": "[variables('configAppName')]",
             "location": "[parameters('location')]",
+            "comments": "This Web App is the Configuration Web App.",
             "kind": "app",
             "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
                 "[resourceId('Microsoft.Insights/components/', variables('configAppInsightsName'))]",
-                "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
-                "[resourceId('Microsoft.Cache/Redis', variables('redisCacheName'))]"
+                "[resourceId('Microsoft.Cache/Redis', variables('redisCacheName'))]",
+                "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]"
             ],
+            "identity": {
+                "type": "SystemAssigned"
+            },
             "properties": {
                 "name": "[variables('configAppName')]",
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
@@ -388,12 +407,9 @@
                             "value": "[parameters('managedAadAppObjectId')]"
                         }
                     ]
-                },
-                "identity": {
-                    "type": "SystemAssigned"
                 }
             },
-            "resources":[
+            "resources": [
                 {
                     "apiVersion": "2015-08-01",
                     "name": "web",
@@ -414,14 +430,17 @@
             "apiVersion": "2016-08-01",
             "name": "[variables('apiAppName')]",
             "location": "[parameters('location')]",
+            "comments": "This Web app is for the Integration Service API.",
             "kind": "app",
             "dependsOn": [
                 "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
                 "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
                 "[resourceId('Microsoft.Insights/components/', variables('apiAppInsightsName'))]",
-                "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
                 "[resourceId('Microsoft.Cache/Redis', variables('redisCacheName'))]"
             ],
+            "identity": {
+                "type": "SystemAssigned"
+            },
             "properties": {
                 "name": "[variables('apiAppName')]",
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
@@ -565,12 +584,9 @@
                             "value": "[parameters('aadAppClientId')]"
                         }
                     ]
-                },
-                "identity": {
-                    "type": "SystemAssigned"
                 }
             },
-            "resources":[
+            "resources": [
                 {
                     "apiVersion": "2015-08-01",
                     "name": "web",
@@ -587,66 +603,60 @@
             ]
         },
         {
-            "name": "[variables('keyVaultName')]",
             "type": "Microsoft.KeyVault/vaults",
-            "apiVersion": "2016-10-01",
+            "apiVersion": "2018-02-14",
+            "name": "[variables('keyVaultName')]",
             "location": "[parameters('location')]",
+            "comments": "This Azure KeyVault will store the necessary information like the Kronos credentials, etc.",
+            "dependsOn": [
+                "[concat('Microsoft.Web/sites/', variables('apiAppName'))]",
+                "[concat('Microsoft.Web/sites/', variables('configAppName'))]"
+            ],
+            "tags": {
+                "displayName": "KeyVault"
+            },
             "properties": {
-                "sku": {
-                    "family": "A",
-                    "name": "Standard"
-                },
+                "enabledForDeployment": "false",
+                "enabledForTemplateDeployment": "false",
+                "enabledForDiskEncryption": "false",
                 "tenantId": "[subscription().tenantId]",
-                "enabledForTemplateDeployment": true,
                 "accessPolicies": [
                     {
+                        "objectId": "[reference(concat('Microsoft.Web/sites/', variables('apiAppName')), '2018-02-01', 'Full').identity.principalId]",
                         "tenantId": "[subscription().tenantId]",
-                        "objectId": "[parameters('managedAadAppObjectId')]",
                         "permissions": {
-                            "keys": [
-                                "Get",
-                                "List",
-                                "Update",
-                                "Create",
-                                "Import",
-                                "Delete",
-                                "Recover",
-                                "Backup",
-                                "Restore"
-                            ],
                             "secrets": [
-                                "Get",
-                                "List",
-                                "Set",
-                                "Delete",
-                                "Recover",
-                                "Backup",
-                                "Restore"
-                            ],
-                            "certificates": [
-                                "get",
-                                "list",
-                                "delete",
-                                "create",
-                                "import",
-                                "update",
-                                "managecontacts",
-                                "manageissuers",
-                                "getissuers",
-                                "listissuers",
-                                "setissuers",
-                                "deleteissuers"
+                                "get"
+                            ]
+                        }
+                    },
+                    {
+                        "objectId": "[reference(concat('Microsoft.Web/sites/', variables('configAppName')), '2018-02-01', 'Full').identity.principalId]",
+                        "tenantId": "[subscription().tenantId]",
+                        "permissions": {
+                            "secrets": [
+                                "get", "delete", "set"
                             ]
                         }
                     }
-                ]
+                ],
+                "sku": {
+                    "name": "Standard",
+                    "family": "A"
+                },
+                "networkAcls": {
+                    "value": {
+                        "defaultAction": "Allow",
+                        "bypass": "AzureServices"
+                    }
+                }
             }
         },
         {
             "type": "Microsoft.KeyVault/vaults/secrets",
             "apiVersion": "2016-10-01",
             "name": "[concat(variables('keyVaultName'), '/ClientId')]",
-            "location": "westus2",
+            "comments": "This secret is for the ClientID, or the Azure AD Application ID.",
             "dependsOn": [
                 "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
             ],
@@ -661,7 +671,7 @@
             "type": "Microsoft.KeyVault/vaults/secrets",
             "apiVersion": "2016-10-01",
             "name": "[concat(variables('keyVaultName'), '/ClientSecret')]",
-            "location": "westus2",
+            "comments": "This secret is for the ClientSecret which is for the Azure AD Application Registration.",
             "dependsOn": [
                 "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
             ],
@@ -676,7 +686,7 @@
             "type": "Microsoft.KeyVault/vaults/secrets",
             "apiVersion": "2016-10-01",
             "name": "[concat(variables('keyVaultName'), '/RedisCacheConfiguration')]",
-            "location": "westus2",
+            "comments": "This secret is for the Redis Cache configuration.",
             "dependsOn": [
                 "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
             ],
@@ -691,7 +701,7 @@
             "type": "Microsoft.KeyVault/vaults/secrets",
             "apiVersion": "2016-10-01",
             "name": "[concat(variables('keyVaultName'), '/StorageConnectionString')]",
-            "location": "westus2",
+            "comments": "This secret is the Azure Table storage connection string.",
             "dependsOn": [
                 "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
             ],
@@ -706,7 +716,7 @@
             "type": "Microsoft.KeyVault/vaults/secrets",
             "apiVersion": "2016-10-01",
             "name": "[concat(variables('keyVaultName'), '/TenantId')]",
-            "location": "westus2",
+            "comments": "This secret is the Tenant ID of the Teams instance.",
             "dependsOn": [
                 "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
             ],
@@ -721,7 +731,7 @@
             "type": "Microsoft.KeyVault/vaults/secrets",
             "apiVersion": "2016-10-01",
             "name": "[concat(variables('keyVaultName'), '/WorkforceSuperUserName')]",
-            "location": "westus2",
+            "comments": "This secret is the Kronos WFC Superuser name.",
             "dependsOn": [
                 "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
             ],
@@ -729,14 +739,14 @@
                 "attributes": {
                     "enabled": true
                 },
-                "value": "[variables('defaultKronosUserName')]"
+                "value": "[parameters('kronosUserName')]"
             }
         },
         {
             "type": "Microsoft.KeyVault/vaults/secrets",
             "apiVersion": "2016-10-01",
             "name": "[concat(variables('keyVaultName'), '/WorkforceSuperUserPassword')]",
-            "location": "westus2",
+            "comments": "This secret is the Kronos WFC Superuser password.",
             "dependsOn": [
                 "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
             ],
@@ -744,7 +754,7 @@
                 "attributes": {
                     "enabled": true
                 },
-                "value": "[variables('defaultKronosPassword')]"
+                "value": "[parameters('kronosPassword')]"
             }
         },
         {
@@ -752,6 +762,7 @@
             "type": "Microsoft.Logic/workflows",
             "apiVersion": "2016-06-01",
             "location": "[parameters('location')]",
+            "comments": "This resource defines the Azure Logic app to periodically sync data between Kronos WFC and Shifts.",
             "tags": {
             },
             "scale": null,
