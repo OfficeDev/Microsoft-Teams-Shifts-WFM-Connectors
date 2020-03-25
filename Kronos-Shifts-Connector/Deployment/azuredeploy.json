@@ -626,7 +626,7 @@
                         "tenantId": "[subscription().tenantId]",
                         "permissions": {
                             "secrets": [
-                                "get", "list", "backup", "restore"
+                                "get"
                             ],
                             "keys": [
                             ],
@@ -654,10 +654,6 @@
                             "keys": [
                             ],
                             "secrets": [
-                                "get",
-                                "list",
-                                "set",
-                                "delete"
                             ],
                             "certificates": [
                             ]
