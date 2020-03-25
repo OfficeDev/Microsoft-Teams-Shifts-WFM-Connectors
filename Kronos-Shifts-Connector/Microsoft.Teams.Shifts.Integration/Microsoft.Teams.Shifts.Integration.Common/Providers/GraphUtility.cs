@@ -155,7 +155,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             var hcfClient = this.httpClientFactory.CreateClient("GraphBetaAPI");
             hcfClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
             hcfClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            var requestUri = "groups";
+            var requestUri = "groups?$filter=resourceProvisioningOptions";
             do
             {
                 using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, requestUri))
@@ -183,6 +183,8 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
                     }
                     else
                     {
+                        hasMoreTeams = false;
+
                         var failedResponseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                         var failedResponseProps = new Dictionary<string, string>()
                         {
