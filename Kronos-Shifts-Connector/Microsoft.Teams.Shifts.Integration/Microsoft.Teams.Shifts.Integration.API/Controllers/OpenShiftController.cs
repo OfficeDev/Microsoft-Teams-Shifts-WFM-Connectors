@@ -265,8 +265,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                                     }
                                                     else
                                                     {
-                                                        telemetryProps.Add("MappedTeamStatus", $"There is no mappedTeam found with WFI ID: {allRequiredConfigurations.WFIId}");
-                                                        this.telemetryClient.TrackTrace(Resource.SyncOpenShiftsFromKronos, telemetryProps);
+                                                        this.telemetryClient.TrackTrace($"{Resource.SyncOpenShiftsFromKronos} - There is no mappedTeam found with WFI ID: {allRequiredConfigurations.WFIId}");
                                                         continue;
                                                     }
                                                 }
@@ -414,10 +413,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var isInOpenShiftRequestMappingTable = await this.openShiftRequestMappingEntityProvider.CheckOpenShiftRequestExistance(item.TeamsOpenShiftId).ConfigureAwait(false);
                 if (!isInOpenShiftRequestMappingTable)
                 {
-                this.telemetryClient.TrackTrace($"{item.TeamsOpenShiftId} is not in the Open Shift Request mapping table - deletion can be done.");
-                var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-                using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Delete, "teams/" + mappedTeam.TeamId + "/schedule/openShifts/" + item.TeamsOpenShiftId))
+                    this.telemetryClient.TrackTrace($"{item.TeamsOpenShiftId} is not in the Open Shift Request mapping table - deletion can be done.");
+                    var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                    using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Delete, "teams/" + mappedTeam.TeamId + "/schedule/openShifts/" + item.TeamsOpenShiftId))
                     {
                         var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
                         if (response.IsSuccessStatusCode)
@@ -446,7 +445,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                             this.telemetryClient.TrackTrace(Resource.DeleteOrphanDataOpenShiftsEntityMappingAsync, errorDeleteProps);
                         }
-                   }
+                    }
                 }
                 else
                 {

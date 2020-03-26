@@ -507,9 +507,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                                 }
                                                 else
                                                 {
-                                                    this.telemetryClient.TrackTrace($"ResponseBody - {approvalHttpResponse.Content.ToString()}");
-                                                    telemetryProps.Add("ErrorReason", $"The service is acting on Open Shift Request: {entityToUpdate?.RowKey} which may have been approved");
-                                                    this.telemetryClient.TrackTrace(Resource.ProcessOpenShiftsRequests + "-Error", telemetryProps);
+                                                    this.telemetryClient.TrackTrace($"{Resource.ProcessOpenShiftsRequests} -Error The service is acting on Open Shift Request: {entityToUpdate?.RowKey} which may have been approved");
                                                 }
                                             }
                                         }
@@ -552,9 +550,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                         }
                                         else
                                         {
-                                            this.telemetryClient.TrackTrace($"ResponseBody - {declineHttpResponse.Content.ToString()}");
-                                            telemetryProps.Add("ErrorReason", $"The service is acting on Open Shift Request: {entityToUpdate?.RowKey} which may have been approved or declined.");
-                                            this.telemetryClient.TrackTrace(Resource.ProcessOpenShiftsRequests + "-Error", telemetryProps);
+                                            this.telemetryClient.TrackTrace($"{Resource.ProcessOpenShiftsRequests} -Error: The service is acting on Open Shift Request: {entityToUpdate?.RowKey} which may have been approved or declined.");
                                         }
                                     }
                                 }
