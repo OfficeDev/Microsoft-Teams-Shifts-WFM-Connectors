@@ -155,7 +155,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             hcfClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
             // Filter group who has associated teams also.
-            var requestUri = "groups?$filter=resourceProvisioningOptions";
+            var requestUri = "groups?$filter=resourceProvisioningOptions/Any(x:x eq 'Team')";
             do
             {
                 using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, requestUri))
