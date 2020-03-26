@@ -249,26 +249,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                 }
 
                 // Fetching the shift team details
-                var teamDetailsResponse = await this.graphUtility.FetchShiftTeamDetailsAsync(graphAccessToken).ConfigureAwait(false);
-
-                if (string.IsNullOrEmpty(teamDetailsResponse))
-                {
-                    throw new NullReferenceException(Resources.TeamDetailsResponseNullOrEmpty);
-                }
-
-                // Deserializing the response of shift team details
-                var result = JsonConvert.DeserializeObject<ShiftTeamDetails>(teamDetailsResponse);
-
-                List<ShiftTeams> shiftTeamsList = new List<ShiftTeams>();
-                if (result != null && result.Value != null)
-                {
-                    shiftTeamsList = result.Value.Select(element =>
-                    new ShiftTeams
-                    {
-                        ShiftTeamId = element.ShiftTeamId,
-                        ShiftTeamName = element.ShiftTeamName,
-                    }).ToList();
-                }
+                var shiftTeamsList = await this.graphUtility.FetchShiftTeamDetailsAsync(graphAccessToken).ConfigureAwait(false);
 
                 // Iterating the shift teams list to fetch the scheduling groups corrsponding to the shift teams id
                 foreach (var shiftTeam in shiftTeamsList)

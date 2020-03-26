@@ -282,6 +282,7 @@
     <Compile Include="Cache\RedisTokenCache.cs" />
     <Compile Include="Models\AllOpenShiftMappingEntity.cs" />
     <Compile Include="Models\AllOpenShiftRequestMappingEntity.cs" />
+    <Compile Include="Models\AllShiftsTeam.cs" />
     <Compile Include="Models\AllUserMappingEntity.cs" />
     <Compile Include="Models\ConfigEntityViewModel.cs" />
     <Compile Include="Models\ConfigurationEntity.cs" />

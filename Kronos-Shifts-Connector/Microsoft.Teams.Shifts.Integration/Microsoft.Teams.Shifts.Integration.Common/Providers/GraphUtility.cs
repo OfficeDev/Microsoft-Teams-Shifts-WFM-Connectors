@@ -56,11 +56,6 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             Models.RequestModels.WorkforceIntegration workforceIntegration,
             string accessToken)
         {
-            if (workforceIntegration is null)
-            {
-                throw new ArgumentNullException(nameof(workforceIntegration));
-            }
-
             var provider = CultureInfo.InvariantCulture;
             this.telemetryClient.TrackTrace(BusinessLogicResource.RegisterWorkforceIntegrationAsync + " called at " + DateTime.Now.ToString("o", provider));
 
@@ -88,7 +83,6 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         {
             var fetchShiftUserDetailsProps = new Dictionary<string, string>()
             {
-                { "AccessToken", accessToken },
                 { "CallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
             };
 
@@ -103,9 +97,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             var requestUri = "users";
             do
             {
-                using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, requestUri)
-                {
-                })
+                using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, requestUri))
                 {
                     var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
                     if (response.IsSuccessStatusCode)
@@ -146,41 +138,68 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// </summary>
         /// <param name="accessToken">Access Token.</param>
         /// <returns>The shift user.</returns>
-        public async Task<string> FetchShiftTeamDetailsAsync(
+        public async Task<List<ShiftTeams>> FetchShiftTeamDetailsAsync(
             string accessToken)
         {
             var fetchShiftUserDetailsProps = new Dictionary<string, string>()
             {
-                { "AccessToken", accessToken },
                 { "CallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
             };
+
+            List<ShiftTeams> shiftTeams = new List<ShiftTeams>();
+            var hasMoreTeams = false;
 
             this.telemetryClient.TrackTrace(BusinessLogicResource.FetchShiftTeamDetailsAsync, fetchShiftUserDetailsProps);
             var hcfClient = this.httpClientFactory.CreateClient("GraphBetaAPI");
             hcfClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
             hcfClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, "groups")
-            {
-            })
-            {
-                var response = await hcfClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
-                if (response.IsSuccessStatusCode)
-                {
-                    var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    return responseContent;
-                }
-                else
-                {
-                    var failedResponseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var failedResponseProps = new Dictionary<string, string>()
-                    {
-                        { "FailedResponse", failedResponseContent },
-                    };
 
-                    this.telemetryClient.TrackTrace(BusinessLogicResource.FetchShiftTeamDetailsAsync, failedResponseProps);
-                    return string.Empty;
+            // Filter group who has associated teams also.
+            var requestUri = "groups?$filter=resourceProvisioningOptions/Any(x:x eq 'Team')";
+            do
+            {
+                using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, requestUri))
+                {
+                    var response = await hcfClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                        var allResponse = JsonConvert.DeserializeObject<AllShiftsTeam>(responseContent);
+                        shiftTeams.AddRange(allResponse.ShiftTeams);
+
+                        // If Shifts has more Teams. Typically graph API has 100 teams in one batch.
+                        // Using nextlink, teams from next batch is fetched.
+                        if (allResponse.NextLink != null)
+                        {
+                            requestUri = allResponse.NextLink.ToString();
+                            hasMoreTeams = true;
+                        }
+
+                        // nextlink is null when there are no batch of teams to be fetched.
+                        else
+                        {
+                            hasMoreTeams = false;
+                        }
+                    }
+                    else
+                    {
+                        hasMoreTeams = false;
+
+                        var failedResponseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                        var failedResponseProps = new Dictionary<string, string>()
+                        {
+                            { "FailedResponse", failedResponseContent },
+                        };
+
+                        this.telemetryClient.TrackTrace(BusinessLogicResource.FetchShiftTeamDetailsAsync, failedResponseProps);
+                    }
                 }
             }
+
+            // loop until Shifts has more teams to fetch.
+            while (hasMoreTeams);
+
+            return shiftTeams;
         }
 
         /// <summary>
