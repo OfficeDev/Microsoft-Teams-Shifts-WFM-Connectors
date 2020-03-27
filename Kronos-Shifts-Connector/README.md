@@ -157,7 +157,7 @@ Here are the following requirements to correctly deploy the **Shifts-Kronos Inte
 10.	Wait for the deployment to finish. You can check the progress of the deployment from the *Notifications* pane of the Azure portal
 11.	Once the deployment has finished, you would have the option to navigate to the resource group to ensure all resources are deployed correctly
 12. Upon a successful deployment you would be presented with a screen that shows a large green check mark and a phrase similar to *Your deployment completed successfully*
-13. Smoke test – this step is required to ensure that all the code has been properly deployed
+13. Smoke test – this step is required to ensure that all the code has been properly deployed, and the necessary steps that follow will aid in conducting the necessary smoke tests to be conducted.
 
 ## Post ARM Template Deployment Steps
 The following actions are to be done post deployment to ensure that all the information is being exchanged correctly between the resources in the newly created resource group:
@@ -211,7 +211,10 @@ Once the ARM Template deployment succeeds, it is important that you still add on
 14.   Now click on the *Add* button, and you would be automatically redirected to the page which is shown in step 4. However, now you would see 4 access policies which would be similar to what is shown below:
 
 ![All Azure KeyVault access policies are configured](images/figure41.png)
-*Note*: There may be a difference in the names of the applications and the app registration. The main purpose is to ensure that there are a total of ***4*** access policies that are configured.
+*Note*: There may be a difference in the names of the applications and the app registration. The main purpose is to ensure that there are a total of ***3*** access policies that are configured. These three KeyVault policies are for the following:  
+1. Configuration Web App  
+2. Integration API Web App  
+3. User access policy
 
 ### Setting up the Redirect URIs
 1. Once the ARM Template deployment is successful, there would be an output screen that will show the necessary URL for the Configuration Web App service. Copy that URL into an application such as Notepad  
