@@ -486,6 +486,26 @@ The following are common issues that tenant admins may encounter while following
 |-----|------|
 |Sorry your change couldn't be completed|Swap shift request creation/submission success depends upon business rules on Kronos side so FLWs need to be aware of those before requesting Swap 1. Swap shift is not possible for past date in Shifts. If such request is initiated from Shifts, the Workforce Integration sends error to Shifts. Shifts will display a generic error message 2. Swap shift is not allowed in Kronos if user already has same shift as the requested shift. The Workforce Integration sends error to Shifts. Shifts will display a generic error message. 3. If User1 has requested User2 for a swap shift and user2 has requested the same shift to User 3, then one of the requests will get approved and other will be declined|
 
+# Continuous Deployment in Azure App Services
+In order to ensure you have the latest build/changes to the app services, you would need to have the code updated for both the Configuration Web App, and the Integration API Service applications. To get the latest changes, please follow the instructions below:
+1. Log in to the Azure Portal for your subscription.
+2. Navigate to resource group where you have deployed the Shifts-Kronos Integration resources, and you should see something similar to the screengrab below:
+
+![Sample resource group](images/sample-resource-group.png)
+
+3. Navigate to the resource which has the `-config` string appended to the base resource name. In the screenshot above, `k2shifts-config`. When doing so, you should see the below screenshot:
+
+![Configuration app overview](images/config-app-overview.png)
+
+4. On the left hand side of the screenshot in the above step, under the *Deployment* section, there is a label that reads *Deployment Center*. Once you navigate into the deployment center, your screen should resemble the below:
+
+![Deployment center overview](images/deployment-center-overview.png)
+
+5. In the screenshot in the previous step, there is a button that reads *Sync*. Please click on that button, and it will initiate the sync from GitHub and deploy the code.  
+6. Once the code has synced successfully, navigate to the overview, which is shown in Step 3.
+7. Make sure to click on the button that reads *Restart* in the screenshot in step 3.
+8. Repeat the above steps 1-7 for the resource that has the string `-api` appended to the base resource name.
+
 # Best Practices
 The following tips are recommended as best practices when it comes to deploying the Shifts-Kronos Integration package from GitHub:
 1.	One instance of Kronos WFC corresponds to one instance of Teams
