@@ -266,7 +266,7 @@ Once the ARM Template deployment is successful, one final operation is to ensure
 ![Downloading the mapping templates](images/download-template.png)  
 
 9. Once you have downloaded the mapping template files, navigate back to the screenshot in step 6 which should be empty.  
-10. Upload the downloaded template files and in step 6, your screen should then resemble that screen.
+10. Upload the downloaded template files and in step 6, your screen should then resemble that screengrab.
 
 ### User Creation through the Teams Admin Portal
 1.    Navigate to the [Microsoft Teams Admin Portal](https://admin.teams.microsoft.com)
