@@ -260,7 +260,13 @@ Once the ARM Template deployment is successful, one final operation is to ensure
 
 ![Navigation inside of the templates blob](images/figure9.png)
 
-7. Next, you would need to download the necessary empty template files from GitHub, and those files can be found [here]()
+7. Next, you would need to download the necessary empty template files from GitHub, and those files can be found [here](https://github.com/OfficeDev/Microsoft-Teams-Shifts-WFM-Connectors/tree/v-prkris/arm-template-deployment-guide/Kronos-Shifts-Connector/Templates)
+8. Then navigate to each file, and there should be a button that reads *Download*. The screen should resemble the following: 
+
+![Downloading the mapping templates](images/download-template.png)  
+
+9. Once you have downloaded the mapping template files, navigate back to the screenshot in step 6 which should be empty.  
+10. Upload the downloaded template files and in step 6, your screen should then resemble that screen.
 
 ### User Creation through the Teams Admin Portal
 1.    Navigate to the [Microsoft Teams Admin Portal](https://admin.teams.microsoft.com)
