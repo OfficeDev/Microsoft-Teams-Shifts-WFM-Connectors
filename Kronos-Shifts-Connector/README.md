@@ -252,12 +252,15 @@ Once the ARM Template deployment is successful, one final operation is to ensure
 ![Storage account overview](images/figure7.png)
 
 4.	Navigate into the containers, by clicking on the link that reads *Containers* from the figure above
-5.	Upon navigation to the containers, the ARM Template should provision a blob container called “templates”, and the screen should resemble below:
+5.	Upon navigation to the containers, the ARM Template should provision a blob container called “templates”, and the screen should resemble below:  
 
-![Templates blob container](images/figure8.png)
-1. Navigate inside of the "templates" blob container, and the screen should resemble the next screenshot below: 
+![Templates blob container](images/figure8.png)  
+
+6. Navigate inside of the "templates" blob container, and the screen should resemble the next screenshot below: 
 
 ![Navigation inside of the templates blob](images/figure9.png)
+
+7. Next, you would need to download the necessary empty template files from GitHub, and those files can be found [here]()
 
 ### User Creation through the Teams Admin Portal
 1.    Navigate to the [Microsoft Teams Admin Portal](https://admin.teams.microsoft.com)
