@@ -143,7 +143,7 @@ Here are the following requirements to correctly deploy the **Shifts-Kronos Inte
 |firstTimeSyncEndDate|This is the end date of the first-time data sync between Kronos and Shifts|
 |location|This is the data center for all the resources that will be deployed through the ARM Template. Make sure that you select a location that can host Application Insights, Azure Table Storage, Azure Key Vault, and Redis Cache|
 |storageAccountType|This is the storage grade for the Azure table storage account|
-|Sku|This is the payment tier of the various resources|
+|sku|This is the payment tier of the various resources|
 |planSize|The size of the hosting plan required for the API web app service and the Configuration Web App service|
 |processNumberOfUsersInBatch|When syncing the shift entities between Kronos and Shifts, the transfer is done based on users in a batch manner. The default value is 100 and can be changed at the time of deployment|
 |processNumberOfOrgJobsInBatch|When syncing the open shift entities between Kronos and Shifts, the transfer is done based on the org job paths in a batch manner. The default value is 50 and can be changed at the time of deployment|
@@ -257,9 +257,16 @@ Once the ARM Template deployment is successful, one final operation is to ensure
 5.	Upon navigation to the containers, the ARM Template should provision a blob container called “templates”, and the screen should resemble below:
 
 ![Templates blob container](images/figure8.png)
-1. Navigate inside of the "templates" blob container, and the screen should resemble the next screenshot below: 
+6. Navigate inside of the "templates" blob container, and the screen should resemble the next screenshot below: 
 
 ![Navigation inside of the templates blob](images/figure9.png)
+
+7. Initially you would see an empty container. That is due to the fact that you would need to get the necessary files uploaded.
+8. On GitHub, there is a sub-directory within the `Kronos-Shifts-Connector` folder called `Excel Templates`. Navigate to that folder, and for additional reference, see the screenshot below: 
+
+![Excel Templates directory on GitHub]()
+
+9.  Download both Excel files from the above 
 
 ### User Creation through the Teams Admin Portal
 1.    Navigate to the [Microsoft Teams Admin Portal](https://admin.teams.microsoft.com)
