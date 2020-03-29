@@ -264,9 +264,10 @@ Once the ARM Template deployment is successful, one final operation is to ensure
 7. Initially you would see an empty container. That is due to the fact that you would need to get the necessary files uploaded.
 8. On GitHub, there is a sub-directory within the `Kronos-Shifts-Connector` folder called `Excel Templates`. Navigate to that folder, and for additional reference, see the screenshot below: 
 
-![Excel Templates directory on GitHub]()
+![Excel Templates directory on GitHub](images/excel-templates-folder-GitHub.png)
 
-9.  Download both Excel files from the above 
+9.  Download both Excel files from the above location.
+10. Navigate back to the Azure portal, to the screenshot in step 5, and upload the Excel files accordingly. 
 
 ### User Creation through the Teams Admin Portal
 1.    Navigate to the [Microsoft Teams Admin Portal](https://admin.teams.microsoft.com)
@@ -275,7 +276,7 @@ Once the ARM Template deployment is successful, one final operation is to ensure
 
 ![Home page of the Teams Admin portal](images/figure10.png)
 
-4. From the figure above, navigate to the Users page by clicking on the option that reads *Users* in the left hand blade. The screen should resemble the following below:
+1. From the figure above, navigate to the Users page by clicking on the option that reads *Users* in the left hand blade. The screen should resemble the following below:
 
 ![The users landing page](images/figure11.png)
 
