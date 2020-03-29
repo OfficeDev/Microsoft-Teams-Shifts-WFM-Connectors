@@ -141,7 +141,7 @@ Here are the following requirements to correctly deploy the **Shifts-Kronos Inte
 |teamsTenantId|This is the Tenant ID of your Teams tenant, and it can be different than the tenant ID of the Azure sub where the Shifts-Kronos Integration package is deployed|
 |firstTimeSyncStartDate|This is the start date of the first-time data sync between Kronos and Shifts|
 |firstTimeSyncEndDate|This is the end date of the first-time data sync between Kronos and Shifts|
-|Location|This is the data center for all the resources that will be deployed through the ARM Template. Make sure that you select a location that can host Application Insights, Azure Table Storage, Azure Key Vault, and Redis Cache|
+|location|This is the data center for all the resources that will be deployed through the ARM Template. Make sure that you select a location that can host Application Insights, Azure Table Storage, Azure Key Vault, and Redis Cache|
 |storageAccountType|This is the storage grade for the Azure table storage account|
 |Sku|This is the payment tier of the various resources|
 |planSize|The size of the hosting plan required for the API web app service and the Configuration Web App service|
@@ -149,6 +149,9 @@ Here are the following requirements to correctly deploy the **Shifts-Kronos Inte
 |processNumberOfOrgJobsInBatch|When syncing the open shift entities between Kronos and Shifts, the transfer is done based on the org job paths in a batch manner. The default value is 50 and can be changed at the time of deployment|
 |syncFromPreviousDays|The number of days in the past for subsequent syncs between Kronos and Shifts|
 |syncToNextDays|The number of days in the future for subsequent syncs between Kronos and Shifts|
+|correctDateSpanForOutboundCalls|The number of days in the past and future when it comes to having outbound calls for the Open Shift and Swap Shift Requests|
+|kronosUserName|The Kronos WFC SuperUser name|
+|kronosPassword|The Kronos WFC SuperUser password|
 |gitRepoUrl|The public GitHub repository URL|
 |gitBranch|The specific branch from which the code can be deployed. The recommended value is master, however, at the time of deployment this value can be changed|
 
@@ -158,6 +161,8 @@ Here are the following requirements to correctly deploy the **Shifts-Kronos Inte
 11.	Once the deployment has finished, you would have the option to navigate to the resource group to ensure all resources are deployed correctly
 12. Upon a successful deployment you would be presented with a screen that shows a large green check mark and a phrase similar to *Your deployment completed successfully*
 13. Smoke test – this step is required to ensure that all the code has been properly deployed
+
+* *Note*: With the baseResourceName, the minimum length is 3 characters, maximum length is 24 characters, and it should contain only numbers and letters. Therefore, it is recommended to use a baseResourceName at 8 characters because the names of the resources that are being deployed via the ARM Template will contain strings such as `-logicApp` for the Azure Logic App; `-api` for the Integration Service API; `-config` for the Configuration Web App; etc..
 
 ## Post ARM Template Deployment Steps
 The following actions are to be done post deployment to ensure that all the information is being exchanged correctly between the resources in the newly created resource group:
@@ -414,6 +419,77 @@ d.	No duplicate rows
 Note: If a team has not been mapped (i.e. Meatpacking team), and the users under the Meatpacking team have been mapped, the data in Kronos WFC for the Meatpacking department will not be synced to the Meatpacking team on Shifts. In other words, those users will be skipped during the sync operations.
 
 ![Teams to Department Mapping screen](images/figure25.png)
+
+*Note*: For the Teams and Department Mappings, you should create the teams and the scheduling groups first in the Shifts UI if the number of teams in your Azure AD tenant is less than 10. If on the other hand, the number of teams in your Azure AD tenant is greater, go [here](#automating-the-process-to-create-scheduling-groups) for the necessary instructions.
+
+#### Automating the process to create scheduling groups
+It is important to note that you would need to create the necessary scripts using PowerShell or a scripting language that you are comfortable. Also, another key prerequisite, make sure to use the ClientID from earlier to be able to obtain the necessary Graph API token. 
+
+1. Get the list of team IDs that you are a part of. You can find the documentation [here](https://docs.microsoft.com/en-us/graph/api/user-list-joinedteams?view=graph-rest-beta&tabs=http), and the necessary API reference is listed below:
+
+`GET https://graph.microsoft.com/beta/me/joinedTeams`
+
+The permissions that are required for this API are in Table 3 below.
+
+**Table 3.** Required Graph API permissions
+Permission type|Permissions (from least to most privileged)
+----------------|------------------------
+|Delegated (work or school account)|User.Read.All, User.ReadWrite.All|
+|Delegated (personal Microsoft account)|Not supported.|
+|Application|User.Read.All, User.ReadWrite.All|
+
+*Note* - With the above permissions, please ensure that these permissions are listed with your Azure AD application registration.
+
+2. Obtain a list of the user IDs to be added into the new scheduling group. You can get the list of users from the User to User Mapping exported Excel file as a sample source. The documentation reference is found [here](https://docs.microsoft.com/en-us/graph/api/group-list-members?view=graph-rest-beta&tabs=http). The necessary API reference is also found below: 
+
+`GET https://graph.microsoft.com/beta/groups/{id}/members` where `{id}` is to be substituted with a groupId from the previous step. In the table below, **Table 4**, you will see the Graph API permissions that are required:
+
+**Table 4.** Permissions required for this Graph API.
+Permission type|Permissions (from least to most privileged)
+----------------|------------------------
+|Delegated (work or school account)|User.ReadBasic.All, User.Read.All, Group.Read.All, Directory.Read.All|
+|Delegated (personal Microsoft account)|Not supported.|
+|Application|Group.Read.All, Directory.Read.All|
+
+3. Create the scheduling group by passing in the necessary team ID and the user IDs. The API documentation can be found [here](https://docs.microsoft.com/en-us/graph/api/schedule-post-schedulinggroups?view=graph-rest-beta&tabs=http), and find the API reference: `POST https://graph.microsoft.com/beta/teams/{teamId}/schedule/schedulingGroups`
+
+The body of the request would be defined as follows:
+
+```json
+{
+   "displayName": "SampleSchedulingGroupName",
+   "isActive": true,
+   "userIds": [
+      "userId1",
+      "userId2",
+      "userId3"
+   ]
+}
+```  
+Replace the `SampleSchedulingGroupName` with the scheduling group name which would be the job code or the last labor level in the Org Job Path. The required permissions are shown in **Table 5**. 
+
+**Table 5.** Required Graph API permissions.
+Permission type|Permissions (from least to most privileged)
+----------------|------------------------
+|Delegated (work or school account)|Group.ReadWrite.All|
+|Delegated (personal Microsoft account)|Not supported.|
+|Application|Schedule.ReadWrite.All|
+
+*Note*: Anytime that users are to be added or removed, there would need to be a PUT call made. [Here](https://docs.microsoft.com/en-us/graph/api/schedulinggroup-put?view=graph-rest-beta&tabs=http) is the documentation for the resource, and the following is the exact HTTP call:
+
+`PUT https://graph.microsoft.com/beta/teams/{teamId}/schedule/schedulingGroups/{schedulingGroupId}` where the teamId is obtained from step 1, and the schedulingGroupId is obtained from the previous step. The schema for the PUT call is shown below:
+
+```json
+{
+  "displayName": "Cashiers",
+  "isActive": true,
+  "userIds": [
+    "c5d0c76b-80c4-481c-be50-923cd8d680a1",
+    "2a4296b3-a28a-44ba-bc66-0274b9b95851"
+  ]
+}
+```
+Once the necessary steps have been done, and you will be able to continue mapping the teams and departments between Shifts and Kronos WFC. 
 
 ### Step 4: Perform first time sync
 Click on the Done button in Team to Department Mapping screen, which will initiate following workflows:  
