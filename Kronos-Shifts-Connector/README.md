@@ -216,7 +216,7 @@ Once the ARM Template deployment succeeds, it is important that you still add on
 14.   Now click on the *Add* button, and you would be automatically redirected to the page which is shown in step 4. However, now you would see 4 access policies which would be similar to what is shown below:
 
 ![All Azure KeyVault access policies are configured](images/figure41.png)
-*Note*: There may be a difference in the names of the applications and the app registration. The main purpose is to ensure that there are a total of ***4*** access policies that are configured.
+*Note*: There may be a difference in the names of the applications and the app registration. The main purpose is to ensure that there are a total of ***3*** access policies that are configured.
 
 ### Setting up the Redirect URIs
 1. Once the ARM Template deployment is successful, there would be an output screen that will show the necessary URL for the Configuration Web App service. Copy that URL into an application such as Notepad  
@@ -557,6 +557,8 @@ The following are common issues that tenant admins may encounter while following
 |Error|Reason|
 |-----|------|
 |Sorry your change couldn't be completed|Swap shift request creation/submission success depends upon business rules on Kronos side so FLWs need to be aware of those before requesting Swap 1. Swap shift is not possible for past date in Shifts. If such request is initiated from Shifts, the Workforce Integration sends error to Shifts. Shifts will display a generic error message 2. Swap shift is not allowed in Kronos if user already has same shift as the requested shift. The Workforce Integration sends error to Shifts. Shifts will display a generic error message. 3. If User1 has requested User2 for a swap shift and user2 has requested the same shift to User 3, then one of the requests will get approved and other will be declined|
+
+* Conflict due to source code deployment failure - There are possibilities that the underlying Azure deployment engine may not be able to properly deploy the source code from GitHub into the necessary Web App services. Navigate [here](#continuous-deployment-in-azure-app-services) to properly fix such issues.
 
 # Continuous Deployment in Azure App Services
 In order to ensure you have the latest build/changes to the app services, you would need to have the code updated for both the Configuration Web App, and the Integration API Service applications. To get the latest changes, please follow the instructions below:
