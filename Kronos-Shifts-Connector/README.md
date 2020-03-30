@@ -560,6 +560,12 @@ The following are common issues that tenant admins may encounter while following
 
 * Conflict due to source code deployment failure - There are possibilities that the underlying Azure deployment engine may not be able to properly deploy the source code from GitHub into the necessary Web App services. Navigate [here](#continuous-deployment-in-azure-app-services) to properly fix such issues.
 
+* Problem when using the Configuration Web App and/or Integration Service API
+
+|Issue|Solution|
+------|--------|
+|The specified CGI application encountered an error and the server terminated the process|This issue can be resolved by restarting the Configuration Web App and/or the Integration Service API. The instructions are found [here](#continuous-deployment-in-azure-app-services)|
+
 # Continuous Deployment in Azure App Services
 In order to ensure you have the latest build/changes to the app services, you would need to have the code updated for both the Configuration Web App, and the Integration API Service applications. To get the latest changes, please follow the instructions below:
 1. Log in to the Azure Portal for your subscription.
