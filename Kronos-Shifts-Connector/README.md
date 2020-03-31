@@ -12,14 +12,14 @@ The points noted below are to be considered as best practices to properly levera
 * IT Admin has functional understating of Kronos WFC 8.1 and Microsoft Teams Shifts App. IT Admin is also the super user of Kronos – The IT Admin needs to have admin-level access to Shifts as their credentials are required for request approval  
 * Kronos WFC serves as single source of truth for all entities. In other words, all entities in the scope of this integration such as: Shifts, Open Shifts, Time Offs should be created in Kronos by the FLMs
 * Shifts App is used by FLWs to view their schedules, create requests for Time Offs, Open Shifts, and Swap Shifts  
-* FLMs should use Kronos WFC only for all Approval/Rejection workflows. FLMs should not approve any requests in the Shifts app as it will cause data inconsistency between Kronos WFC and Shifts
+* FLMs should use Kronos WFC only for all Approval/Rejection workflows. FLMs should not approve any requests in the Shifts App as it will cause data inconsistency between Kronos WFC and Shifts
 * FLW requests (Open Shift Request, Swap Shift Request) will be synced from Shifts to Kronos in synchronous manner using Shifts Outbound APIs and Kronos WFC 8.1 data submission (POST) APIs  
-* FLW requests for Time Off will be sync’d from Shifts to Kronos in asynchronous manner  
-* Approved schedules for Shifts, Time Offs, Open-Shifts and Swap-Shifts will be sync’d from Kronos to Shifts in asynchronous manner using Kronos WFC 8.1 GET APIs and Shifts/Graph post APIs  
-* Status of requests created in Shifts App and synced to Kronos WFC will be synced back to Shifts to keep both systems in sync  
-* To sync all the requests initiated in Shifts (by FLWs) to Kronos, SuperUser account credentials are used. Once these are approved in Kronos (by FLMs), their approval status will be synced back to Shifts. These statuses are synced to Shifts using Microsoft Graph APIs with Shifts Admin account authorization  
+* FLW requests for Time Off will be synced from Shifts App to Kronos in asynchronous manner  
+* Approved schedules for Shifts, Time Offs, Open Shifts and Swap Shifts will be sync’d from Kronos to Shifts App in asynchronous manner using Kronos WFC 8.1 GET APIs and Shifts/Graph post APIs  
+* Status of requests created in Shifts App and synced to Kronos WFC will be synced back to Shifts App to keep both systems in sync  
+* To sync all the requests initiated in Shifts App (by FLWs) to Kronos, SuperUser account credentials are used. Once these are approved in Kronos (by FLMs), their approval status will be synced back to Shifts App. These statuses are synced to Shifts App using Microsoft Graph APIs with Shifts Admin account authorization  
 * Users must be created in Azure/Teams prior to User to User mapping step to be performed in Configuration Web App (Config Web App is one of the components of this integration as explained in below sections)  
-* Teams and Scheduling groups must be created in Shifts prior Teams to Department mapping step in Configuration Web App  
+* Teams and Scheduling groups must be created in Shifts App prior Teams to Department mapping step in Configuration Web App  
 * Done button on Configuration Web App should be used only for first time sync  
 * First time sync is expected to take longer time since it may sync data for larger time interval. The time would vary based on amount of data i.e. number of users, number of teams, number of entities (such as Shifts, TimeOffs, OpenShifts etc.) to be synced and date span of the Time interval for which the sync is happening. So, it may take time to reflect this complete data in Shifts. Done button click will initiate background process to complete the sync  
 
@@ -34,7 +34,7 @@ The Shifts-Kronos Integration application has the following components built usi
 
 1.	Azure Web App Services – For Configuration Web App and the Integration Service API. The Configuration Web App and the Integration Service API are both written in ASP.NET Core technologies
 2.	Azure Table Storage – the database account which contains the necessary tables required for the entire Shifts-Kronos Integration to work successfully
-3.	Azure Logic App – this is the schedule job that will sync data between Kronos WFC and Shifts on a configured interval of time or configured number of previous days from current date till number of next days, based on flag passed to APIs for slide dates or complete sync
+3.	Azure Logic App – this is the schedule job that will sync data between Kronos WFC and Shifts App on a configured interval of time or configured number of previous days from current date till number of next days, based on flag passed to APIs for slide dates or complete sync
 4.	Azure Key Vault – to store all the connection strings, client Ids, client secrets, access token for accessing graph API (All the data which requires encryption must be the part of key vault)
 5.	Kronos Solution – This is custom library project which is the part of Integration Service API. It will be used to query and submit data to Kronos WFC
 6.	Application Insights – Capture necessary telemetry at the time of necessary events, and will be used by both the Configuration Web App, the Integration Service API
@@ -138,16 +138,16 @@ Here are the following requirements to correctly deploy the **Shifts-Kronos Inte
 |aadAppClientSecret|This is the Client Secret from the app registration|
 |managedAadAppObjectId|This is the AAD Object ID of the app registration|
 |teamsTenantId|This is the Tenant ID of your Teams tenant, and it can be different than the tenant ID of the Azure sub where the Shifts-Kronos Integration package is deployed|
-|firstTimeSyncStartDate|This is the start date of the first-time data sync between Kronos and Shifts|
-|firstTimeSyncEndDate|This is the end date of the first-time data sync between Kronos and Shifts|
+|firstTimeSyncStartDate|This is the start date of the first-time data sync between Kronos and Shifts App|
+|firstTimeSyncEndDate|This is the end date of the first-time data sync between Kronos and Shifts App|
 |location|This is the data center for all the resources that will be deployed through the ARM Template. Make sure that you select a location that can host Application Insights, Azure Table Storage, Azure Key Vault, and Redis Cache|
 |storageAccountType|This is the storage grade for the Azure table storage account|
 |sku|This is the payment tier of the various resources|
 |planSize|The size of the hosting plan required for the API web app service and the Configuration Web App service|
-|processNumberOfUsersInBatch|When syncing the shift entities between Kronos and Shifts, the transfer is done based on users in a batch manner. The default value is 100 and can be changed at the time of deployment|
-|processNumberOfOrgJobsInBatch|When syncing the open shift entities between Kronos and Shifts, the transfer is done based on the org job paths in a batch manner. The default value is 50 and can be changed at the time of deployment|
-|syncFromPreviousDays|The number of days in the past for subsequent syncs between Kronos and Shifts|
-|syncToNextDays|The number of days in the future for subsequent syncs between Kronos and Shifts|
+|processNumberOfUsersInBatch|When syncing the shift entities between Kronos and Shifts App, the transfer is done based on users in a batch manner. The default value is 100 and can be changed at the time of deployment|
+|processNumberOfOrgJobsInBatch|When syncing the open shift entities between Kronos and Shifts App, the transfer is done based on the org job paths in a batch manner. The default value is 50 and can be changed at the time of deployment|
+|syncFromPreviousDays|The number of days in the past for subsequent syncs between Kronos and Shifts App|
+|syncToNextDays|The number of days in the future for subsequent syncs between Kronos and Shifts App|
 |correctDateSpanForOutboundCalls|The number of days in the past and future when it comes to having outbound calls for the Open Shift and Swap Shift Requests|
 |kronosUserName|The Kronos WFC SuperUser name|
 |kronosPassword|The Kronos WFC SuperUser password|
@@ -514,14 +514,14 @@ The first-time sync will be done using the parameters of *firstTimeSyncStartDate
 
 # Data Sync through Logic App
 The ARM Template provisions the Azure logic app, and the Azure logic app will execute based upon the sync frequency, sync interval, and sync hour chosen by the tenant admin. There are couple key differences to note between syncing data via the done button, and syncing the data via the Azure logic app. When the logic app is triggered on a scheduled interval, the time period for syncing data will be automatically calculated using the parameters syncFromPreviousDays and syncToNextDays from config file which represent the number of days in the past, and the number of days in the future respectively. The point of reference for the calculations will be based on the current date at which the logic app is executing.
-FLW requests (Open Shift Request, Swap Shift Request) will be sync’d from Shifts to Kronos in synchronous manner using Shifts Outbound APIs and Kronos WFC 8.1 data submission (POST) APIs (logic app does not play any role in this sync)
+FLW requests (Open Shift Request, Swap Shift Request) will be synced from Shifts to Kronos in synchronous manner using Shifts Outbound APIs and Kronos WFC 8.1 data submission (POST) APIs (logic app does not play any role in this sync)
 
 # Telemetry
 Shifts-Kronos Integration application utilizes Azure Application Insights to capture the necessary events and errors. It captures following properties:
 * Response from Kronos and Graph APIs – capturing necessary Id values.
   * Success
   * Errors
-* Events (sync from Kronos to Shifts, real-time outbound from Shifts to Kronos)
+* Events (sync from Kronos to Shifts App, real-time outbound from Shifts App to Kronos)
   * Method names
     * Parameters passed to methods
   * Timestamps (at the time when events happen)  
@@ -543,15 +543,15 @@ The following are common issues that tenant admins may encounter while following
 |-----|--------|
 |Graph token expiration - 401 Unauthorized|The Graph token may experie, and to resolve that: 1. Log out of the configuration web app. 2. Log back into the configuration web app.|
 
-* Problems while creating open shifts
-![Problems while creating open shifts](images/figure27.png)
+* Problems while creating Open Shifts
+![Problems while creating Open Shifts](images/figure27.png)
 
 |Error|Reason|
 |-----|------|
 |Sorry your change couldn't be completed|Above scenario may happen due to Kronos business rules: Ex: the number of working hours for the user should not be more than 40 hours for current week otherwise Kronos does not allow to create / submit the open shift request. If such request is initiated, the Workforce Integration sends error to Shifts and Shifts would not allow to submit such open shift request  **Solution:** FLW to choose and submit open shift requests after ensuring number of working hours quota for given duration|
 
 * Problem while creating swap shift requests
-![Problem while creating swap shifts](images/figure28.png)
+![Problem while creating swap Shifts](images/figure28.png)
 
 |Error|Reason|
 |-----|------|
@@ -591,8 +591,8 @@ The following tips are recommended as best practices when it comes to deploying 
 2.	Fork the main Microsoft repo for the following reasons:  
     * Any custom changes that are required, can be made on the forked copy of the Microsoft repository  
     * Easy to deploy changes from the forked copy of the Microsoft repo on to Azure subscription
-3. For the FLM (First Line Manager) operations such as: approving time off requests; approving open shift requests; approving swap shift requests; creating open shifts; creating shifts; etc. are to be conducted in Kronos WFC only.  
-   1. If the FLM approves any of the above mentioned requests, it has a consequence of causing data inconsistency between Microsoft Shifts, and Kronos WFC.
+3. For the FLM (First Line Manager) operations such as: approving Time Off Requests; approving Open Shift Requests; approving Swap Shift Requests; creating Open Shifts; creating Shifts; etc. are to be conducted in Kronos WFC only.  
+   1. If the FLM approves any of the above mentioned requests, it has a consequence of causing data inconsistency between Microsoft Shifts App, and Kronos WFC.
 
 # Legal notice
 
