@@ -29,7 +29,7 @@ The points noted below are to be considered as best practices to properly levera
   3. Training - this PayCode would be used if the FLW is attending a corporate training
   4. Sick - this PayCode would be used if the FLW is unable to come to work due to an illness
   5. Bereavement - this PayCode would be used if the FLW is having a family emergency
-* As mentioned, the list of above PayCodes are initially supported as part of the scope of the integration tooling. The Kronos WFC Admins would need to properly configure the required PayCodes
+* As mentioned, the list of above PayCodes are initially supported as part of the scope of the integration tooling. The Kronos WFC Admins would need to properly configure the required PayCodes. To manually configure PayCodes, please follow the steps outlined in the Troubleshooting section of the Design Document
 
 ## Solution Overview
 The Shifts-Kronos Integration application has the following components built using ASP.Net Core 2.2. Those need to be hosted on Microsoft Azure.  
