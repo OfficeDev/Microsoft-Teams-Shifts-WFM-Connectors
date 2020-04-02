@@ -23,7 +23,13 @@ The points noted below are to be considered as best practices to properly levera
 * Teams and Scheduling groups must be created in Shifts App prior Teams to Department mapping step in Configuration Web App  
 * Done button on Configuration Web App should be used only for first time sync  
 * First time sync is expected to take longer time since it may sync data for larger time interval. The time would vary based on amount of data i.e. number of users, number of teams, number of entities (such as Shifts, Time Offs, Open Shifts etc.) to be synced and date span of the Time interval for which the sync is happening. So, it may take time to reflect this complete data in Shifts. Done button click will initiate background process to complete the sync  
-* FLWs are to be aware of which PayCodes they have access to for creating the Time Off requests. The paycodes are to be configured ahead of time in the Kronos WFC instances.
+* FLWs are to be aware of which PayCodes they have access to for creating the Time Off requests. The paycodes are to be configured ahead of time in the Kronos WFC instances. The following list of Kronos PayCodes are supported initially:  
+  1. Vacation - this PayCode would be used if the FLW is taking a personal holiday
+  2. Personal - this PayCode would be used if the FLW is spending some personal time
+  3. Training - this PayCode would be used if the FLW is attending a corporate training
+  4. Sick - this PayCode would be used if the FLW is unable to come to work due to an illness
+  5. Bereavement - this PayCode would be used if the FLW is having a family emergency
+* As mentioned, the list of above PayCodes are initially supported as part of the scope of the integration tooling. The Kronos WFC Admins would need to properly configure the required PayCodes
 
 ## Solution Overview
 The Shifts-Kronos Integration application has the following components built using ASP.Net Core 2.2. Those need to be hosted on Microsoft Azure.  
