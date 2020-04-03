@@ -92,11 +92,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             {
                 this.taskWrapper.Enqueue(this.ProcessKronosToShiftsShiftsAsync(isRequestFromLogicApp));
 
-                using (StringContent stringContent = new StringContent(string.Empty))
-                {
-                    this.telemetryClient.TrackTrace($"SyncKronosToShifts ends at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}", telemetryProps);
-                    return this.Ok(stringContent);
-                }
+                this.telemetryClient.TrackTrace($"SyncKronosToShifts ends at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}", telemetryProps);
+                return this.Ok(string.Empty);
             }
             else
             {
