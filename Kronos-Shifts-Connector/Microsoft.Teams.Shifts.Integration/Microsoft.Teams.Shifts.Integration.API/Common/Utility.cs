@@ -187,9 +187,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         }
 
         /// <summary>
-        /// Convert '/' character of OrgJobPath from kronos into '$' to save this into Azure table Row/Partition key.
+        /// Convert '/' character of OrgJobPath from Kronos into '$' to save this into Azure table Row/Partition key.
         /// </summary>
-        /// <param name="orgJobPath">The actual OrgJobPath which is coming from kronos.</param>
+        /// <param name="orgJobPath">The actual OrgJobPath which is coming from Kronos.</param>
         /// <returns>Converted OrgJobPath.</returns>
         public static string OrgJobPathDBConversion(string orgJobPath)
         {
@@ -342,7 +342,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         public string GetShiftNotes(App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.ScheduleShift shift)
         {
             string result, noteContents;
-            this.telemetryClient.TrackTrace($"GetShiftNotes started.");
+            this.telemetryClient.TrackTrace($"GetShiftNotes start at {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
 
             if (shift is null)
             {
@@ -388,7 +388,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         {
             var provider = CultureInfo.InvariantCulture;
             string result, noteContents;
-            this.telemetryClient.TrackTrace("GetOpenShiftNotes started.");
+            this.telemetryClient.TrackTrace($"GetOpenShiftNotes start at {DateTime.UtcNow.ToString("O", provider)}");
 
             if (openShift is null)
             {
@@ -847,7 +847,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         }
 
         /// <summary>
-        /// This method converts UTC time to kronos timezone.
+        /// This method converts UTC time to Kronos timezone.
         /// </summary>
         /// <param name="dateTimeOffset">UTC nullable date time offset.</param>
         /// <returns>Kronos date time.</returns>
@@ -865,7 +865,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         }
 
         /// <summary>
-        /// This method converts UTC time to kronos timezone.
+        /// This method converts UTC time to Kronos timezone.
         /// </summary>
         /// <param name="dateTime">Date time.</param>
         /// <returns>Kronos date time.</returns>

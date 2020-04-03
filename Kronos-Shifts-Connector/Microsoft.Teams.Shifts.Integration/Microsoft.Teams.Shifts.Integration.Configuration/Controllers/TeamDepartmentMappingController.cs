@@ -142,7 +142,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                 TokenHelper tokenHelper = new TokenHelper(this.appSettings);
                 string apiAccessToken = tokenHelper.GenerateToken();
 
-                // Run sync kronos to shift.
+                // Run sync Kronos to Shifts.
                 using (request = this.PrepareHttpRequest("api/SyncKronosToShifts/StartSync/false", graphAccessToken, apiAccessToken))
                 {
                     syncKronosToShiftsResponse = client.SendAsync(request);
@@ -163,13 +163,13 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
             }
 
             if (string.IsNullOrEmpty(errorMsgs))
-                {
-                    return this.RedirectToAction("Index").WithSuccess(Resources.SuccessNotificationHeaderText, Resources.SetUpSuccessfulMessage);
-                }
-                else
-                {
-                    return this.RedirectToAction("Index").WithDanger(Resources.ErrorNotificationHeaderText, errorMsgs);
-                }
+            {
+                return this.RedirectToAction("Index").WithSuccess(Resources.SuccessNotificationHeaderText, Resources.SetUpSuccessfulMessage);
+            }
+            else
+            {
+                return this.RedirectToAction("Index").WithErrorMessage(Resources.ErrorNotificationHeaderText, errorMsgs);
+            }
         }
 
         /// <summary>
@@ -283,7 +283,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
             }
             else
             {
-                return this.RedirectToAction("Index", "TeamDepartmentMapping").WithDanger(Resources.ErrorNotificationHeaderText, Resources.WorkforceIntegrationNotRegister);
+                return this.RedirectToAction("Index", "TeamDepartmentMapping").WithErrorMessage(Resources.ErrorNotificationHeaderText, Resources.WorkforceIntegrationNotRegister);
             }
         }
 
@@ -403,7 +403,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
         /// <summary>
         /// Method to convert the model to DataTable.
         /// </summary>
-        /// <param name="shiftTeamsList">The list of teams in shifts.</param>
+        /// <param name="shiftTeamsList">The list of teams in Shifts.</param>
         /// <param name="kronosOrgJobPathList">The Kronos Details list.</param>
         /// <returns>File to browser's response.</returns>
         private static List<DataTable> ConvertModelToDataTable(

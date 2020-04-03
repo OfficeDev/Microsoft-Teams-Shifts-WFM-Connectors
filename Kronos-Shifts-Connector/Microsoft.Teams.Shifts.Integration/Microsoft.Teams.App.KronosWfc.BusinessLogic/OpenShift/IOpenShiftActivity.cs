@@ -66,7 +66,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
         /// <param name="endPointUrl">Kronos API Endpoint.</param>
         /// <param name="jSession">The jSession.</param>
         /// <param name="queryDateSpan">The query date span.</param>
-        /// <param name="kronosPersonNumber">The kronos person number.</param>
+        /// <param name="kronosPersonNumber">The Kronos person number.</param>
         /// <returns>A unit of execution.</returns>
         Task<Models.ResponseEntities.OpenShiftRequest.ApproveDecline.Response> GetApprovedOrDeclinedOpenShiftRequestsForUserAsync(
             Uri endPointUrl,

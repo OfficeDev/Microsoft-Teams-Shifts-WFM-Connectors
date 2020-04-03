@@ -125,11 +125,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var configurationEntities = await this.configurationProvider.GetConfigurationsAsync().ConfigureAwait(false);
             var configurationEntity = configurationEntities?.FirstOrDefault();
 
-            // Check whether passthrough header is present and is equal to workforce integration id.
-            var isPassthroughHeaderValid = requestHeaders.TryGetValue("X-MS-WFMPassthrough", out passThroughValue) ?
-                                            (string.Equals(passThroughValue, configurationEntity.WorkforceIntegrationId, StringComparison.Ordinal) ? true : false) : false;
-
-            this.telemetryClient.TrackTrace($"isPassthroughHeaderValid {isPassthroughHeaderValid}");
+            // Check whether Request coming from correct workforce integration is present and is equal to workforce integration id.
+            // Request is valid for OpenShift and SwapShift request FLM approval when the value of X-MS-WFMRequest coming
+            // from correct workforce integration is equal to current workforce integration id.
+            var isRequestFromCorrectIntegration = requestHeaders.TryGetValue("X-MS-WFMPassthrough", out passThroughValue) &&
+                                           string.Equals(passThroughValue, configurationEntity.WorkforceIntegrationId, StringComparison.Ordinal);
 
             // Step 2 - Create/declare the byte arrays, and other data types required.
             byte[] secretKeyBytes = Encoding.UTF8.GetBytes(configurationEntity?.WorkforceIntegrationSecret);
@@ -153,7 +153,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             if (jsonModel.Requests.Any(x => x.Url.Contains("/openshiftrequests/", StringComparison.InvariantCulture)))
             {
                 // Process payload for open shift request.
-                responseModelList = await this.ProcessOpenShiftRequest(jsonModel, updateProps, aadGroupId, isPassthroughHeaderValid).ConfigureAwait(false);
+                responseModelList = await this.ProcessOpenShiftRequest(jsonModel, updateProps, aadGroupId, isRequestFromCorrectIntegration).ConfigureAwait(false);
             }
 
             // Check if payload is for swap shift request.
@@ -162,7 +162,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 this.telemetryClient.TrackTrace("Teams Controller swapRequests " + JsonConvert.SerializeObject(jsonModel));
 
                 // Process payload for swap shift request.
-                responseModelList = await this.ProcessSwapShiftRequest(jsonModel, aadGroupId, isPassthroughHeaderValid).ConfigureAwait(true);
+                responseModelList = await this.ProcessSwapShiftRequest(jsonModel, aadGroupId, isRequestFromCorrectIntegration).ConfigureAwait(true);
             }
 
             // Check if payload is for open shift.
@@ -260,7 +260,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="itemId">Id for response.</param>
         /// <param name="statusCode">HttpStatusCode for the request been processed.</param>
         /// <param name="eTag">Etag based on response.</param>
-        /// <param name="error">Forward error to shifts if any.</param>
+        /// <param name="error">Forward error to Shifts if any.</param>
         /// <returns>ShiftsIntegResponse.</returns>
         private static ShiftsIntegResponse GenerateResponse(string itemId, HttpStatusCode statusCode, string eTag, ResponseError error)
         {
@@ -324,12 +324,34 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         }
 
         /// <summary>
+        /// Generate response to prevent actions.
+        /// </summary>
+        /// <param name="jsonModel">The request payload.</param>
+        /// <param name="errorMessage">Error message to send while preventing action.</param>
+        /// <returns>List of ShiftsIntegResponse.</returns>
+        private static List<ShiftsIntegResponse> GenerateResponseToPreventAction(RequestModel jsonModel, string errorMessage)
+        {
+            List<ShiftsIntegResponse> shiftsIntegResponses = new List<ShiftsIntegResponse>();
+            var integrationResponse = new ShiftsIntegResponse();
+            foreach (var item in jsonModel.Requests)
+            {
+                ResponseError responseError = new ResponseError();
+                responseError.Code = HttpStatusCode.BadRequest.ToString();
+                responseError.Message = errorMessage;
+                integrationResponse = GenerateResponse(item.Id, HttpStatusCode.BadRequest, null, responseError);
+                shiftsIntegResponses.Add(integrationResponse);
+            }
+
+            return shiftsIntegResponses;
+        }
+
+        /// <summary>
         /// Process open shift requests outbound calls.
         /// </summary>
         /// <param name="jsonModel">Incoming payload for the request been made in Shifts.</param>
         /// <param name="updateProps">telemetry properties.</param>
         /// <returns>Returns list of ShiftIntegResponse for request.</returns>
-        private async Task<List<ShiftsIntegResponse>> ProcessOpenShiftRequest(RequestModel jsonModel, Dictionary<string, string> updateProps, string teamsId, bool isPassthroughHeaderValid)
+        private async Task<List<ShiftsIntegResponse>> ProcessOpenShiftRequest(RequestModel jsonModel, Dictionary<string, string> updateProps, string teamsId, bool isRequestFromCorrectIntegration)
         {
             List<ShiftsIntegResponse> responseModelList = new List<ShiftsIntegResponse>();
             var requestBody = jsonModel.Requests.First(x => x.Url.Contains("/openshiftrequests/", StringComparison.InvariantCulture)).Body;
@@ -352,16 +374,18 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     // The Open shift request is approved by manager.
                     case ApiConstants.ShiftsApproved:
                         {
-                            // Passthrough header is present and is equal to workforce integration id.
-                            if (isPassthroughHeaderValid)
+                            // The request is coming from intended workforce integration.
+                            if (isRequestFromCorrectIntegration)
                             {
-                                this.telemetryClient.TrackTrace($"Passthrough header is {isPassthroughHeaderValid} for OpenShiftRequest approval outbound call.");
+                                this.telemetryClient.TrackTrace($"Request coming from correct workforce integration is {isRequestFromCorrectIntegration} for OpenShiftRequest approval outbound call.");
                                 responseModelList = await this.ProcessOpenShiftRequestApprovalAsync(jsonModel, updateProps).ConfigureAwait(false);
                             }
+
+                            // Request is coming from either Shifts UI or from incorrect workforce integration.
                             else
                             {
-                                this.telemetryClient.TrackTrace($"Passthrough header is {isPassthroughHeaderValid} for OpenShiftRequest approval outbound call.");
-                                responseModelList = this.GenerateResponseToPreventAction(jsonModel, Resource.InvalidApproval);
+                                this.telemetryClient.TrackTrace($"Request coming from correct workforce integration is {isRequestFromCorrectIntegration} for OpenShiftRequest approval outbound call.");
+                                responseModelList = GenerateResponseToPreventAction(jsonModel, Resource.InvalidApproval);
                             }
                         }
 
@@ -370,10 +394,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     // The code below would be when there is a decline.
                     case ApiConstants.ShiftsDeclined:
                         {
-                            // Passthrough header is present and is equal to workforce integration id.
-                            if (isPassthroughHeaderValid)
+                            // The request is coming from intended workforce integration.
+                            if (isRequestFromCorrectIntegration)
                             {
-                                this.telemetryClient.TrackTrace($"Passthrough header is {isPassthroughHeaderValid} for OpenShiftRequest decline outbound call.");
+                                this.telemetryClient.TrackTrace($"Request coming from correct workforce integration is {isRequestFromCorrectIntegration} for OpenShiftRequest decline outbound call.");
                                 var integrationResponse = new ShiftsIntegResponse();
                                 foreach (var item in jsonModel.Requests)
                                 {
@@ -382,11 +406,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 }
                             }
 
-                            // Passthrough header is either not present or is not a valid workforce integration id.
+                            // Request is coming from either Shifts UI or from incorrect workforce integration.
                             else
                             {
-                                this.telemetryClient.TrackTrace($"Passthrough header is {isPassthroughHeaderValid} for OpenShiftRequest decline outbound call.");
-                                responseModelList = this.GenerateResponseToPreventAction(jsonModel, Resource.InvalidApproval);
+                                this.telemetryClient.TrackTrace($"Request coming from correct workforce integration is {isRequestFromCorrectIntegration} for OpenShiftRequest decline outbound call.");
+                                responseModelList = GenerateResponseToPreventAction(jsonModel, Resource.InvalidApproval);
                             }
                         }
 
@@ -403,7 +427,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="jsonModel">Incoming payload for the request been made in Shifts.</param>
         /// <param name="aadGroupId">AAD Group id.</param>
         /// <returns>Returns list of ShiftIntegResponse for request.</returns>
-        private async Task<List<ShiftsIntegResponse>> ProcessSwapShiftRequest(RequestModel jsonModel, string aadGroupId, bool isPassthroughHeaderValid)
+        private async Task<List<ShiftsIntegResponse>> ProcessSwapShiftRequest(RequestModel jsonModel, string aadGroupId, bool isRequestFromCorrectIntegration)
         {
             List<ShiftsIntegResponse> responseModelList = new List<ShiftsIntegResponse>();
             var requestBody = jsonModel.Requests.First(x => x.Url.Contains("/swapRequests/", StringComparison.InvariantCulture)).Body;
@@ -444,37 +468,37 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     // Manager has declined the request in Kronos, which declines the request in Shifts also.
                     else if (requestState == ApiConstants.ShiftsDeclined && requestAssignedTo == ApiConstants.ShiftsManager)
                     {
-                        // Passthrough header is present and is equal to workforce integration id.
-                        if (isPassthroughHeaderValid)
+                        // The request is coming from intended workforce integration.
+                        if (isRequestFromCorrectIntegration)
                         {
-                            this.telemetryClient.TrackTrace($"Passthrough header is {isPassthroughHeaderValid} for SwapShiftRequest decline outbound call.");
+                            this.telemetryClient.TrackTrace($"Request coming from correct workforce integration is {isRequestFromCorrectIntegration} for SwapShiftRequest decline outbound call.");
                             integrationResponseSwap = GenerateResponse(swapRequest.Id, HttpStatusCode.OK, swapRequest.ETag, null);
                             responseModelList.Add(integrationResponseSwap);
                         }
 
-                        // Passthrough header is either not present or is not a valid workforce integration id.
+                        // Request is coming from either Shifts UI or from incorrect workforce integration.
                         else
                         {
-                            this.telemetryClient.TrackTrace($"Passthrough header is {isPassthroughHeaderValid} for SwapShiftRequest decline outbound call.");
-                            responseModelList = this.GenerateResponseToPreventAction(jsonModel, Resource.InvalidApproval);
+                            this.telemetryClient.TrackTrace($"Request coming from correct workforce integration is {isRequestFromCorrectIntegration} for SwapShiftRequest decline outbound call.");
+                            responseModelList = GenerateResponseToPreventAction(jsonModel, Resource.InvalidApproval);
                         }
                     }
 
                     // Manager has approved the request in Kronos.
                     else if (requestState == ApiConstants.ShiftsApproved && requestAssignedTo == ApiConstants.ShiftsManager)
                     {
-                        // Passthrough header is present and is equal to workforce integration id.
-                        if (isPassthroughHeaderValid)
+                        // The request is coming from intended workforce integration.
+                        if (isRequestFromCorrectIntegration)
                         {
-                            this.telemetryClient.TrackTrace($"Passthrough header is {isPassthroughHeaderValid} for SwapShiftRequest approval outbound call.");
+                            this.telemetryClient.TrackTrace($"Request coming from correct workforce integration is {isRequestFromCorrectIntegration} for SwapShiftRequest approval outbound call.");
                             responseModelList = await this.ProcessSwapShiftRequestApprovalAsync(jsonModel, aadGroupId).ConfigureAwait(false);
                         }
 
-                        // Passthrough header is either not present or is not a valid workforce integration id.
+                        // Request is coming from either Shifts UI or from incorrect workforce integration.
                         else
                         {
-                            this.telemetryClient.TrackTrace($"Passthrough header is {isPassthroughHeaderValid} for SwapShiftRequest approval outbound call.");
-                            responseModelList = this.GenerateResponseToPreventAction(jsonModel, Resource.InvalidApproval);
+                            this.telemetryClient.TrackTrace($"Request coming from correct workforce integration is {isRequestFromCorrectIntegration} for SwapShiftRequest approval outbound call.");
+                            responseModelList = GenerateResponseToPreventAction(jsonModel, Resource.InvalidApproval);
                         }
                     }
 
@@ -819,28 +843,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             this.telemetryClient.TrackTrace($"{Resource.ProcessOutboundOpenShiftRequestAsync} ends at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
             return responseModelList;
-        }
-
-        /// <summary>
-        /// Generate response to prevent actions.
-        /// </summary>
-        /// <param name="jsonModel">The request payload.</param>
-        /// <param name="errorMessage">Error message to send while preventing action.</param>
-        /// <returns>List of ShiftsIntegResponse.</returns>
-        private List<ShiftsIntegResponse> GenerateResponseToPreventAction(RequestModel jsonModel, string errorMessage)
-        {
-            List<ShiftsIntegResponse> shiftsIntegResponses = new List<ShiftsIntegResponse>();
-            var integrationResponse = new ShiftsIntegResponse();
-            foreach (var item in jsonModel.Requests)
-            {
-                ResponseError responseError = new ResponseError();
-                responseError.Code = HttpStatusCode.BadRequest.ToString();
-                responseError.Message = errorMessage;
-                integrationResponse = GenerateResponse(item.Id, HttpStatusCode.BadRequest, null, responseError);
-                shiftsIntegResponses.Add(integrationResponse);
-            }
-
-            return shiftsIntegResponses;
         }
     }
 }

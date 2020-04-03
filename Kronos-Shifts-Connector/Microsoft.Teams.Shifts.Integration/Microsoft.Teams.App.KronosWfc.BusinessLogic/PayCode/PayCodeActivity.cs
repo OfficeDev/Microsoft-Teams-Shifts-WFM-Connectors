@@ -55,8 +55,8 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.PayCodes
                 jSession).ConfigureAwait(false);
 
             Response scheduleResponse = this.ProcessResponse(tupleResponse.Item1);
-            
-            // Reading Paycodes from Kronos
+
+            // Reading Paycodes from Kronos.
             var payCodeList = scheduleResponse.PayCode.Where(c => c.ExcuseAbsenceFlag == "true" && c.IsVisibleFlag == "true").Select(x => x.PayCodeName).ToList();
             this.telemetryClient.TrackTrace($"Number of Paycodes fetched from Kronos: {payCodeList.Count}");
             return payCodeList;

@@ -25,7 +25,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using TimeOffReasonResponse = Microsoft.Teams.Shifts.Integration.API.Models.Response;
 
     /// <summary>
-    /// Fetch TimeOffReasons from kronos and create the same in shifts.
+    /// Fetch TimeOffReasons from Kronos and create the same in Shifts.
     /// </summary>
     [Authorize(Policy = "AppID")]
     [Route("/api/TimeOffReason")]
@@ -75,7 +75,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         }
 
         /// <summary>
-        /// Maps the Paycode of kronos with timeoffreasons.
+        /// Maps the Paycode of Kronos with TimeOffReasons.
         /// </summary>
         /// <returns>JSONResult.</returns>
         [HttpGet]
@@ -207,7 +207,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         }
 
         /// <summary>
-        /// Create TimeOff Reasons in shifts.
+        /// Create TimeOff Reasons in Shifts.
         /// </summary>
         /// <param name="accessToken">Cached AccessToken.</param>
         /// <param name="teamsId">MS Teams Id.</param>

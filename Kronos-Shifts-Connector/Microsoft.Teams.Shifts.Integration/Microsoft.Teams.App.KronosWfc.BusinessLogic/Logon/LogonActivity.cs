@@ -47,7 +47,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Logon
         }
 
         /// <summary>
-        /// This method calls the logOn api to log the user to kronos.
+        /// This method calls the logOn api to log the user to Kronos.
         /// </summary>
         /// <param name="username">The user name string.</param>
         /// <param name="password">The user password.</param>

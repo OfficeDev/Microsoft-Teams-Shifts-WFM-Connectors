@@ -5,7 +5,6 @@
 namespace Microsoft.Teams.Shifts.Integration.API.Common
 {
     using System;
-    using System.Globalization;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights;
@@ -20,7 +19,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         private readonly TelemetryClient telemetryClient;
         private CancellationTokenSource tokenSource;
         private Task currentTask;
-        private CultureInfo cultureInfoProvider = CultureInfo.InvariantCulture;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BackgroundService"/> class.
@@ -40,7 +38,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// <returns>A task instance.</returns>
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            this.telemetryClient.TrackTrace($"BackgroundService StartAsync method started");
+#pragma warning disable CA1303 // Do not pass literals as localized parameters
+            this.telemetryClient.TrackTrace("BackgroundService StartAsync method started.");
+#pragma warning restore CA1303 // Do not pass literals as localized parameters
 
             // Creating a linked token so that we can trigger cancellation outside of this token's cancellation
             this.tokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -48,7 +48,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
             {
                 try
                 {
+#pragma warning disable CA1303 // Do not pass literals as localized parameters
                     this.telemetryClient.TrackTrace("BackgroundService Dequeue method started.");
+#pragma warning restore CA1303 // Do not pass literals as localized parameters
 
                     // Dequeuing a task and running it in background until the cancellation is triggered or task is completed
                     this.currentTask = this.taskWrapper.Dequeue(this.tokenSource.Token);
@@ -69,7 +71,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// <returns>A task instance.</returns>
         public async Task StopAsync(CancellationToken cancellationToken)
         {
-            this.telemetryClient.TrackTrace("BackgroundService StopAsync method started");
+#pragma warning disable CA1303 // Do not pass literals as localized parameters
+            this.telemetryClient.TrackTrace("BackgroundService StopAsync method started.");
+#pragma warning restore CA1303 // Do not pass literals as localized parameters
 
             // Signal cancellation to the executing method
             this.tokenSource.Cancel();

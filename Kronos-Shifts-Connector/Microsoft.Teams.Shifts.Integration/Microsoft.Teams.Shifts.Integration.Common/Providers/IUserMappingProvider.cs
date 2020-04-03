@@ -35,11 +35,11 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// Method to import Kronons and Shift users data.
         /// </summary>
         /// <param name="entity">Mapped User Entity.</param>
-        /// <returns>Success if kronos, shift mapped users are fetched.</returns>
+        /// <returns>Success if Kronos, Shift mapped users are fetched.</returns>
         Task<bool> KronosShiftUsersMappingAsync(AllUserMappingEntity entity);
 
         /// <summary>
-        /// Method to get distinct kronos org job path.
+        /// Method to get distinct Kronos org job path.
         /// </summary>
         /// <returns>List of distinct OrgJobPath.</returns>
         Task<List<string>> GetDistinctOrgJobPatAsync();

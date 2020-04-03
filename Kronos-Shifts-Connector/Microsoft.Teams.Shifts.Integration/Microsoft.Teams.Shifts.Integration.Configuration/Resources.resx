@@ -238,7 +238,7 @@
   </data>
   <data name="UpdateNotificationHeaderText" xml:space="preserve">
     <value>Updated successfully!</value>
-    <comment>The update successfull popup text</comment>
+    <comment>The update successful popup text</comment>
   </data>
   <data name="KronosShiftUserMappingXML" xml:space="preserve">
     <value>kronos_shift_usermapping.xlsx</value>

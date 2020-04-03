@@ -62,7 +62,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Models
         public string KronosReqId { get; set; }
 
         /// <summary>
-        /// Gets or sets shifts teams id.
+        /// Gets or sets Shifts teams id.
         /// </summary>
         public string ShiftsTeamId { get; set; }
     }

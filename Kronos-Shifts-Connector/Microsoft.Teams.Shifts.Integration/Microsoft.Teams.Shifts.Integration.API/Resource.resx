@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="InvalidKronosCredentials" xml:space="preserve">
-    <value>Unable to login kronos.</value>
+    <value>Unable to login Kronos.</value>
   </data>
   <data name="IssueShiftsAccessToken" xml:space="preserve">
     <value>Unable to fetch shifts access token. Please try to relogin.</value>

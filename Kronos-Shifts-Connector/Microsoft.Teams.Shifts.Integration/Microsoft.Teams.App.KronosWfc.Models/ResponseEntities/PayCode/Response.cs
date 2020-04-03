@@ -14,7 +14,7 @@ namespace Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.PayCodes
     public class Response
     {
         /// <summary>
-        /// Gets or sets kronos paycode name.
+        /// Gets or sets Kronos paycode name.
         /// </summary>
         [XmlElement(ElementName = "PayCode")]
 #pragma warning disable CA2227 // Collection properties should be read only
@@ -22,7 +22,7 @@ namespace Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.PayCodes
 #pragma warning restore CA2227 // Collection properties should be read only
 
         /// <summary>
-        /// Gets or sets kronos status of Paycode.
+        /// Gets or sets Kronos status of Paycode.
         /// </summary>
         [XmlAttribute(AttributeName = "Status")]
         public string Status { get; set; }
@@ -34,7 +34,7 @@ namespace Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.PayCodes
         public string Action { get; set; }
 
         /// <summary>
-        /// Gets or sets excuce flag of kronos.
+        /// Gets or sets excuce flag of Kronos.
         /// </summary>
         [XmlAttribute(AttributeName = "ExcuseAbsenceFlag")]
         public string ExcuseAbsenceFlag { get; set; }

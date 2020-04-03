@@ -136,7 +136,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
         /// <param name="querySpan">The querySpan.</param>
         /// <param name="comment">The comment for request.</param>
         /// <param name="endpointUrl">Endpoint Kronos URL.</param>
-        /// <returns>request to send to kronos.</returns>
+        /// <returns>request to send to Kronos.</returns>
         public async Task<SubmitResponse.Response> SubmitSwapShiftAsync(
             string jSession,
             string personNumber,
@@ -288,7 +288,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
                                 {
                                     Employee = requestorEmployee,
 
-                                    // The kronos is expecting only these formats to be serialized,
+                                    // The Kronos is expecting only these formats to be serialized,
                                     // however we are converting the correct date format while creating actual shifts, timeoff etc.
                                     EndDateTime = swapShiftObj.Emp1ToDateTime.ToString(ApiConstants.KronosAcceptableDateFormat, System.Globalization.CultureInfo.InvariantCulture),
                                     OrgJobPath = swapShiftObj.SelectedJob,
@@ -334,7 +334,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
         /// <param name="reqId">The reqId of swap shift request.</param>
         /// <param name="querySpan">The querySpan.</param>
         /// <param name="comment">The comment for request.</param>
-        /// <returns>request to send to kronos.</returns>
+        /// <returns>Request to send to Kronos.</returns>
         private string CreateSwapShiftSubmitRequest(
             string personNumber,
             string reqId,
