@@ -169,7 +169,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         public string OpenShiftTheme => this.configuration["OpenShiftTheme"];
 
         /// <summary>
-        /// Gets kronos query name.
+        /// Gets Kronos query name.
         /// </summary>
         public string KronosUserDetailsQuery => this.configuration["KronosUserDetailsQuery"];
 

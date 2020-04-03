@@ -287,7 +287,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                                 Code = Resource.KronosWFCOpenShiftRequestErrorCode,
                                                 Message = postUpdateOpenShiftRequestStatusResult?.Status,
                                             },
-                                            ETag = GenerateNewGuid(),
                                         },
                                     };
                                 }
@@ -307,7 +306,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                             Code = Resource.KronosWFCOpenShiftRequestErrorCode,
                                             Message = postDraftOpenShiftRequestResult?.Status,
                                         },
-                                        ETag = GenerateNewGuid(),
                                     },
                                 };
                             }
@@ -327,7 +325,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                         Code = Resource.OpenShiftNotFoundCode,
                                         Message = string.Format(CultureInfo.InvariantCulture, Resource.OpenShiftNotFoundMessage, request.OpenShiftId),
                                     },
-                                    ETag = GenerateNewGuid(),
                                 },
                             };
                         }
@@ -348,7 +345,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 Code = userMappingRecord.Error,
                                 Message = userMappingRecord.Error,
                             },
-                            ETag = GenerateNewGuid(),
                         },
                     };
                 }
@@ -368,7 +364,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             Code = Resource.SetUpNotDoneCode,
                             Message = Resource.SetUpNotDoneMessage,
                         },
-                        ETag = GenerateNewGuid(),
                     },
                 };
             }
@@ -493,7 +488,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                             var approvalHttpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
                                             approvalHttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfigurations.ShiftsAccessToken);
 
-                                            // Send Passthrough header to verify the sender of request in outbound call.
+                                            // Send Passthrough header to indicate the sender of request in outbound call.
                                             approvalHttpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", allRequiredConfigurations.WFIId);
                                             using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, "teams/" + user.ShiftTeamId + "/schedule/openshiftchangerequests/" + entityToUpdate.RowKey + "/approve")
                                             {
@@ -536,7 +531,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                     var declineHttpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
                                     declineHttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfigurations.ShiftsAccessToken);
 
-                                    // Send Passthrough header to verify the sender of request in outbound call.
+                                    // Send Passthrough header to indicate the sender of request in outbound call.
                                     declineHttpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", allRequiredConfigurations.WFIId);
                                     using (var declineRequestMessage = new HttpRequestMessage(HttpMethod.Post, "teams/" + user.ShiftTeamId + "/schedule/openshiftchangerequests/" + entityToUpdate.RowKey + "/decline")
                                     {
@@ -678,7 +673,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         }
 
         /// <summary>
-        /// Gets a user model from shifts in order to return the Org Job Path.
+        /// Gets a user model from Shifts in order to return the Org Job Path.
         /// </summary>
         /// <returns>A task.</returns>
         private async Task<UserDetailsModel> GetMappedUserDetailsAsync(

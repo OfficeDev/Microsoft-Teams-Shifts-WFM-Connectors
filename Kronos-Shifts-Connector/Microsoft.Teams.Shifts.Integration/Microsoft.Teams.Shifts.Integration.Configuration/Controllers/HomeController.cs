@@ -136,7 +136,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                     // When given Kronos URL is incorrect. loginKronos will be null.
                     if (loginKronos == null)
                     {
-                        return this.RedirectToAction("Index").WithDanger(Resources.ErrorNotificationHeaderText, Resources.InvalidKronosURL);
+                        return this.RedirectToAction("Index").WithErrorMessage(Resources.ErrorNotificationHeaderText, Resources.InvalidKronosURL);
                     }
                     else
                     if (loginKronos.Status == ApiConstants.Success)
@@ -169,17 +169,17 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                     // When Kronos login is failed due to incorrect credentials.
                     else
                     {
-                        return this.RedirectToAction("Index").WithDanger(Resources.ErrorNotificationHeaderText, Resources.KronosErrorContentText);
+                        return this.RedirectToAction("Index").WithErrorMessage(Resources.ErrorNotificationHeaderText, Resources.KronosErrorContentText);
                     }
                 }
                 else
                 {
-                    return this.RedirectToAction("Index").WithDanger(Resources.ErrorNotificationHeaderText, Resources.UnableToFetchConfiguration);
+                    return this.RedirectToAction("Index").WithErrorMessage(Resources.ErrorNotificationHeaderText, Resources.UnableToFetchConfiguration);
                 }
             }
             else
             {
-                return this.RedirectToAction("Index").WithDanger(Resources.ErrorNotificationHeaderText, Resources.MandatoryCredentialsNotProvided);
+                return this.RedirectToAction("Index").WithErrorMessage(Resources.ErrorNotificationHeaderText, Resources.MandatoryCredentialsNotProvided);
             }
         }
 
@@ -294,7 +294,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                     var failedResponseContent = await workforceIntegrationResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
 
                     workforceIntegrationRegProps.Add("FailedResponse", failedResponseContent);
-                    return this.RedirectToAction("Index", "Home").WithDanger(Resources.WFIRegFailedHeaderText, string.Format(CultureInfo.InvariantCulture, Resources.WFIRegFailedContentText, wfiDisplayName));
+                    return this.RedirectToAction("Index", "Home").WithErrorMessage(Resources.WFIRegFailedHeaderText, string.Format(CultureInfo.InvariantCulture, Resources.WFIRegFailedContentText, wfiDisplayName));
                 }
             }
 
@@ -327,7 +327,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                 var teamDeptMappingEntity = await this.teamDepartmentMappingProvider.GetMappedTeamToDeptsWithJobPathsAsync().ConfigureAwait(false);
                 if (teamDeptMappingEntity != null && teamDeptMappingEntity.Count > 0)
                 {
-                    return this.RedirectToAction("Index", "Home").WithDanger(Resources.WFIGeneralHeaderText, string.Format(
+                    return this.RedirectToAction("Index", "Home").WithErrorMessage(Resources.WFIGeneralHeaderText, string.Format(
                         CultureInfo.InvariantCulture,
                         Resources.WFIDeleteFailedDueToTeamDeptMappingText,
                         configurationEntity?.WorkforceIntegrationId));
@@ -356,7 +356,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                 }
                 else
                 {
-                    return this.RedirectToAction("Index", "Home").WithDanger(Resources.WFIGeneralHeaderText, string.Format(
+                    return this.RedirectToAction("Index", "Home").WithErrorMessage(Resources.WFIGeneralHeaderText, string.Format(
                         CultureInfo.InvariantCulture,
                         Resources.WfiDeletionFailed,
                         configurationEntity?.WorkforceIntegrationId));
@@ -369,7 +369,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
             }
             else
             {
-                return this.RedirectToAction("Index", "Home").WithDanger(Resources.WFIGeneralHeaderText, string.Format(
+                return this.RedirectToAction("Index", "Home").WithErrorMessage(Resources.WFIGeneralHeaderText, string.Format(
                     CultureInfo.InvariantCulture,
                     Resources.WfiDeletionFailed,
                     configurationEntity?.WorkforceIntegrationId));

@@ -168,7 +168,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
             }
             else
             {
-                return this.RedirectToAction("Index", "UserMapping").WithDanger(Resources.ErrorNotificationHeaderText, Resources.WorkforceIntegrationNotRegister);
+                return this.RedirectToAction("Index", "UserMapping").WithErrorMessage(Resources.ErrorNotificationHeaderText, Resources.WorkforceIntegrationNotRegister);
             }
         }
 
@@ -266,7 +266,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
         /// <summary>
         /// Method to delete mapping record from User Mapping table.
         /// </summary>
-        /// <param name="partitionKey">Partition Key i.e. OrgJobPath of kronos.</param>
+        /// <param name="partitionKey">Partition Key i.e. OrgJobPath of Kronos.</param>
         /// <param name="rowKey">Kronos Person number.</param>
         /// <returns>Json result indicating success or failure conditions.</returns>
         [HttpPost]
@@ -291,8 +291,8 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
         /// <summary>
         /// Method to convert the model to DataTable.
         /// </summary>
-        /// <param name="shiftList">List of shift's users.</param>
-        /// <param name="kronosList">List of kronos users.</param>
+        /// <param name="shiftList">List of Shifts users.</param>
+        /// <param name="kronosList">List of Kronos users.</param>
         /// <returns>File to browser's response.</returns>
         private static List<DataTable> ConvertModelToDataTable(List<ShiftUser> shiftList, List<KronosUserModel> kronosList)
         {

@@ -311,19 +311,18 @@ namespace Microsoft.Teams.Shifts.Integration.API {
                 return ResourceManager.GetString("InternalServerErrorMessage", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to The action you are trying to perform should only be done in Kronos.
         /// </summary>
-        public static string InvalidApproval{
+        public static string InvalidApproval {
             get {
                 return ResourceManager.GetString("InvalidApproval", resourceCulture);
             }
         }
-
-
+        
         /// <summary>
-        ///   Looks up a localized string similar to Unable to login kronos..
+        ///   Looks up a localized string similar to Unable to login Kronos.
         /// </summary>
         public static string InvalidKronosCredentials {
             get {
@@ -647,7 +646,7 @@ namespace Microsoft.Teams.Shifts.Integration.API {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Something went wrong while syncing the shifts..
+        ///   Looks up a localized string similar to Something went wrong while syncing the Shifts.
         /// </summary>
         public static string SyncedFailed {
             get {

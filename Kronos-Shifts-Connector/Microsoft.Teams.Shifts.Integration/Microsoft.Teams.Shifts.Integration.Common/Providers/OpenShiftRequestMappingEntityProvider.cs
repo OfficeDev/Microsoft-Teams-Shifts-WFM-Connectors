@@ -69,7 +69,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// The method that returns the open shift request mapping searching
         /// a Kronos Request ID.
         /// </summary>
-        /// <param name="kronosReqId">The kronos request ID.</param>
+        /// <param name="kronosReqId">The Kronos request ID.</param>
         /// <returns>A unit of execution.</returns>
         public async Task<AllOpenShiftRequestMappingEntity> GetOpenShiftRequestMappingEntityByKronosReqIdAsync(string kronosReqId)
         {

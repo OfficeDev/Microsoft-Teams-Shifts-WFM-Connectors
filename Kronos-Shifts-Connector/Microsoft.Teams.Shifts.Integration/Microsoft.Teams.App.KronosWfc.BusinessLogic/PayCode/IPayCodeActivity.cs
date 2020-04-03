@@ -9,7 +9,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.PayCodes
     using System.Threading.Tasks;
 
     /// <summary>
-    /// This interface used to fetch paycodes from kronos.
+    /// This interface used to fetch paycodes from Kronos.
     /// </summary>
     public interface IPayCodeActivity
     {
@@ -18,7 +18,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.PayCodes
         /// </summary>
         /// <param name="endPointUrl">Kronos endpoint url.</param>
         /// <param name="jSession">Kronos session.</param>
-        /// <returns>List of kronos paycodes.</returns>
+        /// <returns>List of Kronos paycodes.</returns>
         Task<List<string>> FetchPayCodesAsync(
             Uri endPointUrl,
             string jSession);

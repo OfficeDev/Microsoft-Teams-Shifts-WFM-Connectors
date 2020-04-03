@@ -48,13 +48,13 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Extensions.Alerts
         }
 
         /// <summary>
-        /// Renders an alert with danger.
+        /// Renders an alert with error message.
         /// </summary>
         /// <param name="result">The IActionResult.</param>
         /// <param name="title">The title of the alert.</param>
         /// <param name="body">The content of the alert.</param>
         /// <returns>A type of <see cref="IActionResult"/>.</returns>
-        public static IActionResult WithDanger(this IActionResult result, string title, string body)
+        public static IActionResult WithErrorMessage(this IActionResult result, string title, string body)
         {
             return Alert(result, "danger", title, body);
         }

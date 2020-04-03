@@ -75,7 +75,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         }
 
         /// <summary>
-        /// Start shits sync from kronos to shifts.
+        /// Start shits sync from Kronos to Shifts.
         /// </summary>
         /// <param name="isRequestFromLogicApp">Checks if request is coming from logic app or portal.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
@@ -289,11 +289,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 await this.DeleteOrphanDataShiftsEntityMappingAsync(accessToken, lookUpEntriesFoundList, userModelList, lookUpData).ConfigureAwait(false);
             }
 
-            // Get the Kronos WFC API Time Zone from App Settings.
-            var kronosTimeZoneId = this.appSettings.KronosTimeZone;
-            var kronosTimeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(kronosTimeZoneId);
-
-            await this.CreateEntryShiftsEntityMappingAsync(accessToken, userModelNotFoundList, shiftsNotFoundList, monthPartitionKey, kronosTimeZoneInfo).ConfigureAwait(false);
+            await this.CreateEntryShiftsEntityMappingAsync(accessToken, userModelNotFoundList, shiftsNotFoundList, monthPartitionKey).ConfigureAwait(false);
 
             this.telemetryClient.TrackTrace($"ShiftController - ProcessShiftEntitiesBatchAsync ended at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
         }
@@ -310,8 +306,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             string accessToken,
             List<UserDetailsModel> userModelNotFoundList,
             List<Shift> notFoundShifts,
-            string monthPartitionKey,
-            TimeZoneInfo kronosTimeZoneInfo)
+            string monthPartitionKey)
         {
             // create entries from not found list
             for (int i = 0; i < notFoundShifts.Count; i++)
@@ -333,7 +328,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                         var shiftResponse = JsonConvert.DeserializeObject<Models.Response.Shifts.Shift>(responseContent);
                         var shiftId = shiftResponse.Id;
-                        var shiftMappingEntity = this.CreateNewShiftMappingEntity(shiftResponse, notFoundShifts[i].KronosUniqueId, userModelNotFoundList[i], kronosTimeZoneInfo);
+                        var shiftMappingEntity = this.CreateNewShiftMappingEntity(shiftResponse, notFoundShifts[i].KronosUniqueId, userModelNotFoundList[i]);
                         await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(shiftMappingEntity, shiftId, monthPartitionKey).ConfigureAwait(false);
                         continue;
                     }
@@ -420,8 +415,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private TeamsShiftMappingEntity CreateNewShiftMappingEntity(
             Models.Response.Shifts.Shift responseModel,
             string uniqueId,
-            UserDetailsModel user,
-            TimeZoneInfo kronosTimeZoneInfo)
+            UserDetailsModel user)
         {
             var createNewShiftMappingEntityProps = new Dictionary<string, string>()
             {
