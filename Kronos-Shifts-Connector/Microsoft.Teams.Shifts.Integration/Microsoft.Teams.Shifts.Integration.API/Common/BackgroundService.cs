@@ -5,7 +5,6 @@
 namespace Microsoft.Teams.Shifts.Integration.API.Common
 {
     using System;
-    using System.Globalization;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights;
