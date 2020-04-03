@@ -75,7 +75,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         }
 
         /// <summary>
-        /// Maps the Paycode of Kronos with timeoffreasons.
+        /// Maps the Paycode of Kronos with TimeOffReasons.
         /// </summary>
         /// <returns>JSONResult.</returns>
         [HttpGet]

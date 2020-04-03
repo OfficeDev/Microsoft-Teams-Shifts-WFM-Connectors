@@ -198,9 +198,9 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
         }
 
         /// <summary>
-        /// method to import Kronos and Shift users.
+        /// Method to import Kronos and Shift users.
         /// </summary>
-        /// <returns> returns true if file import is successfull.</returns>
+        /// <returns> Returns true if file import is successful.</returns>
         [HttpPost]
         public async Task<ActionResult> ImportMappingAsync()
         {

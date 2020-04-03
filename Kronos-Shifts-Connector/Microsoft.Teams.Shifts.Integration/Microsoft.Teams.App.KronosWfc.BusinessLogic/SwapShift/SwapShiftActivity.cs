@@ -334,7 +334,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
         /// <param name="reqId">The reqId of swap shift request.</param>
         /// <param name="querySpan">The querySpan.</param>
         /// <param name="comment">The comment for request.</param>
-        /// <returns>request to send to Kronos.</returns>
+        /// <returns>Request to send to Kronos.</returns>
         private string CreateSwapShiftSubmitRequest(
             string personNumber,
             string reqId,

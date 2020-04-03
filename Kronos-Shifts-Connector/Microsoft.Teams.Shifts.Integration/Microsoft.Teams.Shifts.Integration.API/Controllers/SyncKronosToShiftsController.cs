@@ -163,7 +163,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             try
             {
-                // Sync timeoffreasons from Kronos to Shifts.
+                // Sync TimeOffReasons from Kronos to Shifts.
                 await this.timeOffReasonController.MapPayCodeTimeOffReasonsAsync().ConfigureAwait(false);
                 isMapPayCodeTimeOffReasonsSuccessful = true;
                 this.telemetryClient.TrackTrace($"{Resource.MapPayCodeTimeOffReasonsAsync} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");

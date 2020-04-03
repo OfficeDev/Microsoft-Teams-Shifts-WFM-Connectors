@@ -75,7 +75,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         }
 
         /// <summary>
-        /// Start shits sync from Kronos to Shifts.
+        /// Start shifts sync from Kronos to Shifts.
         /// </summary>
         /// <param name="isRequestFromLogicApp">Checks if request is coming from logic app or portal.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
