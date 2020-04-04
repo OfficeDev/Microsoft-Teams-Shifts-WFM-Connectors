@@ -1,4 +1,4 @@
-﻿// <copyright file="SwapShiftController.cs" company="Microsoft">
+// <copyright file="SwapShiftController.cs" company="Microsoft">
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
@@ -749,8 +749,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         // Process for only those requests which are approved in Kronos but still pending in our db.
                         foreach (var swapShiftEntity in pendingSwapShiftEntities)
                         {
-                            if (await this.CheckRequestStatus(swapShiftEntity.RowKey, swapShiftEntity.ShiftsTeamId, graphClient).ConfigureAwait(false))
-                            {
                                 var approvedData = swapshiftDetails.RequestMgmt.RequestItems.SwapShiftRequestItem.Where(c => c.Id == swapShiftEntity.KronosReqId).FirstOrDefault();
 
                                 if (approvedData != null)
@@ -764,11 +762,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                         note,
                                         allRequiredConfigurations.WFIId).ConfigureAwait(false);
                                 }
-                            }
-                            else
-                            {
-                                this.telemetryClient.TrackTrace($"{string.Format(CultureInfo.InvariantCulture, Resource.InvalidSwapShiftState, swapShiftEntity?.RowKey)}");
-                            }
                         }
                     }
 
@@ -777,8 +770,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         // Process for only those requests which are refused in Kronos but still pending in our db.
                         foreach (var swapShiftEntity in pendingSwapShiftEntities)
                         {
-                            if (await this.CheckRequestStatus(swapShiftEntity.RowKey, swapShiftEntity.ShiftsTeamId, graphClient).ConfigureAwait(false))
-                            {
                                 var refusedData = swapshiftRefusedDetails.RequestMgmt.RequestItems.SwapShiftRequestItem.Where(c => c.Id == swapShiftEntity.KronosReqId).FirstOrDefault();
                                 if (refusedData != null)
                                 {
@@ -793,11 +784,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                         note,
                                         allRequiredConfigurations.WFIId).ConfigureAwait(false);
                                 }
-                            }
-                            else
-                            {
-                                this.telemetryClient.TrackTrace($"{string.Format(CultureInfo.InvariantCulture, Resource.InvalidSwapShiftState, swapShiftEntity?.RowKey)}");
-                            }
                         }
                     }
 
@@ -806,9 +792,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         // Process for only those requests which are retracted in Kronos but still pending in our db.
                         foreach (var swapShiftEntity in pendingSwapShiftEntities)
                         {
-                            if (await this.CheckRequestStatus(swapShiftEntity.RowKey, swapShiftEntity.ShiftsTeamId, graphClient).ConfigureAwait(false))
-                            {
                                 var retractedData = swapshiftRetractedDetails.RequestMgmt.RequestItems.SwapShiftRequestItem.Where(c => c.Id == swapShiftEntity.KronosReqId).FirstOrDefault();
+
                                 if (retractedData != null)
                                 {
                                     // Fetch notes for the swap shift request.
@@ -822,11 +807,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                         note,
                                         allRequiredConfigurations.WFIId).ConfigureAwait(false);
                                 }
-                            }
-                            else
-                            {
-                                this.telemetryClient.TrackTrace($"{string.Format(CultureInfo.InvariantCulture, Resource.InvalidSwapShiftState, swapShiftEntity?.RowKey)}");
-                            }
                         }
                     }
                 }
@@ -1162,35 +1142,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             }
 
             return swapshiftRequests;
-        }
-
-        /// <summary>
-        /// check the swap shift status using graph call for acknowledgement.
-        /// </summary>
-        /// <param name="swapReqId">Swap shift request id.</param>
-        /// <param name="teamsId">Shifts teams id.</param>
-        /// <param name="graphClient">Graph client.</param>
-        /// <returns>Returns true if request is in pendign with manager state.</returns>
-        private async Task<bool> CheckRequestStatus(string swapReqId, string teamsId, GraphServiceClient graphClient)
-        {
-            this.telemetryClient.TrackTrace($"{Resource.CheckRequestStatus}");
-            try
-            {
-                // Get the swap request details using graph call which is in pending with manager state.
-                var reqDetails = await graphClient.Teams[teamsId].Schedule.SwapShiftsChangeRequests[swapReqId].Request().GetAsync().ConfigureAwait(false);
-                this.telemetryClient.TrackTrace("Request state: " + reqDetails.State + "Assigned to: " + reqDetails.AssignedTo + "for request id: " + swapReqId);
-
-                // Returns true if it is in pending with manager else returns false (request is in system declined state).
-                var isReqPending = (reqDetails.State.ToString() == ApiConstants.ShiftsPending && reqDetails.AssignedTo.ToString() == ApiConstants.ShiftsManager) ? true : false;
-                return isReqPending;
-            }
-#pragma warning disable CA1031 // Do not catch general exception types
-            catch (Exception ex)
-#pragma warning restore CA1031 // Do not catch general exception types
-            {
-                this.telemetryClient.TrackException(ex);
-                return false;
-            }
         }
     }
 }
