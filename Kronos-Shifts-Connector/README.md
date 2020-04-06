@@ -510,7 +510,7 @@ Once the necessary steps have been done, and you will be able to continue mappin
 Click on the Done button in Team to Department Mapping screen, which will initiate following workflows:  
 a.	Kronos to Shifts – Open Shift sync  
 b.	Kronos to Shifts – Approved or Declined Open Shift Request sync  
-c.	Kronos to Shifts – Approved Swap Shift Request sync  
+c.	Kronos to Shifts – Approved or Declined Swap Shift Request sync  
 d.	Kronos to Shifts – Time Off Reason sync  
 e.	Kronos to Shifts – Approved or Declined Time Off Sync  
 f.	Shifts to Kronos – Time Off Request sync  
@@ -522,7 +522,7 @@ The first-time sync will be done using the parameters of *firstTimeSyncStartDate
 
 # Data Sync through Logic App
 The ARM Template provisions the Azure logic app, and the Azure logic app will execute based upon the sync frequency, sync interval, and sync hour chosen by the tenant admin. There are couple key differences to note between syncing data via the done button, and syncing the data via the Azure logic app. When the logic app is triggered on a scheduled interval, the time period for syncing data will be automatically calculated using the parameters syncFromPreviousDays and syncToNextDays from config file which represent the number of days in the past, and the number of days in the future respectively. The point of reference for the calculations will be based on the current date at which the logic app is executing.
-FLW requests (Open Shift Request, Swap Shift Request) will be synced from Shifts to Kronos in synchronous manner using Shifts Outbound APIs and Kronos WFC 8.1 data submission (POST) APIs (logic app does not play any role in this sync)
+FLW requests (Open Shift Request, Swap Shift Request) will be synced from the Shifts App to Kronos in synchronous manner using Shifts Outbound APIs and Kronos WFC 8.1 data submission (POST) APIs (logic app does not play any role in this sync)
 
 # Telemetry
 Shifts-Kronos Integration application utilizes Azure Application Insights to capture the necessary events and errors. It captures following properties:
@@ -535,7 +535,7 @@ Shifts-Kronos Integration application utilizes Azure Application Insights to cap
   * Timestamps (at the time when events happen)  
 * Data properties (i.e. any IDs that are of interest to Graph API calls, or local data retrieval)  
 * Tenant ID – where applicable  
-* Outbound calls from Shifts to the Integration API Service
+* Outbound calls from the Shifts App to the Integration API Service
 
 # Troubleshooting
 The following are common issues that tenant admins may encounter while following these steps to deploy the Shifts-Kronos Integration application:
@@ -563,7 +563,7 @@ The following are common issues that tenant admins may encounter while following
 
 |Error|Reason|
 |-----|------|
-|Sorry your change couldn't be completed|Swap shift request creation/submission success depends upon business rules on Kronos side so FLWs need to be aware of those before requesting Swap 1. Swap shift is not possible for past date in Shifts. If such request is initiated from Shifts, the Workforce Integration sends error to Shifts. Shifts will display a generic error message 2. Swap shift is not allowed in Kronos if user already has same shift as the requested shift. The Workforce Integration sends error to Shifts. Shifts will display a generic error message. 3. If User1 has requested User2 for a swap shift and user2 has requested the same shift to User 3, then one of the requests will get approved and other will be declined|
+|Sorry your change couldn't be completed|Swap Shift Request creation/submission success depends upon business rules on Kronos side so FLWs need to be aware of those before requesting Swap 1. Swap shift is not possible for past date in Shifts. If such request is initiated from Shifts, the Workforce Integration sends error to Shifts. Shifts will display a generic error message 2. Swap shift is not allowed in Kronos if user already has same shift as the requested shift. The Workforce Integration sends error to Shifts. Shifts will display a generic error message. 3. If User1 has requested User2 for a swap shift and user2 has requested the same shift to User 3, then one of the requests will get approved and other will be declined|
 
 * Conflict due to source code deployment failure - There are possibilities that the underlying Azure deployment engine may not be able to properly deploy the source code from GitHub into the necessary Web App services. Navigate [here](#continuous-deployment-in-azure-app-services) to properly fix such issues.
 
