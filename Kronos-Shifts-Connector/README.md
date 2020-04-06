@@ -13,7 +13,7 @@ The points noted below are to be considered as best practices to properly levera
 * Kronos WFC serves as single source of truth for all entities 
     * All entities in scope of this integration such as: Shifts, Open Shifts, Time Offs should be created in Kronos WFC by the FMLs and not in the Shifts App  
     * Shifts App can be used by the FLWs to view their schedules, create requests for Time Offs, Open Shifts, and Swap Shifts  
-    * **FLMs should use Kronos WFC only for all Approval/Rejection workflows. FLMs should not approve any requests in the Shifts App as it can cause daya inconsistency between Kronos WFC and Shifts.** By design the integration blocks approval of Open Shift and Swap Shift requests if initiated from Shifts App UI however does not do so for Time Off requests
+    * **FLMs should use Kronos WFC only for all Approval/Rejection workflows. FLMs should not approve any requests in the Shifts App as it can cause data inconsistency between Kronos WFC and Shifts.** By design the integration blocks approval of Open Shift and Swap Shift requests if initiated from Shifts App UI however does not do so for Time Off requests
 * FLW requests (Open Shift Request, Swap Shift Request) will be synced from Shifts to Kronos in synchronous manner using Shifts Outbound APIs and Kronos WFC 8.1 data submission (POST) APIs  
 * FLW requests for Time Off will be synced from Shifts App to Kronos in asynchronous manner  
 * Approved schedules for Shifts, Time Offs, Open Shifts and Swap Shifts will be sync’d from Kronos to Shifts App in asynchronous manner using Kronos WFC 8.1 GET APIs and Shifts/Graph post APIs  
