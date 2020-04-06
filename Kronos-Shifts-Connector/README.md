@@ -549,7 +549,7 @@ The following are common issues that tenant admins may encounter while following
 
 |Issue|Solution|
 |-----|--------|
-|Graph token expiration - 401 Unauthorized|The Graph token may expire, and to resolve that: 1. Log out of the configuration web app. 2. Log back into the Configuration Web App.|
+|Graph token expiration - 401 Unauthorized|The Graph token may expire, and to resolve that: 1. Log out of the Configuration Web App. 2. Log back into the Configuration Web App.|
 
 * Problems while creating Open Shifts
 ![Problems while creating Open Shifts](images/figure27.png)
