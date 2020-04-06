@@ -57,14 +57,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         public string ClientSecret { get; }
 
         /// <summary>
-        /// Gets WfmSuperUsername.
+        /// Gets or sets WfmSuperUsername.
         /// </summary>
-        public string WfmSuperUsername { get; }
+        public string WfmSuperUsername { get; set; }
 
         /// <summary>
-        /// Gets WfmSuperUserPassword.
+        /// Gets or sets WfmSuperUserPassword.
         /// </summary>
-        public string WfmSuperUserPassword { get; }
+        public string WfmSuperUserPassword { get; set; }
 
         /// <summary>
         /// Gets ClientId.
@@ -169,7 +169,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         public string OpenShiftTheme => this.configuration["OpenShiftTheme"];
 
         /// <summary>
-        /// Gets kronos query name.
+        /// Gets Kronos query name.
         /// </summary>
         public string KronosUserDetailsQuery => this.configuration["KronosUserDetailsQuery"];
 

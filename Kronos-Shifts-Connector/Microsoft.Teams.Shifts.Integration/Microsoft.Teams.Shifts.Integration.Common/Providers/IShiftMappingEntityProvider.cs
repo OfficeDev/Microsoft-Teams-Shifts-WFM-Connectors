@@ -34,10 +34,14 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// </summary>
         /// <param name="processKronosUsersInBatchList">Model to store list of user information.</param>
         /// <param name="monthPartitionKey">Month Partition Value.</param>
+        /// <param name="queryStartDate">Query start date.</param>
+        /// <param name="queryEndDate">Query end date.</param>
         /// <returns>ShiftMappingEntity.</returns>
         Task<List<TeamsShiftMappingEntity>> GetAllShiftMappingEntitiesInBatchAsync(
             IEnumerable<UserDetailsModel> processKronosUsersInBatchList,
-            string monthPartitionKey);
+            string monthPartitionKey,
+            string queryStartDate,
+            string queryEndDate);
 
         /// <summary>
         /// Method that would be able to return based on the PartitionKey, hash, and Shift "ID".

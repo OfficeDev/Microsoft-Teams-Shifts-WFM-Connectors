@@ -25,7 +25,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using TimeOffReasonResponse = Microsoft.Teams.Shifts.Integration.API.Models.Response;
 
     /// <summary>
-    /// Fetch TimeOffReasons from kronos and create the same in shifts.
+    /// Fetch TimeOffReasons from Kronos and create the same in Shifts.
     /// </summary>
     [Authorize(Policy = "AppID")]
     [Route("/api/TimeOffReason")]
@@ -75,7 +75,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         }
 
         /// <summary>
-        /// Maps the Paycode of kronos with timeoffreasons.
+        /// Maps the Paycode of Kronos with TimeOffReasons.
         /// </summary>
         /// <returns>JSONResult.</returns>
         [HttpGet]
@@ -207,7 +207,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         }
 
         /// <summary>
-        /// Create TimeOff Reasons in shifts.
+        /// Create TimeOff Reasons in Shifts.
         /// </summary>
         /// <param name="accessToken">Cached AccessToken.</param>
         /// <param name="teamsId">MS Teams Id.</param>
@@ -217,10 +217,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         {
             this.telemetryClient.TrackTrace($"{MethodBase.GetCurrentMethod().Name}");
 
-            TimeOffReasonRequest.TimeOffReason timeOffReason = new TimeOffReasonRequest.TimeOffReason();
-            timeOffReason.DisplayName = payCode;
-            timeOffReason.IconType = "plane";
-            timeOffReason.IsActive = true;
+            TimeOffReasonRequest.TimeOffReason timeOffReason = new TimeOffReasonRequest.TimeOffReason
+            {
+                DisplayName = payCode,
+                IconType = "plane",
+                IsActive = true,
+            };
             var requestString = JsonConvert.SerializeObject(timeOffReason);
 
             var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");

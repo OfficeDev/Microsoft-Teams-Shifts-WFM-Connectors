@@ -75,7 +75,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         }
 
         /// <summary>
-        /// Start shits sync from kronos to shifts.
+        /// Start shifts sync from Kronos to Shifts.
         /// </summary>
         /// <param name="isRequestFromLogicApp">Checks if request is coming from logic app or portal.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
@@ -140,7 +140,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                                 var lookUpData = await this.shiftMappingEntityProvider.GetAllShiftMappingEntitiesInBatchAsync(
                                     processKronosUsersQueueInBatch,
-                                    monthPartitionKey).ConfigureAwait(false);
+                                    monthPartitionKey,
+                                    queryStartDate,
+                                    queryEndDate).ConfigureAwait(false);
 
                                 // Get shift response for a batch of users.
                                 var shiftsResponse = await this.upcomingShiftsActivity.ShowUpcomingShiftsInBatchAsync(
@@ -429,6 +431,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 AadUserId = responseModel.UserId,
                 KronosUniqueId = uniqueId,
                 KronosPersonNumber = user.KronosPersonNumber,
+                ShiftStartDate = this.utility.UTCToKronosTimeZone(responseModel.SharedShift.StartDateTime),
             };
 
             this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, createNewShiftMappingEntityProps);

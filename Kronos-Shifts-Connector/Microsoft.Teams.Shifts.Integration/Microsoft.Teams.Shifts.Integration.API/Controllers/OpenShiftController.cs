@@ -180,7 +180,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                         // Retrieve lookUpData for the open shift entity.
                                         var lookUpData = await this.openShiftMappingEntityProvider.GetAllOpenShiftMappingEntitiesInBatch(
                                             monthPartitionKey,
-                                            mappedTeam?.TeamsScheduleGroupId).ConfigureAwait(false);
+                                            mappedTeam?.TeamsScheduleGroupId,
+                                            queryStartDate,
+                                            queryEndDate).ConfigureAwait(false);
 
                                         if (lookUpData != null)
                                         {
@@ -263,8 +265,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                                     }
                                                     else
                                                     {
-                                                        telemetryProps.Add("MappedTeamStatus", $"There is no mappedTeam found with WFI ID: {allRequiredConfigurations.WFIId}");
-                                                        this.telemetryClient.TrackTrace(Resource.SyncOpenShiftsFromKronos, telemetryProps);
+                                                        this.telemetryClient.TrackTrace($"{Resource.SyncOpenShiftsFromKronos} - There is no mappedTeam found with WFI ID: {allRequiredConfigurations.WFIId}");
                                                         continue;
                                                     }
                                                 }
@@ -333,11 +334,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             TeamToDepartmentJobMappingEntity mappedTeam)
         {
             this.telemetryClient.TrackTrace($"CreateEntryOpenShiftsEntityMappingAsync start at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
-
-            if (openShiftNotFound is null)
-            {
-                throw new ArgumentNullException(nameof(openShiftNotFound));
-            }
 
             // This foreach loop iterates over the OpenShifts which are to be added into Shifts UI.
             foreach (var item in openShiftNotFound)
@@ -415,7 +411,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             {
                 this.telemetryClient.TrackTrace($"OpenShiftController - Checking {item.TeamsOpenShiftId} to see if there are any Open Shift Requests");
                 var isInOpenShiftRequestMappingTable = await this.openShiftRequestMappingEntityProvider.CheckOpenShiftRequestExistance(item.TeamsOpenShiftId).ConfigureAwait(false);
-
                 if (!isInOpenShiftRequestMappingTable)
                 {
                     this.telemetryClient.TrackTrace($"{item.TeamsOpenShiftId} is not in the Open Shift Request mapping table - deletion can be done.");
@@ -532,6 +527,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 KronosSlots = Constants.KronosOpenShiftsSlotCount,
                 SchedulingGroupId = responseModel.SchedulingGroupId,
                 OrgJobPath = orgJobPath,
+                OpenShiftStartDate = this.utility.UTCToKronosTimeZone(responseModel.SharedOpenShift.StartDateTime),
             };
 
             this.telemetryClient.TrackTrace(Resource.CreateNewOpenShiftMappingEntity, createNewOpenShiftMappingEntityProps);

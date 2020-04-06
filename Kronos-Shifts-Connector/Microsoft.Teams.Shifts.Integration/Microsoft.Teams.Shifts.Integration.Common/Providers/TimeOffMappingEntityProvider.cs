@@ -40,7 +40,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// <summary>
         /// Method to get all the time off mapping entities.
         /// </summary>
-        /// <param name="processKronosUsersInBatchList">The batch of kronos users.</param>
+        /// <param name="processKronosUsersInBatchList">The batch of Kronos users.</param>
         /// <param name="monthPartitionKey">The month partition key.</param>
         /// <returns>A list of time off mapping entities that are contained in a unit of execution.</returns>
         public async Task<List<TimeOffMappingEntity>> GetAllTimeOffMappingEntitiesAsync(

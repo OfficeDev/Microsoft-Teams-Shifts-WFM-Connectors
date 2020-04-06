@@ -1,4 +1,4 @@
-﻿// <copyright file="SwapShiftController.cs" company="Microsoft">
+// <copyright file="SwapShiftController.cs" company="Microsoft">
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
@@ -190,14 +190,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                         SwapShiftObj swapShiftObj = new SwapShiftObj
                         {
-                            // Convert shift time to kronos time zone.
-                            Emp1FromDateTime = this.utility.UTCToKronosKronosTimeZone(
+                            // Convert shift time to Kronos time zone.
+                            Emp1FromDateTime = this.utility.UTCToKronosTimeZone(
                                 senderShiftDetails.SharedShift.StartDateTime),
-                            Emp1ToDateTime = this.utility.UTCToKronosKronosTimeZone(
+                            Emp1ToDateTime = this.utility.UTCToKronosTimeZone(
                                 senderShiftDetails.SharedShift.EndDateTime),
-                            Emp2FromDateTime = this.utility.UTCToKronosKronosTimeZone(
+                            Emp2FromDateTime = this.utility.UTCToKronosTimeZone(
                                 recipientShiftDetails.SharedShift.StartDateTime),
-                            Emp2ToDateTime = this.utility.UTCToKronosKronosTimeZone(
+                            Emp2ToDateTime = this.utility.UTCToKronosTimeZone(
                                 recipientShiftDetails.SharedShift.EndDateTime),
                             QueryDateSpan = $"{shiftStartDate}-{shiftEndDate}",
                             RequestedToName = recipient?.KronosUserName,
@@ -709,13 +709,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             // Check if all the tokens are present and configuration is done.
             if (allRequiredConfigurations != null && (bool)allRequiredConfigurations?.IsAllSetUpExists && isCorrectDateRange)
             {
-                // Get the users whose request is in pending state in shifts.
+                // Get the users whose request is in pending state in Shifts.
                 List<SwapShiftMappingEntity> pendingSwapShiftEntities = await this.swapShiftMappingEntityProvider.GetPendingRequest().ConfigureAwait(false);
 
                 // If there are the requests which are in pending state.
                 if (pendingSwapShiftEntities.Any())
                 {
-                    // list of kronos person numbers whose request is in pending state in database.
+                    // list of Kronos person numbers whose request is in pending state in database.
                     List<string> kronosPersonNumbers = pendingSwapShiftEntities.Select(c => c.RequestorKronosPersonNumber).Distinct().ToList();
 
                     // Gets all the approved swap shifts.
@@ -746,11 +746,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                     if (swapshiftDetails != null && swapshiftDetails.RequestMgmt?.RequestItems?.SwapShiftRequestItem?.Count > 0)
                     {
-                        // Process for only those requests which are approved in kronos but still pending in our db.
+                        // Process for only those requests which are approved in Kronos but still pending in our db.
                         foreach (var swapShiftEntity in pendingSwapShiftEntities)
                         {
-                            if (await this.CheckRequestStatus(swapShiftEntity.RowKey, swapShiftEntity.ShiftsTeamId, graphClient).ConfigureAwait(false))
-                            {
                                 var approvedData = swapshiftDetails.RequestMgmt.RequestItems.SwapShiftRequestItem.Where(c => c.Id == swapShiftEntity.KronosReqId).FirstOrDefault();
 
                                 if (approvedData != null)
@@ -761,23 +759,17 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                     await this.AddSwapShiftApprovalAsync(
                                         allRequiredConfigurations.ShiftsAccessToken,
                                         swapShiftEntity,
-                                        note).ConfigureAwait(false);
+                                        note,
+                                        allRequiredConfigurations.WFIId).ConfigureAwait(false);
                                 }
-                            }
-                            else
-                            {
-                                this.telemetryClient.TrackTrace($"{string.Format(CultureInfo.InvariantCulture, Resource.InvalidSwapShiftState, swapShiftEntity?.RowKey)}");
-                            }
                         }
                     }
 
                     if (swapshiftRefusedDetails != null && swapshiftRefusedDetails.RequestMgmt?.RequestItems?.SwapShiftRequestItem?.Count > 0)
                     {
-                        // Process for only those requests which are refused in kronos but still pending in our db.
+                        // Process for only those requests which are refused in Kronos but still pending in our db.
                         foreach (var swapShiftEntity in pendingSwapShiftEntities)
                         {
-                            if (await this.CheckRequestStatus(swapShiftEntity.RowKey, swapShiftEntity.ShiftsTeamId, graphClient).ConfigureAwait(false))
-                            {
                                 var refusedData = swapshiftRefusedDetails.RequestMgmt.RequestItems.SwapShiftRequestItem.Where(c => c.Id == swapShiftEntity.KronosReqId).FirstOrDefault();
                                 if (refusedData != null)
                                 {
@@ -789,24 +781,19 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                         swapShiftEntity?.ShiftsTeamId,
                                         swapShiftEntity,
                                         refusedData.StatusName,
-                                        note).ConfigureAwait(false);
+                                        note,
+                                        allRequiredConfigurations.WFIId).ConfigureAwait(false);
                                 }
-                            }
-                            else
-                            {
-                                this.telemetryClient.TrackTrace($"{string.Format(CultureInfo.InvariantCulture, Resource.InvalidSwapShiftState, swapShiftEntity?.RowKey)}");
-                            }
                         }
                     }
 
                     if (swapshiftRetractedDetails != null && swapshiftRetractedDetails.RequestMgmt?.RequestItems?.SwapShiftRequestItem?.Count > 0)
                     {
-                        // Process for only those requests which are retracted in kronos but still pending in our db.
+                        // Process for only those requests which are retracted in Kronos but still pending in our db.
                         foreach (var swapShiftEntity in pendingSwapShiftEntities)
                         {
-                            if (await this.CheckRequestStatus(swapShiftEntity.RowKey, swapShiftEntity.ShiftsTeamId, graphClient).ConfigureAwait(false))
-                            {
                                 var retractedData = swapshiftRetractedDetails.RequestMgmt.RequestItems.SwapShiftRequestItem.Where(c => c.Id == swapShiftEntity.KronosReqId).FirstOrDefault();
+
                                 if (retractedData != null)
                                 {
                                     // Fetch notes for the swap shift request.
@@ -817,13 +804,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                         swapShiftEntity?.ShiftsTeamId,
                                         swapShiftEntity,
                                         retractedData?.StatusName,
-                                        note).ConfigureAwait(false);
+                                        note,
+                                        allRequiredConfigurations.WFIId).ConfigureAwait(false);
                                 }
-                            }
-                            else
-                            {
-                                this.telemetryClient.TrackTrace($"{string.Format(CultureInfo.InvariantCulture, Resource.InvalidSwapShiftState, swapShiftEntity?.RowKey)}");
-                            }
                         }
                     }
                 }
@@ -911,7 +894,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="accessToken">The Microsoft Graph access token.</param>
         /// <param name="swapShiftMappingEntity">The Swap Shift entity from database.</param>
         /// <param name="note">The necessary notes that are applicable to the Swap Shift request approval.</param>
-        private async Task AddSwapShiftApprovalAsync(string accessToken, SwapShiftMappingEntity swapShiftMappingEntity, string note)
+        /// <param name="wfIId">The workforce integration id.</param>
+        private async Task AddSwapShiftApprovalAsync(string accessToken, SwapShiftMappingEntity swapShiftMappingEntity, string note, string wfIId)
         {
             var telemetryProps = new Dictionary<string, string>()
             {
@@ -924,6 +908,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            // Send Passthrough header to indicate the sender of request in outbound call.
+            httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", wfIId);
 
             // Approves the swapShift in Shifts.
             ApproveMsg approveMsg = new ApproveMsg { Message = note };
@@ -985,7 +972,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="swapShiftMappingEntity">The Swap Shift entity from database.</param>
         /// <param name="status">The status to post as part of the decline.</param>
         /// <param name="note">Applicable notes for the decline of the Swap Shift request.</param>
-        private async Task DeclineSwapShiftRequestAsync(string accessToken, string teamsId, SwapShiftMappingEntity swapShiftMappingEntity, string status, string note)
+        /// <param name="workforceIntegrationId">The workforce integration id.</param>
+        private async Task DeclineSwapShiftRequestAsync(string accessToken, string teamsId, SwapShiftMappingEntity swapShiftMappingEntity, string status, string note, string workforceIntegrationId)
         {
             var telemetryProps = new Dictionary<string, string>()
             {
@@ -996,6 +984,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             this.telemetryClient.TrackTrace($"{Resource.DeclineSwapShiftRequestAsync} starts at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
             var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+            // Send Passthrough header to indicate the sender of request in outbound call.
+            httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", workforceIntegrationId);
 
             // Declines the swapShift in Shifts.
             ApproveMsg approveMsg = new ApproveMsg { Message = note };
@@ -1033,7 +1024,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="wFIID">Workforce integration id.</param>
         /// <param name="wFEndpoint">Kronos endpoint.</param>
         /// <param name="jsession">The JSession (Kronos "token").</param>
-        /// /// <param name="queryDateSpan">Date span for kronos to fetch the swap shift details.</param>
+        /// /// <param name="queryDateSpan">Date span for Kronos to fetch the swap shift details.</param>
         /// <returns>A unit of execution that contains the approved response.</returns>
         private async Task<Approve.SwapShiftData.Response> GetSwapShiftResultsByUserAsync(
             List<string> kronosPersonNumbers,
@@ -1076,7 +1067,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="wFIID">The workforce integration id.</param>
         /// <param name="wFEndpoint">Kronos Endpoint.</param>
         /// <param name="jsession">The JSession (Kronos "token").</param>
-        /// <param name="queryDateSpan">Query date span for kronos details.</param>
+        /// <param name="queryDateSpan">Query date span for Kronos details.</param>
         /// <returns>A unit of execution that contains the refused response.</returns>
         private async Task<Approve.SwapShiftData.Response> GetSwapShiftRefusedResultsByUserAsync(
             List<string> kronosPersonNumbers,
@@ -1118,7 +1109,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="wFIID">The workforce integration id.</param>
         /// <param name="wFEndpoint">Kronos Endpoint.</param>
         /// <param name="jsession">The JSession (Kronos "token").</param>
-        /// <param name="queryDateSpan">Query date span for kronos details.</param>
+        /// <param name="queryDateSpan">Query date span for Kronos details.</param>
         /// <returns>A unit of execution that contains the retracted response.</returns>
         private async Task<Approve.SwapShiftData.Response> GetSwapShiftRetractedResultsByUserAsync(
             List<string> kronosPersonNumbers,
@@ -1151,64 +1142,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             }
 
             return swapshiftRequests;
-        }
-
-        /// <summary>
-        /// This method gets all the mapped user details.
-        /// </summary>
-        /// <param name="workForceIntegrationId">The workforce integration ID.</param>
-        /// <returns>A unit of execution that returns a type of <see cref="IEnumerable{UserDetailsModel}"/>.</returns>
-        private async Task<IEnumerable<UserDetailsModel>> GetAllMappedUserDetailsAsync(string workForceIntegrationId)
-        {
-            List<UserDetailsModel> kronosUsers = new List<UserDetailsModel>();
-
-            var mappedUsersResult = await this.userMappingProvider.GetAllMappedUserDetailsAsync().ConfigureAwait(false);
-
-            foreach (var element in mappedUsersResult)
-            {
-                var teamMappingEntity = await this.teamDepartmentMappingProvider.GetTeamMappingForOrgJobPathAsync(workForceIntegrationId, element.PartitionKey).ConfigureAwait(false);
-
-                // If team department mapping for a user not present. Skip the user.
-                if (teamMappingEntity != null)
-                {
-                    kronosUsers.Add(new UserDetailsModel
-                    {
-                        KronosPersonNumber = element.RowKey,
-                        ShiftUserId = element.ShiftUserAadObjectId,
-                        ShiftTeamId = teamMappingEntity.TeamId,
-                        ShiftScheduleGroupId = teamMappingEntity.TeamsScheduleGroupId,
-                        OrgJobPath = element.PartitionKey,
-                    });
-                }
-            }
-
-            return kronosUsers;
-        }
-
-        /// <summary>
-        /// check the swap shift status using graph call for acknowledgement.
-        /// </summary>
-        /// <param name="swapReqId">Swap shift request id.</param>
-        /// <param name="teamsId">Shifts teams id.</param>
-        /// <param name="graphClient">Graph client.</param>
-        /// <returns>Returns true if request is in pendign with manager state.</returns>
-        private async Task<bool> CheckRequestStatus(string swapReqId, string teamsId, GraphServiceClient graphClient)
-        {
-            this.telemetryClient.TrackTrace($"{Resource.CheckRequestStatus}");
-            try
-            {
-                // Get the swap request details using graph call which is in pending with manager state.
-                var reqDetails = await graphClient.Teams[teamsId].Schedule.SwapShiftsChangeRequests[swapReqId].Request().GetAsync().ConfigureAwait(false);
-                this.telemetryClient.TrackTrace("Request state: " + reqDetails.State + "Assigned to: " + reqDetails.AssignedTo + "for request id: " + swapReqId);
-
-                // Returns true if it is in pending with manager else returns false (request is in system declined state).
-                var isReqPending = (reqDetails.State.ToString() == ApiConstants.ShiftsPending && reqDetails.AssignedTo.ToString() == ApiConstants.ShiftsManager) ? true : false;
-                return isReqPending;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
         }
     }
 }

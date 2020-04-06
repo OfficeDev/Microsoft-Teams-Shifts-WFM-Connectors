@@ -168,7 +168,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
             }
             else
             {
-                return this.RedirectToAction("Index", "UserMapping").WithDanger(Resources.ErrorNotificationHeaderText, Resources.WorkforceIntegrationNotRegister);
+                return this.RedirectToAction("Index", "UserMapping").WithErrorMessage(Resources.ErrorNotificationHeaderText, Resources.WorkforceIntegrationNotRegister);
             }
         }
 
@@ -198,9 +198,9 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
         }
 
         /// <summary>
-        /// method to import Kronos and Shift users.
+        /// Method to import Kronos and Shift users.
         /// </summary>
-        /// <returns> returns true if file import is successfull.</returns>
+        /// <returns> Returns true if file import is successful.</returns>
         [HttpPost]
         public async Task<ActionResult> ImportMappingAsync()
         {
@@ -266,7 +266,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
         /// <summary>
         /// Method to delete mapping record from User Mapping table.
         /// </summary>
-        /// <param name="partitionKey">Partition Key i.e. OrgJobPath of kronos.</param>
+        /// <param name="partitionKey">Partition Key i.e. OrgJobPath of Kronos.</param>
         /// <param name="rowKey">Kronos Person number.</param>
         /// <returns>Json result indicating success or failure conditions.</returns>
         [HttpPost]
@@ -291,8 +291,8 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
         /// <summary>
         /// Method to convert the model to DataTable.
         /// </summary>
-        /// <param name="shiftList">List of shift's users.</param>
-        /// <param name="kronosList">List of kronos users.</param>
+        /// <param name="shiftList">List of Shifts users.</param>
+        /// <param name="kronosList">List of Kronos users.</param>
         /// <returns>File to browser's response.</returns>
         private static List<DataTable> ConvertModelToDataTable(List<ShiftUser> shiftList, List<KronosUserModel> kronosList)
         {
@@ -394,15 +394,22 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                         element.PersonNumber,
                         tenantId,
                         loginKronosResult.Jsession).ConfigureAwait(false);
+                    if (jobAssigmentResponse != null)
+                    {
+                        var jobDetails = jobAssigmentResponse.JobAssign.PrimaryLaborAccList.PrimaryLaborAcc.OrganizationPath;
 
-                    var jobDetails = jobAssigmentResponse.JobAssign.PrimaryLaborAccList.PrimaryLaborAcc.OrganizationPath;
-                    kronosUserModels.Add(
-                        new KronosUserModel()
-                        {
-                            KronosOrgJobPath = jobDetails,
-                            KronosPersonNumber = element.PersonNumber,
-                            KronosUserName = element.FullName,
-                        });
+                        kronosUserModels.Add(
+                            new KronosUserModel()
+                            {
+                                KronosOrgJobPath = jobDetails,
+                                KronosPersonNumber = element.PersonNumber,
+                                KronosUserName = element.FullName,
+                            });
+                    }
+                    else
+                    {
+                        this.telemetryClient.TrackTrace($"Unable to fetch job assignment for {element.PersonNumber} ");
+                    }
                 }
 
                 return kronosUserModels;

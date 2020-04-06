@@ -238,7 +238,7 @@
   </data>
   <data name="UpdateNotificationHeaderText" xml:space="preserve">
     <value>Updated successfully!</value>
-    <comment>The update successfull popup text</comment>
+    <comment>The update successful popup text</comment>
   </data>
   <data name="KronosShiftUserMappingXML" xml:space="preserve">
     <value>kronos_shift_usermapping.xlsx</value>
@@ -310,5 +310,21 @@
   <data name="SyncKronosToShiftsError" xml:space="preserve">
     <value>The sync could not be initiated.</value>
     <comment>Error message when sync is initiated through done button and endpoint throws an error.</comment>
+  </data>
+  <data name="InvalidKronosURL" xml:space="preserve">
+    <value>Invalid Kronos URL. Please check the URL and try again.</value>
+    <comment>The message will be displayed when provided Kronos URL is incorrect.</comment>
+  </data>
+  <data name="MandatoryCredentialsNotProvided" xml:space="preserve">
+    <value>Please check the mandatory fields and try again.</value>
+    <comment>The message will be shown when the mandatory fields are not filled.</comment>
+  </data>
+  <data name="UnableToFetchConfiguration" xml:space="preserve">
+    <value>Unable to fetch configuration.</value>
+    <comment>The message will be displayed when configuration fetch is failed.</comment>
+  </data>
+  <data name="UnableToLoginToKronos" xml:space="preserve">
+    <value>Unable to login to Kronos. Please check credentials and try again.</value>
+    <comment>The message will be displayed when provided Kronos credentials are incorrect.</comment>
   </data>
 </root>

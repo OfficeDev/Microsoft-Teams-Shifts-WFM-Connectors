@@ -55,17 +55,17 @@ namespace Microsoft.Teams.App.KronosWfc.Common
         public const string LoadAllQueries = "LoadAllQueries";
 
         /// <summary>
-        /// Defines the visibility status for kronos side.
+        /// Defines the visibility status for Kronos side.
         /// </summary>
         public const string PublicVisibilityCode = "Public";
 
         /// <summary>
-        /// Defines the success status from kronos side.
+        /// Defines the success status from Kronos side.
         /// </summary>
         public const string Success = "Success";
 
         /// <summary>
-        /// Defines the failure status from kronos side.
+        /// Defines the failure status from Kronos side.
         /// </summary>
         public const string Failure = "Failure";
 
@@ -130,27 +130,27 @@ namespace Microsoft.Teams.App.KronosWfc.Common
         public const string Retrieve = "Retrieve";
 
         /// <summary>
-        /// Defines the status to be changed from submitted to offered in kronos side.
+        /// Defines the status to be changed from submitted to offered in Kronos side.
         /// </summary>
         public const string Offered = "OFFERED";
 
         /// <summary>
-        /// Defines the submitted status to fetch submitted entries from kronos.
+        /// Defines the submitted status to fetch submitted entries from Kronos.
         /// </summary>
         public const string Submitted = "SUBMITTED";
 
         /// <summary>
-        /// Defines the approved status to fetch approved entries from kronos.
+        /// Defines the approved status to fetch approved entries from Kronos.
         /// </summary>
         public const string ApprovedStatus = "APPROVED";
 
         /// <summary>
-        /// Defines the Refused status to fetch declined entries from kronos.
+        /// Defines the Refused status to fetch declined entries from Kronos.
         /// </summary>
         public const string Refused = "REFUSED";
 
         /// <summary>
-        /// Defines the Retract status to fetch deleted entries from kronos.
+        /// Defines the Retract status to fetch deleted entries from Kronos.
         /// </summary>
         public const string Retract = "RETRACT";
 
@@ -205,17 +205,17 @@ namespace Microsoft.Teams.App.KronosWfc.Common
         public const string SwapShiftRequest = "Shift Swap Request";
 
         /// <summary>
-        /// Defines swap Shift comment if kronos comment is null.
+        /// Defines swap Shift comment if Kronos comment is null.
         /// </summary>
         public const string SwapShiftComment = "Other reason";
 
         /// <summary>
-        /// Defines swap Shift comment if kronos comment is null.
+        /// Defines swap Shift comment if Kronos comment is null.
         /// </summary>
         public const string SwapShiftNoteText = "Add";
 
         /// <summary>
-        /// Defines kronos acceptable date format.
+        /// Defines Kronos acceptable date format.
         /// </summary>
         public const string KronosAcceptableDateFormat = "MM/d/yyyy hh:mmtt";
 
@@ -223,5 +223,10 @@ namespace Microsoft.Teams.App.KronosWfc.Common
         /// Defines the status when FLW1 cancels the Swap Shift Request.
         /// </summary>
         public const string SwapShiftCancelled = "Cancelled";
+
+        /// <summary>
+        /// Error message when Kronos login is failed.
+        /// </summary>
+        public const string KronosFailedLogin = "Unable to login to Kronos. Please check credentials and try again.";
     }
 }

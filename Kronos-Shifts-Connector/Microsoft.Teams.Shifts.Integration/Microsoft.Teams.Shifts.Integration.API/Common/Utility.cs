@@ -187,9 +187,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         }
 
         /// <summary>
-        /// Convert '/' character of OrgJobPath from kronos into '$' to save this into Azure table Row/Partition key.
+        /// Convert '/' character of OrgJobPath from Kronos into '$' to save this into Azure table Row/Partition key.
         /// </summary>
-        /// <param name="orgJobPath">The actual OrgJobPath which is coming from kronos.</param>
+        /// <param name="orgJobPath">The actual OrgJobPath which is coming from Kronos.</param>
         /// <returns>Converted OrgJobPath.</returns>
         public static string OrgJobPathDBConversion(string orgJobPath)
         {
@@ -209,28 +209,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// <summary>
         /// Having the ability to create a new TeamsShiftMappingEntity.
         /// </summary>
-        /// <param name="shift">The Shift model.</param>
-        /// <param name="userMappingEntity">Details of user from User Mapping Entity table.</param>
-        /// <param name="kronosUniqueId">Kronos Unique Id corresponds to the shift.</param>
-        /// <returns>Mapping Entity associated with Team and Shift.</returns>
-        public static TeamsShiftMappingEntity CreateShiftMappingEntity(
-           Models.IntegrationAPI.Shift shift,
-           AllUserMappingEntity userMappingEntity,
-           string kronosUniqueId)
-        {
-            TeamsShiftMappingEntity teamsShiftMappingEntity = new TeamsShiftMappingEntity
-            {
-                AadUserId = shift?.UserId,
-                KronosUniqueId = kronosUniqueId,
-                KronosPersonNumber = userMappingEntity?.RowKey,
-            };
-
-            return teamsShiftMappingEntity;
-        }
-
-        /// <summary>
-        /// Having the ability to create a new TeamsShiftMappingEntity.
-        /// </summary>
         /// <param name="aadUserId">AAD user Id associated with the Shift.</param>
         /// <param name="kronosUniqueId">Kronos Unique Id fro that Shift.</param>
         /// <param name="kronosPersonNumber">Kronos Person number for the user.</param>
@@ -245,6 +223,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
                 AadUserId = aadUserId,
                 KronosUniqueId = kronosUniqueId,
                 KronosPersonNumber = kronosPersonNumber,
+                ShiftStartDate = DateTime.UtcNow,
             };
 
             return teamsShiftMappingEntity;
@@ -277,21 +256,19 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
             string endDate,
             string dateFormat = Common.Constants.DateFormat)
         {
-            DateTime tempStartDate, tempEndDate;
-
             bool validStartDate = DateTime.TryParseExact(
                 startDate,
                 dateFormat,
                 DateTimeFormatInfo.InvariantInfo,
                 DateTimeStyles.None,
-                out tempStartDate);
+                out var tempStartDate);
 
             bool validEndDate = DateTime.TryParseExact(
                 endDate,
                 dateFormat,
                 DateTimeFormatInfo.InvariantInfo,
                 DateTimeStyles.None,
-                out tempEndDate);
+                out var tempEndDate);
 
             return validStartDate && validEndDate && (tempStartDate < tempEndDate);
         }
@@ -870,11 +847,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         }
 
         /// <summary>
-        /// This method converts UTC time to kronos timezone.
+        /// This method converts UTC time to Kronos timezone.
         /// </summary>
         /// <param name="dateTimeOffset">UTC nullable date time offset.</param>
         /// <returns>Kronos date time.</returns>
-        public DateTime UTCToKronosKronosTimeZone(DateTimeOffset? dateTimeOffset)
+        public DateTime UTCToKronosTimeZone(DateTimeOffset? dateTimeOffset)
         {
             var kronosTimeZoneId = this.appSettings.KronosTimeZone;
             var kronosTimeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(kronosTimeZoneId);
@@ -885,6 +862,45 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
                                 : DateTime.MaxValue, kronosTimeZoneInfo);
 
             return kronosDateTime;
+        }
+
+        /// <summary>
+        /// This method converts UTC time to Kronos timezone.
+        /// </summary>
+        /// <param name="dateTime">Date time.</param>
+        /// <returns>Kronos date time.</returns>
+        public DateTime UTCToKronosTimeZone(DateTime dateTime)
+        {
+            var kronosTimeZoneId = this.appSettings.KronosTimeZone;
+            var kronosTimeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(kronosTimeZoneId);
+
+            var kronosDateTime = TimeZoneInfo.ConvertTimeFromUtc(
+                                 dateTime, kronosTimeZoneInfo);
+
+            return kronosDateTime;
+        }
+
+        /// <summary>
+        /// Having the ability to create a new TeamsShiftMappingEntity.
+        /// </summary>
+        /// <param name="shift">The Shift model.</param>
+        /// <param name="userMappingEntity">Details of user from User Mapping Entity table.</param>
+        /// <param name="kronosUniqueId">Kronos Unique Id corresponds to the shift.</param>
+        /// <returns>Mapping Entity associated with Team and Shift.</returns>
+        public TeamsShiftMappingEntity CreateShiftMappingEntity(
+           Models.IntegrationAPI.Shift shift,
+           AllUserMappingEntity userMappingEntity,
+           string kronosUniqueId)
+        {
+            TeamsShiftMappingEntity teamsShiftMappingEntity = new TeamsShiftMappingEntity
+            {
+                AadUserId = shift?.UserId,
+                KronosUniqueId = kronosUniqueId,
+                KronosPersonNumber = userMappingEntity?.RowKey,
+                ShiftStartDate = this.UTCToKronosTimeZone(shift.SharedShift.StartDateTime),
+            };
+
+            return teamsShiftMappingEntity;
         }
 
         /// <summary>

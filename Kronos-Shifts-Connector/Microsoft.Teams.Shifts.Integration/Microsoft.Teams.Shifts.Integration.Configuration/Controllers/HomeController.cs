@@ -93,7 +93,9 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
         [HttpPost]
         public async Task<IActionResult> ParseAndSaveDataAsync(HomeViewModel dataToSave)
         {
-            if (dataToSave != null)
+            if (dataToSave != null && dataToSave.WfmApiEndpoint != null &&
+                dataToSave.WfmSuperUsername != null &&
+                dataToSave.WfmSuperUserPassword != null)
             {
                 ConfigurationEntity newConfiguration = new ConfigurationEntity();
 
@@ -131,7 +133,13 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                         dataToSave.WfmSuperUserPassword,
                         new Uri(dataToSave.WfmApiEndpoint)).ConfigureAwait(false);
 
-                    if (loginKronos?.Status == ApiConstants.Success)
+                    // When given Kronos URL is incorrect. loginKronos will be null.
+                    if (loginKronos == null)
+                    {
+                        return this.RedirectToAction("Index").WithErrorMessage(Resources.ErrorNotificationHeaderText, Resources.InvalidKronosURL);
+                    }
+                    else
+                    if (loginKronos.Status == ApiConstants.Success)
                     {
                         // executes for both save and update operations
                         await this.configurationProvider.SaveOrUpdateConfigurationAsync(newConfiguration).ConfigureAwait(false);
@@ -145,6 +153,10 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                         // save or update the user credentials in keyvault
                         this.SaveSecrets(userDetailsDict);
 
+                        // setting appsettings properties WorkforceSuperUserName & WorkforceSuperUserPassword to their updated values
+                        this.appSettings.WfmSuperUsername = dataToSave.WfmSuperUsername;
+                        this.appSettings.WfmSuperUserPassword = dataToSave.WfmSuperUserPassword;
+
                         // condition to update the details if already exists
                         if (!string.IsNullOrWhiteSpace(dataToSave.ConfigurationId))
                         {
@@ -153,19 +165,21 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
 
                         return this.RedirectToAction("Index").WithSuccess(Resources.SuccessNotificationHeaderText, Resources.ConfigurationSavedSuccessNextStepsText);
                     }
+
+                    // When Kronos login is failed due to incorrect credentials.
                     else
                     {
-                        return this.RedirectToAction("Index").WithDanger(Resources.ErrorNotificationHeaderText, Resources.KronosErrorContentText);
+                        return this.RedirectToAction("Index").WithErrorMessage(Resources.ErrorNotificationHeaderText, Resources.KronosErrorContentText);
                     }
                 }
                 else
                 {
-                    return this.BadRequest();
+                    return this.RedirectToAction("Index").WithErrorMessage(Resources.ErrorNotificationHeaderText, Resources.UnableToFetchConfiguration);
                 }
             }
             else
             {
-                return this.BadRequest();
+                return this.RedirectToAction("Index").WithErrorMessage(Resources.ErrorNotificationHeaderText, Resources.MandatoryCredentialsNotProvided);
             }
         }
 
@@ -280,7 +294,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                     var failedResponseContent = await workforceIntegrationResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
 
                     workforceIntegrationRegProps.Add("FailedResponse", failedResponseContent);
-                    return this.RedirectToAction("Index", "Home").WithDanger(Resources.WFIRegFailedHeaderText, string.Format(CultureInfo.InvariantCulture, Resources.WFIRegFailedContentText, wfiDisplayName));
+                    return this.RedirectToAction("Index", "Home").WithErrorMessage(Resources.WFIRegFailedHeaderText, string.Format(CultureInfo.InvariantCulture, Resources.WFIRegFailedContentText, wfiDisplayName));
                 }
             }
 
@@ -313,7 +327,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                 var teamDeptMappingEntity = await this.teamDepartmentMappingProvider.GetMappedTeamToDeptsWithJobPathsAsync().ConfigureAwait(false);
                 if (teamDeptMappingEntity != null && teamDeptMappingEntity.Count > 0)
                 {
-                    return this.RedirectToAction("Index", "Home").WithDanger(Resources.WFIGeneralHeaderText, string.Format(
+                    return this.RedirectToAction("Index", "Home").WithErrorMessage(Resources.WFIGeneralHeaderText, string.Format(
                         CultureInfo.InvariantCulture,
                         Resources.WFIDeleteFailedDueToTeamDeptMappingText,
                         configurationEntity?.WorkforceIntegrationId));
@@ -342,7 +356,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                 }
                 else
                 {
-                    return this.RedirectToAction("Index", "Home").WithDanger(Resources.WFIGeneralHeaderText, string.Format(
+                    return this.RedirectToAction("Index", "Home").WithErrorMessage(Resources.WFIGeneralHeaderText, string.Format(
                         CultureInfo.InvariantCulture,
                         Resources.WfiDeletionFailed,
                         configurationEntity?.WorkforceIntegrationId));
@@ -355,7 +369,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
             }
             else
             {
-                return this.RedirectToAction("Index", "Home").WithDanger(Resources.WFIGeneralHeaderText, string.Format(
+                return this.RedirectToAction("Index", "Home").WithErrorMessage(Resources.WFIGeneralHeaderText, string.Format(
                     CultureInfo.InvariantCulture,
                     Resources.WfiDeletionFailed,
                     configurationEntity?.WorkforceIntegrationId));

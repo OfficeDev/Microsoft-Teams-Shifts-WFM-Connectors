@@ -160,6 +160,15 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid Kronos URL. Please check the URL and try again..
+        /// </summary>
+        public static string InvalidKronosURL {
+            get {
+                return ResourceManager.GetString("InvalidKronosURL", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to login with the provided credentials for Kronos. Please correct and try again!.
         /// </summary>
         public static string KronosErrorContentText {
@@ -174,6 +183,15 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration {
         public static string KronosShiftUserMappingXML {
             get {
                 return ResourceManager.GetString("KronosShiftUserMappingXML", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please check the mandatory fields and try again..
+        /// </summary>
+        public static string MandatoryCredentialsNotProvided {
+            get {
+                return ResourceManager.GetString("MandatoryCredentialsNotProvided", resourceCulture);
             }
         }
         
@@ -345,6 +363,24 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration {
         public static string TokenCacheReuseExceptionMessage {
             get {
                 return ResourceManager.GetString("TokenCacheReuseExceptionMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to fetch configuration..
+        /// </summary>
+        public static string UnableToFetchConfiguration {
+            get {
+                return ResourceManager.GetString("UnableToFetchConfiguration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to login to Kronos. Please check credentials and try again..
+        /// </summary>
+        public static string UnableToLoginToKronos {
+            get {
+                return ResourceManager.GetString("UnableToLoginToKronos", resourceCulture);
             }
         }
         

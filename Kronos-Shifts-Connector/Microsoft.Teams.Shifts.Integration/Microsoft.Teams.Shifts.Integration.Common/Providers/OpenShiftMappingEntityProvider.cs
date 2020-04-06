@@ -6,6 +6,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Linq;
     using System.Reflection;
     using System.Threading.Tasks;
@@ -42,7 +43,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// </summary>
         /// <param name="entity">The open shift mapping entity.</param>
         /// <returns>A unit of execution.</returns>
-        public Task SaveOrUpdateOpenShiftMappingEntityAsync(
+        public async Task SaveOrUpdateOpenShiftMappingEntityAsync(
             AllOpenShiftMappingEntity entity)
         {
             if (entity is null)
@@ -58,7 +59,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             };
 
             this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, saveOrUpdateShiftMappingProps);
-            return this.StoreOrUpdateEntityAsync(entity);
+            await this.StoreOrUpdateEntityAsync(entity).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -101,14 +102,14 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// </summary>
         /// <param name="entity">The mapping entity to be deleted.</param>
         /// <returns>A unit of execution to say whether or not the delete happened successfully.</returns>
-        public Task DeleteOrphanDataFromOpenShiftMappingAsync(AllOpenShiftMappingEntity entity)
+        public async Task DeleteOrphanDataFromOpenShiftMappingAsync(AllOpenShiftMappingEntity entity)
         {
             if (entity is null)
             {
                 throw new ArgumentNullException(nameof(entity));
             }
 
-            return this.DeleteEntityAsync(entity);
+            await this.DeleteEntityAsync(entity).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -116,12 +117,16 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// </summary>
         /// <param name="monthPartitionKey">The month partition key.</param>
         /// <param name="schedulingGroupId">The scheduling group ID.</param>
+        /// <param name="queryStartDate">Query start date.</param>
+        /// <param name="queryEndDate">Query end date.</param>
         /// <returns>Gets a list of all the open shift mapping entities in the batch.</returns>
         public async Task<List<AllOpenShiftMappingEntity>> GetAllOpenShiftMappingEntitiesInBatch(
             string monthPartitionKey,
-            string schedulingGroupId)
+            string schedulingGroupId,
+            string queryStartDate,
+            string queryEndDate)
         {
-            var allOpenShiftMappingEntities = await this.GetAllOpenShiftMappingEntitiesInBatchAsync(monthPartitionKey, schedulingGroupId).ConfigureAwait(false);
+            var allOpenShiftMappingEntities = await this.GetAllOpenShiftMappingEntitiesInBatchAsync(monthPartitionKey, schedulingGroupId, queryStartDate, queryEndDate).ConfigureAwait(false);
             return allOpenShiftMappingEntities;
         }
 
@@ -142,10 +147,14 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// </summary>
         /// <param name="monthPartitionKey">The month wise partition key.</param>
         /// <param name="schedulingGroupId">The scheduling group ID.</param>
+        /// <param name="queryStartDate">Query start date.</param>
+        /// <param name="queryEndDate">Query end date.</param>
         /// <returns>A unit of execution that contains a list of open shift mapping entities.</returns>
         private async Task<List<AllOpenShiftMappingEntity>> GetAllOpenShiftMappingEntitiesInBatchAsync(
             string monthPartitionKey,
-            string schedulingGroupId)
+            string schedulingGroupId,
+            string queryStartDate,
+            string queryEndDate)
         {
             await this.EnsureInitializedAsync().ConfigureAwait(false);
 
@@ -156,12 +165,20 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
 
             this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, getEntitiesProps);
 
+            CultureInfo culture = CultureInfo.InvariantCulture;
+
             string monthPartitionFilter = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, monthPartitionKey);
             string schedulingGroupIdFilter = TableQuery.GenerateFilterCondition("SchedulingGroupId", QueryComparisons.Equal, schedulingGroupId);
+            string startDateFilter = TableQuery.GenerateFilterConditionForDate("OpenShiftStartDate", QueryComparisons.GreaterThanOrEqual, Convert.ToDateTime(queryStartDate, culture));
+            string endDateFilter = TableQuery.GenerateFilterConditionForDate("OpenShiftStartDate", QueryComparisons.LessThanOrEqual, Convert.ToDateTime(queryEndDate, culture).AddDays(1));
 
             // Table query
             TableQuery<AllOpenShiftMappingEntity> query = new TableQuery<AllOpenShiftMappingEntity>();
-            query.Where(TableQuery.CombineFilters(monthPartitionFilter, TableOperators.And, schedulingGroupIdFilter));
+
+            query.Where(TableQuery.CombineFilters(
+                TableQuery.CombineFilters(startDateFilter, TableOperators.And, endDateFilter),
+                TableOperators.And,
+                TableQuery.CombineFilters(monthPartitionFilter, TableOperators.And, schedulingGroupIdFilter)));
 
             // Results list
             var results = new List<AllOpenShiftMappingEntity>();
@@ -196,11 +213,6 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
 
         private async Task<TableResult> StoreOrUpdateEntityAsync(AllOpenShiftMappingEntity entity)
         {
-            if (entity is null)
-            {
-                throw new ArgumentNullException(nameof(entity));
-            }
-
             await this.EnsureInitializedAsync().ConfigureAwait(false);
 
             var storeOrUpdateEntityProps = new Dictionary<string, string>()

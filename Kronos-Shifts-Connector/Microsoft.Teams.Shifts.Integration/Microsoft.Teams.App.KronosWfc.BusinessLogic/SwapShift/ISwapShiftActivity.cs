@@ -22,7 +22,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
         /// </summary>
         /// <param name="endPointUrl">The Kronos WFC endpoint URL.</param>
         /// <param name="jSession">JSession.</param>
-        /// <param name="queryDateSpan">Date range for querying kronos.</param>
+        /// <param name="queryDateSpan">Date range for querying Kronos.</param>
         /// <param name="personNumbers">Person number who created request.</param>
         /// <param name="statusName">Status of request.</param>
         /// <returns>Request details response object.</returns>
