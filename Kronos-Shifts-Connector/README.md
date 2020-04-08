@@ -12,6 +12,7 @@ The points noted below are to be considered as best practices to properly levera
 * IT Admin has functional understating of Kronos WFC 8.1 and Microsoft Teams Shifts App. IT Admin is also the super user of Kronos – The IT Admin needs to have admin-level access to Shifts as their credentials are required for request approval  
 * Kronos WFC serves as single source of truth for all entities 
     * All entities in scope of this integration such as: Shifts, Open Shifts, Time Offs should be created in Kronos WFC by the FMLs and not in the Shifts App  
+    * **The Offer Shift entity and related functionalities are not in scope of this integration**
     * Shifts App can be used by the FLWs to view their schedules, create requests for Time Offs, Open Shifts, and Swap Shifts  
     * **FLMs should use Kronos WFC only for all Approval/Rejection workflows. FLMs should not approve any requests in the Shifts App as it can cause data inconsistency between Kronos WFC and Shifts.** By design the integration blocks approval of Open Shift and Swap Shift requests if initiated from Shifts App UI however does not do so for Time Off requests
 * FLW requests (Open Shift Request, Swap Shift Request) will be synced from Shifts to Kronos in synchronous manner using Shifts Outbound APIs and Kronos WFC 8.1 data submission (POST) APIs  
