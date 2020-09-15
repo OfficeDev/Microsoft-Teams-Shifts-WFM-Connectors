@@ -331,3 +331,6 @@ ASALocalRun/
 
 # Build Outputs
 /Kronos-Shifts-Connector/Microsoft.Teams.Shifts.Integration/Microsoft.Teams.Shifts.Integration.Configuration/wwwroot/lib
+
+# API Settings Files
+/Kronos-Shifts-Connector/api/.vscode

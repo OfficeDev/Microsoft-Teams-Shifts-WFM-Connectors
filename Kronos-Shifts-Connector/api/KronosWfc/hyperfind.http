@@ -1,0 +1,13 @@
+### Get All Home Users
+POST {{baseUrl}}
+Content-Type: application/xml
+
+<Kronos_WFC version="1.0">
+    <Request Action="RunQuery">
+        <HyperFindQuery 
+            HyperFindQueryName="All Home" 
+            VisibilityCode="Public" 
+            QueryDateSpan="15/09/2020-15/09/2020" />
+    </Request>
+</Kronos_WFC>
+

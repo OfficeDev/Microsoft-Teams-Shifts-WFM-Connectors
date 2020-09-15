@@ -1,0 +1,11 @@
+### Login
+POST {{baseUrl}}
+Content-Type: application/xml
+
+<Kronos_WFC version="1.0">
+    <request 
+        object="System" 
+        action="Logon" 
+        username="{{loginName}}" 
+        password="{{password}}" />
+</Kronos_WFC>
