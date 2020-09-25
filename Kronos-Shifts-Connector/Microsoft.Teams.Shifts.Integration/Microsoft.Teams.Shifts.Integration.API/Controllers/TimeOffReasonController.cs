@@ -85,7 +85,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
             if (allRequiredConfigurations != null && (bool)allRequiredConfigurations?.IsAllSetUpExists)
             {
-                var result = await this.teamDepartmentMappingProvider.GetTeamDeptMappingDetailsAsync().ConfigureAwait(false);
+                var result = await this.teamDepartmentMappingProvider.GetMappedTeamToDeptsWithJobPathsAsync().ConfigureAwait(false);
                 if (result != null)
                 {
                     foreach (var team in result)

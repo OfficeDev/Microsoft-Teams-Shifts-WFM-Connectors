@@ -44,6 +44,13 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         Task<List<ShiftsTeamDepartmentMappingEntity>> GetMappedTeamDetailsAsync();
 
         /// <summary>
+        /// Function that will return all the mappings for a single team that are mapped in Azure Table storage.
+        /// </summary>
+        /// <param name="teamId">The ID of the team to get the mappings for.</param>
+        /// <returns>The mappings for the team.</returns>
+        Task<List<TeamToDepartmentJobMappingEntity>> GetMappedTeamDetailsAsync(string teamId);
+
+        /// <summary>
         /// This method definition will be getting all of the team to department mappings
         /// that have OrgJobPaths.
         /// </summary>
@@ -61,13 +68,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// </summary>
         /// <param name="entity">The entity to delete.</param>
         /// <returns>http status code representing the asynchronous operation.</returns>
-        Task<bool> TeamsToDepartmentMappingAsync(TeamsDepartmentMappingModel entity);
-
-        /// <summary>
-        /// Function that will return all of the teams and department that are mapped in Azure Table storage.
-        /// </summary>
-        /// <returns>List of Team and Department mapping model.</returns>
-        Task<List<TeamsDepartmentMappingModel>> GetTeamDeptMappingDetailsAsync();
+        Task<bool> TeamsToDepartmentMappingAsync(TeamToDepartmentJobMappingEntity entity);
 
         /// <summary>
         /// Method to delete teams and Department mapping.

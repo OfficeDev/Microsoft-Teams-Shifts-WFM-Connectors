@@ -43,6 +43,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private readonly IOpenShiftRequestMappingEntityProvider openShiftRequestMappingEntityProvider;
         private readonly IOpenShiftMappingEntityProvider openShiftMappingEntityProvider;
         private readonly ISwapShiftMappingEntityProvider swapShiftMappingEntityProvider;
+        private readonly ITeamDepartmentMappingProvider teamDepartmentMappingProvider;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TeamsController"/> class.
@@ -57,6 +58,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="openShiftRequestMappingEntityProvider">The open shift request mapping entity provider DI.</param>
         /// <param name="openShiftMappingEntityProvider">The open shift mapping entity provider DI.</param>
         /// <param name="swapShiftMappingEntityProvider">The swap shift mapping entity provider DI.</param>
+        /// <param name="teamDepartmentMappingProvider">The team department mapping entity provider DI.</param>
         public TeamsController(
             TelemetryClient telemetryClient,
             IConfigurationProvider configurationProvider,
@@ -67,7 +69,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             IShiftMappingEntityProvider shiftMappingEntityProvider,
             IOpenShiftRequestMappingEntityProvider openShiftRequestMappingEntityProvider,
             IOpenShiftMappingEntityProvider openShiftMappingEntityProvider,
-            ISwapShiftMappingEntityProvider swapShiftMappingEntityProvider)
+            ISwapShiftMappingEntityProvider swapShiftMappingEntityProvider,
+            ITeamDepartmentMappingProvider teamDepartmentMappingProvider)
         {
             this.telemetryClient = telemetryClient;
             this.configurationProvider = configurationProvider;
@@ -79,6 +82,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             this.openShiftRequestMappingEntityProvider = openShiftRequestMappingEntityProvider;
             this.openShiftMappingEntityProvider = openShiftMappingEntityProvider;
             this.swapShiftMappingEntityProvider = swapShiftMappingEntityProvider;
+            this.teamDepartmentMappingProvider = teamDepartmentMappingProvider;
         }
 
         /// <summary>
@@ -149,11 +153,17 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 { "IncomingAadGroupId", aadGroupId },
             };
 
+            // get the kronos org job mapping information
+            var teamMappings = await this.teamDepartmentMappingProvider.GetMappedTeamDetailsAsync(aadGroupId).ConfigureAwait(false);
+
+            // get the timezone for the first mapping - logically all mappings for the team must have the same time zone set
+            var timeZone = teamMappings[0].KronosTimeZone;
+
             // Check if payload is for open shift request.
             if (jsonModel.Requests.Any(x => x.Url.Contains("/openshiftrequests/", StringComparison.InvariantCulture)))
             {
                 // Process payload for open shift request.
-                responseModelList = await this.ProcessOpenShiftRequest(jsonModel, updateProps, aadGroupId, isRequestFromCorrectIntegration).ConfigureAwait(false);
+                responseModelList = await this.ProcessOpenShiftRequest(jsonModel, updateProps, aadGroupId, isRequestFromCorrectIntegration, timeZone).ConfigureAwait(false);
             }
 
             // Check if payload is for swap shift request.
@@ -162,7 +172,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 this.telemetryClient.TrackTrace("Teams Controller swapRequests " + JsonConvert.SerializeObject(jsonModel));
 
                 // Process payload for swap shift request.
-                responseModelList = await this.ProcessSwapShiftRequest(jsonModel, aadGroupId, isRequestFromCorrectIntegration).ConfigureAwait(true);
+                responseModelList = await this.ProcessSwapShiftRequest(jsonModel, aadGroupId, isRequestFromCorrectIntegration, timeZone).ConfigureAwait(true);
             }
 
             // Check if payload is for open shift.
@@ -350,17 +360,18 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// </summary>
         /// <param name="jsonModel">Incoming payload for the request been made in Shifts.</param>
         /// <param name="updateProps">telemetry properties.</param>
+        /// <param name="teamsId">The ID of the team from which the request originated.</param>
+        /// <param name="isRequestFromCorrectIntegration">Whether the request originated from the correct workforce integration or not</param>
+        /// <param name="timeZone">The time zone to use when converting the times.</param>
         /// <returns>Returns list of ShiftIntegResponse for request.</returns>
-        private async Task<List<ShiftsIntegResponse>> ProcessOpenShiftRequest(RequestModel jsonModel, Dictionary<string, string> updateProps, string teamsId, bool isRequestFromCorrectIntegration)
+        private async Task<List<ShiftsIntegResponse>> ProcessOpenShiftRequest(RequestModel jsonModel, Dictionary<string, string> updateProps, string teamsId, bool isRequestFromCorrectIntegration, string timeZone)
         {
             List<ShiftsIntegResponse> responseModelList = new List<ShiftsIntegResponse>();
             var requestBody = jsonModel.Requests.First(x => x.Url.Contains("/openshiftrequests/", StringComparison.InvariantCulture)).Body;
 
             if (requestBody != null)
             {
-                var requestState = requestBody?["state"].Value<string>();
-
-                switch (requestState)
+                switch (requestBody["state"].Value<string>())
                 {
                     // The Open shift request is submitted in Shifts and is pending with manager for approval.
                     case ApiConstants.ShiftsPending:
@@ -378,7 +389,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             if (isRequestFromCorrectIntegration)
                             {
                                 this.telemetryClient.TrackTrace($"Request coming from correct workforce integration is {isRequestFromCorrectIntegration} for OpenShiftRequest approval outbound call.");
-                                responseModelList = await this.ProcessOpenShiftRequestApprovalAsync(jsonModel, updateProps).ConfigureAwait(false);
+                                responseModelList = await this.ProcessOpenShiftRequestApprovalAsync(jsonModel, updateProps, timeZone).ConfigureAwait(false);
                             }
 
                             // Request is coming from either Shifts UI or from incorrect workforce integration.
@@ -426,8 +437,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// </summary>
         /// <param name="jsonModel">Incoming payload for the request been made in Shifts.</param>
         /// <param name="aadGroupId">AAD Group id.</param>
+        /// <param name="timeZone">The time zone to use when converting the times.</param>
         /// <returns>Returns list of ShiftIntegResponse for request.</returns>
-        private async Task<List<ShiftsIntegResponse>> ProcessSwapShiftRequest(RequestModel jsonModel, string aadGroupId, bool isRequestFromCorrectIntegration)
+        private async Task<List<ShiftsIntegResponse>> ProcessSwapShiftRequest(RequestModel jsonModel, string aadGroupId, bool isRequestFromCorrectIntegration, string timeZone)
         {
             List<ShiftsIntegResponse> responseModelList = new List<ShiftsIntegResponse>();
             var requestBody = jsonModel.Requests.First(x => x.Url.Contains("/swapRequests/", StringComparison.InvariantCulture)).Body;
@@ -491,7 +503,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         if (isRequestFromCorrectIntegration)
                         {
                             this.telemetryClient.TrackTrace($"Request coming from correct workforce integration is {isRequestFromCorrectIntegration} for SwapShiftRequest approval outbound call.");
-                            responseModelList = await this.ProcessSwapShiftRequestApprovalAsync(jsonModel, aadGroupId).ConfigureAwait(false);
+                            responseModelList = await this.ProcessSwapShiftRequestApprovalAsync(jsonModel, aadGroupId, timeZone).ConfigureAwait(false);
                         }
 
                         // Request is coming from either Shifts UI or from incorrect workforce integration.
@@ -552,8 +564,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// </summary>
         /// <param name="jsonModel">The decrypted JSON payload.</param>
         /// <param name="updateProps">A dictionary of string, string that will be logged to ApplicationInsights.</param>
+        /// <param name="timeZone">The time zone to use when converting the times.</param>
         /// <returns>A unit of execution.</returns>
-        private async Task<List<ShiftsIntegResponse>> ProcessOpenShiftRequestApprovalAsync(RequestModel jsonModel, Dictionary<string, string> updateProps)
+        private async Task<List<ShiftsIntegResponse>> ProcessOpenShiftRequestApprovalAsync(RequestModel jsonModel, Dictionary<string, string> updateProps, string timeZone)
         {
             List<ShiftsIntegResponse> responseModelList = new List<ShiftsIntegResponse>();
             ShiftsIntegResponse integrationResponse = null;
@@ -577,7 +590,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             updateProps.Add("GraphOpenShiftId", finalOpenShift.Id);
 
             // Step 1 - Create the Kronos Unique ID.
-            var kronosUniqueId = this.utility.CreateUniqueId(finalShift);
+            var kronosUniqueId = this.utility.CreateUniqueId(finalShift, timeZone);
 
             this.telemetryClient.TrackTrace("KronosHash-OpenShiftRequestApproval-TeamsController: " + kronosUniqueId);
 
@@ -601,7 +614,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         KronosUniqueId = tempShiftEntity.KronosUniqueId,
                         PartitionKey = tempShiftEntity.PartitionKey,
                         AadUserId = tempShiftEntity.AadUserId,
-                        ShiftStartDate = this.utility.UTCToKronosTimeZone(finalShift.SharedShift.StartDateTime),
+                        ShiftStartDate = this.utility.UTCToKronosTimeZone(finalShift.SharedShift.StartDateTime, timeZone),
                     };
 
                     // Step 3 - Save the new shift record.
@@ -688,8 +701,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// </summary>
         /// <param name="jsonModel">The decryped JSON payload from Shifts/MS Graph.</param>
         /// <param name="aadGroupId">The team ID for which the Swap Shift request has been approved.</param>
+        /// <param name="timeZone">The time zone to use when converting the times.</param>
         /// <returns>A unit of execution that contains the type of <see cref="ShiftsIntegResponse"/>.</returns>
-        private async Task<List<ShiftsIntegResponse>> ProcessSwapShiftRequestApprovalAsync(RequestModel jsonModel, string aadGroupId)
+        private async Task<List<ShiftsIntegResponse>> ProcessSwapShiftRequestApprovalAsync(RequestModel jsonModel, string aadGroupId, string timeZone)
         {
             List<ShiftsIntegResponse> swapShiftsIntegResponses = new List<ShiftsIntegResponse>();
             ShiftsIntegResponse integrationResponse = null;
@@ -716,8 +730,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var newShiftSecond = JsonConvert.DeserializeObject<Shift>(postedShifts.Last().Body.ToString());
 
                 // Step 1 - Create the Kronos Unique ID.
-                var kronosUniqueIdFirst = this.utility.CreateUniqueId(newShiftFirst);
-                var kronosUniqueIdSecond = this.utility.CreateUniqueId(newShiftSecond);
+                var kronosUniqueIdFirst = this.utility.CreateUniqueId(newShiftFirst, timeZone);
+                var kronosUniqueIdSecond = this.utility.CreateUniqueId(newShiftSecond, timeZone);
 
                 try
                 {
@@ -728,16 +742,16 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     // When getting the month partition key, make sure to take into account the Kronos Time Zone as well
                     var provider = CultureInfo.InvariantCulture;
                     var actualStartDateTimeStr = this.utility.CalculateStartDateTime(
-                        newShiftFirst.SharedShift.StartDateTime.Date).ToString("M/dd/yyyy", provider);
+                        newShiftFirst.SharedShift.StartDateTime.Date, timeZone).ToString("M/dd/yyyy", provider);
                     var actualEndDateTimeStr = this.utility.CalculateEndDateTime(
-                        newShiftFirst.SharedShift.EndDateTime.Date).ToString("M/dd/yyyy", provider);
+                        newShiftFirst.SharedShift.EndDateTime.Date, timeZone).ToString("M/dd/yyyy", provider);
 
                     // Create the month partition key based on the finalShift object.
                     var monthPartitions = Common.Utility.GetMonthPartition(actualStartDateTimeStr, actualEndDateTimeStr);
                     var monthPartition = monthPartitions?.FirstOrDefault();
 
                     // Create the shift mapping entity based on the finalShift object also.
-                    var shiftEntity = this.utility.CreateShiftMappingEntity(newShiftFirst, userMappingRecord, kronosUniqueIdFirst);
+                    var shiftEntity = this.utility.CreateShiftMappingEntity(newShiftFirst, userMappingRecord, kronosUniqueIdFirst, timeZone);
                     await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(
                         shiftEntity,
                         newShiftFirst.Id,
@@ -751,16 +765,16 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                     // When getting the month partition key, make sure to take into account the Kronos Time Zone as well
                     var actualStartDateTimeStrSec = this.utility.CalculateStartDateTime(
-                        newShiftSecond.SharedShift.StartDateTime).ToString("M/dd/yyyy", provider);
+                        newShiftSecond.SharedShift.StartDateTime, timeZone).ToString("M/dd/yyyy", provider);
                     var actualEndDateTimeStrSec = this.utility.CalculateEndDateTime(
-                        newShiftSecond.SharedShift.EndDateTime).ToString("M/dd/yyyy", provider);
+                        newShiftSecond.SharedShift.EndDateTime, timeZone).ToString("M/dd/yyyy", provider);
 
                     // Create the month partition key based on the finalShift object.
                     var monthPartitionsSec = Common.Utility.GetMonthPartition(actualStartDateTimeStrSec, actualEndDateTimeStrSec);
                     var monthPartitionSec = monthPartitionsSec?.FirstOrDefault();
 
                     // Create the shift mapping entity based on the finalShift object also.
-                    var shiftEntitySec = this.utility.CreateShiftMappingEntity(newShiftSecond, userMappingRecordSec, kronosUniqueIdSecond);
+                    var shiftEntitySec = this.utility.CreateShiftMappingEntity(newShiftSecond, userMappingRecordSec, kronosUniqueIdSecond, timeZone);
                     await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(
                         shiftEntitySec,
                         newShiftSecond.Id,

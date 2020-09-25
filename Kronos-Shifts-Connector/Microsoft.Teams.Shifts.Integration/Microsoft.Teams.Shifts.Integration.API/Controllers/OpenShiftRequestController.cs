@@ -137,7 +137,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             // Step 1c.
             var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
-            var kronosTimeZoneId = this.appSettings.KronosTimeZone;
+            var teamMappings = await this.teamDepartmentMappingProvider.GetMappedTeamDetailsAsync(teamsId).ConfigureAwait(false);
+            var teamMapping = teamMappings.FirstOrDefault();
+
+            var kronosTimeZoneId = string.IsNullOrEmpty(teamMapping.KronosTimeZone) ? this.appSettings.KronosTimeZone : teamMapping.KronosTimeZone;
             var kronosTimeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(kronosTimeZoneId);
 
             if (allRequiredConfigurations != null && (bool)allRequiredConfigurations?.IsAllSetUpExists)
@@ -452,7 +455,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                             var openShiftObj = JsonConvert.DeserializeObject<GraphOpenShift>(getOpenShiftResponseStr);
 
                                             // 3. Creating the expected shift hash from the above and the userId.
-                                            var expectedShiftHash = this.utility.CreateUniqueId(openShiftObj, user.ShiftUserId);
+                                            var expectedShiftHash = this.utility.CreateUniqueId(openShiftObj, user.ShiftUserId, user.KronosTimeZone);
 
                                             this.telemetryClient.TrackTrace($"Hash From OpenShiftRequestController: {expectedShiftHash}");
 
@@ -463,8 +466,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                                 user.KronosPersonNumber);
 
                                             // 5. Calculate the necessary monthwise partitions - this is the partition key for the shift entity mapping table.
-                                            var actualStartDateTimeStr = this.utility.CalculateStartDateTime(openShiftObj.SharedOpenShift.StartDateTime).ToString("d", provider);
-                                            var actualEndDateTimeStr = this.utility.CalculateEndDateTime(openShiftObj.SharedOpenShift.EndDateTime).ToString("d", provider);
+                                            var actualStartDateTimeStr = this.utility.CalculateStartDateTime(openShiftObj.SharedOpenShift.StartDateTime, user.KronosTimeZone).ToString("d", provider);
+                                            var actualEndDateTimeStr = this.utility.CalculateEndDateTime(openShiftObj.SharedOpenShift.EndDateTime, user.KronosTimeZone).ToString("d", provider);
                                             var monthPartitions = Utility.GetMonthPartition(actualStartDateTimeStr, actualEndDateTimeStr);
                                             var monthPartition = monthPartitions?.FirstOrDefault();
 

@@ -1,0 +1,28 @@
+### Get Open Shifts
+POST {{baseUrl}}
+Content-Type: application/xml
+
+<Kronos_WFC version="1.0">
+    <Request Action="LoadOpenShifts">
+        <Schedule QueryDateSpan="{{queryDateSpan}}" OrgJobPath="./Blockbusters UK/Rental/Stores/1111/Sales Assit" />
+        <Schedule QueryDateSpan="{{queryDateSpan}}" OrgJobPath="./Blockbusters UK/Rental/Stores/1111/Store Manager" />
+        <Schedule QueryDateSpan="{{queryDateSpan}}" OrgJobPath="./Blockbusters UK/Rental/Stores/2222/Sales Assit" />
+        <Schedule QueryDateSpan="{{queryDateSpan}}" OrgJobPath="./Blockbusters UK/Rental/Stores/2222/Store Manager" />
+    </Request>
+</Kronos_WFC>
+
+### Get Open Shift Requests
+POST {{baseUrl}}
+Content-Type: application/xml
+
+<Kronos_WFC version="1.0">
+    <Request Action="Retrieve">
+        <RequestMgmt QueryDateSpan="{{queryDateSpan}}">
+            <Employees>
+                <PersonIdentity PersonNumber="BB04" />
+            </Employees>
+            <RequestFor>Open Shift - Request</RequestFor>
+        </RequestMgmt>
+    </Request>
+</Kronos_WFC>
+

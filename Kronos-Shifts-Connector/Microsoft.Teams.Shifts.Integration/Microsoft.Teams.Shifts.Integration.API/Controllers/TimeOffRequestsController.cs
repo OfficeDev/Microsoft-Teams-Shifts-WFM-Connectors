@@ -91,14 +91,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         {
             this.telemetryClient.TrackTrace($"{Resource.ProcessTimeOffRequetsAsync} starts at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)} for isRequestFromLogicApp: " + isRequestFromLogicApp);
 
-            var tenantId = this.appSettings.TenantId;
-            var clientId = this.appSettings.ClientId;
-            var clientSecret = this.appSettings.ClientSecret;
-            var instance = this.appSettings.Instance;
-            var graphBetaUrl = this.appSettings.GraphBetaApiUrl;
-            var timeOffStartDate = string.Empty;
-            var timeOffEndDate = string.Empty;
-            this.utility.SetQuerySpan(Convert.ToBoolean(isRequestFromLogicApp, CultureInfo.InvariantCulture), out timeOffStartDate, out timeOffEndDate);
+            this.utility.SetQuerySpan(Convert.ToBoolean(isRequestFromLogicApp, CultureInfo.InvariantCulture), out string timeOffStartDate, out string timeOffEndDate);
 
             var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
 
@@ -115,7 +108,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 // Get distinct Teams.
                 var allteamDetails = allUsers?.Select(x => x.ShiftTeamId).Distinct().ToList();
 
-                // Get list of time off reasons from User mapping table
+                // Get list of time off reasons from pay code to time off reason mapping table
                 var timeOffReasons = await this.timeOffReasonProvider.GetTimeOffReasonsAsync().ConfigureAwait(false);
 
                 var monthPartitions = Utility.GetMonthPartition(timeOffStartDate, timeOffEndDate);
@@ -144,7 +137,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             timeOffRequestItems.Clear();
                             hasMoreTimeOffs = false;
                             var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-                            Uri requestUri = new Uri(graphBetaUrl + "teams/" + team + "/schedule/timeoffrequests?$filter=state eq 'pending'");
+                            Uri requestUri = new Uri(this.appSettings.GraphApiUrl + "teams/" + team + "/schedule/timeoffrequests?$filter=state eq 'pending'");
                             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfigurations.ShiftsAccessToken);
                             do
                             {
@@ -175,13 +168,17 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                     }
                                 }
                             }
-                            while (hasMoreTimeOffs == true);
+                            while (hasMoreTimeOffs);
 
-                            if (timeOffRequestItems != null && timeOffRequestItems.Count > 0)
+                            if (timeOffRequestItems?.Count > 0)
                             {
+                                // get the team mappings for the team and pick the first because we need the Kronos Time Zone
+                                var teamMappings = await this.teamDepartmentMappingProvider.GetMappedTeamDetailsAsync(team).ConfigureAwait(false);
+                                var teamMapping = teamMappings.FirstOrDefault();
+
                                 foreach (var item in timeOffRequestItems)
                                 {
-                                    var timeOffReqStartDate = this.utility.UTCToKronosTimeZone(item.StartDateTime);
+                                    var timeOffReqStartDate = this.utility.UTCToKronosTimeZone(item.StartDateTime, teamMapping.KronosTimeZone);
                                     if (timeOffReqStartDate < DateTime.ParseExact(queryStartDate, Common.Constants.DateFormat, CultureInfo.InvariantCulture)
                                         || timeOffReqStartDate > DateTime.ParseExact(queryEndDate, Common.Constants.DateFormat, CultureInfo.InvariantCulture).AddDays(1))
                                     {
@@ -194,12 +191,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                                     if (timeOffMappingEntity.Count == 0)
                                     {
-                                        var timeOffReason = timeOffReasons.Where(t => t.TimeOffReasonId == item.TimeOffReasonId).FirstOrDefault();
+                                        var timeOffReason = timeOffReasons.Find(t => t.TimeOffReasonId == item.TimeOffReasonId);
 
-                                        var personDetails = allUsers.Where(u => u.ShiftUserId == Convert.ToString(item.SenderUserId, CultureInfo.InvariantCulture)).FirstOrDefault();
+                                        var personDetails = allUsers.FirstOrDefault(u => u.ShiftUserId == Convert.ToString(item.SenderUserId, CultureInfo.InvariantCulture));
 
-                                        // Get the Kronos WFC API Time Zone from App Settings.
-                                        var kronosTimeZoneId = this.appSettings.KronosTimeZone;
+                                        // Get the Kronos WFC API Time Zone from mapping or App Settings.
+                                        var kronosTimeZoneId = string.IsNullOrEmpty(teamMapping.KronosTimeZone) ? this.appSettings.KronosTimeZone : teamMapping.KronosTimeZone;
                                         var kronosTimeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(kronosTimeZoneId);
 
                                         // Create the Kronos Time Off Request.

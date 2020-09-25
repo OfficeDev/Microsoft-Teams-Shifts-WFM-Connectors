@@ -118,7 +118,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 int userIteration = Utility.GetIterablesCount(Convert.ToInt32(processNumberOfUsersInBatch, CultureInfo.InvariantCulture), userCount);
                 var graphClient = await this.CreateGraphClientWithDelegatedAccessAsync(allRequiredConfigurations.ShiftsAccessToken).ConfigureAwait(false);
 
-                if (monthPartitions != null && monthPartitions.Count > 0)
+                if (monthPartitions?.Count > 0)
                 {
                     foreach (var monthPartitionKey in monthPartitions)
                     {
@@ -132,10 +132,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             out var queryEndDate);
 
                         var processUsersInBatchList = new List<ResponseHyperFindResult>();
-                        var usersDetails = allUsers?.ToList();
 
                         // TODO #1 - Add the code for checking the dates.
-                        foreach (var item in usersDetails)
+                        foreach (var item in allUsers?.ToList())
                         {
                             processUsersInBatchList.Add(new ResponseHyperFindResult
                             {
@@ -400,13 +399,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             var timeOffQueryDateSpan = queryStartDate + "-" + queryEndDate;
 
-            var timeOffRequests = await this.timeOffActivity.GetTimeOffRequestDetailsByBatchAsync(
+            return await this.timeOffActivity.GetTimeOffRequestDetailsByBatchAsync(
                 new Uri(kronosEndpoint),
                 jsession,
                 timeOffQueryDateSpan,
                 employees).ConfigureAwait(false);
-
-            return timeOffRequests;
         }
 
         /// <summary>
@@ -441,12 +438,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// Method that will calculate the end date accordingly.
         /// </summary>
         /// <param name="requestItem">An object of type <see cref="GlobalTimeOffRequestItem"/>.</param>
+        /// <param name="timeZone">The Kronos time zone to use when converting times to and from UTC.</param>
         /// <returns>A type of DateTimeOffset.</returns>
-        private DateTimeOffset CalculateEndDate(GlobalTimeOffRequestItem requestItem)
+        private DateTimeOffset CalculateEndDate(GlobalTimeOffRequestItem requestItem, string timeZone)
         {
-            var correctStartDate = this.utility.CalculateStartDateTime(requestItem);
+            var correctStartDate = this.utility.CalculateStartDateTime(requestItem, timeZone);
             var provider = CultureInfo.InvariantCulture;
-            var kronosTimeZoneId = this.appSettings.KronosTimeZone;
+            var kronosTimeZoneId = string.IsNullOrEmpty(timeZone) ? this.appSettings.KronosTimeZone : timeZone;
             var kronosTimeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(kronosTimeZoneId);
 
             var telemetryProps = new Dictionary<string, string>()
@@ -524,8 +522,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         SharedTimeOff = new TimeOffItem
                         {
                             TimeOffReasonId = kronosPayCodeList[i].TimeOffReasonId,
-                            StartDateTime = this.utility.CalculateStartDateTime(timeOffNotFoundList[i]),
-                            EndDateTime = this.CalculateEndDate(timeOffNotFoundList[i]),
+                            StartDateTime = this.utility.CalculateStartDateTime(timeOffNotFoundList[i], userModelNotFoundList[i].KronosTimeZone),
+                            EndDateTime = this.CalculateEndDate(timeOffNotFoundList[i], userModelNotFoundList[i].KronosTimeZone),
                             Theme = ScheduleEntityTheme.White,
                         },
                     };
@@ -596,8 +594,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     ManagerActionDateTime = null,
                     ManagerActionMessage = null,
                     ManagerUserId = string.Empty,
-                    StartDateTime = this.utility.CalculateStartDateTime(globalTimeOffRequestDetails[i]),
-                    EndDateTime = this.CalculateEndDate(globalTimeOffRequestDetails[i]),
+                    StartDateTime = this.utility.CalculateStartDateTime(globalTimeOffRequestDetails[i], user[i].KronosTimeZone),
+                    EndDateTime = this.CalculateEndDate(globalTimeOffRequestDetails[i], user[i].KronosTimeZone),
                     TimeOffReasonId = timeOffReasonId[i].TimeOffReasonId,
                     LastModifiedBy = new LastModifiedBy
                     {

@@ -7,7 +7,7 @@ Content-Type: application/xml
         <HyperFindQuery 
             HyperFindQueryName="All Home" 
             VisibilityCode="Public" 
-            QueryDateSpan="15/09/2020-15/09/2020" />
+            QueryDateSpan="9/15/2020-9/15/2020" />
     </Request>
 </Kronos_WFC>
 
