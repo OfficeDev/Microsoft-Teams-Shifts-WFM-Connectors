@@ -504,14 +504,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="uniqueId">The Kronos Unique Id.</param>
         /// <param name="monthPartitionKey">The monthwise partition key.</param>
         /// <param name="orgJobPath">The Kronos Org Job Path.</param>
-        /// <param name="timeZone">The time zone to use when converting the UTC times to Kronos times.</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting the UTC times to Kronos times.</param>
         /// <returns>The new AllOpenShiftMappingEntity which conforms to schema.</returns>
         private AllOpenShiftMappingEntity CreateNewOpenShiftMappingEntity(
             Models.Response.OpenShifts.GraphOpenShift responseModel,
             string uniqueId,
             string monthPartitionKey,
             string orgJobPath,
-            string timeZone)
+            string kronosTimeZone)
         {
             var createNewOpenShiftMappingEntityProps = new Dictionary<string, string>()
             {
@@ -529,7 +529,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 KronosSlots = Constants.KronosOpenShiftsSlotCount,
                 SchedulingGroupId = responseModel.SchedulingGroupId,
                 OrgJobPath = orgJobPath,
-                OpenShiftStartDate = this.utility.UTCToKronosTimeZone(responseModel.SharedOpenShift.StartDateTime, timeZone),
+                OpenShiftStartDate = this.utility.UTCToKronosTimeZone(responseModel.SharedOpenShift.StartDateTime, kronosTimeZone),
             };
 
             this.telemetryClient.TrackTrace(Resource.CreateNewOpenShiftMappingEntity, createNewOpenShiftMappingEntityProps);

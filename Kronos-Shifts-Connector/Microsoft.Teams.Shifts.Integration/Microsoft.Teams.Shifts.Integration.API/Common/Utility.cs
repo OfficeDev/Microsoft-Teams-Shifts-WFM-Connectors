@@ -279,9 +279,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// the activities, the notes and the userId.
         /// </summary>
         /// <param name="shift">The shift that has been created from the XML retrieved from Kronos.</param>
-        /// <param name="timeZone">The time zone to use when converting the times.</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting the times.</param>
         /// <returns>The MD5 string.</returns>
-        public string CreateUniqueId(Models.Request.Shift shift, string timeZone)
+        public string CreateUniqueId(Models.Request.Shift shift, string kronosTimeZone)
         {
             if (shift is null)
             {
@@ -301,11 +301,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
             foreach (var item in shift.SharedShift.Activities)
             {
                 sb.Append(item.DisplayName);
-                sb.Append(this.CalculateEndDateTime(item.EndDateTime, timeZone));
-                sb.Append(this.CalculateStartDateTime(item.StartDateTime, timeZone));
+                sb.Append(this.CalculateEndDateTime(item.EndDateTime, kronosTimeZone));
+                sb.Append(this.CalculateStartDateTime(item.StartDateTime, kronosTimeZone));
             }
 
-            var stringToHash = $"{this.CalculateStartDateTime(shift.SharedShift.StartDateTime, timeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(shift.SharedShift.EndDateTime, timeZone).ToString(CultureInfo.InvariantCulture)}{sb}{shift.SharedShift.Notes}{shift.UserId}";
+            var stringToHash = $"{this.CalculateStartDateTime(shift.SharedShift.StartDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(shift.SharedShift.EndDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}{sb}{shift.SharedShift.Notes}{shift.UserId}";
 
             this.telemetryClient.TrackTrace($"String to create hash - Shift: {stringToHash}");
 
@@ -432,12 +432,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// </summary>
         /// <param name="openShift">The open shift from Graph.</param>
         /// <param name="userAadObjectId">The AAD Object ID of the user.</param>
-        /// <param name="timeZone">The time zone to use when converting the times.</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting the times.</param>
         /// <returns>A string that represents the expected hash of the new shift that is to be created.</returns>
         public string CreateUniqueId(
             Models.Response.OpenShifts.GraphOpenShift openShift,
             string userAadObjectId,
-            string timeZone)
+            string kronosTimeZone)
         {
             if (openShift is null)
             {
@@ -457,11 +457,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
             foreach (var item in openShift.SharedOpenShift.Activities)
             {
                 sb.Append(item.DisplayName);
-                sb.Append(this.CalculateEndDateTime(item.EndDateTime, timeZone));
-                sb.Append(this.CalculateStartDateTime(item.StartDateTime, timeZone));
+                sb.Append(this.CalculateEndDateTime(item.EndDateTime, kronosTimeZone));
+                sb.Append(this.CalculateStartDateTime(item.StartDateTime, kronosTimeZone));
             }
 
-            var stringToHash = $"{this.CalculateStartDateTime(openShift.SharedOpenShift.StartDateTime, timeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(openShift.SharedOpenShift.EndDateTime, timeZone).ToString(CultureInfo.InvariantCulture)}{sb}{openShift.SharedOpenShift.Notes}{userAadObjectId}";
+            var stringToHash = $"{this.CalculateStartDateTime(openShift.SharedOpenShift.StartDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(openShift.SharedOpenShift.EndDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}{sb}{openShift.SharedOpenShift.Notes}{userAadObjectId}";
 
             this.telemetryClient.TrackTrace($"String to create hash - OpenShift: {stringToHash}");
 
@@ -496,9 +496,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// This method generates the Kronos Unique Id for the Shift Entity.
         /// </summary>
         /// <param name="shift">The shift entity that is coming from the response.</param>
-        /// <param name="timeZone">The time zone to use when converting the times.</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting the times.</param>
         /// <returns>A string that represents the Kronos Unique Id.</returns>
-        public string CreateUniqueId(Models.IntegrationAPI.Shift shift, string timeZone)
+        public string CreateUniqueId(Models.IntegrationAPI.Shift shift, string kronosTimeZone)
         {
             if (shift is null)
             {
@@ -519,14 +519,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
             foreach (var item in shift.SharedShift.Activities)
             {
                 sb.Append(item.DisplayName);
-                sb.Append(this.CalculateEndDateTime(item.EndDateTime, timeZone));
-                sb.Append(this.CalculateStartDateTime(item.StartDateTime, timeZone));
+                sb.Append(this.CalculateEndDateTime(item.EndDateTime, kronosTimeZone));
+                sb.Append(this.CalculateStartDateTime(item.StartDateTime, kronosTimeZone));
             }
 
             // From Kronos to Shifts sync, the notes are passed as an empty string.
             // Therefore, the notes are marked as empty while creating the unique ID from Shifts to Kronos.
             shift.SharedShift.Notes = string.Empty;
-            var stringToHash = $"{this.CalculateStartDateTime(shift.SharedShift.StartDateTime, timeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(shift.SharedShift.EndDateTime, timeZone).ToString(CultureInfo.InvariantCulture)}{sb}{shift.SharedShift.Notes}{shift.UserId}";
+            var stringToHash = $"{this.CalculateStartDateTime(shift.SharedShift.StartDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(shift.SharedShift.EndDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}{sb}{shift.SharedShift.Notes}{shift.UserId}";
 
             this.telemetryClient.TrackTrace($"String to create hash - Shift (IntegrationAPI Model): {stringToHash}");
 
@@ -562,9 +562,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// </summary>
         /// <param name="shift">The OpenShift entity.</param>
         /// <param name="schedulingGroupId">The scheduling group id.</param>
-        /// <param name="timeZone">The time zone to use when converting the times.</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting the times.</param>
         /// <returns>A string that is the Unique ID of the open shift.</returns>
-        public string CreateUniqueId(OpenShift.OpenShiftRequestModel shift, string schedulingGroupId, string timeZone)
+        public string CreateUniqueId(OpenShift.OpenShiftRequestModel shift, string schedulingGroupId, string kronosTimeZone)
         {
             if (shift is null)
             {
@@ -584,11 +584,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
             foreach (var item in shift.SharedOpenShift.Activities)
             {
                 sb.Append(item.DisplayName);
-                sb.Append(this.CalculateEndDateTime(item.EndDateTime, timeZone));
-                sb.Append(this.CalculateStartDateTime(item.StartDateTime, timeZone));
+                sb.Append(this.CalculateEndDateTime(item.EndDateTime, kronosTimeZone));
+                sb.Append(this.CalculateStartDateTime(item.StartDateTime, kronosTimeZone));
             }
 
-            var stringToHash = $"{this.CalculateStartDateTime(shift.SharedOpenShift.StartDateTime, timeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(shift.SharedOpenShift.EndDateTime, timeZone).ToString(CultureInfo.InvariantCulture)}{sb}{shift.SharedOpenShift.Notes}{schedulingGroupId}";
+            var stringToHash = $"{this.CalculateStartDateTime(shift.SharedOpenShift.StartDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(shift.SharedOpenShift.EndDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}{sb}{shift.SharedOpenShift.Notes}{schedulingGroupId}";
 
             this.telemetryClient.TrackTrace($"String to create hash - OpenShiftRequestModel: {stringToHash}");
 
@@ -623,9 +623,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// Method to properly calculate the StartDateTime in the context of the time off.
         /// </summary>
         /// <param name="requestItem">An item that is type of <see cref="GlobalTimeOffRequestItem"/> that contains the start and end dates.</param>
-        /// <param name="timeZone">The time zone representing the Kronos time zone.</param>
+        /// <param name="kronosTimeZone">The time zone representing the Kronos time zone.</param>
         /// <returns>The type <see cref="DateTimeOffset"/> representing the right start time.</returns>
-        public DateTime CalculateStartDateTime(GlobalTimeOffRequestItem requestItem, string timeZone)
+        public DateTime CalculateStartDateTime(GlobalTimeOffRequestItem requestItem, string kronosTimeZone)
         {
             if (requestItem is null)
             {
@@ -635,8 +635,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
             // Step 1: Take the raw Kronos date time, and convert it to the Kronos date time zone.
             // Step 2: Convert the Kronos date time to UTC.
             // Step 3: Convert the UTC time to Shifts Time Zone.
-            var kronosTimeZoneId = string.IsNullOrEmpty(timeZone) ? this.appSettings.KronosTimeZone : timeZone;
-            var kronosTimeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(kronosTimeZoneId);
+            var kronosTimeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(kronosTimeZone);
             var incomingKronosDate = requestItem.TimeOffPeriods.TimeOffPeriod.StartDate;
 
             string startTimeString;
@@ -667,163 +666,160 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// This method calculates the start date/time for the open shift entity.
         /// </summary>
         /// <param name="activity">The open shift activity.</param>
-        /// <param name="timeZone">The timezone to use when converting the start date to utc</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting the start date to utc</param>
         /// <returns>The start date/time to be rendered in the time zone that Shifts has been set up in.</returns>
-        public DateTime CalculateStartDateTime(App.KronosWfc.Models.ResponseEntities.OpenShift.ShiftSegment activity, string timeZone)
+        public DateTime CalculateStartDateTime(App.KronosWfc.Models.ResponseEntities.OpenShift.ShiftSegment activity, string kronosTimeZone)
         {
             if (activity is null)
             {
                 throw new ArgumentNullException(nameof(activity));
             }
 
-            var kronosTimeZoneId = string.IsNullOrEmpty(timeZone) ? this.appSettings.KronosTimeZone : timeZone;
-            var kronosTimeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(kronosTimeZoneId);
             var incomingKronosDate = activity.StartDate;
             var incomingKronosTime = activity.StartTime;
 
-            DateTime dateTimeStr = DateTime.Parse($"{incomingKronosDate} {incomingKronosTime}", CultureInfo.InvariantCulture);
-            return TimeZoneInfo.ConvertTimeToUtc(dateTimeStr, kronosTimeZoneInfo);
+            return this.CalculateUtcDateTime(incomingKronosDate, incomingKronosTime, kronosTimeZone);
         }
 
         /// <summary>
         /// Method to calculate the start date time for the shift segment in the batch open shift request.
         /// </summary>
         /// <param name="activity">The shift segment which is part of the batch.</param>
-        /// <param name="timeZone">The timezone to use when converting the start date to utc</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting the start date to utc</param>
         /// <returns>A date-time offset.</returns>
-        public DateTime CalculateStartDateTime(App.KronosWfc.Models.ResponseEntities.OpenShift.Batch.ShiftSegment activity, string timeZone)
+        public DateTime CalculateStartDateTime(App.KronosWfc.Models.ResponseEntities.OpenShift.Batch.ShiftSegment activity, string kronosTimeZone)
         {
             if (activity is null)
             {
                 throw new ArgumentNullException(nameof(activity));
             }
 
-            return this.CalculateUtcDateTime(activity.StartDate, activity.StartTime, timeZone);
+            return this.CalculateUtcDateTime(activity.StartDate, activity.StartTime, kronosTimeZone);
         }
 
         /// <summary>
         /// Method to calculate the end date time for the shift segment in the batch open shift request.
         /// </summary>
         /// <param name="activity">The shift segment which is part of the batch.</param>
-        /// <param name="timeZone">The timezone to use when converting the start date to utc.</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting the start date to utc.</param>
         /// <returns>A date-time offset.</returns>
-        public DateTime CalculateEndDateTime(App.KronosWfc.Models.ResponseEntities.OpenShift.Batch.ShiftSegment activity, string timeZone)
+        public DateTime CalculateEndDateTime(App.KronosWfc.Models.ResponseEntities.OpenShift.Batch.ShiftSegment activity, string kronosTimeZone)
         {
             if (activity is null)
             {
                 throw new ArgumentNullException(nameof(activity));
             }
 
-            return this.CalculateUtcDateTime(activity.EndDate, activity.EndTime, timeZone);
+            return this.CalculateUtcDateTime(activity.EndDate, activity.EndTime, kronosTimeZone);
         }
 
         /// <summary>
         /// Method that will calculate the end date time.
         /// </summary>
         /// <param name="endDateTime">The incoming end date time object.</param>
-        /// <param name="timeZone">The timezone to use when converting the end datetime.</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting the end datetime.</param>
         /// <returns>A date time result.</returns>
-        public DateTime CalculateEndDateTime(DateTime endDateTime, string timeZone)
+        public DateTime CalculateEndDateTime(DateTime endDateTime, string kronosTimeZone)
         {
-            return this.CalculateLocalDateTime(endDateTime, timeZone);
+            return this.CalculateLocalDateTime(endDateTime, kronosTimeZone);
         }
 
         /// <summary>
         /// Method that calculates the start date time.
         /// </summary>
         /// <param name="startDateTime">The incoming start date time object.</param>
-        /// <param name="timeZone">The timezone to use when converting the start datetime.</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting the start datetime.</param>
         /// <returns>A date time result.</returns>
-        public DateTime CalculateStartDateTime(DateTime startDateTime, string timeZone)
+        public DateTime CalculateStartDateTime(DateTime startDateTime, string kronosTimeZone)
         {
-            return this.CalculateLocalDateTime(startDateTime, timeZone);
+            return this.CalculateLocalDateTime(startDateTime, kronosTimeZone);
         }
 
         /// <summary>
         /// This method calculates from "UTC" to the expected time.
         /// </summary>
         /// <param name="startDateTime">Incoming start date time.</param>
-        /// <param name="timeZone">The timezone to use when converting the start datetime.</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting the start datetime.</param>
         /// <returns>A date time object.</returns>
-        public DateTime CalculateStartDateTime(DateTimeOffset startDateTime, string timeZone)
+        public DateTime CalculateStartDateTime(DateTimeOffset startDateTime, string kronosTimeZone)
         {
             var incomingKronosDate = startDateTime.ToString("d", CultureInfo.InvariantCulture);
             var incomingKronosTime = startDateTime.ToString("t", CultureInfo.InvariantCulture);
 
-            return this.CalculateLocalDateTime(incomingKronosDate, incomingKronosTime, timeZone);
+            return this.CalculateLocalDateTime(incomingKronosDate, incomingKronosTime, kronosTimeZone);
         }
 
         /// <summary>
         /// This method calculates from "UTC" to the expected time.
         /// </summary>
         /// <param name="endDateTime">Incoming end date time.</param>
-        /// <param name="timeZone">The timezone to use when converting the start datetime.</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting the start datetime.</param>
         /// <returns>A date time object.</returns>
-        public DateTime CalculateEndDateTime(DateTimeOffset endDateTime, string timeZone)
+        public DateTime CalculateEndDateTime(DateTimeOffset endDateTime, string kronosTimeZone)
         {
             var incomingKronosDate = endDateTime.ToString("d", CultureInfo.InvariantCulture);
             var incomingKronosTime = endDateTime.ToString("t", CultureInfo.InvariantCulture);
 
-            return this.CalculateLocalDateTime(incomingKronosDate, incomingKronosTime, timeZone);
+            return this.CalculateLocalDateTime(incomingKronosDate, incomingKronosTime, kronosTimeZone);
         }
 
         /// <summary>
         /// This method calculates the end date/time for the open shift entity.
         /// </summary>
         /// <param name="activity">The open shift activity.</param>
-        /// <param name="timeZone">The timezone to use when converting the end datetime.</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting the end datetime.</param>
         /// <returns>The end date/time to be rendered in the time zone that Shifts has been set up in.</returns>
-        public DateTime CalculateEndDateTime(App.KronosWfc.Models.ResponseEntities.OpenShift.ShiftSegment activity, string timeZone)
+        public DateTime CalculateEndDateTime(App.KronosWfc.Models.ResponseEntities.OpenShift.ShiftSegment activity, string kronosTimeZone)
         {
             if (activity is null)
             {
                 throw new ArgumentNullException(nameof(activity));
             }
 
-            return this.CalculateUtcDateTime(activity.EndDate, activity.EndTime, timeZone);
+            return this.CalculateUtcDateTime(activity.EndDate, activity.EndTime, kronosTimeZone);
         }
 
         /// <summary>
         /// This method calculates the start date/time for the shift entity.
         /// </summary>
         /// <param name="activity">The shift activity.</param>
-        /// <param name="timeZone">The timezone to use when converting the start date to utc.</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting the start date to utc.</param>
         /// <returns>The start date/time to be rendered in the time zone that Shifts has been set up in.</returns>
-        public DateTime CalculateStartDateTime(App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.ShiftSegment activity, string timeZone)
+        public DateTime CalculateStartDateTime(App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.ShiftSegment activity, string kronosTimeZone)
         {
             if (activity is null)
             {
                 throw new ArgumentNullException(nameof(activity));
             }
 
-            return this.CalculateUtcDateTime(activity.StartDate, activity.StartTime, timeZone);
+            return this.CalculateUtcDateTime(activity.StartDate, activity.StartTime, kronosTimeZone);
         }
 
         /// <summary>
         /// This method calculates the end date/time for the shift entity.
         /// </summary>
         /// <param name="activity">The shift activity.</param>
-        /// <param name="timeZone">The timezone to use when converting the end date to utc.</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting the end date to utc.</param>
         /// <returns>The end date/time to be rendered in the time zone that Shifts has been set up in.</returns>
-        public DateTime CalculateEndDateTime(App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.ShiftSegment activity, string timeZone)
+        public DateTime CalculateEndDateTime(App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.ShiftSegment activity, string kronosTimeZone)
         {
             if (activity is null)
             {
                 throw new ArgumentNullException(nameof(activity));
             }
 
-            return this.CalculateUtcDateTime(activity.EndDate, activity.EndTime, timeZone);
+            return this.CalculateUtcDateTime(activity.EndDate, activity.EndTime, kronosTimeZone);
         }
 
         /// <summary>
-        /// This method converts UTC time to Kronos timezone.
+        /// This method converts UTC time to Kronos time zone.
         /// </summary>
         /// <param name="dateTimeOffset">UTC nullable date time offset.</param>
-        /// <param name="timeZone">The time zone to use when converting from UTC to Kronos time.</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting from UTC to Kronos time.</param>
         /// <returns>Kronos date time.</returns>
-        public DateTime UTCToKronosTimeZone(DateTimeOffset? dateTimeOffset, string timeZone)
+        public DateTime UTCToKronosTimeZone(DateTimeOffset? dateTimeOffset, string kronosTimeZone)
         {
-            var kronosTimeZoneId = string.IsNullOrEmpty(timeZone) ? this.appSettings.KronosTimeZone : timeZone;
+            var kronosTimeZoneId = string.IsNullOrEmpty(kronosTimeZone) ? this.appSettings.KronosTimeZone : kronosTimeZone;
             var kronosTimeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(kronosTimeZoneId);
 
             return TimeZoneInfo.ConvertTimeFromUtc(
@@ -833,14 +829,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         }
 
         /// <summary>
-        /// This method converts UTC time to Kronos timezone.
+        /// This method converts UTC time to Kronos time zone.
         /// </summary>
         /// <param name="dateTime">Date time.</param>
-        /// <param name="timeZone">The time zone to use when converting from UTC to Kronos time.</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting from UTC to Kronos time.</param>
         /// <returns>Kronos date time.</returns>
-        public DateTime UTCToKronosTimeZone(DateTime dateTime, string timeZone)
+        public DateTime UTCToKronosTimeZone(DateTime dateTime, string kronosTimeZone)
         {
-            var kronosTimeZoneId = string.IsNullOrEmpty(timeZone) ? this.appSettings.KronosTimeZone : timeZone;
+            var kronosTimeZoneId = string.IsNullOrEmpty(kronosTimeZone) ? this.appSettings.KronosTimeZone : kronosTimeZone;
             var kronosTimeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(kronosTimeZoneId);
 
             return TimeZoneInfo.ConvertTimeFromUtc(dateTime, kronosTimeZoneInfo);
@@ -852,20 +848,20 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// <param name="shift">The Shift model.</param>
         /// <param name="userMappingEntity">Details of user from User Mapping Entity table.</param>
         /// <param name="kronosUniqueId">Kronos Unique Id corresponds to the shift.</param>
-        /// <param name="timeZone">The time zone to use when converting from UTC to Kronos time.</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting from UTC to Kronos time.</param>
         /// <returns>Mapping Entity associated with Team and Shift.</returns>
         public TeamsShiftMappingEntity CreateShiftMappingEntity(
            Models.IntegrationAPI.Shift shift,
            AllUserMappingEntity userMappingEntity,
            string kronosUniqueId,
-           string timeZone)
+           string kronosTimeZone)
         {
             return new TeamsShiftMappingEntity
             {
                 AadUserId = shift?.UserId,
                 KronosUniqueId = kronosUniqueId,
                 KronosPersonNumber = userMappingEntity?.RowKey,
-                ShiftStartDate = this.UTCToKronosTimeZone(shift.SharedShift.StartDateTime, timeZone),
+                ShiftStartDate = this.UTCToKronosTimeZone(shift.SharedShift.StartDateTime, kronosTimeZone),
             };
         }
 
@@ -1048,11 +1044,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// </summary>
         /// <param name="datePart">The date part to convert.</param>
         /// <param name="timePart">The time part to convert.</param>
-        /// <param name="timeZone">The timezone the date and time are expressed in.</param>
+        /// <param name="kronosTimeZone">The time zone the date and time are expressed in.</param>
         /// <returns>The UTC datetime.</returns>
-        private DateTime CalculateUtcDateTime(string datePart, string timePart, string timeZone)
+        private DateTime CalculateUtcDateTime(string datePart, string timePart, string kronosTimeZone)
         {
-            var kronosTimeZoneId = string.IsNullOrEmpty(timeZone) ? this.appSettings.KronosTimeZone : timeZone;
+            var kronosTimeZoneId = string.IsNullOrEmpty(kronosTimeZone) ? this.appSettings.KronosTimeZone : kronosTimeZone;
             var kronosTimeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(kronosTimeZoneId);
 
             DateTime dateTimeStr = DateTime.Parse($"{datePart} {timePart}", CultureInfo.InvariantCulture);
@@ -1060,17 +1056,17 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         }
 
         /// <summary>
-        /// Method converting the specified datetime expressed in UTC to a datetime expressed in the specified timezone.
+        /// Method converting the specified datetime expressed in UTC to a datetime expressed in the specified time zone.
         /// </summary>
         /// <param name="dateTime">The UTC datetime to convert.</param>
-        /// <param name="timeZone">The time zone to convert the time to.</param>
+        /// <param name="kronosTimeZone">The time zone to convert the time to.</param>
         /// <returns>The converted datetime.</returns>
-        private DateTime CalculateLocalDateTime(DateTime dateTime, string timeZone)
+        private DateTime CalculateLocalDateTime(DateTime dateTime, string kronosTimeZone)
         {
             var incomingKronosDate = dateTime.ToString("d", CultureInfo.InvariantCulture);
             var incomingKronosTime = dateTime.ToString("t", CultureInfo.InvariantCulture);
 
-            return this.CalculateLocalDateTime(incomingKronosDate, incomingKronosTime, timeZone);
+            return this.CalculateLocalDateTime(incomingKronosDate, incomingKronosTime, kronosTimeZone);
         }
 
         /// <summary>
@@ -1078,11 +1074,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// </summary>
         /// <param name="datePart">The date part to convert.</param>
         /// <param name="timePart">The time part to convert.</param>
-        /// <param name="timeZone">The timezone the date and time are to be converted to.</param>
+        /// <param name="kronosTimeZone">The time zone the date and time are to be converted to.</param>
         /// <returns>The converted datetime.</returns>
-        private DateTime CalculateLocalDateTime(string datePart, string timePart, string timeZone)
+        private DateTime CalculateLocalDateTime(string datePart, string timePart, string kronosTimeZone)
         {
-            var kronosTimeZoneId = string.IsNullOrEmpty(timeZone) ? this.appSettings.KronosTimeZone : timeZone;
+            var kronosTimeZoneId = string.IsNullOrEmpty(kronosTimeZone) ? this.appSettings.KronosTimeZone : kronosTimeZone;
             var kronosTimeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(kronosTimeZoneId);
 
             DateTime dateTimeStr = DateTime.Parse($"{datePart} {timePart}", CultureInfo.InvariantCulture);

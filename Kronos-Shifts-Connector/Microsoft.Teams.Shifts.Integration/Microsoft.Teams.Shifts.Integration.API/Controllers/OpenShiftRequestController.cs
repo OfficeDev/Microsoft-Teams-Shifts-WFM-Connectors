@@ -137,11 +137,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             // Step 1c.
             var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
-            var teamMappings = await this.teamDepartmentMappingProvider.GetMappedTeamDetailsAsync(teamsId).ConfigureAwait(false);
-            var teamMapping = teamMappings.FirstOrDefault();
+            var mappedTeams = await this.teamDepartmentMappingProvider.GetMappedTeamDetailsAsync(teamsId).ConfigureAwait(false);
+            var mappedTeam = mappedTeams.FirstOrDefault();
 
-            var kronosTimeZoneId = string.IsNullOrEmpty(teamMapping.KronosTimeZone) ? this.appSettings.KronosTimeZone : teamMapping.KronosTimeZone;
-            var kronosTimeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(kronosTimeZoneId);
+            var kronosTimeZone = string.IsNullOrEmpty(mappedTeam?.KronosTimeZone) ? this.appSettings.KronosTimeZone : mappedTeam.KronosTimeZone;
+            var kronosTimeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(kronosTimeZone);
 
             if (allRequiredConfigurations != null && (bool)allRequiredConfigurations?.IsAllSetUpExists)
             {

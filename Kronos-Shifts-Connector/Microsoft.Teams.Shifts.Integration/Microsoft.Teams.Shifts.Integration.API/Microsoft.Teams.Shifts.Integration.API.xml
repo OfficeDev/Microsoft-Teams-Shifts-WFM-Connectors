@@ -536,7 +536,7 @@
             the activities, the notes and the userId.
             </summary>
             <param name="shift">The shift that has been created from the XML retrieved from Kronos.</param>
-            <param name="timeZone">The time zone to use when converting the times.</param>
+            <param name="kronosTimeZone">The time zone to use when converting the times.</param>
             <returns>The MD5 string.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.GetShiftNotes(Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.ScheduleShift)">
@@ -559,7 +559,7 @@
             </summary>
             <param name="openShift">The open shift from Graph.</param>
             <param name="userAadObjectId">The AAD Object ID of the user.</param>
-            <param name="timeZone">The time zone to use when converting the times.</param>
+            <param name="kronosTimeZone">The time zone to use when converting the times.</param>
             <returns>A string that represents the expected hash of the new shift that is to be created.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.CreateUniqueId(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Shift,System.String)">
@@ -567,7 +567,7 @@
             This method generates the Kronos Unique Id for the Shift Entity.
             </summary>
             <param name="shift">The shift entity that is coming from the response.</param>
-            <param name="timeZone">The time zone to use when converting the times.</param>
+            <param name="kronosTimeZone">The time zone to use when converting the times.</param>
             <returns>A string that represents the Kronos Unique Id.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.CreateUniqueId(Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.RequestModels.OpenShift.OpenShiftRequestModel,System.String,System.String)">
@@ -576,7 +576,7 @@
             </summary>
             <param name="shift">The OpenShift entity.</param>
             <param name="schedulingGroupId">The scheduling group id.</param>
-            <param name="timeZone">The time zone to use when converting the times.</param>
+            <param name="kronosTimeZone">The time zone to use when converting the times.</param>
             <returns>A string that is the Unique ID of the open shift.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.CalculateStartDateTime(Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests.GlobalTimeOffRequestItem,System.String)">
@@ -584,7 +584,7 @@
             Method to properly calculate the StartDateTime in the context of the time off.
             </summary>
             <param name="requestItem">An item that is type of <see cref="T:Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests.GlobalTimeOffRequestItem"/> that contains the start and end dates.</param>
-            <param name="timeZone">The time zone representing the Kronos time zone.</param>
+            <param name="kronosTimeZone">The time zone representing the Kronos time zone.</param>
             <returns>The type <see cref="T:System.DateTimeOffset"/> representing the right start time.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.CalculateStartDateTime(Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.OpenShift.ShiftSegment,System.String)">
@@ -592,7 +592,7 @@
             This method calculates the start date/time for the open shift entity.
             </summary>
             <param name="activity">The open shift activity.</param>
-            <param name="timeZone">The timezone to use when converting the start date to utc</param>
+            <param name="kronosTimeZone">The time zone to use when converting the start date to utc</param>
             <returns>The start date/time to be rendered in the time zone that Shifts has been set up in.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.CalculateStartDateTime(Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.OpenShift.Batch.ShiftSegment,System.String)">
@@ -600,7 +600,7 @@
             Method to calculate the start date time for the shift segment in the batch open shift request.
             </summary>
             <param name="activity">The shift segment which is part of the batch.</param>
-            <param name="timeZone">The timezone to use when converting the start date to utc</param>
+            <param name="kronosTimeZone">The time zone to use when converting the start date to utc</param>
             <returns>A date-time offset.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.CalculateEndDateTime(Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.OpenShift.Batch.ShiftSegment,System.String)">
@@ -608,7 +608,7 @@
             Method to calculate the end date time for the shift segment in the batch open shift request.
             </summary>
             <param name="activity">The shift segment which is part of the batch.</param>
-            <param name="timeZone">The timezone to use when converting the start date to utc.</param>
+            <param name="kronosTimeZone">The time zone to use when converting the start date to utc.</param>
             <returns>A date-time offset.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.CalculateEndDateTime(System.DateTime,System.String)">
@@ -616,7 +616,7 @@
             Method that will calculate the end date time.
             </summary>
             <param name="endDateTime">The incoming end date time object.</param>
-            <param name="timeZone">The timezone to use when converting the end datetime.</param>
+            <param name="kronosTimeZone">The time zone to use when converting the end datetime.</param>
             <returns>A date time result.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.CalculateStartDateTime(System.DateTime,System.String)">
@@ -624,7 +624,7 @@
             Method that calculates the start date time.
             </summary>
             <param name="startDateTime">The incoming start date time object.</param>
-            <param name="timeZone">The timezone to use when converting the start datetime.</param>
+            <param name="kronosTimeZone">The time zone to use when converting the start datetime.</param>
             <returns>A date time result.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.CalculateStartDateTime(System.DateTimeOffset,System.String)">
@@ -632,7 +632,7 @@
             This method calculates from "UTC" to the expected time.
             </summary>
             <param name="startDateTime">Incoming start date time.</param>
-            <param name="timeZone">The timezone to use when converting the start datetime.</param>
+            <param name="kronosTimeZone">The time zone to use when converting the start datetime.</param>
             <returns>A date time object.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.CalculateEndDateTime(System.DateTimeOffset,System.String)">
@@ -640,7 +640,7 @@
             This method calculates from "UTC" to the expected time.
             </summary>
             <param name="endDateTime">Incoming end date time.</param>
-            <param name="timeZone">The timezone to use when converting the start datetime.</param>
+            <param name="kronosTimeZone">The time zone to use when converting the start datetime.</param>
             <returns>A date time object.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.CalculateEndDateTime(Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.OpenShift.ShiftSegment,System.String)">
@@ -648,7 +648,7 @@
             This method calculates the end date/time for the open shift entity.
             </summary>
             <param name="activity">The open shift activity.</param>
-            <param name="timeZone">The timezone to use when converting the end datetime.</param>
+            <param name="kronosTimeZone">The time zone to use when converting the end datetime.</param>
             <returns>The end date/time to be rendered in the time zone that Shifts has been set up in.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.CalculateStartDateTime(Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.ShiftSegment,System.String)">
@@ -656,7 +656,7 @@
             This method calculates the start date/time for the shift entity.
             </summary>
             <param name="activity">The shift activity.</param>
-            <param name="timeZone">The timezone to use when converting the start date to utc.</param>
+            <param name="kronosTimeZone">The time zone to use when converting the start date to utc.</param>
             <returns>The start date/time to be rendered in the time zone that Shifts has been set up in.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.CalculateEndDateTime(Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.ShiftSegment,System.String)">
@@ -664,23 +664,23 @@
             This method calculates the end date/time for the shift entity.
             </summary>
             <param name="activity">The shift activity.</param>
-            <param name="timeZone">The timezone to use when converting the end date to utc.</param>
+            <param name="kronosTimeZone">The time zone to use when converting the end date to utc.</param>
             <returns>The end date/time to be rendered in the time zone that Shifts has been set up in.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.UTCToKronosTimeZone(System.Nullable{System.DateTimeOffset},System.String)">
             <summary>
-            This method converts UTC time to Kronos timezone.
+            This method converts UTC time to Kronos time zone.
             </summary>
             <param name="dateTimeOffset">UTC nullable date time offset.</param>
-            <param name="timeZone">The time zone to use when converting from UTC to Kronos time.</param>
+            <param name="kronosTimeZone">The time zone to use when converting from UTC to Kronos time.</param>
             <returns>Kronos date time.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.UTCToKronosTimeZone(System.DateTime,System.String)">
             <summary>
-            This method converts UTC time to Kronos timezone.
+            This method converts UTC time to Kronos time zone.
             </summary>
             <param name="dateTime">Date time.</param>
-            <param name="timeZone">The time zone to use when converting from UTC to Kronos time.</param>
+            <param name="kronosTimeZone">The time zone to use when converting from UTC to Kronos time.</param>
             <returns>Kronos date time.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.CreateShiftMappingEntity(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Shift,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.AllUserMappingEntity,System.String,System.String)">
@@ -690,7 +690,7 @@
             <param name="shift">The Shift model.</param>
             <param name="userMappingEntity">Details of user from User Mapping Entity table.</param>
             <param name="kronosUniqueId">Kronos Unique Id corresponds to the shift.</param>
-            <param name="timeZone">The time zone to use when converting from UTC to Kronos time.</param>
+            <param name="kronosTimeZone">The time zone to use when converting from UTC to Kronos time.</param>
             <returns>Mapping Entity associated with Team and Shift.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.GetKronosSessionAsync">
@@ -734,15 +734,15 @@
             </summary>
             <param name="datePart">The date part to convert.</param>
             <param name="timePart">The time part to convert.</param>
-            <param name="timeZone">The timezone the date and time are expressed in.</param>
+            <param name="kronosTimeZone">The time zone the date and time are expressed in.</param>
             <returns>The UTC datetime.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.CalculateLocalDateTime(System.DateTime,System.String)">
             <summary>
-            Method converting the specified datetime expressed in UTC to a datetime expressed in the specified timezone.
+            Method converting the specified datetime expressed in UTC to a datetime expressed in the specified time zone.
             </summary>
             <param name="dateTime">The UTC datetime to convert.</param>
-            <param name="timeZone">The time zone to convert the time to.</param>
+            <param name="kronosTimeZone">The time zone to convert the time to.</param>
             <returns>The converted datetime.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.CalculateLocalDateTime(System.String,System.String,System.String)">
@@ -751,7 +751,7 @@
             </summary>
             <param name="datePart">The date part to convert.</param>
             <param name="timePart">The time part to convert.</param>
-            <param name="timeZone">The timezone the date and time are to be converted to.</param>
+            <param name="kronosTimeZone">The time zone the date and time are to be converted to.</param>
             <returns>The converted datetime.</returns>
         </member>
         <member name="T:Microsoft.Teams.Shifts.Integration.API.Controllers.ConnectController">
@@ -847,7 +847,7 @@
             <param name="uniqueId">The Kronos Unique Id.</param>
             <param name="monthPartitionKey">The monthwise partition key.</param>
             <param name="orgJobPath">The Kronos Org Job Path.</param>
-            <param name="timeZone">The time zone to use when converting the UTC times to Kronos times.</param>
+            <param name="kronosTimeZone">The time zone to use when converting the UTC times to Kronos times.</param>
             <returns>The new AllOpenShiftMappingEntity which conforms to schema.</returns>
         </member>
         <member name="T:Microsoft.Teams.Shifts.Integration.API.Controllers.OpenShiftRequestController">
@@ -1174,10 +1174,11 @@
             This is the teams controller that is being used here.
             </summary>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.#ctor(Microsoft.ApplicationInsights.TelemetryClient,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IConfigurationProvider,Microsoft.Teams.Shifts.Integration.API.Controllers.OpenShiftRequestController,Microsoft.Teams.Shifts.Integration.API.Controllers.SwapShiftController,Microsoft.Teams.Shifts.Integration.API.Common.Utility,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IUserMappingProvider,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IShiftMappingEntityProvider,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IOpenShiftRequestMappingEntityProvider,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IOpenShiftMappingEntityProvider,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.ISwapShiftMappingEntityProvider,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.ITeamDepartmentMappingProvider)">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.#ctor(Microsoft.Teams.Shifts.Integration.API.Common.AppSettings,Microsoft.ApplicationInsights.TelemetryClient,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IConfigurationProvider,Microsoft.Teams.Shifts.Integration.API.Controllers.OpenShiftRequestController,Microsoft.Teams.Shifts.Integration.API.Controllers.SwapShiftController,Microsoft.Teams.Shifts.Integration.API.Common.Utility,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IUserMappingProvider,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IShiftMappingEntityProvider,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IOpenShiftRequestMappingEntityProvider,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IOpenShiftMappingEntityProvider,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.ISwapShiftMappingEntityProvider,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.ITeamDepartmentMappingProvider)">
             <summary>
             Initializes a new instance of the <see cref="T:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController"/> class.
             </summary>
+            <param name="appSettings">Configuration DI.</param>
             <param name="telemetryClient">ApplicationInsights DI.</param>
             <param name="configurationProvider">ConfigurationProvider DI.</param>
             <param name="openShiftRequestController">OpenShiftRequestController DI.</param>
@@ -1259,7 +1260,7 @@
             <param name="updateProps">telemetry properties.</param>
             <param name="teamsId">The ID of the team from which the request originated.</param>
             <param name="isRequestFromCorrectIntegration">Whether the request originated from the correct workforce integration or not</param>
-            <param name="timeZone">The time zone to use when converting the times.</param>
+            <param name="kronosTimeZone">The time zone to use when converting the times.</param>
             <returns>Returns list of ShiftIntegResponse for request.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.ProcessSwapShiftRequest(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming.RequestModel,System.String,System.Boolean,System.String)">
@@ -1268,7 +1269,7 @@
             </summary>
             <param name="jsonModel">Incoming payload for the request been made in Shifts.</param>
             <param name="aadGroupId">AAD Group id.</param>
-            <param name="timeZone">The time zone to use when converting the times.</param>
+            <param name="kronosTimeZone">The time zone to use when converting the times.</param>
             <returns>Returns list of ShiftIntegResponse for request.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.ProcessOpenShiftRequestApprovalAsync(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming.RequestModel,System.Collections.Generic.Dictionary{System.String,System.String},System.String)">
@@ -1278,7 +1279,7 @@
             </summary>
             <param name="jsonModel">The decrypted JSON payload.</param>
             <param name="updateProps">A dictionary of string, string that will be logged to ApplicationInsights.</param>
-            <param name="timeZone">The time zone to use when converting the times.</param>
+            <param name="kronosTimeZone">The time zone to use when converting the times.</param>
             <returns>A unit of execution.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.ProcessSwapShiftRequestApprovalAsync(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming.RequestModel,System.String,System.String)">
@@ -1287,7 +1288,7 @@
             </summary>
             <param name="jsonModel">The decryped JSON payload from Shifts/MS Graph.</param>
             <param name="aadGroupId">The team ID for which the Swap Shift request has been approved.</param>
-            <param name="timeZone">The time zone to use when converting the times.</param>
+            <param name="kronosTimeZone">The time zone to use when converting the times.</param>
             <returns>A unit of execution that contains the type of <see cref="T:Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels.ShiftsIntegResponse"/>.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.ProcessOutboundOpenShiftRequestAsync(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.OpenShiftRequestIS,System.Collections.Generic.Dictionary{System.String,System.String},System.String)">

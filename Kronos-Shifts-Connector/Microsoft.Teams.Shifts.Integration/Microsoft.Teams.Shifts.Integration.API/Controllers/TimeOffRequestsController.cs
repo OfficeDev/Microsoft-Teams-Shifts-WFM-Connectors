@@ -173,12 +173,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             if (timeOffRequestItems?.Count > 0)
                             {
                                 // get the team mappings for the team and pick the first because we need the Kronos Time Zone
-                                var teamMappings = await this.teamDepartmentMappingProvider.GetMappedTeamDetailsAsync(team).ConfigureAwait(false);
-                                var teamMapping = teamMappings.FirstOrDefault();
+                                var mappedTeams = await this.teamDepartmentMappingProvider.GetMappedTeamDetailsAsync(team).ConfigureAwait(false);
+                                var mappedTeam = mappedTeams.FirstOrDefault();
+                                var kronosTimeZone = string.IsNullOrEmpty(mappedTeam?.KronosTimeZone) ? this.appSettings.KronosTimeZone : mappedTeam.KronosTimeZone;
 
                                 foreach (var item in timeOffRequestItems)
                                 {
-                                    var timeOffReqStartDate = this.utility.UTCToKronosTimeZone(item.StartDateTime, teamMapping.KronosTimeZone);
+                                    var timeOffReqStartDate = this.utility.UTCToKronosTimeZone(item.StartDateTime, kronosTimeZone);
                                     if (timeOffReqStartDate < DateTime.ParseExact(queryStartDate, Common.Constants.DateFormat, CultureInfo.InvariantCulture)
                                         || timeOffReqStartDate > DateTime.ParseExact(queryEndDate, Common.Constants.DateFormat, CultureInfo.InvariantCulture).AddDays(1))
                                     {
@@ -195,9 +196,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                                         var personDetails = allUsers.FirstOrDefault(u => u.ShiftUserId == Convert.ToString(item.SenderUserId, CultureInfo.InvariantCulture));
 
-                                        // Get the Kronos WFC API Time Zone from mapping or App Settings.
-                                        var kronosTimeZoneId = string.IsNullOrEmpty(teamMapping.KronosTimeZone) ? this.appSettings.KronosTimeZone : teamMapping.KronosTimeZone;
-                                        var kronosTimeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(kronosTimeZoneId);
+                                        // Get the Kronos WFC API Time Zone Info
+                                        var kronosTimeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(kronosTimeZone);
 
                                         // Create the Kronos Time Off Request.
                                         var timeOffResponse = await this.createTimeOffActivity.TimeOffRequestAsync(
