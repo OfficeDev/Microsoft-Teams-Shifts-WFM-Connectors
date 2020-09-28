@@ -1,0 +1,7 @@
+### Get Server Time
+POST {{baseUrl}}
+Content-Type: application/xml
+
+<Kronos_WFC version="1.0">
+    <Request Action="GetServerTime" Object="ServerTime" />
+</Kronos_WFC>

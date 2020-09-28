@@ -157,17 +157,24 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             TableQuery<TeamToDepartmentJobMappingEntity> query = new TableQuery<TeamToDepartmentJobMappingEntity>();
 
             // Results list
-            List<TeamToDepartmentJobMappingEntity> results = new List<TeamToDepartmentJobMappingEntity>();
-            TableContinuationToken continuationToken = null;
-            do
-            {
-                TableQuerySegment<TeamToDepartmentJobMappingEntity> queryResults = await this.teamDepartmentMappingCloudTable.ExecuteQuerySegmentedAsync(query, continuationToken).ConfigureAwait(false);
-                continuationToken = queryResults.ContinuationToken;
-                results.AddRange(queryResults.Results);
-            }
-            while (continuationToken != null);
+            return await this.GetQueryResultsAsync(query).ConfigureAwait(false);
+        }
 
-            return results;
+        /// <summary>
+        /// Function that will return all the mappings for a single team that are mapped in Azure Table storage.
+        /// </summary>
+        /// <param name="teamId">The ID of the team to get the mappings for.</param>
+        /// <returns>The mappings for the team.</returns>
+        public async Task<List<TeamToDepartmentJobMappingEntity>> GetMappedTeamDetailsAsync(string teamId)
+        {
+            await this.EnsureInitializedAsync().ConfigureAwait(false);
+
+            // Table query
+            TableQuery<TeamToDepartmentJobMappingEntity> query = new TableQuery<TeamToDepartmentJobMappingEntity>()
+                .Where(TableQuery.GenerateFilterCondition("TeamId", QueryComparisons.Equal, teamId));
+
+            // Results list
+            return await this.GetQueryResultsAsync(query).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -180,20 +187,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
 
             List<string> orgJobPathList = new List<string>();
 
-            // Table query
-            TableQuery<TeamToDepartmentJobMappingEntity> query = new TableQuery<TeamToDepartmentJobMappingEntity>();
-
-            // Results list
-            List<TeamToDepartmentJobMappingEntity> results = new List<TeamToDepartmentJobMappingEntity>();
-            TableContinuationToken continuationToken = null;
-            do
-            {
-                TableQuerySegment<TeamToDepartmentJobMappingEntity> queryResults = await this.teamDepartmentMappingCloudTable.ExecuteQuerySegmentedAsync(query, continuationToken).ConfigureAwait(false);
-                continuationToken = queryResults.ContinuationToken;
-                results.AddRange(queryResults.Results);
-            }
-            while (continuationToken != null);
-
+            var results = await this.GetMappedTeamDetailsAsync().ConfigureAwait(false);
             foreach (var item in results)
             {
                 orgJobPathList.Add(item.RowKey.Replace('$', '/'));
@@ -207,7 +201,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// </summary>
         /// <param name="entity">Mapping entity reference.</param>
         /// <returns>http status code representing the asynchronous operation.</returns>
-        public async Task<bool> TeamsToDepartmentMappingAsync(TeamsDepartmentMappingModel entity)
+        public async Task<bool> TeamsToDepartmentMappingAsync(TeamToDepartmentJobMappingEntity entity)
         {
             if (entity is null)
             {
@@ -227,32 +221,6 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         }
 
         /// <summary>
-        /// Function that will return all of the teams and department that are
-        /// mapped in Azure Table storage.
-        /// </summary>
-        /// <returns>List of Team and Department mapping model.</returns>
-        public async Task<List<TeamsDepartmentMappingModel>> GetTeamDeptMappingDetailsAsync()
-        {
-            await this.EnsureInitializedAsync().ConfigureAwait(false);
-
-            // Table query
-            TableQuery<TeamsDepartmentMappingModel> query = new TableQuery<TeamsDepartmentMappingModel>();
-
-            // Results list
-            List<TeamsDepartmentMappingModel> results = new List<TeamsDepartmentMappingModel>();
-            TableContinuationToken continuationToken = null;
-            do
-            {
-                TableQuerySegment<TeamsDepartmentMappingModel> queryResults = await this.teamDepartmentMappingCloudTable.ExecuteQuerySegmentedAsync(query, continuationToken).ConfigureAwait(false);
-                continuationToken = queryResults.ContinuationToken;
-                results.AddRange(queryResults.Results);
-            }
-            while (continuationToken != null);
-
-            return results;
-        }
-
-        /// <summary>
         /// Method to delete teams and Department mapping.
         /// </summary>
         /// <param name="partitionKey">The partition key.</param>
@@ -263,17 +231,16 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             await this.EnsureInitializedAsync().ConfigureAwait(false);
 
             // Table query
-            TableQuery<TeamsDepartmentMappingModel> deleteQuery = new TableQuery<TeamsDepartmentMappingModel>();
-            deleteQuery
-            .Where(TableQuery.CombineFilters(
-            TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, partitionKey),
-            TableOperators.And,
-            TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, rowKey)));
+            TableQuery<TeamToDepartmentJobMappingEntity> deleteQuery = new TableQuery<TeamToDepartmentJobMappingEntity>();
+            deleteQuery.Where(TableQuery.CombineFilters(
+                TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, partitionKey),
+                TableOperators.And,
+                TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, rowKey)));
 
             TableContinuationToken continuationToken = null;
             if (await this.teamDepartmentMappingCloudTable.ExistsAsync().ConfigureAwait(false))
             {
-                TableQuerySegment<TeamsDepartmentMappingModel> queryResults = await this.teamDepartmentMappingCloudTable.ExecuteQuerySegmentedAsync(
+                TableQuerySegment<TeamToDepartmentJobMappingEntity> queryResults = await this.teamDepartmentMappingCloudTable.ExecuteQuerySegmentedAsync(
                     deleteQuery, continuationToken).ConfigureAwait(false);
 
                 continuationToken = queryResults.ContinuationToken;
@@ -326,5 +293,26 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             this.telemetryClient.TrackTrace($"{MethodBase.GetCurrentMethod().Name}");
             await this.initializeTask.Value.ConfigureAwait(false);
         }
+
+        /// <summary>
+        /// Gets the full set of mapped team departments determined by the query.
+        /// </summary>
+        /// <param name="query">The query to use when fetching the mapped team departments.</param>
+        /// <returns>The full set of mapped team departments.</returns>
+        private async Task<List<TeamToDepartmentJobMappingEntity>> GetQueryResultsAsync(TableQuery<TeamToDepartmentJobMappingEntity> query)
+        {
+            List<TeamToDepartmentJobMappingEntity> results = new List<TeamToDepartmentJobMappingEntity>();
+            TableContinuationToken continuationToken = null;
+            do
+            {
+                TableQuerySegment<TeamToDepartmentJobMappingEntity> queryResults = await this.teamDepartmentMappingCloudTable.ExecuteQuerySegmentedAsync(query, continuationToken).ConfigureAwait(false);
+                continuationToken = queryResults.ContinuationToken;
+                results.AddRange(queryResults.Results);
+            }
+            while (continuationToken != null);
+
+            return results;
+        }
+
     }
 }

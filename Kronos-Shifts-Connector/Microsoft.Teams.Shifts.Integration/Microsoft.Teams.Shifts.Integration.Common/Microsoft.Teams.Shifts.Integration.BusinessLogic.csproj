@@ -295,7 +295,6 @@
     <Compile Include="Models\ShiftTeams.cs" />
     <Compile Include="Models\ShiftUser.cs" />
     <Compile Include="Models\ShiftUserModel.cs" />
-    <Compile Include="Models\TeamsDepartmentMappingModel.cs" />
     <Compile Include="Models\TeamsShiftMappingEntity.cs" />
     <Compile Include="Models\UserDetailsModel.cs" />
     <Compile Include="Models\OpenShiftRequestMappingEntity.cs" />

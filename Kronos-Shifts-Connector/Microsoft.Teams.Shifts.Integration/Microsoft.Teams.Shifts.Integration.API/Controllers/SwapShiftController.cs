@@ -142,6 +142,15 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             // Step 1 - Check if all the tokens are present and required configurations are done.
             if (allRequiredConfigurations != null && (bool)allRequiredConfigurations?.IsAllSetUpExists)
             {
+                // we need the mapped team in order to get the Kronos Time Zone which we need to convert the UTC times from Teams into
+                // Kronos times, however, as the mapping table maps departments we will get back multiple mappings but realistically
+                // can only deal with a single time zone for each team so we will take the first on the assumption that all the rest are
+                // the same - if not we have an issue because Teams does not supply the department information we would need in order to
+                // be able to select the correct one
+                var mappedTeams = await this.teamDepartmentMappingProvider.GetMappedTeamDetailsAsync(teamsId).ConfigureAwait(false);
+                var mappedTeam = mappedTeams.FirstOrDefault();
+                var kronosTimeZone = string.IsNullOrEmpty(mappedTeam?.KronosTimeZone) ? this.appSettings.KronosTimeZone : mappedTeam.KronosTimeZone;
+
                 // Step 1a - Get the user details of FLW1.
                 var sender = await this.userMappingProvider.GetUserMappingEntityAsyncNew(swapRequest.SenderUserId, teamsId).ConfigureAwait(false);
 
@@ -191,14 +200,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         SwapShiftObj swapShiftObj = new SwapShiftObj
                         {
                             // Convert shift time to Kronos time zone.
-                            Emp1FromDateTime = this.utility.UTCToKronosTimeZone(
-                                senderShiftDetails.SharedShift.StartDateTime),
-                            Emp1ToDateTime = this.utility.UTCToKronosTimeZone(
-                                senderShiftDetails.SharedShift.EndDateTime),
-                            Emp2FromDateTime = this.utility.UTCToKronosTimeZone(
-                                recipientShiftDetails.SharedShift.StartDateTime),
-                            Emp2ToDateTime = this.utility.UTCToKronosTimeZone(
-                                recipientShiftDetails.SharedShift.EndDateTime),
+                            Emp1FromDateTime = this.utility.UTCToKronosTimeZone(senderShiftDetails.SharedShift.StartDateTime, kronosTimeZone),
+                            Emp1ToDateTime = this.utility.UTCToKronosTimeZone(senderShiftDetails.SharedShift.EndDateTime, kronosTimeZone),
+                            Emp2FromDateTime = this.utility.UTCToKronosTimeZone(recipientShiftDetails.SharedShift.StartDateTime, kronosTimeZone),
+                            Emp2ToDateTime = this.utility.UTCToKronosTimeZone(recipientShiftDetails.SharedShift.EndDateTime, kronosTimeZone),
                             QueryDateSpan = $"{shiftStartDate}-{shiftEndDate}",
                             RequestedToName = recipient?.KronosUserName,
                             RequestedToPersonNumber = recipient?.RowKey,

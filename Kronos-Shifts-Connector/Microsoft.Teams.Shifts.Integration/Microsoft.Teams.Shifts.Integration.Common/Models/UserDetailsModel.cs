@@ -43,5 +43,10 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Models
         /// Gets or sets the error.
         /// </summary>
         public string Error { get; set; }
+
+        /// <summary>
+        /// Gets or sets the time zone to use to convert shift start and end dates.
+        /// </summary>
+        public string KronosTimeZone { get; set; }
     }
 }

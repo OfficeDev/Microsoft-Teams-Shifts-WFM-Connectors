@@ -12,6 +12,11 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Models
     public class TeamToDepartmentJobMappingEntity : TableEntity
     {
         /// <summary>
+        /// Gets or sets the Kronos Time Zone.
+        /// </summary>
+        public string KronosTimeZone { get; set; }
+
+        /// <summary>
         /// Gets or sets the Team name in Shifts.
         /// </summary>
         public string ShiftsTeamName { get; set; }

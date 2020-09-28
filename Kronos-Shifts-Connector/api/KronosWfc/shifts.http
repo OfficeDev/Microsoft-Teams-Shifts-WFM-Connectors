@@ -1,0 +1,14 @@
+### Get Scheduled Shifts
+POST {{baseUrl}}
+Content-Type: application/xml
+
+<Kronos_WFC version="1.0">
+    <Request Action="Load">
+        <Schedule QueryDateSpan="{{queryDateSpan}}">
+            <Employees>
+                <PersonIdentity PersonNumber="BB04" />
+            </Employees>
+        </Schedule>
+    </Request>
+</Kronos_WFC>
+

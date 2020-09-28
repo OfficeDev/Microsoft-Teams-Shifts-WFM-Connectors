@@ -179,12 +179,13 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
         [HttpGet]
         public async Task<ActionResult> GetTeamDepartmentMappingAsync()
         {
-            var mappedTeamsResult = await this.teamDepartmentMappingProvider.GetTeamDeptMappingDetailsAsync().ConfigureAwait(false);
+            var mappedTeamsResult = await this.teamDepartmentMappingProvider.GetMappedTeamToDeptsWithJobPathsAsync().ConfigureAwait(false);
             var mappedTeamsResultViewModel = mappedTeamsResult.Select(
-                m => new TeamsDepartmentMappingModel
+                m => new TeamsDepartmentMappingViewModel
                 {
-                    PartitionKey = m.PartitionKey,
-                    RowKey = Utility.OrgJobPathKronosConversion(m.RowKey),
+                    WorkforceIntegrationId = m.PartitionKey,
+                    KronosOrgJobPath = Utility.OrgJobPathKronosConversion(m.RowKey),
+                    KronosTimeZone = m.KronosTimeZone,
                     ShiftsTeamName = m.ShiftsTeamName,
                     TeamId = m.TeamId,
                     TeamsScheduleGroupId = m.TeamsScheduleGroupId,
@@ -337,14 +338,15 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                                 return this.Json(new { isWorkforceIntegrationPresent = true, response = isValidFile });
                             }
 
-                            TeamsDepartmentMappingModel entity = new TeamsDepartmentMappingModel()
+                            TeamToDepartmentJobMappingEntity entity = new TeamToDepartmentJobMappingEntity()
                             {
                                 PartitionKey = row.Cell(1).Value.ToString(),
                                 RowKey = Utility.OrgJobPathDBConversion(row.Cell(2).Value.ToString()),
-                                TeamId = row.Cell(3).Value.ToString(),
-                                ShiftsTeamName = row.Cell(4).Value.ToString(),
-                                TeamsScheduleGroupId = row.Cell(5).Value.ToString(),
-                                TeamsScheduleGroupName = row.Cell(6).Value.ToString(),
+                                KronosTimeZone = row.Cell(3).Value.ToString(),
+                                TeamId = row.Cell(4).Value.ToString(),
+                                ShiftsTeamName = row.Cell(5).Value.ToString(),
+                                TeamsScheduleGroupId = row.Cell(6).Value.ToString(),
+                                TeamsScheduleGroupName = row.Cell(7).Value.ToString(),
                             };
 
                             if (isValidFile)

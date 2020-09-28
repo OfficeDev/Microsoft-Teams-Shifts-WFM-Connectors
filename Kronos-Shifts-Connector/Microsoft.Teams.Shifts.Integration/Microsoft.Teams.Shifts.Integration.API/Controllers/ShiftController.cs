@@ -83,11 +83,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         {
             this.telemetryClient.TrackTrace($"{Resource.ProcessShiftsAsync} starts at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)} for isRequestFromLogicApp: {isRequestFromLogicApp}");
 
-            string graphBetaUrl = this.appSettings.GraphBetaApiUrl;
-
-            var shiftStartDate = string.Empty;
-            var shiftEndDate = string.Empty;
-            this.utility.SetQuerySpan(Convert.ToBoolean(isRequestFromLogicApp, CultureInfo.InvariantCulture), out shiftStartDate, out shiftEndDate);
+            this.utility.SetQuerySpan(Convert.ToBoolean(isRequestFromLogicApp, CultureInfo.InvariantCulture), out string shiftStartDate, out string shiftEndDate);
             var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
 
             // Check whether date range are in correct format.
@@ -120,9 +116,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 out queryEndDate);
 
                             var processUsersInBatchList = new List<App.KronosWfc.Models.ResponseEntities.HyperFind.ResponseHyperFindResult>();
-                            var usersDetails = kronosUsers?.ToList();
-
-                            foreach (var item in usersDetails)
+                            foreach (var item in kronosUsers?.ToList())
                             {
                                 processUsersInBatchList.Add(new App.KronosWfc.Models.ResponseEntities.HyperFind.ResponseHyperFindResult
                                 {
@@ -233,8 +227,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             shiftActivity.Add(new ShiftActivity
                             {
                                 IsPaid = true,
-                                StartDateTime = this.utility.CalculateStartDateTime(activity),
-                                EndDateTime = this.utility.CalculateEndDateTime(activity),
+                                StartDateTime = this.utility.CalculateStartDateTime(activity, user.KronosTimeZone),
+                                EndDateTime = this.utility.CalculateEndDateTime(activity, user.KronosTimeZone),
                                 Code = string.Empty,
                                 DisplayName = activity.SegmentTypeName,
                             });
@@ -255,7 +249,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             },
                         };
 
-                        shift.KronosUniqueId = this.utility.CreateUniqueId(shift);
+                        shift.KronosUniqueId = this.utility.CreateUniqueId(shift, user.KronosTimeZone);
 
                         this.telemetryClient.TrackTrace($"ShiftController-KronosHash: {shift.KronosUniqueId}");
 
@@ -431,7 +425,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 AadUserId = responseModel.UserId,
                 KronosUniqueId = uniqueId,
                 KronosPersonNumber = user.KronosPersonNumber,
-                ShiftStartDate = this.utility.UTCToKronosTimeZone(responseModel.SharedShift.StartDateTime),
+                ShiftStartDate = this.utility.UTCToKronosTimeZone(responseModel.SharedShift.StartDateTime, user.KronosTimeZone),
             };
 
             this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, createNewShiftMappingEntityProps);
@@ -465,6 +459,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         ShiftUserId = element.ShiftUserAadObjectId,
                         ShiftTeamId = teamMappingEntity.TeamId,
                         ShiftScheduleGroupId = teamMappingEntity.TeamsScheduleGroupId,
+                        KronosTimeZone = teamMappingEntity.KronosTimeZone,
                         OrgJobPath = element.PartitionKey,
                     });
                 }
