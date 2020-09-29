@@ -92,13 +92,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
 #pragma warning restore CA1056 // Uri properties should not be strings
 
         /// <summary>
-        /// Gets GraphBetaApiUrl.
-        /// </summary>
-#pragma warning disable CA1056 // Uri properties should not be strings
-        public string GraphBetaApiUrl => this.configuration["GraphBetaApiUrl"];
-#pragma warning restore CA1056 // Uri properties should not be strings
-
-        /// <summary>
         /// Gets TeamDepartmentMapping.
         /// </summary>
         public string TeamDepartmentMapping => this.configuration.GetValue<string>("TeamDepartmentMapping");
