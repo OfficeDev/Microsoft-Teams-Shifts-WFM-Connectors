@@ -173,11 +173,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private async Task<List<TimeOffReasonResponse.TimeOffReason>> GetTimeOffReasonAsync(string accessToken, string teamsId)
         {
             this.telemetryClient.TrackTrace($"{MethodBase.GetCurrentMethod().Name}");
-            var graphBetaUrl = this.appSettings.GraphBetaApiUrl;
+            var graphUrl = this.appSettings.GraphApiUrl;
 
             var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-            using (HttpResponseMessage response = await httpClient.GetAsync(new Uri(graphBetaUrl + "teams/" + teamsId + "/schedule/timeOffReasons?$search=\"isActive=true\"")).ConfigureAwait(false))
+            using (HttpResponseMessage response = await httpClient.GetAsync(new Uri(graphUrl + "teams/" + teamsId + "/schedule/timeOffReasons?$search=\"isActive=true\"")).ConfigureAwait(false))
             {
                 if (response.IsSuccessStatusCode)
                 {

@@ -56,11 +56,6 @@
             Gets GraphApiUrl.
             </summary>
         </member>
-        <member name="P:Microsoft.Teams.Shifts.Integration.API.Common.AppSettings.GraphBetaApiUrl">
-            <summary>
-            Gets GraphBetaApiUrl.
-            </summary>
-        </member>
         <member name="P:Microsoft.Teams.Shifts.Integration.API.Common.AppSettings.TeamDepartmentMapping">
             <summary>
             Gets TeamDepartmentMapping.

@@ -698,7 +698,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     { "CallingMethod", "UpdateTeam" },
                 };
 
-            var graphBetaUrl = this.appSettings.GraphBetaApiUrl;
             this.utility.SetQuerySpan(
                 Convert.ToBoolean(isRequestFromLogicApp, CultureInfo.InvariantCulture),
                 out var shiftStartDate,
