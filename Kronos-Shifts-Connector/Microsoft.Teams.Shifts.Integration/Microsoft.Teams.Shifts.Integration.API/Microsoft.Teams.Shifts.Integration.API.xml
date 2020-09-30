@@ -432,6 +432,21 @@
             <param name="secretValue">The actual value of the secret.</param>
             <returns>A unit of execution which has a string value boxed in.</returns>
         </member>
+        <member name="T:Microsoft.Teams.Shifts.Integration.API.Common.UsersHelper">
+            <summary>
+            Provides utility methods for working with users.
+            </summary>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.UsersHelper.GetAllMappedUserDetailsAsync(System.String,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IUserMappingProvider,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.ITeamDepartmentMappingProvider,Microsoft.ApplicationInsights.TelemetryClient)">
+            <summary>
+            Get All mapped users, combining user and teams department mapping data.
+            </summary>
+            <param name="workForceIntegrationId">The workforce integration to get the users for.</param>
+            <param name="userMappingProvider">The user mapping provider.</param>
+            <param name="teamDepartmentMappingProvider">The team department mapping provider.</param>
+            <param name="telemetryClient">The telemetry client for logging.</param>
+            <returns>The full list of users.</returns>
+        </member>
         <member name="T:Microsoft.Teams.Shifts.Integration.API.Common.Utility">
             <summary>
             This is the utility class to perform several common operations such as Unique Id creation, Date Time operations, tokens fetch, session fecth, conditions checks etc.
@@ -1410,12 +1425,6 @@
             </summary>
             <param name="timeOffMappingEntity">The time off mapping entity to update or add.</param>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffController.GetAllMappedUserDetailsAsync(System.String)">
-            <summary>
-            Get All users for time off.
-            </summary>
-            <returns>A task.</returns>
-        </member>
         <member name="T:Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffReasonController">
             <summary>
             Fetch TimeOffReasons from Kronos and create the same in Shifts.
@@ -1501,12 +1510,6 @@
             Method to either add or update the Time Off Entity Mapping.
             </summary>
             <param name="timeOffMappingEntity">A type of <see cref="T:Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TimeOffMappingEntity"/>.</param>
-        </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffRequestsController.GetAllMappedUserDetailsAsync(System.String)">
-            <summary>
-            Get All users for time off.
-            </summary>
-            <returns>A task.</returns>
         </member>
         <member name="T:Microsoft.Teams.Shifts.Integration.API.CustomAuthorize">
             <summary>
