@@ -236,7 +236,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                         }
 
                         // validation to check if any cell has empty value
-                        if ((usedCellsCount % noOfColumns) != 0 || noOfColumns != Convert.ToInt16(Resources.NoOfColumnsInExcel, CultureInfo.InvariantCulture))
+                        if ((usedCellsCount % noOfColumns) != 0 || noOfColumns != Convert.ToInt16(Resources.NoOfColumnsInUserExcel, CultureInfo.InvariantCulture))
                         {
                             isValidFile = false;
                             return this.Json(new { response = isValidFile });
