@@ -8,7 +8,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using System.Collections.Generic;
     using System.Globalization;
     using System.Linq;
-    using System.Net;
     using System.Net.Http;
     using System.Net.Http.Headers;
     using System.Reflection;
@@ -21,7 +20,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift;
     using Microsoft.Teams.App.KronosWfc.Common;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift.OpenShiftRequest;
-    using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.FetchApproval;
     using Microsoft.Teams.Shifts.Integration.API.Common;
     using Microsoft.Teams.Shifts.Integration.API.Models.Response.OpenShifts;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
@@ -39,6 +37,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     [Authorize(Policy = "AppID")]
     public class OpenShiftRequestController : Controller
     {
+        private const string OPENSHIFTURL = "teams/{0}/schedule/openShifts/{1}";
+        private const string OPENSHIFTCHANGEREQUESTAPPROVEURL = "teams/{0}/schedule/openshiftchangerequests/{1}/approve";
+        private const string OPENSHIFTCHANGEREQUESTDECLINEURL = "teams/{0}/schedule/openshiftchangerequests/{1}/decline";
+
         private readonly AppSettings appSettings;
         private readonly TelemetryClient telemetryClient;
         private readonly IOpenShiftActivity openShiftActivity;
@@ -47,10 +49,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private readonly IOpenShiftRequestMappingEntityProvider openShiftRequestMappingEntityProvider;
         private readonly IHttpClientFactory httpClientFactory;
         private readonly IOpenShiftMappingEntityProvider openShiftMappingEntityProvider;
-        private readonly string openShiftQueryDateSpan;
         private readonly Utility utility;
         private readonly IShiftMappingEntityProvider shiftMappingEntityProvider;
-        private readonly BackgroundTaskWrapper taskWrapper;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OpenShiftRequestController"/> class.
@@ -65,7 +65,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="openShiftMappingEntityProvider">The Open Shift Mapping DI.</param>
         /// <param name="utility">The common utility methods DI.</param>
         /// <param name="shiftMappingEntityProvider">Shift entity mapping provider DI.</param>
-        /// <param name="taskWrapper">Wrapper class instance for BackgroundTask.</param>
         public OpenShiftRequestController(
             AppSettings appSettings,
             TelemetryClient telemetryClient,
@@ -76,8 +75,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             IHttpClientFactory httpClientFactory,
             IOpenShiftMappingEntityProvider openShiftMappingEntityProvider,
             Utility utility,
-            IShiftMappingEntityProvider shiftMappingEntityProvider,
-            BackgroundTaskWrapper taskWrapper)
+            IShiftMappingEntityProvider shiftMappingEntityProvider)
         {
             if (appSettings is null)
             {
@@ -92,10 +90,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             this.openShiftRequestMappingEntityProvider = openShiftRequestMappingEntityProvider;
             this.openShiftMappingEntityProvider = openShiftMappingEntityProvider;
             this.httpClientFactory = httpClientFactory;
-            this.openShiftQueryDateSpan = $"{this.appSettings.ShiftStartDate}-{this.appSettings.ShiftEndDate}";
             this.utility = utility;
             this.shiftMappingEntityProvider = shiftMappingEntityProvider;
-            this.taskWrapper = taskWrapper;
         }
 
         /// <summary>
@@ -165,7 +161,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     // Step 2 - Getting the Open Shift - the start date/time and end date/time are needed.
                     var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
                     httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfigurations.ShiftsAccessToken);
-                    using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, "teams/" + teamDepartmentMapping.TeamId + "/schedule/openShifts/" + request.OpenShiftId))
+                    var getUrl = string.Format(CultureInfo.InvariantCulture, OPENSHIFTURL, teamDepartmentMapping.TeamId, request.OpenShiftId);
+                    using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, getUrl))
                     {
                         var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
                         if (response.IsSuccessStatusCode)
@@ -412,7 +409,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     {
                         throw new Exception(string.Format(CultureInfo.InvariantCulture, Resource.GenericNotAbleToRetrieveDataMessage, Resource.ProcessOpenShiftsAsync));
                     }
-                    else if (approvedOrDeclinedOpenShiftRequests?.RequestMgmt?.RequestItems?.GlobalOpenShiftRequestItem?.Count == null)
+                    else if (approvedOrDeclinedOpenShiftRequests?.RequestMgmt?.RequestItems?.GlobalOpenShiftRequestItem == null)
                     {
                         // no open shift requests were returned for this user so skip them
                         continue;
@@ -430,7 +427,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                         if (entityToUpdate != null)
                         {
-                            if (item.StatusName == ApiConstants.ApprovedStatus && entityToUpdate.ShiftsStatus == ApiConstants.Pending)
+                            if (item.StatusName.Equals(ApiConstants.ApprovedStatus, StringComparison.OrdinalIgnoreCase) && entityToUpdate.ShiftsStatus.Equals(ApiConstants.Pending, StringComparison.OrdinalIgnoreCase))
                             {
                                 // Update the KronosStatus to Approved here.
                                 entityToUpdate.KronosStatus = ApiConstants.ApprovedStatus;
@@ -441,7 +438,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 // Build the request to get the open shift from Graph.
                                 var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
                                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfigurations.ShiftsAccessToken);
-                                using (var getOpenShiftRequestMessage = new HttpRequestMessage(HttpMethod.Get, "teams/" + user.ShiftTeamId + "/schedule/openShifts/" + entityToUpdate.TeamsOpenShiftId))
+                                var getUrl = string.Format(CultureInfo.InvariantCulture, OPENSHIFTURL, user.ShiftTeamId, entityToUpdate.TeamsOpenShiftId);
+                                using (var getOpenShiftRequestMessage = new HttpRequestMessage(HttpMethod.Get, getUrl))
                                 {
                                     var getOpenShiftResponse = await httpClient.SendAsync(getOpenShiftRequestMessage).ConfigureAwait(false);
                                     if (getOpenShiftResponse.IsSuccessStatusCode)
@@ -492,7 +490,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                                         // Send Passthrough header to indicate the sender of request in outbound call.
                                         approvalHttpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", allRequiredConfigurations.WFIId);
-                                        using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, "teams/" + user.ShiftTeamId + "/schedule/openshiftchangerequests/" + entityToUpdate.RowKey + "/approve")
+                                        var postUrl = string.Format(CultureInfo.InvariantCulture, OPENSHIFTCHANGEREQUESTAPPROVEURL, user.ShiftTeamId, entityToUpdate.RowKey);
+                                        using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, postUrl)
                                         {
                                             Content = new StringContent(approvalMessageModelStr, Encoding.UTF8, "application/json"),
                                         })
@@ -516,7 +515,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 }
                             }
 
-                            if ((item.StatusName == ApiConstants.Retract || item.StatusName == ApiConstants.Refused) && entityToUpdate.ShiftsStatus == ApiConstants.Pending)
+                            if ((item.StatusName.Equals(ApiConstants.Retract, StringComparison.OrdinalIgnoreCase) || item.StatusName.Equals(ApiConstants.Refused, StringComparison.OrdinalIgnoreCase)) && entityToUpdate.ShiftsStatus.Equals(ApiConstants.Pending, StringComparison.OrdinalIgnoreCase))
                             {
                                 entityToUpdate.KronosStatus = item.StatusName;
                                 entityToUpdate.ShiftsStatus = item.StatusName;
@@ -535,7 +534,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                                 // Send Passthrough header to indicate the sender of request in outbound call.
                                 declineHttpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", allRequiredConfigurations.WFIId);
-                                using (var declineRequestMessage = new HttpRequestMessage(HttpMethod.Post, "teams/" + user.ShiftTeamId + "/schedule/openshiftchangerequests/" + entityToUpdate.RowKey + "/decline")
+                                var postUrl = string.Format(CultureInfo.InvariantCulture, OPENSHIFTCHANGEREQUESTDECLINEURL, user.ShiftTeamId, entityToUpdate.RowKey);
+                                using (var declineRequestMessage = new HttpRequestMessage(HttpMethod.Post, postUrl)
                                 {
                                     Content = new StringContent(declineMessageModelStr, Encoding.UTF8, "application/json"),
                                 })
