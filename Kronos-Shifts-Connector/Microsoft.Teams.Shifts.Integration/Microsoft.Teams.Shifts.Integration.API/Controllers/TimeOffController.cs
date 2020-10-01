@@ -110,7 +110,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             if (allRequiredConfigurations != null && (bool)allRequiredConfigurations?.IsAllSetUpExists && isCorrectDateRange)
             {
                 // Get the mapped user details from user to user mapping table.
-                var allUsers = await this.GetAllMappedUserDetailsAsync(allRequiredConfigurations.WFIId).ConfigureAwait(false);
+                var allUsers = await UsersHelper.GetAllMappedUserDetailsAsync(allRequiredConfigurations.WFIId, this.userMappingProvider, this.teamDepartmentMappingProvider, this.telemetryClient).ConfigureAwait(false);
 
                 var monthPartitions = Utility.GetMonthPartition(timeOffStartDate, timeOffEndDate);
                 var processNumberOfUsersInBatch = this.appSettings.ProcessNumberOfUsersInBatch;
@@ -704,42 +704,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private async void AddorUpdateTimeOffMappingAsync(TimeOffMappingEntity timeOffMappingEntity)
         {
             await this.azureTableStorageHelper.InsertOrMergeTableEntityAsync(timeOffMappingEntity, "TimeOffMapping").ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Get All users for time off.
-        /// </summary>
-        /// <returns>A task.</returns>
-        private async Task<IEnumerable<UserDetailsModel>> GetAllMappedUserDetailsAsync(string workForceIntegrationId)
-        {
-            List<UserDetailsModel> kronosUsers = new List<UserDetailsModel>();
-
-            List<AllUserMappingEntity> mappedUsersResult = await this.userMappingProvider.GetAllMappedUserDetailsAsync().ConfigureAwait(false);
-
-            foreach (var element in mappedUsersResult)
-            {
-                var teamMappingEntity = await this.teamDepartmentMappingProvider.GetTeamMappingForOrgJobPathAsync(workForceIntegrationId, element.PartitionKey).ConfigureAwait(false);
-
-                // If team department mapping for a user not present. Skip the user.
-                if (teamMappingEntity != null)
-                {
-                    kronosUsers.Add(new UserDetailsModel
-                    {
-                        KronosPersonNumber = element.RowKey,
-                        ShiftUserId = element.ShiftUserAadObjectId,
-                        ShiftTeamId = teamMappingEntity.TeamId,
-                        ShiftScheduleGroupId = teamMappingEntity.TeamsScheduleGroupId,
-                        OrgJobPath = element.PartitionKey,
-                        ShiftUserDisplayName = element.ShiftUserDisplayName,
-                    });
-                }
-                else
-                {
-                    this.telemetryClient.TrackTrace($"Team {element.PartitionKey} not mapped.");
-                }
-            }
-
-            return kronosUsers;
         }
     }
 }
