@@ -293,8 +293,7 @@ namespace Microsoft.Teams.Shifts.Integration.API
                 provider.GetRequiredService<IHttpClientFactory>(),
                 provider.GetRequiredService<IOpenShiftMappingEntityProvider>(),
                 provider.GetRequiredService<Utility>(),
-                provider.GetRequiredService<IShiftMappingEntityProvider>(),
-                provider.GetRequiredService<BackgroundTaskWrapper>()));
+                provider.GetRequiredService<IShiftMappingEntityProvider>()));
 
             services.AddSingleton((provider) => new TimeOffController(
                 provider.GetRequiredService<AppSettings>(),
