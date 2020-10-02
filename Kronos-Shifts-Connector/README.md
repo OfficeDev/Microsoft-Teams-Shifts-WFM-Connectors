@@ -315,6 +315,7 @@ In this section you are going to set 2 aspects of the logic app: recurrence and 
 
 6. Click on *Recurrence* as shown in the previous step, and you would be shown a view like so:  
    
+
 ![Populating the recurrence schedule for the logic app](images/figure46.png)
 
 7. Next, provide a value for the interval and let the value of frequency be minute. It is recommended to provide the value of 15 such that the logic app will run 4 times within the span of 1 hour. Also, having 15 minute intervals allows for complete syncing of data.
@@ -406,7 +407,7 @@ Note: If you have created teams and schedules before, make sure in the figure be
 
 ![Setting the time zone for the schedule of the team](images/figure21.png)
 
-It is important to note that the time zone should be the same as the time zone of your Kronos WFC instance. This way when entities (i.e. Open Shifts, Time Off, Shifts) are synced, the start and end times are showing the same in both systems.
+It is important to note that the time zone should be the same as the time zone of the organisation location in Kronos WFC that you intend to map the team to. This way when entities (i.e. Open Shifts, Time Off, Shifts) are synced, the start and end times are showing the same time in both systems.
 
 * After selecting the time zone and the closest city, proceed to click on the confirm button. You would be taken to a screen that looks like the screen grab that is annotated with the text: *Viewing all schedules*.  
 
@@ -426,13 +427,15 @@ h.	“Kronos Details” tab contains – KronosOrgJobPath, KronosWorkforceIntegr
 i.	“Shift Team Details” tab contains - ShiftTeamId, ShiftTeamDisplayName, SchedulingGroupId, SchedulingGroupDisplayName
 
 1. Click on *Download Template* button. This action downloads the KronosShiftTeamDeptMappingTemplate.xlsx
-2.	Copy the details from teams_department_usermapping.xlsx file to KronosShiftTeamDeptMappingTemplate.xlsx. Ensure details from both Kronos and Shifts are mapped correctly in this file. Review and ensure following:  
-a.	All the columns are correctly populated   
-b.	All values are correctly mapped  
-c.	No missing values  
-d.	No duplicate rows
- 
-Note: If a team has not been mapped (i.e. Meatpacking team), and the users under the Meatpacking team have been mapped, the data in Kronos WFC for the Meatpacking department will not be synced to the Meatpacking team on Shifts. In other words, those users will be skipped during the sync operations.
+2. Copy the details from teams_department_usermapping.xlsx file to KronosShiftTeamDeptMappingTemplate.xlsx. Ensure details from both Kronos and Shifts are mapped correctly in this file. Review and ensure following:  
+   a.	All the columns are correctly populated. In particular the KronosTimeZone column has been set to the correct standard name of the time zone appropriate for each mapped location. Note, the connector like the Teams Shifts app itself can only support a single time zone per Team/location but as the spreadsheet also contains separate rows for each scheduling group within a Team it will be necessary to duplicate the same time zone name for all such groups.  
+   b.	All values are correctly mapped  
+   c.	No missing values  
+   d.	No duplicate rows. 
+
+*Note*: A list of all supported timezones and their standard names can be found here: [TimeZones](timezones.md)
+
+*Note*: If a team has not been mapped (i.e. Meatpacking team), and the users under the Meatpacking team have been mapped, the data in Kronos WFC for the Meatpacking department will not be synced to the Meatpacking team on Shifts. In other words, those users will be skipped during the sync operations.
 
 ![Teams to Department Mapping screen](images/figure25.png)
 
@@ -481,7 +484,7 @@ The body of the request would be defined as follows:
       "userId3"
    ]
 }
-```  
+```
 Replace the `SampleSchedulingGroupName` with the scheduling group name which would be the job code or the last labor level in the Org Job Path. The required permissions are shown in **Table 5**. 
 
 **Table 5.** Required Graph API permissions.
@@ -507,7 +510,19 @@ Permission type|Permissions (from least to most privileged)
 ```
 Once the necessary steps have been done, and you will be able to continue mapping the teams and departments between Shifts and Kronos WFC. 
 
-### Step 4: Perform first time sync
+### Step 4: Configure Kronos WFC
+
+In the current version of the connector, it is necessary to make the following Configuration changes in Kronos WFC:
+
+1. The connector makes calls to the Kronos WFC API using a fixed date format: **M/dd/yyyy**, therefore it is necessary to configure the super user account supplied at deployment time with a locale with the specified date format.
+2. When synchronizing shifts, open shifts and time off requests the connector requests data from Kronos with the following request sub-types:
+   	1. **Shift Swap Request** (for Shift Swap Requests)
+    	2. **Open Shift - Request** (for Open Shift Requests)
+    	3. **TOR** (for Time Off Requests)
+3. When submitting shift swap requests the connector uses a specific comment type which must be created in Kronos with the name **Other reason**
+
+### Step 5: Perform first time sync
+
 Click on the Done button in Team to Department Mapping screen, which will initiate following workflows:  
 a.	Kronos to Shifts – Open Shift sync  
 b.	Kronos to Shifts – Approved or Declined Open Shift Request sync  
