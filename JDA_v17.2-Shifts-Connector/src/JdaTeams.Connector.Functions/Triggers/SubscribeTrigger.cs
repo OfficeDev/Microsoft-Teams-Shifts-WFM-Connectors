@@ -120,12 +120,6 @@ namespace JdaTeams.Connector.Functions.Triggers
                 var jdaTimezoneName = await _scheduleSourceService.GetJdaTimezoneNameAsync(team.Id, store.TimezoneId.Value);
                 var timezoneInfoId = await _scheduleConnectorService.GetTimezoneInfoIdAsync(jdaTimezoneName);
 
-
-                if (string.IsNullOrEmpty(timezoneInfoId))
-                {
-                    timezoneInfoId = _options.TimeZone;
-                }
-
                 connectionModel.TimezoneInfoId = timezoneInfoId;
             }
 
@@ -152,6 +146,11 @@ namespace JdaTeams.Connector.Functions.Triggers
 
             // save connection settings
             await _scheduleConnectorService.SaveConnectionAsync(connectionModel);
+
+            if (!string.IsNullOrEmpty(connectionModel.TimezoneInfoId))
+            {
+                _options.TimeZone = connectionModel.TimezoneInfoId;
+            }
 
             // start singleton team orchestrator
             await starter.TryStartSingletonAsync(nameof(TeamOrchestrator), teamModel.TeamId, teamModel);
