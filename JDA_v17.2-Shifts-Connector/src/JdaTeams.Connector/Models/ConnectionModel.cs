@@ -8,5 +8,6 @@
         public string BaseAddress { get; set; }
         public string WebhookUrl { get; set; }
         public string TeamName { get; set; }
+        public string TimezoneInfoId { get; set; }
     }
 }

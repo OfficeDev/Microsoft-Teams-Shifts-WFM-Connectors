@@ -2,6 +2,7 @@
 using JdaTeams.Connector.Extensions;
 using JdaTeams.Connector.Http;
 using JdaTeams.Connector.JdaPersona.Http;
+using JdaTeams.Connector.JdaPersona.Models;
 using JdaTeams.Connector.JdaPersona.Options;
 using JdaTeams.Connector.Models;
 using JdaTeams.Connector.Services;
@@ -33,6 +34,15 @@ namespace JdaTeams.Connector.JdaPersona.Services
         public void SetCredentials(string teamId, CredentialsModel credentials)
         {
             _credentials[teamId] = credentials;
+        }
+
+        public async Task<string> GetJdaTimezoneNameAsync(string teamId, int timezoneId)
+        {
+            var jdaPersonaClient = CreateClient(teamId);
+
+            var timezone = await jdaPersonaClient.GetTimezoneByIdAsync(timezoneId);
+
+            return timezone.Name;
         }
 
         public async Task LoadEmployeesAsync(string teamId, List<string> employeeIds)
@@ -78,7 +88,8 @@ namespace JdaTeams.Connector.JdaPersona.Services
                 return new StoreModel
                 {
                     StoreId = jdaSite.Id.ToString(),
-                    StoreName = jdaSite.Name
+                    StoreName = jdaSite.Name,
+                    TimezoneId = jdaSite.TimeZoneAssignmentID
                 };
             }
             catch (HttpOperationException hex) when (hex.Response?.ReasonPhrase == "Not Found")

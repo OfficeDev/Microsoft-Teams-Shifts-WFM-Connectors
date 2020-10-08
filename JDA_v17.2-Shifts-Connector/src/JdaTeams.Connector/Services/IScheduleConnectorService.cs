@@ -10,5 +10,6 @@ namespace JdaTeams.Connector.Services
         Task<ConnectionModel> GetConnectionAsync(string teamId);
         Task SaveConnectionAsync(ConnectionModel model);
         Task DeleteConnectionAsync(string teamId);
+        Task<string> GetTimezoneInfoIdAsync(string timezoneName);
     }
 }

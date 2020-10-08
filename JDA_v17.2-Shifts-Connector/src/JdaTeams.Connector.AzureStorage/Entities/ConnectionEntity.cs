@@ -17,6 +17,7 @@ namespace JdaTeams.Connector.AzureStorage.Entities
         public string BaseAddress { get; set; }
         public string WebhookUrl { get; set; }
         public string TeamName { get; set; }
+        public string TimezoneInfoId { get; set; }
 
         public ConnectionModel AsModel()
         {
@@ -27,7 +28,8 @@ namespace JdaTeams.Connector.AzureStorage.Entities
                 StoreName = StoreName,
                 BaseAddress = BaseAddress,
                 WebhookUrl = WebhookUrl,
-                TeamName = TeamName
+                TeamName = TeamName,
+                TimezoneInfoId = TimezoneInfoId,
             };
         }
 
@@ -40,7 +42,8 @@ namespace JdaTeams.Connector.AzureStorage.Entities
                 StoreName = model.StoreName,
                 BaseAddress = model.BaseAddress,
                 WebhookUrl = model.WebhookUrl,
-                TeamName = model.TeamName
+                TeamName = model.TeamName,
+                TimezoneInfoId = model.TimezoneInfoId
             };
         }
 

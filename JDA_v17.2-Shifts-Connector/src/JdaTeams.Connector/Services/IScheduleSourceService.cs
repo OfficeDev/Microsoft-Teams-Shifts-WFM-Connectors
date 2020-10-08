@@ -15,5 +15,6 @@ namespace JdaTeams.Connector.Services
         Task LoadEmployeesAsync(string teamId, List<string> employeeIds);
         Task<List<ShiftModel>> ListEmployeeWeekShiftsAsync(string teamId, string employeeId, DateTime weekStartDate);
         Task<List<EmployeeModel>> GetEmployeesAsync(string teamId, string storeId, DateTime weekStartDate);
+        Task<string> GetJdaTimezoneNameAsync(string teamId, int timezoneId);
     }
 }

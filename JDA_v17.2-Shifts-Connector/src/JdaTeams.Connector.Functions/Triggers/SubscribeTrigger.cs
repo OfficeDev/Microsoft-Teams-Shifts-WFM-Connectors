@@ -114,6 +114,21 @@ namespace JdaTeams.Connector.Functions.Triggers
 
             var teamModel = subscribeModel.AsTeamModel();
             var connectionModel = subscribeModel.AsConnectionModel();
+
+            if (store.TimezoneId != null)
+            {
+                var jdaTimezoneName = await _scheduleSourceService.GetJdaTimezoneNameAsync(team.Id, store.TimezoneId.Value);
+                var timezoneInfoId = await _scheduleConnectorService.GetTimezoneInfoIdAsync(jdaTimezoneName);
+
+
+                if (string.IsNullOrEmpty(timezoneInfoId))
+                {
+                    timezoneInfoId = _options.TimeZone;
+                }
+
+                connectionModel.TimezoneInfoId = timezoneInfoId;
+            }
+
             connectionModel.StoreName = store.StoreName;
             connectionModel.TeamName = team.Name;
 
