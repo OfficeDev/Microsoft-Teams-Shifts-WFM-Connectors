@@ -31,9 +31,9 @@ namespace JdaTeams.Connector.Extensions
                 .ToArray();
         }
 
-        public static DateTime ApplyTimeZoneOffset(this DateTime utc, string timeZone)
+        public static DateTime ApplyTimeZoneOffset(this DateTime utc, string TimeZone)
         {
-            var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timeZone);
+            var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(TimeZone);
             var offsetTimespan = timeZoneInfo.GetUtcOffset(utc);
 
             return utc - offsetTimespan;

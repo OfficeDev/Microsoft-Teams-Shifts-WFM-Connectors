@@ -36,13 +36,13 @@ namespace JdaTeams.Connector.JdaPersona.Services
             _credentials[teamId] = credentials;
         }
 
-        public async Task<string> GetJdaTimezoneNameAsync(string teamId, int timezoneId)
+        public async Task<string> GetJdaTimeZoneNameAsync(string teamId, int TimeZoneId)
         {
             var jdaPersonaClient = CreateClient(teamId);
 
-            var timezone = await jdaPersonaClient.GetTimezoneByIdAsync(timezoneId);
+            var timeZone = await jdaPersonaClient.GetTimeZoneByIdAsync(TimeZoneId);
 
-            return timezone.Name;
+            return timeZone.Name;
         }
 
         public async Task LoadEmployeesAsync(string teamId, List<string> employeeIds)
@@ -89,7 +89,7 @@ namespace JdaTeams.Connector.JdaPersona.Services
                 {
                     StoreId = jdaSite.Id.ToString(),
                     StoreName = jdaSite.Name,
-                    TimezoneId = jdaSite.TimeZoneAssignmentID
+                    TimeZoneId = jdaSite.TimeZoneAssignmentID
                 };
             }
             catch (HttpOperationException hex) when (hex.Response?.ReasonPhrase == "Not Found")
@@ -102,13 +102,13 @@ namespace JdaTeams.Connector.JdaPersona.Services
             }
         }
 
-        public async Task<List<ShiftModel>> ListWeekShiftsAsync(string teamId, string storeId, DateTime weekStartDate)
+        public async Task<List<ShiftModel>> ListWeekShiftsAsync(string teamId, string storeId, DateTime weekStartDate, string TimeZoneInfoId)
         {
             var jdaPersonaClient = CreateClient(teamId);
             var siteId = int.Parse(storeId);
             var weekShifts = await jdaPersonaClient.GetSiteShiftsForWeekAsync(siteId, weekStartDate);
 
-            return MapShifts(weekShifts);
+            return MapShifts(weekShifts, TimeZoneInfoId);
         }
 
         public async Task<JobModel> GetJobAsync(string teamId, string storeId, string jobId)
@@ -131,11 +131,11 @@ namespace JdaTeams.Connector.JdaPersona.Services
             return new JdaPersonaClient(new Uri(apiBaseAddress), httpHandler);
         }
 
-        private DateTime ConvertFromLocalTime(DateTime dateTime)
+        private DateTime ConvertFromLocalTime(DateTime dateTime, string TimeZoneInfoId)
         {
-            var timezoneInfo = TimeZoneInfo.FindSystemTimeZoneById(_options.TimeZone);
+            var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(TimeZoneInfoId);
             var localDateTime = DateTime.SpecifyKind(dateTime, DateTimeKind.Unspecified);
-            return TimeZoneInfo.ConvertTimeToUtc(localDateTime, timezoneInfo);
+            return TimeZoneInfo.ConvertTimeToUtc(localDateTime, timeZoneInfo);
         }
 
         private async Task LoadHierarchyAsync(string teamId, string storeId)
@@ -183,16 +183,16 @@ namespace JdaTeams.Connector.JdaPersona.Services
             _teamJobs[teamId] = new ConcurrentDictionary<string, JobModel>(jobs);
         }
 
-        public async Task<List<ShiftModel>> ListEmployeeWeekShiftsAsync(string teamId, string employeeId, DateTime weekStartDate)
+        public async Task<List<ShiftModel>> ListEmployeeWeekShiftsAsync(string teamId, string employeeId, DateTime weekStartDate, string TimeZoneInfoId)
         {
             var jdaPersonaClient = CreateClient(teamId);
             var empId = int.Parse(employeeId);
             var weekShifts = await jdaPersonaClient.GetEmployeeShiftsForWeekAsync(empId, weekStartDate);
 
-            return MapShifts(weekShifts);
+            return MapShifts(weekShifts, TimeZoneInfoId);
         }
 
-        private List<ShiftModel> MapShifts(Models.WeekShifts weekShifts)
+        private List<ShiftModel> MapShifts(WeekShifts weekShifts, string TimeZoneInfoId)
         {
             var shifts = new List<ShiftModel>();
             foreach (var weekShift in weekShifts.ScheduledShifts)
@@ -204,8 +204,8 @@ namespace JdaTeams.Connector.JdaPersona.Services
                     JdaJobId = weekShift.ScheduledJobs?.First().JobId.ToString(),
                     LocalStartDate = weekShift.StartTime,
                     LocalEndDate = weekShift.EndTime,
-                    StartDate = ConvertFromLocalTime(weekShift.StartTime),
-                    EndDate = ConvertFromLocalTime(weekShift.EndTime),
+                    StartDate = ConvertFromLocalTime(weekShift.StartTime, TimeZoneInfoId),
+                    EndDate = ConvertFromLocalTime(weekShift.EndTime, TimeZoneInfoId),
                 };
 
                 shifts.Add(shift);
@@ -219,8 +219,8 @@ namespace JdaTeams.Connector.JdaPersona.Services
                             JdaJobId = scheduledJob.JobId.ToString(),
                             LocalStartDate = scheduledJob.StartTime,
                             LocalEndDate = scheduledJob.EndTime,
-                            StartDate = ConvertFromLocalTime(scheduledJob.StartTime),
-                            EndDate = ConvertFromLocalTime(scheduledJob.EndTime)
+                            StartDate = ConvertFromLocalTime(scheduledJob.StartTime, TimeZoneInfoId),
+                            EndDate = ConvertFromLocalTime(scheduledJob.EndTime, TimeZoneInfoId)
                         });
 
                         if (scheduledJob.ScheduledDetail != null)
@@ -232,8 +232,8 @@ namespace JdaTeams.Connector.JdaPersona.Services
                                     Code = scheduledDetail.DetailTypeCode,
                                     LocalStartDate = scheduledDetail.StartTime,
                                     LocalEndDate = scheduledDetail.EndTime,
-                                    StartDate = ConvertFromLocalTime(scheduledDetail.StartTime),
-                                    EndDate = ConvertFromLocalTime(scheduledDetail.EndTime)
+                                    StartDate = ConvertFromLocalTime(scheduledDetail.StartTime, TimeZoneInfoId),
+                                    EndDate = ConvertFromLocalTime(scheduledDetail.EndTime, TimeZoneInfoId)
                                 });
                             }
                         }

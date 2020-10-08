@@ -24,7 +24,7 @@ namespace JdaTeams.Connector.Functions.Activities
         [FunctionName(nameof(ShareActivity))]
         public async Task Run([ActivityTrigger] ShareModel shareModel, ILogger log)
         {
-            // adjust the start and end dates for timezone information to ensure that all shifts actually modified in the period are shared
+            // adjust the start and end dates for TimeZone information to ensure that all shifts actually modified in the period are shared
             var startDate = shareModel.StartDate.ApplyTimeZoneOffset(_options.TimeZone);
             var endDate = shareModel.EndDate.ApplyTimeZoneOffset(_options.TimeZone);
             await _scheduleDestinationService.ShareScheduleAsync(shareModel.TeamId, startDate, endDate, _options.NotifyTeamOnChange);

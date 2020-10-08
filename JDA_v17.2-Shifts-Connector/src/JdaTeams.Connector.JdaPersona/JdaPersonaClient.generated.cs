@@ -1502,12 +1502,12 @@ namespace JdaTeams.Connector.JdaPersona
         }
 
         /// <summary>
-        /// Timezone
+        /// Time Zone
         /// </summary>
         /// <remarks>
-        /// Get the timezone with a specified ID
+        /// Get the timeZone with a specified ID
         /// </remarks>
-        /// <param name='timezoneId'>
+        /// <param name='timeZoneId'>
         /// </param>
         /// <param name='customHeaders'>
         /// Headers that will be added to request.
@@ -1524,7 +1524,7 @@ namespace JdaTeams.Connector.JdaPersona
         /// <return>
         /// A response object containing the response body and response headers.
         /// </return>
-        public async Task<HttpOperationResponse<Timezone>> GetTimezoneByIdWithHttpMessagesAsync(int timezoneId, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<HttpOperationResponse<SiteTimeZone>> GetTimeZoneByIdWithHttpMessagesAsync(int timeZoneId, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             // Tracing
             bool _shouldTrace = ServiceClientTracing.IsEnabled;
@@ -1533,14 +1533,14 @@ namespace JdaTeams.Connector.JdaPersona
             {
                 _invocationId = ServiceClientTracing.NextInvocationId.ToString();
                 Dictionary<string, object> tracingParameters = new Dictionary<string, object>();
-                tracingParameters.Add("timezoneId", timezoneId);
+                tracingParameters.Add("timeZoneId", timeZoneId);
                 tracingParameters.Add("cancellationToken", cancellationToken);
-                ServiceClientTracing.Enter(_invocationId, this, "GetTimezoneById", tracingParameters);
+                ServiceClientTracing.Enter(_invocationId, this, "GetTimeZoneById", tracingParameters);
             }
             // Construct URL
             var _baseUrl = BaseUri.AbsoluteUri;
-            var _url = new System.Uri(new System.Uri(_baseUrl + (_baseUrl.EndsWith("/") ? "" : "/")), "timeZones/{timezoneId}").ToString();
-            _url = _url.Replace("{timezoneId}", System.Uri.EscapeDataString(SafeJsonConvert.SerializeObject(timezoneId, SerializationSettings).Trim('"')));
+            var _url = new System.Uri(new System.Uri(_baseUrl + (_baseUrl.EndsWith("/") ? "" : "/")), "timeZones/{timeZoneId}").ToString();
+            _url = _url.Replace("{timeZoneId}", System.Uri.EscapeDataString(SafeJsonConvert.SerializeObject(timeZoneId, SerializationSettings).Trim('"')));
             // Create HTTP transport objects
             var _httpRequest = new HttpRequestMessage();
             HttpResponseMessage _httpResponse = null;
@@ -1600,7 +1600,7 @@ namespace JdaTeams.Connector.JdaPersona
                 throw ex;
             }
             // Create Result
-            var _result = new HttpOperationResponse<Timezone>();
+            var _result = new HttpOperationResponse<SiteTimeZone>();
             _result.Request = _httpRequest;
             _result.Response = _httpResponse;
             // Deserialize Response
@@ -1609,7 +1609,7 @@ namespace JdaTeams.Connector.JdaPersona
                 _responseContent = await _httpResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
                 try
                 {
-                    _result.Body = SafeJsonConvert.DeserializeObject<Timezone>(_responseContent, DeserializationSettings);
+                    _result.Body = SafeJsonConvert.DeserializeObject<SiteTimeZone>(_responseContent, DeserializationSettings);
                 }
                 catch (JsonException ex)
                 {
@@ -1850,12 +1850,12 @@ namespace JdaTeams.Connector.JdaPersona
         Task<HttpOperationResponse<SiteEmployees>> GetSiteEmployeesWithHttpMessagesAsync(int siteId, System.DateTime? businessDate = default(System.DateTime?), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
-        /// Timezone
+        /// Time Zone
         /// </summary>
         /// <remarks>
-        /// Get the timezone with a specified ID
+        /// Get the timeZone with a specified ID
         /// </remarks>
-        /// <param name='timezoneId'>
+        /// <param name='timeZoneId'>
         /// </param>
         /// <param name='customHeaders'>
         /// The headers that will be added to request.
@@ -1863,7 +1863,7 @@ namespace JdaTeams.Connector.JdaPersona
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        Task<HttpOperationResponse<Timezone>> GetTimezoneByIdWithHttpMessagesAsync(int timezoneId, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<HttpOperationResponse<SiteTimeZone>> GetTimeZoneByIdWithHttpMessagesAsync(int timeZoneId, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
 
     }
 }
@@ -2310,38 +2310,38 @@ namespace JdaTeams.Connector.JdaPersona
             }
 
             /// <summary>
-            /// Timezone
+            /// Time Zone
             /// </summary>
             /// <remarks>
-            /// Get the timezone with a specified ID
+            /// Get the timeZone with a specified ID
             /// </remarks>
             /// <param name='operations'>
             /// The operations group for this extension method.
             /// </param>
-            /// <param name='timezoneId'>
+            /// <param name='timeZoneId'>
             /// </param>
-            public static Timezone GetTimezoneById(this IJdaPersonaClient operations, int timezoneId)
+            public static SiteTimeZone GetTimeZoneById(this IJdaPersonaClient operations, int timeZoneId)
             {
-                return operations.GetTimezoneByIdAsync(timezoneId).GetAwaiter().GetResult();
+                return operations.GetTimeZoneByIdAsync(timeZoneId).GetAwaiter().GetResult();
             }
 
             /// <summary>
-            /// Timezone
+            /// Time Zone
             /// </summary>
             /// <remarks>
-            /// Get the timezone with a specified ID
+            /// Get the timeZone with a specified ID
             /// </remarks>
             /// <param name='operations'>
             /// The operations group for this extension method.
             /// </param>
-            /// <param name='timezoneId'>
+            /// <param name='timeZoneId'>
             /// </param>
             /// <param name='cancellationToken'>
             /// The cancellation token.
             /// </param>
-            public static async Task<Timezone> GetTimezoneByIdAsync(this IJdaPersonaClient operations, int timezoneId, CancellationToken cancellationToken = default(CancellationToken))
+            public static async Task<SiteTimeZone> GetTimeZoneByIdAsync(this IJdaPersonaClient operations, int timeZoneId, CancellationToken cancellationToken = default(CancellationToken))
             {
-                using (var _result = await operations.GetTimezoneByIdWithHttpMessagesAsync(timezoneId, null, cancellationToken).ConfigureAwait(false))
+                using (var _result = await operations.GetTimeZoneByIdWithHttpMessagesAsync(timeZoneId, null, cancellationToken).ConfigureAwait(false))
                 {
                     return _result.Body;
                 }
@@ -3225,20 +3225,20 @@ namespace JdaTeams.Connector.JdaPersona.Models
     /// <summary>
     /// Root Type for Timezone
     /// </summary>
-    public partial class Timezone
+    public partial class SiteTimeZone
     {
         /// <summary>
-        /// Initializes a new instance of the Timezone class.
+        /// Initializes a new instance of the SiteTimeZone class.
         /// </summary>
-        public Timezone()
+        public SiteTimeZone()
         {
             CustomInit();
         }
 
         /// <summary>
-        /// Initializes a new instance of the Timezone class.
+        /// Initializes a new instance of the SiteTimeZone class.
         /// </summary>
-        public Timezone(int? id = default(int?), string name = default(string), IList<object> actions = default(IList<object>))
+        public SiteTimeZone(int? id = default(int?), string name = default(string), IList<object> actions = default(IList<object>))
         {
             Id = id;
             Name = name;

@@ -64,19 +64,19 @@ namespace JdaTeams.Connector.AzureStorage.Services
             await table.ExecuteAsync(operation);
         }
 
-        public async Task<string> GetTimezoneInfoIdAsync(string timezoneName)
+        public async Task<string> GetTimeZoneInfoIdAsync(string TimeZoneName)
         {
-            var table = GetTableReference(_options.TimezoneTableName);
-            var operation = TableOperation.Retrieve(_options.TimezoneTableName, timezoneName);
+            var table = GetTableReference(_options.TimeZoneTableName);
+            var operation = TableOperation.Retrieve(_options.TimeZoneTableName, TimeZoneName);
             var tableResult = await table.ExecuteAsync(operation);
-            var entity = tableResult.Result as TimezoneEntity;
+            var entity = tableResult.Result as TimeZoneEntity;
 
             if (entity == null)
             {
                 throw new KeyNotFoundException();
             }
 
-            return entity.TimezoneInfoId;
+            return entity.TimeZoneInfoId;
         }
 
         private CloudTable GetTableReference(string tableName)

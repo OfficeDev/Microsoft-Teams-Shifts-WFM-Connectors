@@ -1,11 +1,13 @@
 using JdaTeams.Connector.Extensions;
 using JdaTeams.Connector.Functions.Extensions;
+using JdaTeams.Connector.Functions.Helpers;
 using JdaTeams.Connector.Functions.Models;
 using JdaTeams.Connector.Functions.Orchestrators;
 using JdaTeams.Connector.Http;
 using JdaTeams.Connector.MicrosoftGraph.Extensions;
 using JdaTeams.Connector.MicrosoftGraph.Options;
 using JdaTeams.Connector.Models;
+using JdaTeams.Connector.Options;
 using JdaTeams.Connector.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -25,10 +27,12 @@ namespace JdaTeams.Connector.Functions.Triggers
         private readonly ISecretsService _secretsService;
         private readonly MicrosoftGraphOptions _options;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly ConnectorOptions _connectorOptions;
 
-        public SubscribeTrigger(MicrosoftGraphOptions options, IScheduleConnectorService scheduleConnectorService, IScheduleSourceService scheduleSourceService, IScheduleDestinationService scheduleDestinationService, ISecretsService secretsService, IHttpClientFactory httpClientFactory)
+        public SubscribeTrigger(MicrosoftGraphOptions options, ConnectorOptions connectorOptions, IScheduleConnectorService scheduleConnectorService, IScheduleSourceService scheduleSourceService, IScheduleDestinationService scheduleDestinationService, ISecretsService secretsService, IHttpClientFactory httpClientFactory)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
+            _connectorOptions = connectorOptions ?? throw new ArgumentNullException(nameof(connectorOptions));
             _scheduleConnectorService = scheduleConnectorService ?? throw new ArgumentNullException(nameof(scheduleConnectorService));
             _scheduleSourceService = scheduleSourceService ?? throw new ArgumentNullException(nameof(scheduleSourceService));
             _scheduleDestinationService = scheduleDestinationService ?? throw new ArgumentNullException(nameof(scheduleDestinationService));
@@ -115,13 +119,8 @@ namespace JdaTeams.Connector.Functions.Triggers
             var teamModel = subscribeModel.AsTeamModel();
             var connectionModel = subscribeModel.AsConnectionModel();
 
-            if (store.TimezoneId != null)
-            {
-                var jdaTimezoneName = await _scheduleSourceService.GetJdaTimezoneNameAsync(team.Id, store.TimezoneId.Value);
-                var timezoneInfoId = await _scheduleConnectorService.GetTimezoneInfoIdAsync(jdaTimezoneName);
-
-                connectionModel.TimezoneInfoId = timezoneInfoId;
-            }
+            var timeZoneHelper = new TimeZoneHelper(_scheduleSourceService, _scheduleConnectorService, _connectorOptions);
+            connectionModel.TimeZoneInfoId = await timeZoneHelper.GetTimeZone(teamModel.TeamId, store.StoreId);
 
             connectionModel.StoreName = store.StoreName;
             connectionModel.TeamName = team.Name;

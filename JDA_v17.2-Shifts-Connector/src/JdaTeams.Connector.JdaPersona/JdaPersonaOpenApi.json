@@ -364,31 +364,23 @@
         }
       ]
     },
-    "/timeZones/{timezoneId}": {
+    "/timeZones/{timeZoneId}": {
       "get": {
-        "parameters": [
-          {
-            "name": "timezoneId",
-            "in": "path",
-            "required": true,
-            "type": "integer"
-          }
-        ],
         "responses": {
           "200": {
-            "description": "Returns the json for the specified timezone",
+            "description": "Returns the json for the specified time zone",
             "schema": {
-              "$ref": "#/definitions/Timezone"
+              "$ref": "#/definitions/SiteTimeZone"
             }
           }
         },
-        "operationId": "GetTimezoneById",
-        "summary": "Timezone",
-        "description": "Get the timezone with a specified ID"
+        "operationId": "GetTimeZoneById",
+        "summary": "Time Zone",
+        "description": "Get the timeZone with a specified ID"
       },
       "parameters": [
         {
-          "name": "timezoneId",
+          "name": "timeZoneId",
           "in": "path",
           "required": true,
           "type": "integer",
@@ -669,7 +661,7 @@
       },
       "example": "{\n    \"employeeId\": 1000103,\n    \"firstName\": \"Tamara\",\n    \"lastName\": \"Grant\",\n    \"displayName\": \"tagra Grant\",\n    \"canWorkUnassignedJobs\": false,\n    \"isManager\": true\n}"
     },
-    "Timezone": {
+    "SiteTimeZone": {
       "title": "Root Type for Timezone",
       "description": "",
       "type": "object",

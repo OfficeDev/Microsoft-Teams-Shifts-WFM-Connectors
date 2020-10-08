@@ -11,10 +11,10 @@ namespace JdaTeams.Connector.Services
         Task<EmployeeModel> GetEmployeeAsync(string teamId, string employeeId);
         Task<StoreModel> GetStoreAsync(string teamId, string storeId);
         Task<JobModel> GetJobAsync(string teamId, string storeId, string jobId);
-        Task<List<ShiftModel>> ListWeekShiftsAsync(string teamId, string storeId, DateTime weekStartDate);
+        Task<List<ShiftModel>> ListWeekShiftsAsync(string teamId, string storeId, DateTime weekStartDate, string TimeZoneInfoId);
         Task LoadEmployeesAsync(string teamId, List<string> employeeIds);
-        Task<List<ShiftModel>> ListEmployeeWeekShiftsAsync(string teamId, string employeeId, DateTime weekStartDate);
+        Task<List<ShiftModel>> ListEmployeeWeekShiftsAsync(string teamId, string employeeId, DateTime weekStartDate, string TimeZoneInfoId);
         Task<List<EmployeeModel>> GetEmployeesAsync(string teamId, string storeId, DateTime weekStartDate);
-        Task<string> GetJdaTimezoneNameAsync(string teamId, int timezoneId);
+        Task<string> GetJdaTimeZoneNameAsync(string teamId, int TimeZoneId);
     }
 }
