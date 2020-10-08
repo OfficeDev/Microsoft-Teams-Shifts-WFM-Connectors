@@ -147,11 +147,6 @@ namespace JdaTeams.Connector.Functions.Triggers
             // save connection settings
             await _scheduleConnectorService.SaveConnectionAsync(connectionModel);
 
-            if (!string.IsNullOrEmpty(connectionModel.TimezoneInfoId))
-            {
-                _options.TimeZone = connectionModel.TimezoneInfoId;
-            }
-
             // start singleton team orchestrator
             await starter.TryStartSingletonAsync(nameof(TeamOrchestrator), teamModel.TeamId, teamModel);
             return new OkObjectResult(new StoreModel

@@ -69,7 +69,14 @@ namespace JdaTeams.Connector.AzureStorage.Services
             var table = GetTableReference(_options.TimezoneTableName);
             var operation = TableOperation.Retrieve(_options.TimezoneTableName, timezoneName);
             var tableResult = await table.ExecuteAsync(operation);
-            return tableResult.Result.ToString();
+            var entity = tableResult.Result as TimezoneEntity;
+
+            if (entity == null)
+            {
+                throw new KeyNotFoundException();
+            }
+
+            return entity.TimezoneInfoId;
         }
 
         private CloudTable GetTableReference(string tableName)
