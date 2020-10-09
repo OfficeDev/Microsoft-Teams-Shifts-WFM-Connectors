@@ -11,7 +11,6 @@ namespace JdaTeams.Connector.AzureStorage.Entities
             PartitionKey = DefaultPartitionKey;
         }
 
-        public string JdaTimeZoneName { get; set; }
         public string TimeZoneInfoId { get; set; }
     }
 }

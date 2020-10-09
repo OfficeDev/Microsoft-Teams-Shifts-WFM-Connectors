@@ -64,10 +64,10 @@ namespace JdaTeams.Connector.AzureStorage.Services
             await table.ExecuteAsync(operation);
         }
 
-        public async Task<string> GetTimeZoneInfoIdAsync(string TimeZoneName)
+        public async Task<string> GetTimeZoneInfoIdAsync(string timeZoneName)
         {
-            var table = GetTableReference(_options.TimeZoneTableName);
-            var operation = TableOperation.Retrieve(_options.TimeZoneTableName, TimeZoneName);
+            var table = GetTableReference(TimeZoneEntity.DefaultPartitionKey);
+            var operation = TableOperation.Retrieve<TimeZoneEntity>(TimeZoneEntity.DefaultPartitionKey, timeZoneName);
             var tableResult = await table.ExecuteAsync(operation);
             var entity = tableResult.Result as TimeZoneEntity;
 

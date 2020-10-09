@@ -119,7 +119,9 @@ namespace JdaTeams.Connector.Functions.Triggers
             var teamModel = subscribeModel.AsTeamModel();
             var connectionModel = subscribeModel.AsConnectionModel();
 
-            connectionModel.TimeZoneInfoId = await _timeZoneHelper.GetTimeZone(teamModel.TeamId, store.StoreId);
+            connectionModel.TimeZoneInfoId = await _timeZoneHelper.GetTimeZone(teamModel.TeamId, store.TimeZoneId);
+
+            teamModel.TimeZoneInfoId = connectionModel.TimeZoneInfoId;
 
             connectionModel.StoreName = store.StoreName;
             connectionModel.TeamName = team.Name;

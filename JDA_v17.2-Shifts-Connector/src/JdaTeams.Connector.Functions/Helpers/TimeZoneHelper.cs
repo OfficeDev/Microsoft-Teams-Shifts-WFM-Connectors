@@ -45,13 +45,11 @@ namespace JdaTeams.Connector.Functions.Helpers
             return timeZoneInfoId;
         }
 
-        public async Task<string> GetTimeZone(string teamId, string storeId)
+        public async Task<string> GetTimeZone(string teamId, int? timeZoneId)
         {
-            var store = await _scheduleSourceService.GetStoreAsync(teamId, storeId);
-
-            if (store?.TimeZoneId != null)
+            if (timeZoneId.HasValue)
             {
-                var jdaTimeZoneName = await _scheduleSourceService.GetJdaTimeZoneNameAsync(teamId, store.TimeZoneId.Value);
+                var jdaTimeZoneName = await _scheduleSourceService.GetJdaTimeZoneNameAsync(teamId, timeZoneId.Value);
                 return await _scheduleConnectorService.GetTimeZoneInfoIdAsync(jdaTimeZoneName);
             }
 

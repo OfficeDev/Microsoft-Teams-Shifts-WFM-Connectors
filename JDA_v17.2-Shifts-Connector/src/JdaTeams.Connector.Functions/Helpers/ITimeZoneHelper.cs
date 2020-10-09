@@ -5,6 +5,6 @@ namespace JdaTeams.Connector.Functions.Helpers
     public interface ITimeZoneHelper
     {
         Task<string> GetAndUpdateTimeZone(string teamId);
-        Task<string> GetTimeZone(string teamId, string storeId);
+        Task<string> GetTimeZone(string teamId, int? timeZoneId);
     }
 }
