@@ -1,4 +1,5 @@
 ﻿using JdaTeams.Connector.Functions.Extensions;
+using JdaTeams.Connector.Functions.Helpers;
 using JdaTeams.Connector.Functions.Models;
 using JdaTeams.Connector.Functions.Options;
 using JdaTeams.Connector.Models;
@@ -7,6 +8,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
+using TimeZoneConverter;
 
 namespace JdaTeams.Connector.Functions.Activities
 {
@@ -14,11 +16,13 @@ namespace JdaTeams.Connector.Functions.Activities
     {
         private readonly ScheduleActivityOptions _options;
         private readonly IScheduleDestinationService _scheduleDestinationService;
+        private readonly ITimeZoneHelper _timeZoneHelper;
 
-        public ScheduleActivity(ScheduleActivityOptions options, IScheduleDestinationService scheduleDestinationService)
+        public ScheduleActivity(ScheduleActivityOptions options, IScheduleDestinationService scheduleDestinationService, ITimeZoneHelper timeZoneHelper)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _scheduleDestinationService = scheduleDestinationService ?? throw new ArgumentNullException(nameof(scheduleDestinationService));
+            _timeZoneHelper = timeZoneHelper ?? throw new ArgumentException(nameof(timeZoneHelper));
         }
 
         [FunctionName(nameof(ScheduleActivity))]
@@ -28,7 +32,9 @@ namespace JdaTeams.Connector.Functions.Activities
 
             if (schedule.IsUnavailable)
             {
-                var scheduleModel = ScheduleModel.Create(_options.TimeZone);
+                var timeZoneInfo = await _timeZoneHelper.GetAndUpdateTimeZone(teamModel.TeamId);
+
+                var scheduleModel = ScheduleModel.Create(TZConvert.WindowsToIana(timeZoneInfo));
                 
                 await _scheduleDestinationService.CreateScheduleAsync(teamModel.TeamId, scheduleModel);
             }

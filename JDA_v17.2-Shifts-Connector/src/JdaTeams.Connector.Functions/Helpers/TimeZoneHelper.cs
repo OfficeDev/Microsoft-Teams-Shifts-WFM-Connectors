@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace JdaTeams.Connector.Functions.Helpers
 {
-    public class TimeZoneHelper
+    public class TimeZoneHelper : ITimeZoneHelper
     {
         private readonly ConnectorOptions _options;
         private readonly IScheduleConnectorService _scheduleConnectorService;

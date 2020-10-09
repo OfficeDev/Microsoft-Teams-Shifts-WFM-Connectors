@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using JdaTeams.Connector.Extensions;
 using JdaTeams.Connector.Functions.Activities;
 using JdaTeams.Connector.Functions.Extensions;
+using JdaTeams.Connector.Functions.Helpers;
 using JdaTeams.Connector.Functions.Models;
 using JdaTeams.Connector.Functions.Options;
 using JdaTeams.Connector.JdaPersona.Options;
@@ -15,10 +16,12 @@ namespace JdaTeams.Connector.Functions.Orchestrators
     public class ClearScheduleOrchestrator
     {
         private readonly TeamOrchestratorOptions _options;
+        private readonly ITimeZoneHelper _timeZoneHelper;
 
-        public ClearScheduleOrchestrator(TeamOrchestratorOptions options)
+        public ClearScheduleOrchestrator(TeamOrchestratorOptions options, ITimeZoneHelper timeZoneHelper)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
+            _timeZoneHelper = timeZoneHelper ?? throw new ArgumentNullException(nameof(timeZoneHelper));
         }
 
         [FunctionName(nameof(ClearScheduleOrchestrator))]
@@ -30,15 +33,17 @@ namespace JdaTeams.Connector.Functions.Orchestrators
             var pastWeeks = clearScheduleModel.PastWeeks ?? _options.PastWeeks;
             var futureWeeks = clearScheduleModel.FutureWeeks ?? _options.FutureWeeks;
 
+            var timeZoneInfo = await _timeZoneHelper.GetAndUpdateTimeZone(clearScheduleModel.TeamId);
+
             clearScheduleModel.StartDate = context.CurrentUtcDateTime.Date
                 .StartOfWeek(_options.StartDayOfWeek)
                 .AddWeeks(-pastWeeks)
-                .ApplyTimeZoneOffset(_options.TimeZone);
+                .ApplyTimeZoneOffset(timeZoneInfo);
 
             clearScheduleModel.EndDate = context.CurrentUtcDateTime.Date
                 .StartOfWeek(_options.StartDayOfWeek)
                 .AddWeeks(futureWeeks + 1)
-                .ApplyTimeZoneOffset(_options.TimeZone);
+                .ApplyTimeZoneOffset(timeZoneInfo);
 
             if (!context.IsReplaying)
             {

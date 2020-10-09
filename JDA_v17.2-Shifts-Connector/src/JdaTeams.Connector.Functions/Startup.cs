@@ -4,8 +4,8 @@ using JdaTeams.Connector.AzureStorage.Options;
 using JdaTeams.Connector.AzureStorage.Services;
 using JdaTeams.Connector.Functions;
 using JdaTeams.Connector.Functions.Extensions;
+using JdaTeams.Connector.Functions.Helpers;
 using JdaTeams.Connector.Functions.Options;
-using JdaTeams.Connector.Functions.Tracing;
 using JdaTeams.Connector.Http;
 using JdaTeams.Connector.JdaPersona.Options;
 using JdaTeams.Connector.JdaPersona.Services;
@@ -19,7 +19,6 @@ using JdaTeams.Connector.Services;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Rest;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 namespace JdaTeams.Connector.Functions
@@ -54,7 +53,8 @@ namespace JdaTeams.Connector.Functions
                 .AddSingleton<IShiftThemeMap, MicrosoftGraphShiftThemeMap>()
                 .AddSingleton(config.Get<ClearScheduleOptions>())
                 .AddSingleton<IShiftMap, MicrosoftGraphShiftMap>()
-                .AddSingleton(config.Get<ConnectorOptions>());
+                .AddSingleton(config.Get<ConnectorOptions>())
+                .AddSingleton<ITimeZoneHelper, TimeZoneHelper>();
 
             builder.UseHttpOptions(config.Get<HttpOptions>());
             builder.UseTracingOptions(config.Get<TracingOptions>());

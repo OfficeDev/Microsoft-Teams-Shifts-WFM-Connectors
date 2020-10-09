@@ -8,6 +8,6 @@
         public string AppBlobName { get; set; } = "index.html";
         public string TeamTableName { get; set; } = "teams";
         public int TakeCount { get; set; } = 1000;
-        public string TimeZoneTableName { get; set; } = "TimeZones";
+        public string TimeZoneTableName { get; set; } = "timezones";
     }
 }

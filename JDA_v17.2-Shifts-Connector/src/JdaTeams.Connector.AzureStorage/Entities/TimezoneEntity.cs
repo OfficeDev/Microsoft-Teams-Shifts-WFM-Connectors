@@ -4,7 +4,7 @@ namespace JdaTeams.Connector.AzureStorage.Entities
 {
     public class TimeZoneEntity : TableEntity
     {
-        public const string DefaultPartitionKey = "TimeZones";
+        public const string DefaultPartitionKey = "timezones";
 
         public TimeZoneEntity()
         {
@@ -13,6 +13,5 @@ namespace JdaTeams.Connector.AzureStorage.Entities
 
         public string JdaTimeZoneName { get; set; }
         public string TimeZoneInfoId { get; set; }
-        public string TeamsTimeZone { get; set; }
     }
 }

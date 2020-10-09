@@ -27,12 +27,12 @@ namespace JdaTeams.Connector.Functions.Triggers
         private readonly ISecretsService _secretsService;
         private readonly MicrosoftGraphOptions _options;
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly ConnectorOptions _connectorOptions;
+        private readonly ITimeZoneHelper _timeZoneHelper;
 
-        public SubscribeTrigger(MicrosoftGraphOptions options, ConnectorOptions connectorOptions, IScheduleConnectorService scheduleConnectorService, IScheduleSourceService scheduleSourceService, IScheduleDestinationService scheduleDestinationService, ISecretsService secretsService, IHttpClientFactory httpClientFactory)
+        public SubscribeTrigger(MicrosoftGraphOptions options, ITimeZoneHelper timeZoneHelper, IScheduleConnectorService scheduleConnectorService, IScheduleSourceService scheduleSourceService, IScheduleDestinationService scheduleDestinationService, ISecretsService secretsService, IHttpClientFactory httpClientFactory)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
-            _connectorOptions = connectorOptions ?? throw new ArgumentNullException(nameof(connectorOptions));
+            _timeZoneHelper = timeZoneHelper ?? throw new ArgumentNullException(nameof(timeZoneHelper));
             _scheduleConnectorService = scheduleConnectorService ?? throw new ArgumentNullException(nameof(scheduleConnectorService));
             _scheduleSourceService = scheduleSourceService ?? throw new ArgumentNullException(nameof(scheduleSourceService));
             _scheduleDestinationService = scheduleDestinationService ?? throw new ArgumentNullException(nameof(scheduleDestinationService));
@@ -119,8 +119,7 @@ namespace JdaTeams.Connector.Functions.Triggers
             var teamModel = subscribeModel.AsTeamModel();
             var connectionModel = subscribeModel.AsConnectionModel();
 
-            var timeZoneHelper = new TimeZoneHelper(_scheduleSourceService, _scheduleConnectorService, _connectorOptions);
-            connectionModel.TimeZoneInfoId = await timeZoneHelper.GetTimeZone(teamModel.TeamId, store.StoreId);
+            connectionModel.TimeZoneInfoId = await _timeZoneHelper.GetTimeZone(teamModel.TeamId, store.StoreId);
 
             connectionModel.StoreName = store.StoreName;
             connectionModel.TeamName = team.Name;
