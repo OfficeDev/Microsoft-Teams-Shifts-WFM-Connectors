@@ -73,7 +73,7 @@ namespace JdaTeams.Connector.AzureStorage.Services
 
             if (entity == null)
             {
-                throw new KeyNotFoundException();
+                return null;
             }
 
             return entity.TimeZoneInfoId;

@@ -1,56 +1,65 @@
-﻿using JdaTeams.Connector.Options;
+﻿using JdaTeams.Connector.Functions.Extensions;
+using JdaTeams.Connector.Options;
 using JdaTeams.Connector.Services;
+using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
+using System.Data;
 using System.Threading.Tasks;
 
 namespace JdaTeams.Connector.Functions.Helpers
 {
-    public class TimeZoneHelper : ITimeZoneHelper
+    public static class TimeZoneHelper
     {
-        private readonly ConnectorOptions _options;
-        private readonly IScheduleConnectorService _scheduleConnectorService;
-        private readonly IScheduleSourceService _scheduleSourceService;
-
-        public TimeZoneHelper(IScheduleSourceService scheduleSourceService, IScheduleConnectorService scheduleConnectorService, ConnectorOptions options)
+        public static async Task<string> GetAndUpdateTimeZoneAsync(string teamId, IScheduleConnectorService scheduleConnectorService, IScheduleSourceService scheduleSourceService)
         {
-            _options = options ?? throw new ArgumentNullException(nameof(options));
-            _scheduleConnectorService = scheduleConnectorService ?? throw new ArgumentNullException(nameof(scheduleConnectorService));
-            _scheduleSourceService = scheduleSourceService ?? throw new ArgumentNullException(nameof(scheduleSourceService));
-        }
-
-        public async Task<string> GetAndUpdateTimeZone(string teamId)
-        {
-            var timeZoneInfoId = _options.TimeZone;
-
-            var connection = await _scheduleConnectorService.GetConnectionAsync(teamId);
-
-            if (connection != null && !string.IsNullOrEmpty(connection.TimeZoneInfoId))
+            var connection = await scheduleConnectorService.GetConnectionAsync(teamId).ConfigureAwait(false);
+            if (connection == null)
             {
-                var store = await _scheduleSourceService.GetStoreAsync(connection.TeamId, connection.StoreId);
+                // the team must have been unsubscribed
+                throw new ArgumentException("This team cannot be found in the teams table.", teamId);
+            }
+
+            if (!string.IsNullOrEmpty(connection.TimeZoneInfoId))
+            {
+                return connection.TimeZoneInfoId;
+            }
+            else
+            {
+                // we don't have a timezone for this existing connection, so try to get one
+                var store = await scheduleSourceService.GetStoreAsync(connection.TeamId, connection.StoreId).ConfigureAwait(false);
 
                 if (store?.TimeZoneId != null)
                 {
-                    var jdaTimeZoneName = await _scheduleSourceService.GetJdaTimeZoneNameAsync(teamId, store.TimeZoneId.Value);
-                    var returnedTimeZoneInfoId = await _scheduleConnectorService.GetTimeZoneInfoIdAsync(jdaTimeZoneName);
+                    var jdaTimeZoneName = await scheduleSourceService.GetJdaTimeZoneNameAsync(teamId, store.TimeZoneId.Value).ConfigureAwait(false);
+                    var timeZoneInfoId = await scheduleConnectorService.GetTimeZoneInfoIdAsync(jdaTimeZoneName).ConfigureAwait(false);
 
-                    if (returnedTimeZoneInfoId != null)
+                    if (timeZoneInfoId != null)
                     {
-                        connection.TimeZoneInfoId = returnedTimeZoneInfoId;
-                        await _scheduleConnectorService.SaveConnectionAsync(connection);
-                        timeZoneInfoId = returnedTimeZoneInfoId;
+                        connection.TimeZoneInfoId = timeZoneInfoId;
+                        await scheduleConnectorService.SaveConnectionAsync(connection).ConfigureAwait(false);
+                        return timeZoneInfoId;
                     }
                 }
             }
 
-            return timeZoneInfoId;
+            return null;
         }
 
-        public async Task<string> GetTimeZone(string teamId, int? timeZoneId)
+        public static async Task<string> GetTimeZoneAsync(string teamId, int? timeZoneId, IScheduleSourceService scheduleSourceService, IScheduleConnectorService scheduleConnectorService, ILogger log)
         {
             if (timeZoneId.HasValue)
             {
-                var jdaTimeZoneName = await _scheduleSourceService.GetJdaTimeZoneNameAsync(teamId, timeZoneId.Value);
-                return await _scheduleConnectorService.GetTimeZoneInfoIdAsync(jdaTimeZoneName);
+                var jdaTimeZoneName = await scheduleSourceService.GetJdaTimeZoneNameAsync(teamId, timeZoneId.Value).ConfigureAwait(false);
+                try
+                {
+                    return await scheduleConnectorService.GetTimeZoneInfoIdAsync(jdaTimeZoneName).ConfigureAwait(false);
+                }
+                catch(KeyNotFoundException ex)
+                {
+                    // the BY time zone name was not found in the map table so just return null
+                    log.LogTimeZoneError(ex, teamId, timeZoneId.Value, jdaTimeZoneName);
+                }
             }
 
             return null;

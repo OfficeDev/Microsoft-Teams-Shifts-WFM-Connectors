@@ -16,6 +16,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Web.Http;
 
 namespace JdaTeams.Connector.Functions.Triggers
 {
@@ -27,12 +28,10 @@ namespace JdaTeams.Connector.Functions.Triggers
         private readonly ISecretsService _secretsService;
         private readonly MicrosoftGraphOptions _options;
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly ITimeZoneHelper _timeZoneHelper;
 
-        public SubscribeTrigger(MicrosoftGraphOptions options, ITimeZoneHelper timeZoneHelper, IScheduleConnectorService scheduleConnectorService, IScheduleSourceService scheduleSourceService, IScheduleDestinationService scheduleDestinationService, ISecretsService secretsService, IHttpClientFactory httpClientFactory)
+        public SubscribeTrigger(MicrosoftGraphOptions options, IScheduleConnectorService scheduleConnectorService, IScheduleSourceService scheduleSourceService, IScheduleDestinationService scheduleDestinationService, ISecretsService secretsService, IHttpClientFactory httpClientFactory)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
-            _timeZoneHelper = timeZoneHelper ?? throw new ArgumentNullException(nameof(timeZoneHelper));
             _scheduleConnectorService = scheduleConnectorService ?? throw new ArgumentNullException(nameof(scheduleConnectorService));
             _scheduleSourceService = scheduleSourceService ?? throw new ArgumentNullException(nameof(scheduleSourceService));
             _scheduleDestinationService = scheduleDestinationService ?? throw new ArgumentNullException(nameof(scheduleDestinationService));
@@ -61,7 +60,7 @@ namespace JdaTeams.Connector.Functions.Triggers
             StoreModel store;
             try
             {
-                store = await _scheduleSourceService.GetStoreAsync(subscribeModel.TeamId, subscribeModel.StoreId);
+                store = await _scheduleSourceService.GetStoreAsync(subscribeModel.TeamId, subscribeModel.StoreId).ConfigureAwait(false);
             }
             catch (ArgumentException e)
             {
@@ -79,10 +78,18 @@ namespace JdaTeams.Connector.Functions.Triggers
                 return new UnauthorizedResult();
             }
 
+            // ensure that we can map the timezone for the store
+            var timeZoneInfoId = await TimeZoneHelper.GetTimeZoneAsync(subscribeModel.TeamId, store.TimeZoneId, _scheduleSourceService, _scheduleConnectorService, log).ConfigureAwait(false);
+            if (timeZoneInfoId == null)
+            {
+                log.LogError($"Subscribe failed - No time zone mapping found for store TimeZoneId={store.TimeZoneId}.");
+                return new InternalServerErrorResult();
+            }
+
             // exchange and save access token
             if (!string.IsNullOrEmpty(subscribeModel.AuthorizationCode))
             {
-                var tokenResponse = await _httpClientFactory.Client.RequestTokenAsync(_options, subscribeModel.RedirectUri, subscribeModel.AuthorizationCode);
+                var tokenResponse = await _httpClientFactory.Client.RequestTokenAsync(_options, subscribeModel.RedirectUri, subscribeModel.AuthorizationCode).ConfigureAwait(false);
 
                 if (tokenResponse.IsError)
                 {
@@ -92,23 +99,23 @@ namespace JdaTeams.Connector.Functions.Triggers
 
                 var tokenModel = tokenResponse.AsTokenModel();
 
-                await _secretsService.SaveTokenAsync(subscribeModel.TeamId, tokenModel);
+                await _secretsService.SaveTokenAsync(subscribeModel.TeamId, tokenModel).ConfigureAwait(false);
             }
             else if (!string.IsNullOrEmpty(subscribeModel.AccessToken))
             {
                 var tokenModel = subscribeModel.AsTokenModel();
 
-                await _secretsService.SaveTokenAsync(subscribeModel.TeamId, tokenModel);
+                await _secretsService.SaveTokenAsync(subscribeModel.TeamId, tokenModel).ConfigureAwait(false);
             }
 
             // save JDA creds
-            await _secretsService.SaveCredentialsAsync(subscribeModel.TeamId, credentials);
+            await _secretsService.SaveCredentialsAsync(subscribeModel.TeamId, credentials).ConfigureAwait(false);
 
             // get the team from Teams
             GroupModel team;
             try
             {
-                team = await _scheduleDestinationService.GetTeamAsync(subscribeModel.TeamId);
+                team = await _scheduleDestinationService.GetTeamAsync(subscribeModel.TeamId).ConfigureAwait(false);
             }
             catch (Exception e)
             {
@@ -117,12 +124,10 @@ namespace JdaTeams.Connector.Functions.Triggers
             }
 
             var teamModel = subscribeModel.AsTeamModel();
+            teamModel.TimeZoneInfoId = timeZoneInfoId;
+
             var connectionModel = subscribeModel.AsConnectionModel();
-
-            connectionModel.TimeZoneInfoId = await _timeZoneHelper.GetTimeZone(teamModel.TeamId, store.TimeZoneId);
-
-            teamModel.TimeZoneInfoId = connectionModel.TimeZoneInfoId;
-
+            connectionModel.TimeZoneInfoId = timeZoneInfoId;
             connectionModel.StoreName = store.StoreName;
             connectionModel.TeamName = team.Name;
 
@@ -130,7 +135,7 @@ namespace JdaTeams.Connector.Functions.Triggers
             {
                 // ensure that if the team is re-subscribing, that they haven't changed the store
                 // that they are connecting to
-                var existingModel = await _scheduleConnectorService.GetConnectionAsync(subscribeModel.TeamId);
+                var existingModel = await _scheduleConnectorService.GetConnectionAsync(subscribeModel.TeamId).ConfigureAwait(false);
                 if (connectionModel.StoreId != existingModel.StoreId)
                 {
                     log.LogError("Re-subscribe failed - JDA store id changed.");
@@ -145,10 +150,11 @@ namespace JdaTeams.Connector.Functions.Triggers
             catch { /* nothing to do - new subscription */ }
 
             // save connection settings
-            await _scheduleConnectorService.SaveConnectionAsync(connectionModel);
+            await _scheduleConnectorService.SaveConnectionAsync(connectionModel).ConfigureAwait(false);
 
             // start singleton team orchestrator
-            await starter.TryStartSingletonAsync(nameof(TeamOrchestrator), teamModel.TeamId, teamModel);
+            await starter.TryStartSingletonAsync(nameof(TeamOrchestrator), teamModel.TeamId, teamModel).ConfigureAwait(false);
+
             return new OkObjectResult(new StoreModel
             {
                 StoreId = connectionModel.StoreId,

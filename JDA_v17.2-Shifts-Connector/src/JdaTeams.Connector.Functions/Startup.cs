@@ -53,8 +53,7 @@ namespace JdaTeams.Connector.Functions
                 .AddSingleton<IShiftThemeMap, MicrosoftGraphShiftThemeMap>()
                 .AddSingleton(config.Get<ClearScheduleOptions>())
                 .AddSingleton<IShiftMap, MicrosoftGraphShiftMap>()
-                .AddSingleton(config.Get<ConnectorOptions>())
-                .AddSingleton<ITimeZoneHelper, TimeZoneHelper>();
+                .AddSingleton(config.Get<ConnectorOptions>());
 
             builder.UseHttpOptions(config.Get<HttpOptions>());
             builder.UseTracingOptions(config.Get<TracingOptions>());

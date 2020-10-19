@@ -16,13 +16,11 @@ namespace JdaTeams.Connector.Functions.Activities
     {
         private readonly ScheduleActivityOptions _options;
         private readonly IScheduleDestinationService _scheduleDestinationService;
-        private readonly ITimeZoneHelper _timeZoneHelper;
 
-        public ScheduleActivity(ScheduleActivityOptions options, IScheduleDestinationService scheduleDestinationService, ITimeZoneHelper timeZoneHelper)
+        public ScheduleActivity(ScheduleActivityOptions options, IScheduleDestinationService scheduleDestinationService)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _scheduleDestinationService = scheduleDestinationService ?? throw new ArgumentNullException(nameof(scheduleDestinationService));
-            _timeZoneHelper = timeZoneHelper ?? throw new ArgumentException(nameof(timeZoneHelper));
         }
 
         [FunctionName(nameof(ScheduleActivity))]
@@ -32,9 +30,17 @@ namespace JdaTeams.Connector.Functions.Activities
 
             if (schedule.IsUnavailable)
             {
-                var timeZoneInfo = await _timeZoneHelper.GetAndUpdateTimeZone(teamModel.TeamId);
+                string timeZoneInfoId;
+                if (string.IsNullOrEmpty(teamModel.TimeZoneInfoId))
+                {
+                    timeZoneInfoId = _options.TimeZone;
+                }
+                else
+                {
+                    timeZoneInfoId = TZConvert.WindowsToIana(teamModel.TimeZoneInfoId);
+                }
 
-                var scheduleModel = ScheduleModel.Create(TZConvert.WindowsToIana(timeZoneInfo));
+                var scheduleModel = ScheduleModel.Create(timeZoneInfoId);
                 
                 await _scheduleDestinationService.CreateScheduleAsync(teamModel.TeamId, scheduleModel);
             }

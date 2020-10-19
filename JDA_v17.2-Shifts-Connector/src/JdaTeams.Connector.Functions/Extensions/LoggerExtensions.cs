@@ -120,6 +120,15 @@ namespace JdaTeams.Connector.Functions.Extensions
         {
             log.LogInformation(new EventId(14, "Week"), "Week: StoreId={storeId}, TeamId={teamId}, WeekDate={weekDate}", week.StoreId, week.TeamId, week.StartDate.AsDateString());
         }
+        public static void LogTimeZoneError(this ILogger log, Exception ex, string teamId, int jdaTimeZoneId, string jdaTimeZoneName)
+        {
+            log.LogError(new EventId(15, "TimeZone"), ex, "TimeZone: TeamId={teamId}, JdaTimeZoneId={jdaTimeZoneId}, JdaTimeZoneName={jdaTimeZoneName}", teamId, jdaTimeZoneId, jdaTimeZoneName);
+        }
+
+        public static void LogMissingTimeZoneError(this ILogger log, TeamModel team)
+        {
+            log.LogError(new EventId(15, "TimeZone"), "TimeZone: StoreId={storeId}, TeamId={teamId}", team.StoreId, team.TeamId);
+        }
 
         private static class Status
         {

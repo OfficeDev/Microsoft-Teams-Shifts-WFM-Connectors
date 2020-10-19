@@ -9,6 +9,6 @@ namespace JdaTeams.Connector.Functions.Models
         public string TeamId { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
-
+        public string TimeZoneInfoId { get; set; }
     }
 }
