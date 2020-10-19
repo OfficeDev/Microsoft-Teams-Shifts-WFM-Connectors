@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using TimeZoneConverter;
 
 namespace JdaTeams.Connector.Extensions
 {
@@ -33,7 +34,7 @@ namespace JdaTeams.Connector.Extensions
 
         public static DateTime ApplyTimeZoneOffset(this DateTime utc, string timeZone)
         {
-            var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(timeZone);
+            var timeZoneInfo = TZConvert.GetTimeZoneInfo(timeZone);
             var offsetTimespan = timeZoneInfo.GetUtcOffset(utc);
 
             return utc - offsetTimespan;

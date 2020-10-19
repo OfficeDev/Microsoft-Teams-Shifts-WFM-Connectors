@@ -21,6 +21,6 @@ namespace JdaTeams.Connector.Functions.Models
         public string InstanceId => TeamId + "-ClearSchedule";
 
         public DateTime? QueryEndDate { get; set; }
-
+        public string TimeZoneInfoId { get; internal set; }
     }
 }

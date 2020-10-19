@@ -14,11 +14,11 @@ namespace JdaTeams.Connector.Models
         public bool IsUnavailable => Status?.Equals("NotStarted", StringComparison.OrdinalIgnoreCase) == true
             || Status?.Equals("Failed", StringComparison.OrdinalIgnoreCase) == true;
 
-        public static ScheduleModel Create(string timeZone)
+        public static ScheduleModel Create(string TimeZone)
         {
             return new ScheduleModel
             {
-                TimeZone = timeZone ?? throw new ArgumentNullException(nameof(timeZone)),
+                TimeZone = TimeZone ?? throw new ArgumentNullException(nameof(TimeZone)),
                 IsEnabled = true
             };
         }

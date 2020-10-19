@@ -134,7 +134,7 @@ namespace JdaTeams.Connector.Functions.Triggers
         private async Task<List<ShiftModel>> GetMissingShifts(ConnectionModel connection, DateTime weekStartDate, List<ShiftModel> cachedShifts)
         {
             // get the shifts for the week from JDA
-            var jdaShifts = await _scheduleSourceService.ListWeekShiftsAsync(connection.TeamId, connection.StoreId, weekStartDate);
+            var jdaShifts = await _scheduleSourceService.ListWeekShiftsAsync(connection.TeamId, connection.StoreId, weekStartDate, connection.TimeZoneInfoId);
             var cachedShiftIds = cachedShifts.Select(s => s.JdaShiftId).ToList();
 
             return jdaShifts.Where(s => !cachedShiftIds.Contains(s.JdaShiftId)).ToList();

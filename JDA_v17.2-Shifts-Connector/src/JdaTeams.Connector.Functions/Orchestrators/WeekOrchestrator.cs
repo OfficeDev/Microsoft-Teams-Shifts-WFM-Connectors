@@ -40,7 +40,8 @@ namespace JdaTeams.Connector.Functions.Orchestrators
                 {
                     TeamId = weekModel.TeamId,
                     StartDate = weekModel.StartDate,
-                    EndDate = weekModel.StartDate.AddWeek()
+                    EndDate = weekModel.StartDate.AddWeek(),
+                    TimeZoneInfoId = weekModel.TimeZoneInfoId
                 };
                 await context.CallActivityAsync(nameof(ShareActivity), shareModel);
             }
