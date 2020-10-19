@@ -122,12 +122,12 @@ namespace JdaTeams.Connector.Functions.Extensions
         }
         public static void LogTimeZoneError(this ILogger log, Exception ex, string teamId, int jdaTimeZoneId, string jdaTimeZoneName)
         {
-            log.LogError(new EventId(15, "TimeZone"), ex, "TimeZone: TeamId={teamId}, JdaTimeZoneId={jdaTimeZoneId}, JdaTimeZoneName={jdaTimeZoneName}", teamId, jdaTimeZoneId, jdaTimeZoneName);
+            log.LogError(new EventId(15, "TimeZone"), ex, "TimeZoneError: TeamId={teamId}, JdaTimeZoneId={jdaTimeZoneId}, JdaTimeZoneName={jdaTimeZoneName}", teamId, jdaTimeZoneId, jdaTimeZoneName);
         }
 
         public static void LogMissingTimeZoneError(this ILogger log, TeamModel team)
         {
-            log.LogError(new EventId(15, "TimeZone"), "TimeZone: StoreId={storeId}, TeamId={teamId}", team.StoreId, team.TeamId);
+            log.LogError(new EventId(15, "TimeZone"), "MissingTimeZoneError: StoreId={storeId}, TeamId={teamId}", team.StoreId, team.TeamId);
         }
 
         private static class Status

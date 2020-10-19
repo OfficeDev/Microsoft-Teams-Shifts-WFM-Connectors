@@ -4,7 +4,6 @@ using JdaTeams.Connector.AzureStorage.Options;
 using JdaTeams.Connector.AzureStorage.Services;
 using JdaTeams.Connector.Functions;
 using JdaTeams.Connector.Functions.Extensions;
-using JdaTeams.Connector.Functions.Helpers;
 using JdaTeams.Connector.Functions.Options;
 using JdaTeams.Connector.Http;
 using JdaTeams.Connector.JdaPersona.Options;
