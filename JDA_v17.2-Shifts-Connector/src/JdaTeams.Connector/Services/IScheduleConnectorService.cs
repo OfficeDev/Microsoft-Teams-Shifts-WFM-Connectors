@@ -6,10 +6,12 @@ namespace JdaTeams.Connector.Services
 {
     public interface IScheduleConnectorService
     {
-        Task<IEnumerable<ConnectionModel>> ListConnectionsAsync();
-        Task<ConnectionModel> GetConnectionAsync(string teamId);
-        Task SaveConnectionAsync(ConnectionModel model);
         Task DeleteConnectionAsync(string teamId);
-        Task<string> GetTimeZoneInfoIdAsync(string TimeZoneName);
+
+        Task<ConnectionModel> GetConnectionAsync(string teamId);
+
+        Task<IEnumerable<ConnectionModel>> ListConnectionsAsync();
+
+        Task SaveConnectionAsync(ConnectionModel model);
     }
 }

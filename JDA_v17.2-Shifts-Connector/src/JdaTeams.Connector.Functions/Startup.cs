@@ -45,6 +45,7 @@ namespace JdaTeams.Connector.Functions
                 .AddSingleton(config.Get<ScheduleActivityOptions>())
                 .AddTransient<IAppService, AzureStorageAppService>()
                 .AddTransient<IScheduleConnectorService, AzureStorageScheduleConnectorService>()
+                .AddTransient<ITimeZoneService, AzureStorageTimeZoneService>()
                 .AddSingleton<ISecretsService, AzureKeyVaultSecretsService>()
                 .AddSingleton(config.Get<AzureKeyVaultOptions>())
                 .AddSingleton<IScheduleDeltaService, DefaultScheduleDeltaService>()

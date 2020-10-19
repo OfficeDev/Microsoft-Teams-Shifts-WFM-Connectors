@@ -7,7 +7,6 @@ using JdaTeams.Connector.Functions.Extensions;
 using JdaTeams.Connector.Functions.Helpers;
 using JdaTeams.Connector.Functions.Models;
 using JdaTeams.Connector.Functions.Options;
-using JdaTeams.Connector.JdaPersona.Options;
 using JdaTeams.Connector.Services;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
@@ -19,12 +18,14 @@ namespace JdaTeams.Connector.Functions.Orchestrators
         private readonly TeamOrchestratorOptions _options;
         private readonly IScheduleConnectorService _scheduleConnectorService;
         private readonly IScheduleSourceService _scheduleSourceService;
+        private readonly ITimeZoneService _timeZoneService;
 
-        public ClearScheduleOrchestrator(TeamOrchestratorOptions options, IScheduleConnectorService scheduleConnectorService, IScheduleSourceService scheduleSourceService)
+        public ClearScheduleOrchestrator(TeamOrchestratorOptions options, IScheduleConnectorService scheduleConnectorService, IScheduleSourceService scheduleSourceService, ITimeZoneService timeZoneService)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _scheduleConnectorService = scheduleConnectorService ?? throw new ArgumentNullException(nameof(scheduleConnectorService));
             _scheduleSourceService = scheduleSourceService ?? throw new ArgumentNullException(nameof(scheduleSourceService));
+            _timeZoneService = timeZoneService ?? throw new ArgumentNullException(nameof(timeZoneService));
         }
 
         [FunctionName(nameof(ClearScheduleOrchestrator))]
@@ -36,7 +37,7 @@ namespace JdaTeams.Connector.Functions.Orchestrators
             var pastWeeks = clearScheduleModel.PastWeeks ?? _options.PastWeeks;
             var futureWeeks = clearScheduleModel.FutureWeeks ?? _options.FutureWeeks;
 
-            var timeZoneInfoId = await TimeZoneHelper.GetAndUpdateTimeZoneAsync(clearScheduleModel.TeamId, _scheduleConnectorService, _scheduleSourceService);
+            var timeZoneInfoId = await TimeZoneHelper.GetAndUpdateTimeZoneAsync(clearScheduleModel.TeamId, _timeZoneService, _scheduleConnectorService, _scheduleSourceService);
             timeZoneInfoId ??= _options.TimeZone;
 
             clearScheduleModel.StartDate = context.CurrentUtcDateTime.Date

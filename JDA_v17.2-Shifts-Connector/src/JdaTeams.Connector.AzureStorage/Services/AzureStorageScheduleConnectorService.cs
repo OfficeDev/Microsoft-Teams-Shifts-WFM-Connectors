@@ -22,7 +22,7 @@ namespace JdaTeams.Connector.AzureStorage.Services
 
         public async Task<IEnumerable<ConnectionModel>> ListConnectionsAsync()
         {
-            var table = GetTableReference(_options.TeamTableName);
+            var table = GetTableReference();
             var filter = TableQuery.GenerateFilterCondition(nameof(ConnectionEntity.PartitionKey), QueryComparisons.Equal, ConnectionEntity.DefaultPartitionKey);
             var query = new TableQuery<ConnectionEntity>()
                 .Where(filter)
@@ -35,7 +35,7 @@ namespace JdaTeams.Connector.AzureStorage.Services
 
         public async Task<ConnectionModel> GetConnectionAsync(string teamId)
         {
-            var table = GetTableReference(_options.TeamTableName);
+            var table = GetTableReference();
             var operation = TableOperation.Retrieve<ConnectionEntity>(ConnectionEntity.DefaultPartitionKey, teamId);
             var tableResult = await table.ExecuteAsync(operation);
             var entity = tableResult.Result as ConnectionEntity;
@@ -50,7 +50,7 @@ namespace JdaTeams.Connector.AzureStorage.Services
 
         public async Task SaveConnectionAsync(ConnectionModel model)
         {
-            var table = GetTableReference(_options.TeamTableName);
+            var table = GetTableReference();
             var entity = ConnectionEntity.FromModel(model);
             var operation = TableOperation.InsertOrReplace(entity);
             await table.ExecuteAsync(operation);
@@ -58,32 +58,17 @@ namespace JdaTeams.Connector.AzureStorage.Services
 
         public async Task DeleteConnectionAsync(string teamId)
         {
-            var table = GetTableReference(_options.TeamTableName);
+            var table = GetTableReference();
             var entity = ConnectionEntity.FromId(teamId);
             var operation = TableOperation.Delete(entity);
             await table.ExecuteAsync(operation);
         }
 
-        public async Task<string> GetTimeZoneInfoIdAsync(string timeZoneName)
-        {
-            var table = GetTableReference(TimeZoneEntity.DefaultPartitionKey);
-            var operation = TableOperation.Retrieve<TimeZoneEntity>(TimeZoneEntity.DefaultPartitionKey, timeZoneName);
-            var tableResult = await table.ExecuteAsync(operation);
-            var entity = tableResult.Result as TimeZoneEntity;
-
-            if (entity == null)
-            {
-                return null;
-            }
-
-            return entity.TimeZoneInfoId;
-        }
-
-        private CloudTable GetTableReference(string tableName)
+        private CloudTable GetTableReference()
         {
             var account = CloudStorageAccount.Parse(_options.ConnectionString);
             var client = account.CreateCloudTableClient();
-            return client.GetTableReference(tableName);
+            return client.GetTableReference(_options.TeamTableName);
         }
     }
 }

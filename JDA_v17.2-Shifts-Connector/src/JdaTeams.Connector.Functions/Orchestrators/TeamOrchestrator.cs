@@ -18,12 +18,14 @@ namespace JdaTeams.Connector.Functions.Orchestrators
         private readonly TeamOrchestratorOptions _options;
         private readonly IScheduleConnectorService _scheduleConnectorService;
         private readonly IScheduleSourceService _scheduleSourceService;
+        private readonly ITimeZoneService _timeZoneService;
 
-        public TeamOrchestrator(TeamOrchestratorOptions options, IScheduleConnectorService scheduleConnectorService, IScheduleSourceService scheduleSourceService)
+        public TeamOrchestrator(TeamOrchestratorOptions options, IScheduleConnectorService scheduleConnectorService, IScheduleSourceService scheduleSourceService, ITimeZoneService timeZoneService)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _scheduleConnectorService = scheduleConnectorService ?? throw new ArgumentNullException(nameof(scheduleConnectorService));
             _scheduleSourceService = scheduleSourceService ?? throw new ArgumentNullException(nameof(scheduleSourceService));
+            _timeZoneService = timeZoneService ?? throw new ArgumentNullException(nameof(timeZoneService));
         }
 
         [FunctionName(nameof(TeamOrchestrator))]
@@ -31,7 +33,7 @@ namespace JdaTeams.Connector.Functions.Orchestrators
             ILogger log)
         {
             var teamModel = context.GetInput<TeamModel>();
-            teamModel.TimeZoneInfoId ??= await TimeZoneHelper.GetAndUpdateTimeZoneAsync(teamModel.TeamId, _scheduleConnectorService, _scheduleSourceService);
+            teamModel.TimeZoneInfoId ??= await TimeZoneHelper.GetAndUpdateTimeZoneAsync(teamModel.TeamId, _timeZoneService, _scheduleConnectorService, _scheduleSourceService);
 
             if (!teamModel.Initialized)
             {

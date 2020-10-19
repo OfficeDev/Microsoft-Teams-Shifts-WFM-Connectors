@@ -1,17 +1,15 @@
 ﻿using JdaTeams.Connector.Functions.Extensions;
-using JdaTeams.Connector.Options;
 using JdaTeams.Connector.Services;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Threading.Tasks;
 
 namespace JdaTeams.Connector.Functions.Helpers
 {
     public static class TimeZoneHelper
     {
-        public static async Task<string> GetAndUpdateTimeZoneAsync(string teamId, IScheduleConnectorService scheduleConnectorService, IScheduleSourceService scheduleSourceService)
+        public static async Task<string> GetAndUpdateTimeZoneAsync(string teamId, ITimeZoneService timeZoneService, IScheduleConnectorService scheduleConnectorService, IScheduleSourceService scheduleSourceService)
         {
             var connection = await scheduleConnectorService.GetConnectionAsync(teamId).ConfigureAwait(false);
             if (connection == null)
@@ -32,7 +30,7 @@ namespace JdaTeams.Connector.Functions.Helpers
                 if (store?.TimeZoneId != null)
                 {
                     var jdaTimeZoneName = await scheduleSourceService.GetJdaTimeZoneNameAsync(teamId, store.TimeZoneId.Value).ConfigureAwait(false);
-                    var timeZoneInfoId = await scheduleConnectorService.GetTimeZoneInfoIdAsync(jdaTimeZoneName).ConfigureAwait(false);
+                    var timeZoneInfoId = await timeZoneService.GetTimeZoneInfoIdAsync(jdaTimeZoneName).ConfigureAwait(false);
 
                     if (timeZoneInfoId != null)
                     {
@@ -46,14 +44,14 @@ namespace JdaTeams.Connector.Functions.Helpers
             return null;
         }
 
-        public static async Task<string> GetTimeZoneAsync(string teamId, int? timeZoneId, IScheduleSourceService scheduleSourceService, IScheduleConnectorService scheduleConnectorService, ILogger log)
+        public static async Task<string> GetTimeZoneAsync(string teamId, int? timeZoneId, ITimeZoneService timeZoneService, IScheduleSourceService scheduleSourceService, IScheduleConnectorService scheduleConnectorService, ILogger log)
         {
             if (timeZoneId.HasValue)
             {
                 var jdaTimeZoneName = await scheduleSourceService.GetJdaTimeZoneNameAsync(teamId, timeZoneId.Value).ConfigureAwait(false);
                 try
                 {
-                    return await scheduleConnectorService.GetTimeZoneInfoIdAsync(jdaTimeZoneName).ConfigureAwait(false);
+                    return await timeZoneService.GetTimeZoneInfoIdAsync(jdaTimeZoneName).ConfigureAwait(false);
                 }
                 catch(KeyNotFoundException ex)
                 {

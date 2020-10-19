@@ -28,8 +28,9 @@ namespace JdaTeams.Connector.Functions.Triggers
         private readonly ISecretsService _secretsService;
         private readonly MicrosoftGraphOptions _options;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly ITimeZoneService _timeZoneService;
 
-        public SubscribeTrigger(MicrosoftGraphOptions options, IScheduleConnectorService scheduleConnectorService, IScheduleSourceService scheduleSourceService, IScheduleDestinationService scheduleDestinationService, ISecretsService secretsService, IHttpClientFactory httpClientFactory)
+        public SubscribeTrigger(MicrosoftGraphOptions options, IScheduleConnectorService scheduleConnectorService, IScheduleSourceService scheduleSourceService, IScheduleDestinationService scheduleDestinationService, ISecretsService secretsService, IHttpClientFactory httpClientFactory, ITimeZoneService timeZoneService)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _scheduleConnectorService = scheduleConnectorService ?? throw new ArgumentNullException(nameof(scheduleConnectorService));
@@ -37,6 +38,7 @@ namespace JdaTeams.Connector.Functions.Triggers
             _scheduleDestinationService = scheduleDestinationService ?? throw new ArgumentNullException(nameof(scheduleDestinationService));
             _secretsService = secretsService ?? throw new ArgumentNullException(nameof(secretsService));
             _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+            _timeZoneService = timeZoneService ?? throw new ArgumentNullException(nameof(timeZoneService));
         }
 
         [FunctionName(nameof(SubscribeTrigger))]
@@ -79,7 +81,7 @@ namespace JdaTeams.Connector.Functions.Triggers
             }
 
             // ensure that we can map the timezone for the store
-            var timeZoneInfoId = await TimeZoneHelper.GetTimeZoneAsync(subscribeModel.TeamId, store.TimeZoneId, _scheduleSourceService, _scheduleConnectorService, log).ConfigureAwait(false);
+            var timeZoneInfoId = await TimeZoneHelper.GetTimeZoneAsync(subscribeModel.TeamId, store.TimeZoneId, _timeZoneService, _scheduleSourceService, _scheduleConnectorService, log).ConfigureAwait(false);
             if (timeZoneInfoId == null)
             {
                 log.LogError($"Subscribe failed - No time zone mapping found for store TimeZoneId={store.TimeZoneId}.");
