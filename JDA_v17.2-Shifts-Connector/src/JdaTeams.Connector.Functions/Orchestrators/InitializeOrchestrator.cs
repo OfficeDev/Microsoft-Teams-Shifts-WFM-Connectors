@@ -23,7 +23,7 @@ namespace JdaTeams.Connector.Functions.Orchestrators
         {
             var teamModel = context.GetInput<TeamModel>();
 
-            await context.CallActivityWithRetryAsync(nameof(ScheduleActivity), _options.AsRetryOptions(), teamModel);
+            await context.CallActivityAsync(nameof(ScheduleActivity), teamModel);
 
             if (_options.ClearScheduleEnabled)
             {
@@ -31,7 +31,7 @@ namespace JdaTeams.Connector.Functions.Orchestrators
             }
             else
             {
-                await context.CallActivityWithRetryAsync(nameof(ClearCacheActivity), _options.AsRetryOptions(), new ClearScheduleModel { TeamId = teamModel.TeamId });
+                await context.CallActivityAsync(nameof(ClearCacheActivity), new ClearScheduleModel { TeamId = teamModel.TeamId });
             }
         }
     }

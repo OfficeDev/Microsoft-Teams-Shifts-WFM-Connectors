@@ -37,8 +37,7 @@ namespace JdaTeams.Connector.Functions.Orchestrators
 
             if (!teamModel.Initialized)
             {
-                await context.CallSubOrchestratorWithRetryAsync(nameof(InitializeOrchestrator), _options.AsRetryOptions(), teamModel);
-
+                await context.CallSubOrchestratorAsync(nameof(InitializeOrchestrator), teamModel);
                 teamModel.Initialized = true;
             }
 
@@ -59,7 +58,7 @@ namespace JdaTeams.Connector.Functions.Orchestrators
                             TeamId = teamModel.TeamId,
                             TimeZoneInfoId = teamModel.TimeZoneInfoId
                         })
-                        .Select(weekModel => context.CallSubOrchestratorWithRetryAsync(nameof(WeekOrchestrator), _options.AsRetryOptions(), weekModel));
+                        .Select(weekModel => context.CallSubOrchestratorAsync(nameof(WeekOrchestrator), weekModel));
 
                     await Task.WhenAll(weekTasks);
                 }
