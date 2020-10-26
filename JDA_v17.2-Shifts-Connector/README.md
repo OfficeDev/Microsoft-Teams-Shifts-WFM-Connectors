@@ -56,7 +56,7 @@ All entries on this table are created programmatically by the connector at the t
 | TimeStamp      | The date and time the record was last modified               |
 | TimeZoneInfoId | The standard* name of the time zone                          |
 
-\* *Note*: A list of all supported timezones and their standard names can be found here: [TimeZones](timezones.md) and full details on how to create and populate this table are presented ![below](#Populate The Timezones Table).
+\* *Note*: A list of all supported timezones and their standard names can be found here: [TimeZones](timezones.md) and full details on how to create and populate this table are presented [below](#populate-the-timezones-table).
 
 4. Azure Blob Storage - a container named **app** is used to store a single html file named index.html that contains the html, javascript and images required for the tab application when connecting a team to Blue Yonder.
 5. Azure Blob Storage - a container named **shifts** is used to cache the collection of shifts synced to the connected team's schedule per store per week
