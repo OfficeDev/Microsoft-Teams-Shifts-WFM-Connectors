@@ -29,7 +29,7 @@ The points noted below are the minimal requirements in order to properly configu
 
 The Shifts-Blue Yonder Integration application is a Microsoft Azure Functions v2 application developed using .NET Core 2.1 with supporting components developed using .NET Standard 2.0.  The core function of the application of synchronising shifts from Blue Yonder into Microsoft Teams Shift is driven by a single eternal orchestrator. Teams are connected to the application via a Teams tab application.
 
-![Reference Architecture](images\ReferenceArchitecture.png)
+![](images/ReferenceArchitecture.png)
 
 1. Azure Functions - contains the entire logic of the connector - developed in C#
 2. Azure Table Storage - the list of connected teams is stored in a table called **teams** with the following schema:
@@ -67,11 +67,11 @@ All entries on this table are created programmatically by the connector at the t
 
 The sync process is controlled per team by an instance of an eternal TeamOrchestrator, one per team which uses a timer to schedule its next execution according to the sync frequency defined in the configuration settings of the Functions app. The orchestrator determines the number of weeks to be synchronised (controlled by configuration settings for the Functions app) and fans out execution by creating in parallel an instance of the WeekOrchestrator which itself calls an instance of the WeekActivity:
 
-![](images\FanOut.png)
+![](images/FanOut.png)
 
 The WeekActivity is where the real work of the synchronisation happens as follows:
 
- ![](images\WeekActivity.png)
+ ![](images/WeekActivity.png)
 
 ## Deployment
 
@@ -101,22 +101,22 @@ This integration uses the Microsoft Graph APIs to access information about users
    - **Supported account type**: normally the default of single tenant should be sufficient
    - **Redirect URI**: this is important but will be set after deployment of the ARM template and the functions application
 
-![](images\AppRegistration1.png)
+![](images/AppRegistration1.png)
 
 3. Click on the *Register* button
 4. When the app is registered, you'll be taken to the app's "Overview" page. Copy the **Application (client) ID**; we will need it later.
 
-![](images\AppRegistration2.png)
+![](images/AppRegistration2.png)
 
 5. In the side panel in the Manage section, click the **Certificates & secrets** section. In the Client secrets section, click on **+ New client secret**. Add a description (name of the secret) and select *Never* for Expires. Click **Add**
 
-![](images\AppRegistration3.png)
+![](images/AppRegistration3.png)
 
 6. Once the client secret is created, copy its *Value*; we will need it later
 7. Navigate to the **Authentication** page that can be found in the left panel under *Manage* in the figure under step 4.
 8. Click **+ Add a platform** and select Web and enter the required value for *Redirect URIs* which can be anything for now as it will be updated later and select **Access tokens** and **ID tokens** under *Implicit grant*
 
-![](images\AppRegistration4.png)
+![](images/AppRegistration4.png)
 
 
 
@@ -129,7 +129,7 @@ This integration uses the Microsoft Graph APIs to access information about users
 | Group.ReadWrite.All | Delegated             | Allows the application to read and write all group (team) data, specifically it allows the application to obtain team and membership data as well as create a schedule for a team and create/update/delete scheduling groups and shifts within the team's schedule. |
 | offline_access      | Delegated             | Allows the application to obtain a refresh token from the Graph API that can be used to automatically refresh the access token. |
 
-![](images\AppRegistration5.png)
+![](images/AppRegistration5.png)
 
 11. Click the Grant admin consent for... option to grant the required consent to the delegated user the application runs as.
 
@@ -145,7 +145,7 @@ The following steps should be followed in order to correctly deploy the required
 
 5. After saving the change, reopen the readme from your repo and click the button to start the deployment process which will display the following screen
 
-![](images\Deployment1.png)#
+![](images/Deployment1.png)#
 
 6. Select a subscription and the resource group created in 1.
 7. Fill in the values for the parameters of the ARM Template as per the table below:
@@ -189,16 +189,16 @@ The following actions are required to complete the deployment and configuration 
 
 1. Navigate to the Functions application created by the ARM template deployment. Select **Identity** under *Settings* in the left-hand panel.
 
-![](images\ConfigureKeyVault1.png)
+![](images/ConfigureKeyVault1.png)
 
 2. With the **System Assigned** tab selected switch the *Status* to **On** and Save followed by Yes. Copy the Object ID once the identity has been created in Azure.
 3. Navigate to the **Azure KeyVault** resource and select **Access policies** under *Settings*
 
-![](images\ConfigureKeyVault2.png)
+![](images/ConfigureKeyVault2.png)
 
 4. Click **Add Access Policy** and in the *Configure from template*, choose **Secret Management**. Click the link **None selected** next to *Select principle* and paste the Object ID copied from 2 above. Click Select and then click Add to add the new policy.
 
-![](images\ConfigureKeyVault3.png)
+![](images/ConfigureKeyVault3.png)
 
 5. On the summary screen it is important to click the **Save** button to persist these changes.
 6. If you wish to be able to view the Secrets stored by the application you will need to create an access policy for your own account also.
@@ -209,14 +209,14 @@ It is now necessary to configure the redirect uris for the application as follow
 
 1. Navigate to the Functions App resource and in the Overview screen copy the URL value:
 
-![](images\SetupUris1.png)
+![](images/SetupUris1.png)
 
 2. In Azure AD navigate to the App Registration created above and select Authentication under Manage. Replace the dummy https://updatemelater.com with the URL copied from the functions app and add three more uris based on it as follows:
    1. {copied url}/delegate
    2. {copied url}/consent
    3. {copied url}/app
 
-![](images\SetupUris2.png)
+![](images/SetupUris2.png)
 
 3. Then click Save to persist the changes.
 
@@ -236,13 +236,13 @@ And in **Tables** create the following tables
 
 A list of all the time zone names that have been created in Blue Yonder can be obtained from either in the Enterprise application or using the /timezones api.
 
-![](images\TimezoneSetup1.png)
+![](images/TimezoneSetup1.png)
 
 The values that are required are from the user-definable Time Zone Name column.
 
 Navigate to the timezones table created above and for each Time Zone Name from Blue Yonder create a row with the following schema:
 
- ![](images\TimezoneSetup2.png)
+ ![](images/TimezoneSetup2.png)
 
 #### Compile And Upload The Index.html Page
 
@@ -251,7 +251,7 @@ Open the web folder in VS Code, open a terminal in the root and do the following
 1. *npm install* - to install the node packages required to build the page
 2. *npm run-script build* - to build and package the complete source into a single **index.html** file using webpack v3.3.0 (this may need to be installed separately depending on your development environment).
 3. If built successfully, the **index.html** file will be created in the *dist* folder
-4. Upload this file to the **app** blob container created [above](*Configure Azure Storage)
+4. Upload this file to the **app** blob container created [above](#Configure Azure Storage)
 
 #### Deploy The Functions Application
 
@@ -259,16 +259,16 @@ The functions application code is not currently deployed as part of the ARM temp
 
 1. Right-click the functions application project JdaTeams.Connector.Functions and select Publish
 
-![](images\DeployFunctions1.png)
+![](images/DeployFunctions1.png)
 
 2. Select Azure and click Next
 3. Select your account, Subscription, Resource Group and the Functions App created by the ARM template. Ensure Run from package file (recommended) is ticked and click Finish.
 
-![](images\DeployFunctions2.png)
+![](images/DeployFunctions2.png)
 
 4. Check the details on the summary screen and then click Publish to commence the deployment
 
-![](images\DeployFunctions3.png)
+![](images/DeployFunctions3.png)
 
 #### Create And Upload The Tab App Manifest
 
@@ -327,7 +327,7 @@ The values that MUST be edited in this file are:
 | configurationUrl | Enter the url of the app function (see below) replace the ?clientId=default from the copied Url with ?theme={theme} |
 | validDomains     | Replace the editme with the name of the Functions app        |
 
-![](images\DeployTabApp1.png) 
+![](images/DeployTabApp1.png) 
 
 Zip the following files to create the tab app package to upload to the app store:
 
@@ -337,7 +337,7 @@ Zip the following files to create the tab app package to upload to the app store
 
 To upload the tab application click the **Apps** button in Teams followed by the **Upload a custom app** (if you cannot see this option then you will need a tenant admin to upload the package for you).
 
-![](images\DeployTabApp2.png)
+![](images/DeployTabApp2.png)
 
 
 # Operations Guide
@@ -424,18 +424,18 @@ All application logging is done to Application Insights except Tracing in the Au
 
 Connecting a team is as simple as adding an instance of the tab app to the general channel of the Team:
 
-![](images\ConnectTeam1.png)
+![](images/ConnectTeam1.png)
 
 Click the + button
 
-![](images\ConnectTeam2.png)
+![](images/ConnectTeam2.png)
 
 What you see in the Add a tab dialog depends on what you have used before and you may need to search for the application which may use a different name or icon depending on what was used in the manifest.json for the application.
 
-![](images\ConnectTeam3.png)
+![](images/ConnectTeam3.png)
 
 In the dialog above click the Add button to add the tab app to the team.
 
-![](images\ConnectTeam4.png)
+![](images/ConnectTeam4.png)
 
 Click the Sign in with Microsoft button then enter the Store ID (internal integer ID of the store/business unit), the login name and password of the user who will need sufficient permissions to access the Blue Yonder public apis and have full access to the data for the store. Click Save whereupon the data entered will be validated and if successful the connection will be made, the schedule will be created (may take a few minutes) and the synchronisation of shifts started. 
