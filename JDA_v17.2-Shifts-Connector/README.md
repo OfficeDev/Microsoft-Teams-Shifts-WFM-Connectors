@@ -56,7 +56,7 @@ All entries on this table are created programmatically by the connector at the t
 | TimeStamp      | The date and time the record was last modified               |
 | TimeZoneInfoId | The standard* name of the time zone                          |
 
-\* *Note*: A list of all supported timezones and their standard names can be found here: [TimeZones](timezones.md) and full details on how to create and populate this table are presented [below](#Populate The Timezones Table).
+\* *Note*: A list of all supported timezones and their standard names can be found here: [TimeZones](timezones.md) and full details on how to create and populate this table are presented ![below](#Populate The Timezones Table).
 
 4. Azure Blob Storage - a container named **app** is used to store a single html file named index.html that contains the html, javascript and images required for the tab application when connecting a team to Blue Yonder.
 5. Azure Blob Storage - a container named **shifts** is used to cache the collection of shifts synced to the connected team's schedule per store per week
@@ -177,13 +177,13 @@ The following steps should be followed in order to correctly deploy the required
 
 The following actions are required to complete the deployment and configuration of the integration application:
 
-1. [Access policy setup in Azure Key Vault](#Access Policy Setup In Azure KeyVault)
-3. [Set up the redirect URIs](#Set Up The Redirect URIs)
-4. [Configure Azure Storage](#Configure Azure Storage)
-5. [Populate the timezones table](#Populate The Timezones Table)
-5. [Compile and upload the Index.html page](#Compile And Upload The Index.html Page)
-6. [Deploy the Functions application](#Deploy The Functions Application)
-7. [Create and Upload the Tab App Manifest](#Create And Upload The Tab App Manifest)
+1. ![Access policy setup in Azure Key Vault](#Access Policy Setup In Azure KeyVault)
+3. ![Set up the redirect URIs](#Set Up The Redirect URIs)
+4. ![Configure Azure Storage](#Configure Azure Storage)
+5. ![Populate the timezones table](#Populate The Timezones Table)
+5. ![Compile and upload the Index.html page](#Compile And Upload The Index.html Page)
+6. ![Deploy the Functions application](#Deploy The Functions Application)
+7. ![Create and Upload the Tab App Manifest](#Create And Upload The Tab App Manifest)
 
 #### Access Policy Setup In Azure KeyVault
 
@@ -251,7 +251,7 @@ Open the web folder in VS Code, open a terminal in the root and do the following
 1. *npm install* - to install the node packages required to build the page
 2. *npm run-script build* - to build and package the complete source into a single **index.html** file using webpack v3.3.0 (this may need to be installed separately depending on your development environment).
 3. If built successfully, the **index.html** file will be created in the *dist* folder
-4. Upload this file to the **app** blob container created [above](#Configure Azure Storage)
+4. Upload this file to the **app** blob container created ![above](#Configure Azure Storage)
 
 #### Deploy The Functions Application
 
