@@ -29,7 +29,7 @@ The points noted below are the minimal requirements in order to properly configu
 
 The Shifts-Blue Yonder Integration application is a Microsoft Azure Functions v2 application developed using .NET Core 2.1 with supporting components developed using .NET Standard 2.0.  The core function of the application of synchronising shifts from Blue Yonder into Microsoft Teams Shift is driven by a single eternal orchestrator. Teams are connected to the application via a Teams tab application.
 
-![](images\ReferenceArchitecture.png)
+![Reference Architecture](images\ReferenceArchitecture.png)
 
 1. Azure Functions - contains the entire logic of the connector - developed in C#
 2. Azure Table Storage - the list of connected teams is stored in a table called **teams** with the following schema:
