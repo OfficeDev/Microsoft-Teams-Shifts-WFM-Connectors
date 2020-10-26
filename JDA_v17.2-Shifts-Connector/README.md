@@ -141,7 +141,7 @@ The following steps should be followed in order to correctly deploy the required
 2. In GitHub, fork the Microsoft Repo (https://github.com/OfficeDev/Microsoft-Teams-Shifts-WFM-Connectors) to your own account which will allow you to make changes to your copy of the code without impacting the main repository and redeploy when necessary.
 3. Open this Readme in your forked copy and edit the url of the Deploy to Azure button below to refer to your own forked repo e.g. change *OfficeDev* to the name of your repo.
 
-[![Deploy to Azure](https://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAndy65%2FMicrosoft-Teams-Shifts-WFM-Connectors%2Fmaster%2FJDA_v17.2-Shifts-Connector%2Fsrc%2FJdaTeams.Connector.Infrastructure%2Fazuredeploy.json)  
+[![Deploy to Azure](https://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FOfficeDev%2FMicrosoft-Teams-Shifts-WFM-Connectors%2Fmaster%2FJDA_v17.2-Shifts-Connector%2Fsrc%2FJdaTeams.Connector.Infrastructure%2Fazuredeploy.json)  
 
 5. After saving the change, reopen the readme from your repo and click the button to start the deployment process which will display the following screen
 
