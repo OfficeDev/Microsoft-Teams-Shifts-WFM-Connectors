@@ -177,13 +177,13 @@ The following steps should be followed in order to correctly deploy the required
 
 The following actions are required to complete the deployment and configuration of the integration application:
 
-1. ![Access policy setup in Azure Key Vault](#Access Policy Setup In Azure KeyVault)
-3. ![Set up the redirect URIs](#Set Up The Redirect URIs)
-4. ![Configure Azure Storage](#Configure Azure Storage)
-5. ![Populate the timezones table](#Populate The Timezones Table)
-5. ![Compile and upload the Index.html page](#Compile And Upload The Index.html Page)
-6. ![Deploy the Functions application](#Deploy The Functions Application)
-7. ![Create and Upload the Tab App Manifest](#Create And Upload The Tab App Manifest)
+1. [Access policy setup in Azure Key Vault](#access-policy-setup-in-azure-keyvault)
+3. [Set up the redirect URIs](#set-up-the-redirect-uris)
+4. [Configure Azure Storage](#configure-azure-storage)
+5. [Populate the timezones table](#populate-the-timezones-table)
+5. [Compile and upload the Index.html page](#compile-and-upload-the-index\.html-page)
+6. [Deploy the Functions application](#deploy-the-functions-application)
+7. [Create and Upload the Tab App Manifest](#create-and-upload-the-tab-app-manifest)
 
 #### Access Policy Setup In Azure KeyVault
 
@@ -251,7 +251,7 @@ Open the web folder in VS Code, open a terminal in the root and do the following
 1. *npm install* - to install the node packages required to build the page
 2. *npm run-script build* - to build and package the complete source into a single **index.html** file using webpack v3.3.0 (this may need to be installed separately depending on your development environment).
 3. If built successfully, the **index.html** file will be created in the *dist* folder
-4. Upload this file to the **app** blob container created ![above](#Configure Azure Storage)
+4. Upload this file to the **app** blob container created [above](#configure-azure-storage)
 
 #### Deploy The Functions Application
 
