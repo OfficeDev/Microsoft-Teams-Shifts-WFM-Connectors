@@ -10,12 +10,5 @@ namespace JdaTeams.Connector.Functions.Options
         public bool ContinueOnError { get; set; } = true;
         public int PastWeeks { get; set; } = 3;
         public int FutureWeeks { get; set; } = 3;
-
-        public RetryOptions AsRetryOptions()
-        {
-            var retryInterval = TimeSpan.FromSeconds(RetryIntervalSeconds);
-
-            return new RetryOptions(retryInterval, RetryMaxAttempts);
-        }
     }
 }

@@ -27,25 +27,5 @@ namespace JdaTeams.Connector.Models
         public string ThemeCode { get; set; }
         public List<ActivityModel> Activities { get; set; } = new List<ActivityModel>();
         public List<ActivityModel> Jobs { get; set; } = new List<ActivityModel>();
-
-        public override string ToString()
-        {
-            var sb = new StringBuilder();
-
-            foreach (var job in Jobs)
-            {
-                if (sb.Length > 0)
-                {
-                    sb.Append("\n");
-                }
-                sb.Append(job.LocalStartDate.ToString("HH:mm"));
-                sb.Append("-");
-                sb.Append(job.LocalEndDate.ToString("HH:mm"));
-                sb.Append(" ");
-                sb.Append(job.Code);
-            }
-
-            return sb.ToString();
-        }
     }
 }

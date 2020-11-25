@@ -5,7 +5,6 @@ using JdaTeams.Connector.AzureStorage.Services;
 using JdaTeams.Connector.Functions;
 using JdaTeams.Connector.Functions.Extensions;
 using JdaTeams.Connector.Functions.Options;
-using JdaTeams.Connector.Functions.Tracing;
 using JdaTeams.Connector.Http;
 using JdaTeams.Connector.JdaPersona.Options;
 using JdaTeams.Connector.JdaPersona.Services;
@@ -19,7 +18,6 @@ using JdaTeams.Connector.Services;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Rest;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 namespace JdaTeams.Connector.Functions
@@ -46,6 +44,7 @@ namespace JdaTeams.Connector.Functions
                 .AddSingleton(config.Get<ScheduleActivityOptions>())
                 .AddTransient<IAppService, AzureStorageAppService>()
                 .AddTransient<IScheduleConnectorService, AzureStorageScheduleConnectorService>()
+                .AddTransient<ITimeZoneService, AzureStorageTimeZoneService>()
                 .AddSingleton<ISecretsService, AzureKeyVaultSecretsService>()
                 .AddSingleton(config.Get<AzureKeyVaultOptions>())
                 .AddSingleton<IScheduleDeltaService, DefaultScheduleDeltaService>()

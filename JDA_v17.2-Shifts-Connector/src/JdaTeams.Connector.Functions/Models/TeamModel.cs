@@ -8,6 +8,7 @@ namespace JdaTeams.Connector.Functions.Models
         public string StoreId { get; set; }
         public string WebhookUrl { get; set; }
         public bool Initialized { get; set; } = false;
+        public string TimeZoneInfoId { get; set; }
 
         public static TeamModel FromConnection(ConnectionModel connectionModel)
         {
@@ -16,7 +17,8 @@ namespace JdaTeams.Connector.Functions.Models
                 TeamId = connectionModel.TeamId,
                 StoreId = connectionModel.StoreId,
                 WebhookUrl = connectionModel.WebhookUrl,
-                Initialized = true
+                Initialized = true,
+                TimeZoneInfoId = connectionModel.TimeZoneInfoId
             };
         }
     }
