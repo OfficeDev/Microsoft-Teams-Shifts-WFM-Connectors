@@ -1,0 +1,2 @@
+### Check Setup
+GET https://kwfcteamsdev-api.azurewebsites.net/api/teams/CheckSetup

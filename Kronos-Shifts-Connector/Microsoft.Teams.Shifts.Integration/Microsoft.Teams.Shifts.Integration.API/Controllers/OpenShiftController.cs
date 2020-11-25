@@ -117,7 +117,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var orgJobsCount = orgJobPaths.Count;
                 int orgJobPathIterations = Utility.GetIterablesCount(Convert.ToInt32(processNumberOfOrgJobsInBatch, CultureInfo.InvariantCulture), orgJobsCount);
 
-                if (monthPartitions != null && monthPartitions.Count > 0)
+                if (monthPartitions?.Count > 0)
                 {
                     // The monthPartitions is a list of strings which are formatted as: MM_YYYY where
                     // MM represents the integer representation of the month, and YYYY is the integer
@@ -213,8 +213,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                                                 openShiftActivity.Add(new Activity
                                                                 {
                                                                     IsPaid = true,
-                                                                    StartDateTime = this.utility.CalculateStartDateTime(segment),
-                                                                    EndDateTime = this.utility.CalculateEndDateTime(segment),
+                                                                    StartDateTime = this.utility.CalculateStartDateTime(segment, mappedTeam.KronosTimeZone),
+                                                                    EndDateTime = this.utility.CalculateEndDateTime(segment, mappedTeam.KronosTimeZone),
                                                                     Code = string.Empty,
                                                                     DisplayName = segment.SegmentTypeName,
                                                                 });
@@ -236,7 +236,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                                             };
 
                                                             // Generates the uniqueId for the OpenShift.
-                                                            shift.KronosUniqueId = this.utility.CreateUniqueId(shift, shift.SchedulingGroupId);
+                                                            shift.KronosUniqueId = this.utility.CreateUniqueId(shift, shift.SchedulingGroupId, mappedTeam.KronosTimeZone);
 
                                                             // Logging the output of the KronosHash creation.
                                                             this.telemetryClient.TrackTrace("OpenShiftController-KronosHash: " + shift.KronosUniqueId);
@@ -359,7 +359,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     {
                         var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                         var openShiftResponse = JsonConvert.DeserializeObject<Models.Response.OpenShifts.GraphOpenShift>(responseContent);
-                        var openShiftMappingEntity = this.CreateNewOpenShiftMappingEntity(openShiftResponse, item.KronosUniqueId, monthPartitionKey, mappedTeam?.RowKey);
+                        var openShiftMappingEntity = this.CreateNewOpenShiftMappingEntity(openShiftResponse, item.KronosUniqueId, monthPartitionKey, mappedTeam?.RowKey, mappedTeam.KronosTimeZone);
 
                         telemetryProps.Add("ResultCode", response.StatusCode.ToString());
                         telemetryProps.Add("TeamsOpenShiftId", openShiftResponse.Id);
@@ -504,12 +504,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="uniqueId">The Kronos Unique Id.</param>
         /// <param name="monthPartitionKey">The monthwise partition key.</param>
         /// <param name="orgJobPath">The Kronos Org Job Path.</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting the UTC times to Kronos times.</param>
         /// <returns>The new AllOpenShiftMappingEntity which conforms to schema.</returns>
         private AllOpenShiftMappingEntity CreateNewOpenShiftMappingEntity(
             Models.Response.OpenShifts.GraphOpenShift responseModel,
             string uniqueId,
             string monthPartitionKey,
-            string orgJobPath)
+            string orgJobPath,
+            string kronosTimeZone)
         {
             var createNewOpenShiftMappingEntityProps = new Dictionary<string, string>()
             {
@@ -527,7 +529,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 KronosSlots = Constants.KronosOpenShiftsSlotCount,
                 SchedulingGroupId = responseModel.SchedulingGroupId,
                 OrgJobPath = orgJobPath,
-                OpenShiftStartDate = this.utility.UTCToKronosTimeZone(responseModel.SharedOpenShift.StartDateTime),
+                OpenShiftStartDate = this.utility.UTCToKronosTimeZone(responseModel.SharedOpenShift.StartDateTime, kronosTimeZone),
             };
 
             this.telemetryClient.TrackTrace(Resource.CreateNewOpenShiftMappingEntity, createNewOpenShiftMappingEntityProps);

@@ -261,8 +261,9 @@
   <data name="WfiDeletionFailed" xml:space="preserve">
     <value>The workforce integration {0} failed to delete.</value>
   </data>
-  <data name="NoOfColumnsInExcel" xml:space="preserve">
-    <value>6</value>
+  <data name="NoOfColumnsInTeamsExcel" xml:space="preserve">
+    <value>7</value>
+    <comment>The number of columns in the KronosShiftTeamDeptMappingTemplate.xlsx</comment>
   </data>
   <data name="WFIAlreadyRegHeaderText" xml:space="preserve">
     <value>Workforce Integration {0} is already registered.</value>
@@ -326,5 +327,9 @@
   <data name="UnableToLoginToKronos" xml:space="preserve">
     <value>Unable to login to Kronos. Please check credentials and try again.</value>
     <comment>The message will be displayed when provided Kronos credentials are incorrect.</comment>
+  </data>
+  <data name="NoOfColumnsInUserExcel" xml:space="preserve">
+    <value>6</value>
+    <comment>The number of columns in the KronosShiftUserMappingTemplate.xlsx</comment>
   </data>
 </root>

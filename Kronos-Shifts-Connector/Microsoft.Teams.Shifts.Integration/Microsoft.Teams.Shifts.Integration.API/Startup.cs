@@ -13,9 +13,7 @@ namespace Microsoft.Teams.Shifts.Integration.API
     using Microsoft.AspNetCore.Authentication.JwtBearer;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Builder;
-    using Microsoft.AspNetCore.Diagnostics;
     using Microsoft.AspNetCore.Hosting;
-    using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Caching.Distributed;
     using Microsoft.Extensions.Configuration;
@@ -87,7 +85,7 @@ namespace Microsoft.Teams.Shifts.Integration.API
 
             services.AddHttpClient("ShiftsAPI", c =>
             {
-                c.BaseAddress = new Uri(this.Configuration["GraphBetaApiUrl"]);
+                c.BaseAddress = new Uri(appSettings.GraphApiUrl);
                 c.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             }).AddPolicyHandler(GetRetryPolicy());
 
@@ -113,7 +111,6 @@ namespace Microsoft.Teams.Shifts.Integration.API
                 provider.GetRequiredService<TelemetryClient>(),
                 provider.GetRequiredService<IApiHelper>()));
 
-            string requestUrl = this.Configuration["GraphBetaApiUrl"];
             services.AddSingleton<BusinessLogic.Providers.IConfigurationProvider>((provider) => new BusinessLogic.Providers.ConfigurationProvider(
                 appSettings.StorageConnectionString,
                 provider.GetRequiredService<TelemetryClient>()));
@@ -123,7 +120,7 @@ namespace Microsoft.Teams.Shifts.Integration.API
                 provider.GetRequiredService<TelemetryClient>()));
 
             services.AddSingleton<IBaseClient, BaseClient>((provider) => new BaseClient(
-                requestUrl,
+                appSettings.GraphApiUrl,
                 provider.GetRequiredService<IAuthenticationProvider>(),
                 null));
 
@@ -296,8 +293,7 @@ namespace Microsoft.Teams.Shifts.Integration.API
                 provider.GetRequiredService<IHttpClientFactory>(),
                 provider.GetRequiredService<IOpenShiftMappingEntityProvider>(),
                 provider.GetRequiredService<Utility>(),
-                provider.GetRequiredService<IShiftMappingEntityProvider>(),
-                provider.GetRequiredService<BackgroundTaskWrapper>()));
+                provider.GetRequiredService<IShiftMappingEntityProvider>()));
 
             services.AddSingleton((provider) => new TimeOffController(
                 provider.GetRequiredService<AppSettings>(),

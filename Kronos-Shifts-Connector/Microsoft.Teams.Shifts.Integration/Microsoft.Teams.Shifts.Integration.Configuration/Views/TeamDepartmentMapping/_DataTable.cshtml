@@ -1,4 +1,4 @@
-﻿@model List<Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TeamsDepartmentMappingModel>
+﻿@model List<Microsoft.Teams.Shifts.Integration.Configuration.Models.TeamsDepartmentMappingViewModel>
 
 <link href="../lib/datatables/css/jquery.dataTables.min.css" rel="stylesheet"/>
 <script src="../lib/datatables/js/jquery.dataTables.min.js"></script>
@@ -8,6 +8,7 @@
             <tr>
                 <th>Kronos Workforce Integration Id</th>
                 <th>Kronos Org Job Path</th>
+                <th>Kronos Time Zone</th>
                 <th>Shifts Team Name</th>
                 <th>Shifts Team Id</th>
                 <th>Schedule Group Id</th>
@@ -22,10 +23,13 @@
                 {
                     <tr>
                         <td>
-                            @Html.DisplayFor(modelItem => item.PartitionKey)
+                            @Html.DisplayFor(modelItem => item.WorkforceIntegrationId)
                         </td>
                         <td>
-                            @Html.DisplayFor(modelItem => item.RowKey)
+                            @Html.DisplayFor(modelItem => item.KronosOrgJobPath)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.KronosTimeZone)
                         </td>
                         <td>
                             @Html.DisplayFor(modelItem => item.ShiftsTeamName)
@@ -40,7 +44,7 @@
                             @Html.DisplayFor(modelItem => item.TeamsScheduleGroupName)
                         </td>
                         <td>
-                            <input type="button" value="Delete" class="btn btn-primary deleteBtnUserMapp" onclick="ajaxCallDeleteTeamDeptMapping('@item.PartitionKey', '@item.RowKey', this)" />
+                            <input type="button" value="Delete" class="btn btn-primary deleteBtnUserMapp" onclick="ajaxCallDeleteTeamDeptMapping('@item.WorkforceIntegrationId', '@item.KronosOrgJobPath', this)" />
                         </td>
                     </tr>
                 }
