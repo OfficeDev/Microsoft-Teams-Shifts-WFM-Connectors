@@ -21,7 +21,6 @@ namespace JdaTeams.Connector.MicrosoftGraph.Mappings
         {
             var shiftItem = new ShiftItem
             {
-                DisplayName = shift.ToString(),
                 StartDateTime = shift.StartDate,
                 EndDateTime = shift.EndDate,
                 Activities = MapActivities(shift),

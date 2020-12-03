@@ -1,4 +1,5 @@
 ﻿using JdaTeams.Connector.Functions.Extensions;
+using JdaTeams.Connector.Functions.Helpers;
 using JdaTeams.Connector.Functions.Models;
 using JdaTeams.Connector.Functions.Options;
 using JdaTeams.Connector.Models;
@@ -7,6 +8,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
+using TimeZoneConverter;
 
 namespace JdaTeams.Connector.Functions.Activities
 {
@@ -28,7 +30,17 @@ namespace JdaTeams.Connector.Functions.Activities
 
             if (schedule.IsUnavailable)
             {
-                var scheduleModel = ScheduleModel.Create(_options.TimeZone);
+                string timeZoneInfoId;
+                if (string.IsNullOrEmpty(teamModel.TimeZoneInfoId))
+                {
+                    timeZoneInfoId = _options.TimeZone;
+                }
+                else
+                {
+                    timeZoneInfoId = TZConvert.WindowsToIana(teamModel.TimeZoneInfoId);
+                }
+
+                var scheduleModel = ScheduleModel.Create(timeZoneInfoId);
                 
                 await _scheduleDestinationService.CreateScheduleAsync(teamModel.TeamId, scheduleModel);
             }

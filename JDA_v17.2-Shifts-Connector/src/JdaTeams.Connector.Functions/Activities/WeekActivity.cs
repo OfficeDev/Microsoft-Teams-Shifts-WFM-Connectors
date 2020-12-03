@@ -44,7 +44,7 @@ namespace JdaTeams.Connector.Functions.Activities
             _scheduleSourceService.SetCredentials(weekModel.TeamId, credentials);
 
             // get the current set of shifts from JDA
-            var shifts = await _scheduleSourceService.ListWeekShiftsAsync(weekModel.TeamId, weekModel.StoreId, weekModel.StartDate);
+            var shifts = await _scheduleSourceService.ListWeekShiftsAsync(weekModel.TeamId, weekModel.StoreId, weekModel.StartDate, weekModel.TimeZoneInfoId);
 
             log.LogShifts(weekModel, shifts);
 

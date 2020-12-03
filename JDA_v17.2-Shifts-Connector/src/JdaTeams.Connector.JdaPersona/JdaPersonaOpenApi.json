@@ -2,8 +2,10 @@
   "swagger": "2.0",
   "info": {
     "title": "JdaPersonaOpenApi",
-    "contact": {},
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "contact": {
+
+    }
   },
   "host": "www.jda.com",
   "basePath": "/",
@@ -19,17 +21,14 @@
   "paths": {
     "/scheduledShifts/site/{siteId}/laborWeek": {
       "get": {
-        "summary": "WeekShifts",
-        "description": "Gets the full set of shifts for the specified site and week. If no businessDate is specified then the method returns the data for the current week.",
-        "operationId": "GetSiteShiftsForWeek",
         "produces": [
           "application/json"
         ],
         "parameters": [
           {
             "name": "siteId",
-            "in": "path",
             "description": "The ID of the site to get the scheduled shifts for.",
+            "in": "path",
             "required": true,
             "type": "integer",
             "format": "int32",
@@ -38,8 +37,8 @@
           },
           {
             "name": "businessDate",
-            "in": "query",
             "description": "The date in format yyyy-mm-dd being any date within the labor week",
+            "in": "query",
             "required": false,
             "type": "string",
             "format": "date"
@@ -53,7 +52,10 @@
             }
           }
         },
-        "deprecated": false
+        "deprecated": false,
+        "operationId": "GetSiteShiftsForWeek",
+        "summary": "WeekShifts",
+        "description": "Gets the full set of shifts for the specified site and week. If no businessDate is specified then the method returns the data for the current week."
       },
       "parameters": [
         {
@@ -67,17 +69,14 @@
     },
     "/users/{employeeId}": {
       "get": {
-        "summary": "User",
-        "description": "Gets the user with the specified ID",
-        "operationId": "GetUserById",
         "produces": [
           "application/json"
         ],
         "parameters": [
           {
             "name": "employeeId",
-            "in": "path",
             "description": "The ID of the user to get",
+            "in": "path",
             "required": true,
             "type": "integer",
             "format": "int32",
@@ -93,7 +92,10 @@
             }
           }
         },
-        "deprecated": false
+        "deprecated": false,
+        "operationId": "GetUserById",
+        "summary": "User",
+        "description": "Gets the user with the specified ID"
       },
       "parameters": [
         {
@@ -107,17 +109,14 @@
     },
     "/jobs/{jobId}": {
       "get": {
-        "summary": "Job",
-        "description": "Gets the job with the specified ID",
-        "operationId": "GetJobById",
         "produces": [
           "application/json"
         ],
         "parameters": [
           {
             "name": "jobId",
-            "in": "path",
             "description": "The ID of the job to get",
+            "in": "path",
             "required": true,
             "type": "integer",
             "format": "int32",
@@ -133,7 +132,10 @@
             }
           }
         },
-        "deprecated": false
+        "deprecated": false,
+        "operationId": "GetJobById",
+        "summary": "Job",
+        "description": "Gets the job with the specified ID"
       },
       "parameters": [
         {
@@ -147,17 +149,14 @@
     },
     "/departments/{departmentId}/": {
       "get": {
-        "summary": "Department",
-        "description": "Gets the department with the specified ID",
-        "operationId": "GetDepartmentById",
         "produces": [
           "application/json"
         ],
         "parameters": [
           {
             "name": "departmentId",
-            "in": "path",
             "description": "The ID of the department to get",
+            "in": "path",
             "required": true,
             "type": "integer",
             "format": "int32",
@@ -173,7 +172,10 @@
             }
           }
         },
-        "deprecated": false
+        "deprecated": false,
+        "operationId": "GetDepartmentById",
+        "summary": "Department",
+        "description": "Gets the department with the specified ID"
       },
       "parameters": [
         {
@@ -187,9 +189,6 @@
     },
     "/sites/{siteId}": {
       "get": {
-        "summary": "Site",
-        "description": "Gets the site with the specified ID",
-        "operationId": "GetSiteById",
         "responses": {
           "200": {
             "description": "Returns the json for the specfied site",
@@ -197,7 +196,10 @@
               "$ref": "#/definitions/Site"
             }
           }
-        }
+        },
+        "operationId": "GetSiteById",
+        "summary": "Site",
+        "description": "Gets the site with the specified ID"
       },
       "parameters": [
         {
@@ -211,9 +213,6 @@
     },
     "/users": {
       "get": {
-        "summary": "Get Users",
-        "description": "Retrieve a list of users using a list of the users internal IDs",
-        "operationId": "GetUsers",
         "responses": {
           "200": {
             "description": "The list of users",
@@ -224,7 +223,10 @@
               }
             }
           }
-        }
+        },
+        "operationId": "GetUsers",
+        "summary": "Get Users",
+        "description": "Retrieve a list of users using a list of the users internal IDs"
       },
       "parameters": [
         {
@@ -240,9 +242,6 @@
     },
     "/departments": {
       "get": {
-        "summary": "List Departments",
-        "description": "Retrieve all departments for a site using the site’s internal ID.",
-        "operationId": "ListDepartments",
         "responses": {
           "200": {
             "description": "Returns the list of departments for the site.",
@@ -253,13 +252,16 @@
               }
             }
           }
-        }
+        },
+        "operationId": "ListDepartments",
+        "summary": "List Departments",
+        "description": "Retrieve all departments for a site using the site’s internal ID."
       },
       "parameters": [
         {
           "name": "siteIdFilter",
-          "in": "query",
           "description": "The site's internal ID",
+          "in": "query",
           "required": true,
           "type": "integer",
           "format": "int32"
@@ -268,9 +270,6 @@
     },
     "/jobs": {
       "get": {
-        "summary": "List Jobs",
-        "description": "Retrieve all jobs for a site using the site’s internal ID.",
-        "operationId": "ListJobs",
         "responses": {
           "200": {
             "description": "Returns the list of jobs.",
@@ -281,13 +280,16 @@
               }
             }
           }
-        }
+        },
+        "operationId": "ListJobs",
+        "summary": "List Jobs",
+        "description": "Retrieve all jobs for a site using the site’s internal ID."
       },
       "parameters": [
         {
           "name": "siteIdFilter",
-          "in": "query",
           "description": "The internal ID of the site.",
+          "in": "query",
           "required": true,
           "type": "integer",
           "format": "int32"
@@ -296,14 +298,11 @@
     },
     "/scheduledShifts/employee/{employeeId}/laborWeek": {
       "get": {
-        "summary": "Employee shifts for week",
-        "description": "Gets the full set of shifts for the specified employee and week. If no businessDate is specified then the method returns the data for the current week.",
-        "operationId": "GetEmployeeShiftsForWeek",
         "parameters": [
           {
             "name": "businessDate",
-            "in": "query",
             "description": "The date in format yyyy-mm-dd being any date within the labor week",
+            "in": "query",
             "required": false,
             "type": "string",
             "format": "date"
@@ -316,7 +315,10 @@
               "$ref": "#/definitions/WeekShifts"
             }
           }
-        }
+        },
+        "operationId": "GetEmployeeShiftsForWeek",
+        "summary": "Employee shifts for week",
+        "description": "Gets the full set of shifts for the specified employee and week. If no businessDate is specified then the method returns the data for the current week."
       },
       "parameters": [
         {
@@ -330,14 +332,11 @@
     },
     "/clockEmployees/site/{siteId}/laborWeek": {
       "get": {
-        "summary": "Get Site Employees",
-        "description": "Gets the assigned employees for the site for the specified labor week.",
-        "operationId": "GetSiteEmployees",
         "parameters": [
           {
             "name": "businessDate",
-            "in": "query",
             "description": "The date in format yyyy-mm-dd being any date within the labor week",
+            "in": "query",
             "required": false,
             "type": "string",
             "format": "date"
@@ -350,11 +349,38 @@
               "$ref": "#/definitions/SiteEmployees"
             }
           }
-        }
+        },
+        "operationId": "GetSiteEmployees",
+        "summary": "Get Site Employees",
+        "description": "Gets the assigned employees for the site for the specified labor week."
       },
       "parameters": [
         {
           "name": "siteId",
+          "in": "path",
+          "required": true,
+          "type": "integer",
+          "format": "int32"
+        }
+      ]
+    },
+    "/timeZones/{timeZoneId}": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Returns the json for the specified time zone",
+            "schema": {
+              "$ref": "#/definitions/SiteTimeZone"
+            }
+          }
+        },
+        "operationId": "GetTimeZoneById",
+        "summary": "Time Zone",
+        "description": "Get the timeZone with a specified ID"
+      },
+      "parameters": [
+        {
+          "name": "timeZoneId",
           "in": "path",
           "required": true,
           "type": "integer",
@@ -634,6 +660,33 @@
         }
       },
       "example": "{\n    \"employeeId\": 1000103,\n    \"firstName\": \"Tamara\",\n    \"lastName\": \"Grant\",\n    \"displayName\": \"tagra Grant\",\n    \"canWorkUnassignedJobs\": false,\n    \"isManager\": true\n}"
+    },
+    "SiteTimeZone": {
+      "title": "Root Type for Timezone",
+      "description": "",
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+
+          }
+        }
+      },
+      "example": {
+        "id": 1000102,
+        "name": "WET",
+        "actions": [
+        ],
+        "self": "timeZones/1000102"
+      }
     }
   }
 }
