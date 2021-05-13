@@ -95,6 +95,16 @@ namespace Microsoft.Teams.App.KronosWfc.Common
         public const string AddRequests = "AddRequests";
 
         /// <summary>
+        /// Defines the Action to approve requests.
+        /// </summary>
+        public const string ApproveRequests = "ApproveRequests";
+
+        /// <summary>
+        /// Defines the Action to approve requests.
+        /// </summary>
+        public const string DenyRequests = "DenyRequests";
+
+        /// <summary>
         /// Defines the pending status when migrating the data from Kronos to Shifts.
         /// </summary>
         public const string Pending = "pending";
