@@ -100,9 +100,9 @@ namespace Microsoft.Teams.App.KronosWfc.Common
         public const string ApproveRequests = "ApproveRequests";
 
         /// <summary>
-        /// Defines the Action to approve requests.
+        /// Defines the Action to deny requests.
         /// </summary>
-        public const string DenyRequests = "DenyRequests";
+        public const string RefuseRequests = "RefuseRequests";
 
         /// <summary>
         /// Defines the pending status when migrating the data from Kronos to Shifts.
