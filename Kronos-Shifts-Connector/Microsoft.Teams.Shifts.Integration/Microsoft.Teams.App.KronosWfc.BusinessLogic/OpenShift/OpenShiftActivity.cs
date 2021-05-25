@@ -69,6 +69,37 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
         }
 
         /// <summary>
+        /// Approves or Denies the request.
+        /// </summary>
+        /// <param name="endPointUrl">The Kronos WFC endpoint URL.</param>
+        /// <param name="jSession">JSession.</param>
+        /// <param name="queryDateSpan">QueryDateSpan string.</param>
+        /// <param name="kronosPersonNumber">The Kronos Person Number.</param>
+        /// <param name="approved">Whether the request needs to be approved or denied.</param>
+        /// <param name="kronosId">The Kronos id of the request.</param>
+        /// <returns>Request details response object.</returns>
+        public async Task<Models.ResponseEntities.OpenShiftRequest.ApproveDecline.Response> ApproveOrDenyOpenShiftRequestsForUserAsync(
+            Uri endPointUrl,
+            string jSession,
+            string queryDateSpan,
+            string kronosPersonNumber,
+            bool approved,
+            string kronosId)
+        {
+            this.telemetryClient.TrackTrace($"OpenShiftActivity - ApproveOrDenyOpenShiftRequestsForUserAsync");
+
+            var xmlTimeOffRequest = this.CreateApprovalRequest(queryDateSpan, kronosPersonNumber, approved, kronosId);
+            var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
+                endPointUrl,
+                ApiConstants.SoapEnvOpen,
+                xmlTimeOffRequest,
+                ApiConstants.SoapEnvClose,
+                jSession).ConfigureAwait(false);
+
+            return this.ProcessOpenShiftsApprovedDeclinedResponse(tupleResponse.Item1);
+        }
+
+        /// <summary>
         /// Method that will have the create the DraftOpenShift.
         /// </summary>
         /// <param name="tenantId">The TenantId.</param>
@@ -363,6 +394,46 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
             var xResponse = xDoc.Root.Descendants().FirstOrDefault(d => d.Name.LocalName.Equals(ApiConstants.Response, StringComparison.Ordinal));
             return XmlConvertHelper.DeserializeObject<Models.ResponseEntities.OpenShiftRequest.ApproveDecline.Response>(
                 xResponse.ToString());
+        }
+
+        /// <summary>
+        /// Approval/Denial request.
+        /// </summary>
+        /// <param name="queryDateSpan">The queryDateSpan string.</param>
+        /// <param name="personNumber">The Kronos Person Number.</param>
+        /// <param name="approved">Whether the request needs to be approved or denied.</param>
+        /// <param name="id">The Kronos id of the request.</param>
+        /// <returns>XML request string.</returns>
+        private string CreateApprovalRequest(
+            string queryDateSpan,
+            string personNumber,
+            bool approved,
+            string id)
+        {
+            var request =
+                new OpenShiftApproveDecline.RequestManagementApproveDecline.Request
+                {
+                    Action = approved ? ApiConstants.ApproveRequests : ApiConstants.RefuseRequests,
+                    RequestMgmt = new OpenShiftApproveDecline.RequestManagementApproveDecline.RequestMgmt
+                    {
+                        Employees = new OpenShiftApproveDecline.RequestManagementApproveDecline.Employee
+                        {
+                            PersonIdentity = new OpenShiftApproveDecline.RequestManagementApproveDecline.PersonIdentity
+                            {
+                                PersonNumber = personNumber,
+                            },
+                        },
+                        QueryDateSpan = queryDateSpan,
+                        RequestIds = new OpenShiftApproveDecline.RequestManagementApproveDecline.RequestIds
+                        {
+                            RequestId = new OpenShiftApproveDecline.RequestManagementApproveDecline.RequestId[1]
+                            {
+                                new OpenShiftApproveDecline.RequestManagementApproveDecline.RequestId() { Id = id },
+                            },
+                        },
+                    },
+                };
+            return request.XmlSerialize();
         }
     }
 }

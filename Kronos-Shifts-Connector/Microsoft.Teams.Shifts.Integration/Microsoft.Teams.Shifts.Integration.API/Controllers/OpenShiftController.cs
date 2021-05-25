@@ -17,6 +17,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift;
+    using Microsoft.Teams.App.KronosWfc.Common;
     using Microsoft.Teams.Shifts.Integration.API.Common;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.RequestModels.OpenShift;
@@ -536,5 +537,37 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             return openShiftMappingEntity;
         }
+
+        /// <summary>
+        /// Approve or Deny the request. 
+        /// </summary>
+        /// <param name="endPointUrl">The Kronos WFC endpoint URL.</param>
+        /// <param name="jSession">JSession.</param>
+        /// <param name="queryDateSpan">QueryDateSpan string.</param>
+        /// <param name="kronosPersonNumber">The Kronos Person Number.</param>
+        /// <param name="approved">Whether the request is approved (true) or denied (false).</param>
+        /// <param name="id">The Kronos id.</param>
+        /// <returns>Request details response object.</returns>
+        public async Task<Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.OpenShiftRequest.ApproveDecline.Response> ApproveOrDenyOpenShiftRequestsForUserAsync(
+            Uri endPointUrl,
+            string jSession,
+            string queryDateSpan,
+            string kronosPersonNumber,
+            bool approved,
+            string id)
+        {
+            this.telemetryClient.TrackTrace($"{MethodBase.GetCurrentMethod().Name}");
+
+            var response = await this.openShiftActivity.ApproveOrDenyOpenShiftRequestsForUserAsync(
+                endPointUrl,
+                jSession,
+                queryDateSpan,
+                kronosPersonNumber,
+                approved,
+                id).ConfigureAwait(false);
+
+            return response;
+        }
+
     }
 }
