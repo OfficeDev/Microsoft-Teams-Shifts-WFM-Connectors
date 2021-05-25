@@ -772,7 +772,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var finalShift = this.GetShift(jsonModel);
             var finalOpenShiftRequest = this.GetOpenShiftRequest(jsonModel);
             var finalOpenShift = this.GetOpenShift(jsonModel);
-            var autoDeclinedRequest = this.GetAutoDeclinedRequests(jsonModel);
+            var autoDeclinedRequests = this.GetAutoDeclinedRequests(jsonModel);
 
             updateProps.Add("NewShiftId", finalShift.Id);
             updateProps.Add("GraphOpenShiftRequestId", finalOpenShiftRequest.Id);
