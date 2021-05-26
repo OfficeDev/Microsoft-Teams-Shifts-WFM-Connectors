@@ -994,10 +994,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             List<ShiftsIntegResponse> responseModelList = new List<ShiftsIntegResponse>();
 
             var openShiftRequest = this.GetOpenShiftRequest(jsonModel, approved);
-            var shift = this.GetShift(jsonModel, approved);
-            var openShift = this.GetOpenShift(jsonModel, approved);
-
-            bool success = false;
+            var success = false;
 
             try
             {
@@ -1028,17 +1025,18 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                 if (success)
                 {
+                    var shift = this.GetShift(jsonModel, approved);
                     var shiftsTemp = await this.shiftController.GetShiftsForUser(kronosUserId, openShiftRequestMapping.PartitionKey).ConfigureAwait(false);
                     var date = this.utility.UTCToKronosTimeZone(shift.SharedShift.StartDateTime, kronosTimeZone).ToString("d", CultureInfo.InvariantCulture);
 
                     // confirm new shift exists on kronos
                     var newKronosShift = shiftsTemp
                         .Schedule.ScheduleItems.ScheduleShift
-                        .Where(x => x.Employee.FirstOrDefault().PersonNumber == kronosUserId)
-                        .FirstOrDefault(x => x.StartDate == date);
+                        .FirstOrDefault(x => x.Employee.FirstOrDefault().PersonNumber == kronosUserId && x.StartDate == date);
 
                     if (newKronosShift != null)
                     {
+                        var openShift = this.GetOpenShift(jsonModel, approved);
                         var kronosUniqueId = this.utility.CreateUniqueId(shift, kronosTimeZone);
                         var newShiftLinkEntity = this.shiftController.CreateNewShiftMappingEntity(shift, kronosUniqueId, kronosUserId, kronosTimeZone);
                         await this.ApproveOpenShiftRequest(openShiftRequest, openShift, responseModelList).ConfigureAwait(false);
