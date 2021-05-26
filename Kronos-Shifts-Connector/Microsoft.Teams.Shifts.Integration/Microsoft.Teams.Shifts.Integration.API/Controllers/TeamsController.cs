@@ -401,10 +401,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 responseModelList = await this.ProcessOpenShiftRequestApprovalAsync(jsonModel, updateProps, kronosTimeZone).ConfigureAwait(false);
                             }
 
-                            // Request is coming from either Shifts UI or from incorrect workforce integration.
+                            // Request is coming from the Shifts UI.
                             else
                             {
-                                responseModelList = await this.ProcessOpenShiftRequestApprovalViaTeams(jsonModel, updateProps, kronosTimeZone, true).ConfigureAwait(false);
+                                responseModelList = await this.ProcessOpenShiftRequestApprovalFromTeams(jsonModel, updateProps, kronosTimeZone, true).ConfigureAwait(false);
                             }
                         }
 
@@ -425,10 +425,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 }
                             }
 
-                            // Request is coming from either Shifts UI or from incorrect workforce integration.
+                            // Request is coming from the Shifts UI.
                             else
                             {
-                                responseModelList = await this.ProcessOpenShiftRequestApprovalViaTeams(jsonModel, updateProps, kronosTimeZone, false).ConfigureAwait(false);
+                                responseModelList = await this.ProcessOpenShiftRequestApprovalFromTeams(jsonModel, updateProps, kronosTimeZone, false).ConfigureAwait(false);
                             }
                         }
 
@@ -638,7 +638,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// </summary>
         /// <param name="autoDeclinedRequests">An open shift request.</param>
         /// <param name="responseModelList">The list of responses.</param>
-        private async Task DealWithOpenShiftAutoDeclines(
+        private async Task HandleOpenShiftAutoDeclines(
             List<IncomingRequest> autoDeclinedRequests,
             List<ShiftsIntegResponse> responseModelList)
         {
@@ -713,7 +713,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="shift">A shift.</param>
         /// <param name="kronosTimeZone">The Kronos time zone.</param>
         /// <param name="responseModelList">The list of responses.</param>
-        private async Task DealWithTempShift(
+        private async Task CreateShiftFromTempShift(
             OpenShiftRequestIS openShiftRequest,
             Shift shift,
             string kronosTimeZone,
@@ -787,13 +787,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 this.telemetryClient.TrackTrace("Starting ProcessOpenShiftRequestApprovalAsync: " + DateTime.Now.ToString(CultureInfo.InvariantCulture), updateProps);
 
                 // add a new shift with the old shift ID, delete the temp one.
-                await this.DealWithTempShift(finalOpenShiftRequest, finalShift, kronosTimeZone, responseModelList).ConfigureAwait(false);
+                await this.CreateShiftFromTempShift(finalOpenShiftRequest, finalShift, kronosTimeZone, responseModelList).ConfigureAwait(false);
 
                 // update the request and delete the old openshift.
                 await this.ApproveOpenShiftRequest(finalOpenShiftRequest, finalOpenShift, responseModelList).ConfigureAwait(false);
 
                 // deal with auto declines.
-                await this.DealWithOpenShiftAutoDeclines(autoDeclinedRequests, responseModelList).ConfigureAwait(false);
+                await this.HandleOpenShiftAutoDeclines(autoDeclinedRequests, responseModelList).ConfigureAwait(false);
 
                 this.telemetryClient.TrackTrace("Finishing ProcessOpenShiftRequestApprovalAsync: " + DateTime.Now.ToString(CultureInfo.InvariantCulture), updateProps);
             }
@@ -983,7 +983,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="updateProps">A dictionary of string, string that will be logged to ApplicationInsights.</param>
         /// <param name="kronosTimeZone">The time zone to use when converting the times.</param>
         /// <returns>A unit of execution.</returns>
-        private async Task<List<ShiftsIntegResponse>> ProcessOpenShiftRequestApprovalViaTeams(
+        private async Task<List<ShiftsIntegResponse>> ProcessOpenShiftRequestApprovalFromTeams(
             RequestModel jsonModel,
             Dictionary<string, string>
             updateProps,
@@ -1009,7 +1009,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 if (!approved)
                 {
                     // Deny in Kronos, Update mapping for Teams.
-                    success = await this.openShiftRequestController.ApproveOpenShiftInKronos(kronosReqId, kronosUserId, openShiftRequestMapping, approved).ConfigureAwait(false);
+                    success = await this.openShiftRequestController.ApproveOrDenyOpenShiftRequestInKronos(kronosReqId, kronosUserId, openShiftRequestMapping, approved).ConfigureAwait(false);
                     if (!success)
                     {
                         responseModelList.Add(GenerateResponse(openShiftRequest.Id, HttpStatusCode.BadRequest, null, null));
@@ -1023,7 +1023,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 }
 
                 // approve in kronos
-                success = await this.openShiftRequestController.ApproveOpenShiftInKronos(kronosReqId, kronosUserId, openShiftRequestMapping, approved).ConfigureAwait(false);
+                success = await this.openShiftRequestController.ApproveOrDenyOpenShiftRequestInKronos(kronosReqId, kronosUserId, openShiftRequestMapping, approved).ConfigureAwait(false);
                 responseModelList.Add(GenerateResponse(openShiftRequest.Id, HttpStatusCode.OK, null, null));
 
                 if (success)
