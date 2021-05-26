@@ -88,11 +88,11 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
         {
             this.telemetryClient.TrackTrace($"OpenShiftActivity - ApproveOrDenyOpenShiftRequestsForUserAsync");
 
-            var xmlTimeOffRequest = this.CreateApprovalRequest(queryDateSpan, kronosPersonNumber, approved, kronosId);
+            var xmlOpenShiftApprovalRequest = this.CreateApproveOrDeclineRequest(queryDateSpan, kronosPersonNumber, approved, kronosId);
             var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
                 endPointUrl,
                 ApiConstants.SoapEnvOpen,
-                xmlTimeOffRequest,
+                xmlOpenShiftApprovalRequest,
                 ApiConstants.SoapEnvClose,
                 jSession).ConfigureAwait(false);
 
@@ -397,14 +397,14 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
         }
 
         /// <summary>
-        /// Approval/Denial request.
+        /// Creates an Approval/Denial request.
         /// </summary>
         /// <param name="queryDateSpan">The queryDateSpan string.</param>
         /// <param name="personNumber">The Kronos Person Number.</param>
         /// <param name="approved">Whether the request needs to be approved or denied.</param>
         /// <param name="id">The Kronos id of the request.</param>
         /// <returns>XML request string.</returns>
-        private string CreateApprovalRequest(
+        private string CreateApproveOrDeclineRequest(
             string queryDateSpan,
             string personNumber,
             bool approved,
@@ -420,18 +420,18 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
                         {
                             PersonIdentity = new OpenShiftApproveDecline.RequestManagementApproveDecline.PersonIdentity
                             {
-                                PersonNumber = personNumber,
-                            },
+                                PersonNumber = personNumber
+                            }
                         },
                         QueryDateSpan = queryDateSpan,
                         RequestIds = new OpenShiftApproveDecline.RequestManagementApproveDecline.RequestIds
                         {
                             RequestId = new OpenShiftApproveDecline.RequestManagementApproveDecline.RequestId[1]
                             {
-                                new OpenShiftApproveDecline.RequestManagementApproveDecline.RequestId() { Id = id },
-                            },
-                        },
-                    },
+                                new OpenShiftApproveDecline.RequestManagementApproveDecline.RequestId() { Id = id }
+                            }
+                        }
+                    }
                 };
             return request.XmlSerialize();
         }
