@@ -675,7 +675,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="openShiftRequest">An open shift request.</param>
         /// <param name="openShift">An open shift.</param>
         /// <param name="responseModelList">The list of responses.</param>
-        private async Task ApproveOpenShiftRequest(
+        private async Task ApproveOpenShiftRequestInTables(
             OpenShiftRequestIS openShiftRequest,
             OpenShiftIS openShift,
             List<ShiftsIntegResponse> responseModelList)
@@ -790,7 +790,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 await this.CreateShiftFromTempShift(finalOpenShiftRequest, finalShift, kronosTimeZone, responseModelList).ConfigureAwait(false);
 
                 // update the request and delete the old openshift.
-                await this.ApproveOpenShiftRequest(finalOpenShiftRequest, finalOpenShift, responseModelList).ConfigureAwait(false);
+                await this.ApproveOpenShiftRequestInTables(finalOpenShiftRequest, finalOpenShift, responseModelList).ConfigureAwait(false);
 
                 // deal with auto declines.
                 await this.HandleOpenShiftAutoDeclines(autoDeclinedRequests, responseModelList).ConfigureAwait(false);
@@ -1039,7 +1039,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         var openShift = this.GetOpenShift(jsonModel, approved);
                         var kronosUniqueId = this.utility.CreateUniqueId(shift, kronosTimeZone);
                         var newShiftLinkEntity = this.shiftController.CreateNewShiftMappingEntity(shift, kronosUniqueId, kronosUserId, kronosTimeZone);
-                        await this.ApproveOpenShiftRequest(openShiftRequest, openShift, responseModelList).ConfigureAwait(false);
+                        await this.ApproveOpenShiftRequestInTables(openShiftRequest, openShift, responseModelList).ConfigureAwait(false);
                         await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(newShiftLinkEntity, shift.Id, openShiftRequestMapping.PartitionKey).ConfigureAwait(false);
                     }
                     else
