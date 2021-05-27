@@ -898,7 +898,7 @@
             <param name="message">message for the error.</param>
             <returns>a response containing an error.</returns>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.OpenShiftRequestController.ApproveOpenShiftInKronos(System.String,System.String,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.AllOpenShiftRequestMappingEntity,System.Boolean)">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.OpenShiftRequestController.ApproveOrDenyOpenShiftRequestInKronos(System.String,System.String,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.AllOpenShiftRequestMappingEntity,System.Boolean)">
             <summary>
             Creates and sends the relevant request to approve or deny an open shift request.
             </summary>
@@ -1353,7 +1353,7 @@
             </summary>
             <param name="jsonModel">Incoming payload for the request been made in Shifts.</param>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.DealWithOpenShiftAutoDeclines(System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming.IncomingRequest},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels.ShiftsIntegResponse})">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.HandleOpenShiftAutoDeclines(System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming.IncomingRequest},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels.ShiftsIntegResponse})">
             <summary>
             Updates the table to deal with auto-declined requests.
             </summary>
@@ -1369,7 +1369,7 @@
             <param name="openShift">An open shift.</param>
             <param name="responseModelList">The list of responses.</param>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.DealWithTempShift(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.OpenShiftRequestIS,Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Shift,System.String,System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels.ShiftsIntegResponse})">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.CreateShiftFromTempShift(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.OpenShiftRequestIS,Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Shift,System.String,System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels.ShiftsIntegResponse})">
             <summary>
             Gets the temporary shift.
             Creates a new shift using all of the temporary shift's data besides the RowKey.
@@ -1408,7 +1408,7 @@
             <param name="teamsId">The Shifts team id.</param>
             <returns>Returns list of shiftIntegResponse.</returns>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.ProcessOpenShiftRequestApprovalViaTeams(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming.RequestModel,System.Collections.Generic.Dictionary{System.String,System.String},System.String,System.Boolean)">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.ProcessOpenShiftRequestApprovalFromTeams(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming.RequestModel,System.Collections.Generic.Dictionary{System.String,System.String},System.String,System.Boolean)">
             <summary>
             This method takes an approval that happens in the Shifts app
             Creates the request to be sent to Kronos, sends it and depending on the response updates the relevant tables.
