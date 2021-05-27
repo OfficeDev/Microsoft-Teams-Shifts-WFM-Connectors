@@ -56,5 +56,13 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// </summary>
         /// <returns>List of swap shift pending requests.</returns>
         Task<List<SwapShiftMappingEntity>> GetPendingRequest();
+
+        /// <summary>
+        /// Method to get the mapping that contains the given shift ids.
+        /// </summary>
+        /// <param name="senderShiftId">The id for the sent shift.</param>
+        /// <param name="requestedShiftId">The id for the shift being recieved.</param>
+        /// <returns>A SwapShiftMapping Entity.</returns>
+        Task<SwapShiftMappingEntity> GetMapping(string senderShiftId, string requestedShiftId);
     }
 }

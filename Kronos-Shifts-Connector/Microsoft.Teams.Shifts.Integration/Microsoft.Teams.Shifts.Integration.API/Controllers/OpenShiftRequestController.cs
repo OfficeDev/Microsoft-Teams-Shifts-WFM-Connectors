@@ -365,7 +365,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="kronosReqId">The Kronos request id for the open shift request.</param>
         /// <param name="kronosUserId">The Kronos user id for the assigned user.</param>
         /// <param name="openShiftRequestMapping">The mapping for the open shift request.</param>
-        /// <param name="approved">Whether the openshift should be approved (true) or denied (false).</param>
+        /// <param name="approved">Whether the open shift should be approved (true) or denied (false).</param>
         /// <returns>Returns a bool that represents whether the request was a success (true) or not (false).</returns>
         internal async Task<bool> ApproveOpenShiftInKronos(
             string kronosReqId,

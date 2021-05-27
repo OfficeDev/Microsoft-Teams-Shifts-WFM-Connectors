@@ -457,6 +457,13 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
             return XmlConvertHelper.DeserializeObject<Response>(xResponse.ToString());
         }
 
+        private FetchApprove.SwapShiftData.Response ProcessSwapShiftApprovalResponse(string strResponse)
+        {
+            XDocument xDoc = XDocument.Parse(strResponse);
+            var xResponse = xDoc.Root.Descendants().FirstOrDefault(d => d.Name.LocalName.Equals(ApiConstants.Response, StringComparison.Ordinal));
+            return XmlConvertHelper.DeserializeObject<FetchApprove.SwapShiftData.Response>(xResponse.ToString());
+        }
+
         /// <summary>
         /// This method creates the approval request.
         /// </summary>
@@ -521,6 +528,77 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
             this.telemetryClient.TrackTrace($"SwapShiftActivity - CreateApprovalRequest: {rq.XmlSerialize().ToString(CultureInfo.InvariantCulture)}");
             this.telemetryClient.TrackTrace($"SwapShiftActivity - CreateApprovalRequest starts at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
             return rq.XmlSerialize();
+        }
+
+        /// <summary>
+        /// Approval/Denial request.
+        /// </summary>
+        /// <param name="queryDateSpan">The queryDateSpan string.</param>
+        /// <param name="personNumber">The Kronos Person Number.</param>
+        /// <param name="approved">Whether the request needs to be approved or denied.</param>
+        /// <param name="id">The Kronos id of the request.</param>
+        /// <returns>XML request string.</returns>
+        private string CreateApprovalRequest(
+            string queryDateSpan,
+            string personNumber,
+            bool approved,
+            string id)
+        {
+            var request =
+                new RequestManagementSwap.Request
+                {
+                    Action = approved ? ApiConstants.ApproveRequests : ApiConstants.RefuseRequests,
+                    RequestMgmt = new RequestManagementSwap.RequestMgmt
+                    {
+                        Employees = new RequestManagementSwap.Employee
+                        {
+                            PersonIdentity = new RequestManagementSwap.PersonIdentity
+                            {
+                                PersonNumber = personNumber,
+                            },
+                        },
+                        QueryDateSpan = queryDateSpan,
+                        RequestIds = new RequestManagementSwap.RequestIds
+                        {
+                            RequestId = new RequestManagementSwap.RequestId[1]
+                            {
+                                new RequestManagementSwap.RequestId() { Id = id },
+                            },
+                        },
+                    },
+                };
+            return request.XmlSerialize();
+        }
+
+        /// <summary>
+        /// Approves or Denies the request.
+        /// </summary>
+        /// <param name="endPointUrl">The Kronos WFC endpoint URL.</param>
+        /// <param name="jSession">JSession.</param>
+        /// <param name="queryDateSpan">QueryDateSpan string.</param>
+        /// <param name="kronosPersonNumber">The Kronos Person Number.</param>
+        /// <param name="approved">Whether the request needs to be approved or denied.</param>
+        /// <param name="kronosId">The Kronos id of the request.</param>
+        /// <returns>Request details response object.</returns>
+        public async Task<FetchApprove.SwapShiftData.Response> ApproveOrDenyOpenShiftRequestsForUserAsync(
+            Uri endPointUrl,
+            string jSession,
+            string queryDateSpan,
+            string kronosPersonNumber,
+            bool approved,
+            string kronosId)
+        {
+            this.telemetryClient.TrackTrace($"ShiftSwapActivity - ApproveOrDenySwapShiftRequestsForUserAsync");
+
+            var xmlTimeOffRequest = this.CreateApprovalRequest(queryDateSpan, kronosPersonNumber, approved, kronosId);
+            var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
+                endPointUrl,
+                ApiConstants.SoapEnvOpen,
+                xmlTimeOffRequest,
+                ApiConstants.SoapEnvClose,
+                jSession).ConfigureAwait(false);
+
+            return this.ProcessSwapShiftApprovalResponse(tupleResponse.Item1);
         }
     }
 }
