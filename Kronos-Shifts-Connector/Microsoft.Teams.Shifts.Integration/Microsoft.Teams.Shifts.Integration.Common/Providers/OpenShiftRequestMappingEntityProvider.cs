@@ -101,12 +101,12 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         }
 
         /// <summary>
-        /// The method that will get the open shift request mapping entity by the open shift request ID.
+        /// The method that will get the open shift request mapping entity by matching the Row key.
         /// </summary>
-        /// <param name="openShiftRequestId">The Open Shift Request ID.</param>
+        /// <param name="rowKey">The Row key.</param>
         /// <returns>A unit of execution that contains the AllOpenShiftRequestMappingEntity.</returns>
-        public async Task<AllOpenShiftRequestMappingEntity> GetOpenShiftRequestMappingEntityByOpenShiftRequestIdAsync(
-            string openShiftRequestId)
+        public async Task<AllOpenShiftRequestMappingEntity> GetOpenShiftRequestMappingEntityByRowKeyAsync(
+            string rowKey)
         {
             var provider = CultureInfo.InvariantCulture;
             await this.EnsureInitializedAsync().ConfigureAwait(false);
@@ -135,7 +135,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             }
             while (continuationToken != null);
 
-            return results.FirstOrDefault(x => x.RowKey == openShiftRequestId);
+            return results.FirstOrDefault(x => x.RowKey == rowKey);
         }
 
         /// <summary>
@@ -144,7 +144,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// <param name="openShiftId">The Open Shift ID.</param>
         /// <param name="openShiftReqId">The open shift request id.</param>
         /// <returns>A unit of execution that contains the Open Shift Request entity.</returns>
-        public async Task<AllOpenShiftRequestMappingEntity> GetOpenShiftRequestMappingEntityByOpenShiftIdAsync(string openShiftId, string openShiftReqId)
+        public async Task<AllOpenShiftRequestMappingEntity> GetOpenShiftRequestMappingEntityByOpenShiftRequestIdAsync(string openShiftId, string openShiftReqId)
         {
             var provider = CultureInfo.InvariantCulture;
             await this.EnsureInitializedAsync().ConfigureAwait(false);

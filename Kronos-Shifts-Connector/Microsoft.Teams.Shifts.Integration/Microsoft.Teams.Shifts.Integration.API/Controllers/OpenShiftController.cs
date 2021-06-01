@@ -17,6 +17,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift;
+    using Microsoft.Teams.App.KronosWfc.Common;
     using Microsoft.Teams.Shifts.Integration.API.Common;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.RequestModels.OpenShift;
