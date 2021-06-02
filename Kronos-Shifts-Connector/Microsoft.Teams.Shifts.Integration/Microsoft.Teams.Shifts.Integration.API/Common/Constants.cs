@@ -52,7 +52,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// <summary>
         /// Workforce integration supported entities.
         /// </summary>
-        public const string WFISupports = "Shift, SwapRequest, OpenShift, OpenShiftRequest";
+        public const string WFISupports = "Shift, SwapRequest, OpenShift, OpenShiftRequest, TimeOff, TimeOffRequest";
 
         /// <summary>
         /// Kronos session  cache timeout.
