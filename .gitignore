@@ -334,3 +334,4 @@ ASALocalRun/
 
 # API Settings Files
 /Kronos-Shifts-Connector/api/.vscode
+Kronos-Shifts-Connector/Microsoft.Teams.Shifts.Integration/Microsoft.Teams.Shifts.Integration.API/Properties/ServiceDependencies/kwfcteamsdev-api - Web Deploy/profile.arm.json

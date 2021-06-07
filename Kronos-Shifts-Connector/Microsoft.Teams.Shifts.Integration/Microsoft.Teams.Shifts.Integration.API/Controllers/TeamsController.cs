@@ -1129,6 +1129,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             return responseModelList;
         }
 
+        /// <summary>
+        /// This method takes an approval that happens in the Shifts app
+        /// Creates the request to be sent to Kronos, sends it and depending on the response updates the relevant tables.
+        /// </summary>
+        /// <param name="jsonModel">The decrypted JSON payload.</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting the times.</param>
+        /// <returns>A unit of execution.</returns>
         private async Task<List<ShiftsIntegResponse>> ProcessShiftSwapRequestApprovalViaTeams(
            RequestModel jsonModel,
            string kronosTimeZone,

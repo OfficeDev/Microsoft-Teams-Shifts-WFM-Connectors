@@ -233,6 +233,42 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
         }
 
         /// <summary>
+        /// Approves or Denies the request.
+        /// </summary>
+        /// <param name="endPointUrl">The Kronos WFC endpoint URL.</param>
+        /// <param name="jSession">JSession.</param>
+        /// <param name="queryDateSpan">QueryDateSpan string.</param>
+        /// <param name="kronosPersonNumber">The Kronos Person Number.</param>
+        /// <param name="approved">Whether the request needs to be approved or denied.</param>
+        /// <param name="kronosId">The Kronos id of the request.</param>
+        /// <returns>Request details response object.</returns>
+        public async Task<FetchApprove.SwapShiftData.Response> ApproveOrDenySwapShiftRequestsForUserAsync(
+            Uri endPointUrl,
+            string jSession,
+            string queryDateSpan,
+            string kronosPersonNumber,
+            bool approved,
+            string kronosId)
+        {
+            var xmlTimeOffRequest = this.CreateApprovalRequest(queryDateSpan, kronosPersonNumber, approved, kronosId);
+            var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
+                endPointUrl,
+                ApiConstants.SoapEnvOpen,
+                xmlTimeOffRequest,
+                ApiConstants.SoapEnvClose,
+                jSession).ConfigureAwait(false);
+
+            this.telemetryClient.TrackTrace(
+                "ShiftSwapActivity - ApproveOrDenySwapShiftRequestsForUserAsync",
+                new Dictionary<string, string>()
+                {
+                    { "Response",  tupleResponse.Item1 }
+                });
+
+            return this.ProcessSwapShiftApprovalResponse(tupleResponse.Item1);
+        }
+
+        /// <summary>
         /// Processes the response for the approve SwapShift.
         /// </summary>
         /// <param name="strResponse">The incoming response XML string.</param>
@@ -457,6 +493,11 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
             return XmlConvertHelper.DeserializeObject<Response>(xResponse.ToString());
         }
 
+        /// <summary>
+        /// Process response for approval request details.
+        /// </summary>
+        /// <param name="strResponse">Response received from approval of TOR.</param>
+        /// <returns>Response object.</returns>
         private FetchApprove.SwapShiftData.Response ProcessSwapShiftApprovalResponse(string strResponse)
         {
             XDocument xDoc = XDocument.Parse(strResponse);
@@ -568,42 +609,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
                     },
                 };
             return request.XmlSerialize();
-        }
-
-        /// <summary>
-        /// Approves or Denies the request.
-        /// </summary>
-        /// <param name="endPointUrl">The Kronos WFC endpoint URL.</param>
-        /// <param name="jSession">JSession.</param>
-        /// <param name="queryDateSpan">QueryDateSpan string.</param>
-        /// <param name="kronosPersonNumber">The Kronos Person Number.</param>
-        /// <param name="approved">Whether the request needs to be approved or denied.</param>
-        /// <param name="kronosId">The Kronos id of the request.</param>
-        /// <returns>Request details response object.</returns>
-        public async Task<FetchApprove.SwapShiftData.Response> ApproveOrDenySwapShiftRequestsForUserAsync(
-            Uri endPointUrl,
-            string jSession,
-            string queryDateSpan,
-            string kronosPersonNumber,
-            bool approved,
-            string kronosId)
-        {
-            var xmlTimeOffRequest = this.CreateApprovalRequest(queryDateSpan, kronosPersonNumber, approved, kronosId);
-            var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
-                endPointUrl,
-                ApiConstants.SoapEnvOpen,
-                xmlTimeOffRequest,
-                ApiConstants.SoapEnvClose,
-                jSession).ConfigureAwait(false);
-
-            this.telemetryClient.TrackTrace(
-                "ShiftSwapActivity - ApproveOrDenySwapShiftRequestsForUserAsync",
-                new Dictionary<string, string>()
-                {
-                    { "Response",  tupleResponse.Item1 }
-                });
-
-            return this.ProcessSwapShiftApprovalResponse(tupleResponse.Item1);
         }
     }
 }

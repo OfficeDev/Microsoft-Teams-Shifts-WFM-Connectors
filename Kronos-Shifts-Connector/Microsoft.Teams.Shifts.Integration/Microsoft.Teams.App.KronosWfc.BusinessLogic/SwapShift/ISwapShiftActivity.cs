@@ -91,7 +91,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
         /// <param name="queryDateSpan">The query date span.</param>
         /// <param name="kronosPersonNumber">The Kronos person number.</param>
         /// <param name="approved">Whether the request is being accepted or denied.</param>
-        /// <param name="kronosId">The id of the OpenShiftRequest in Kronos.</param>
+        /// <param name="kronosId">The id of the swap shift in Kronos.</param>
         /// <returns>A response.</returns>
         Task<FetchApprove.SwapShiftData.Response> ApproveOrDenySwapShiftRequestsForUserAsync(
             Uri endPointUrl,
