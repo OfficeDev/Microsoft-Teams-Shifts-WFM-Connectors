@@ -86,8 +86,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
             bool approved,
             string kronosId)
         {
-            this.telemetryClient.TrackTrace($"OpenShiftActivity - ApproveOrDenyOpenShiftRequestsForUserAsync");
-
             var xmlOpenShiftApprovalRequest = this.CreateApproveOrDeclineRequest(queryDateSpan, kronosPersonNumber, approved, kronosId);
             var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
                 endPointUrl,
@@ -95,6 +93,13 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
                 xmlOpenShiftApprovalRequest,
                 ApiConstants.SoapEnvClose,
                 jSession).ConfigureAwait(false);
+
+            this.telemetryClient.TrackTrace(
+                "OpenShiftActivity - ApproveOrDenyOpenShiftRequestsForUserAsync",
+                new Dictionary<string, string>()
+                {
+                    { "Response", tupleResponse.Item1 }
+                });
 
             return this.ProcessOpenShiftsApprovedDeclinedResponse(tupleResponse.Item1);
         }
