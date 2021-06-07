@@ -1144,9 +1144,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         return responseModelList;
                     }
 
-                    responseModelList.Add(GenerateResponse(swapRequest.Id, HttpStatusCode.OK, null, null));
                     swapShiftRequestMapping.ShiftsStatus = ApiConstants.Refused;
                     await this.swapShiftMappingEntityProvider.AddOrUpdateSwapShiftMappingAsync(swapShiftRequestMapping).ConfigureAwait(false);
+                    responseModelList.Add(GenerateResponse(swapRequest.Id, HttpStatusCode.OK, null, null));
                     return responseModelList;
                 }
 

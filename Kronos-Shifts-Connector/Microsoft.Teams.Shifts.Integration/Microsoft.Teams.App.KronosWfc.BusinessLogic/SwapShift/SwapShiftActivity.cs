@@ -580,7 +580,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
         /// <param name="approved">Whether the request needs to be approved or denied.</param>
         /// <param name="kronosId">The Kronos id of the request.</param>
         /// <returns>Request details response object.</returns>
-        public async Task<FetchApprove.SwapShiftData.Response> ApproveOrDenyOpenShiftRequestsForUserAsync(
+        public async Task<FetchApprove.SwapShiftData.Response> ApproveOrDenySwapShiftRequestsForUserAsync(
             Uri endPointUrl,
             string jSession,
             string queryDateSpan,
@@ -588,7 +588,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
             bool approved,
             string kronosId)
         {
-            this.telemetryClient.TrackTrace($"ShiftSwapActivity - ApproveOrDenySwapShiftRequestsForUserAsync");
+            this.telemetryClient.TrackTrace("ShiftSwapActivity - ApproveOrDenySwapShiftRequestsForUserAsync");
 
             var xmlTimeOffRequest = this.CreateApprovalRequest(queryDateSpan, kronosPersonNumber, approved, kronosId);
             var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(

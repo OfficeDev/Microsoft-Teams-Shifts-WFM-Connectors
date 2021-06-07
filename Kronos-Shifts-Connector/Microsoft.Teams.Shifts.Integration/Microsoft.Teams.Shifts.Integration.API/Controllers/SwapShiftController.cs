@@ -839,7 +839,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         {
             var provider = CultureInfo.InvariantCulture;
             this.telemetryClient.TrackTrace($"{Resource.ProcessOpenShiftsRequests} start at: {DateTime.Now.ToString("o", provider)}");
-            this.utility.SetQuerySpan(Convert.ToBoolean(false, CultureInfo.InvariantCulture), out var openShiftStartDate, out var openShiftEndDate);
+            this.utility.SetQuerySpan(true, out var openShiftStartDate, out var openShiftEndDate);
 
             var openShiftQueryDateSpan = $"{openShiftStartDate}-{openShiftEndDate}";
 
@@ -852,7 +852,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             if ((bool)allRequiredConfigurations?.IsAllSetUpExists && isCorrectDateRange)
             {
                 var response =
-                    await this.swapShiftActivity.ApproveOrDenyOpenShiftRequestsForUserAsync(
+                    await this.swapShiftActivity.ApproveOrDenySwapShiftRequestsForUserAsync(
                         new Uri(allRequiredConfigurations.WfmEndPoint),
                         allRequiredConfigurations.KronosSession,
                         openShiftQueryDateSpan,

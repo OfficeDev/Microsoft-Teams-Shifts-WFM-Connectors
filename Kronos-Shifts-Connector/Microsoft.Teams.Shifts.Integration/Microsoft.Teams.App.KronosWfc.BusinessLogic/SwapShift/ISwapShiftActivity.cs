@@ -93,7 +93,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
         /// <param name="approved">Whether the request is being accepted or denied.</param>
         /// <param name="kronosId">The id of the OpenShiftRequest in Kronos.</param>
         /// <returns>A response.</returns>
-        Task<FetchApprove.SwapShiftData.Response> ApproveOrDenyOpenShiftRequestsForUserAsync(
+        Task<FetchApprove.SwapShiftData.Response> ApproveOrDenySwapShiftRequestsForUserAsync(
             Uri endPointUrl,
             string jSession,
             string queryDateSpan,
