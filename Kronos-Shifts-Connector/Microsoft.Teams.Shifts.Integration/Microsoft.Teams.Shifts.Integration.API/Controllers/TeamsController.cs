@@ -184,6 +184,15 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 responseModelList = await this.ProcessSwapShiftRequest(jsonModel, aadGroupId, isRequestFromCorrectIntegration, kronosTimeZone).ConfigureAwait(true);
             }
 
+            // Check if payload is for time off request.
+            else if (jsonModel.Requests.Any(x => x.Url.Contains("/timeOffRequests/", StringComparison.InvariantCulture)))
+            {
+                this.telemetryClient.TrackTrace("Teams Controller timeOffRequests " + JsonConvert.SerializeObject(jsonModel));
+
+                // Process payload for time off request.
+                responseModelList = await this.ProcessTimeOffRequest(jsonModel, aadGroupId, isRequestFromCorrectIntegration, kronosTimeZone).ConfigureAwait(true);
+            }
+
             // Check if payload is for open shift.
             else if (jsonModel.Requests.Any(x => x.Url.Contains("/openshifts/", StringComparison.InvariantCulture)))
             {
@@ -563,6 +572,80 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             this.telemetryClient.TrackTrace("Teams Controller swapRequests responseModelList" + JsonConvert.SerializeObject(responseModelList));
 
             return responseModelList;
+        }
+
+        /// <summary>
+        /// Process time off request outbound calls.
+        /// </summary>
+        /// <param name="jsonModel">Incoming payload for the request been made in Shifts.</param>
+        /// <param name="aadGroupId">AAD Group id.</param>
+        /// <param name="isRequestFromCorrectIntegration">Whether the request originated from the correct workforce integration or not.</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting the times.</param>
+        /// <returns>Returns list of ShiftIntegResponse for request.</returns>
+        private async Task<List<ShiftsIntegResponse>> ProcessTimeOffRequest(RequestModel jsonModel, string aadGroupId, bool isRequestFromCorrectIntegration, string kronosTimeZone)
+        {
+            List<ShiftsIntegResponse> responseModelList = new List<ShiftsIntegResponse>();
+            var requestBody = jsonModel.Requests.First(x => x.Url.Contains("/timeOffRequests/", StringComparison.InvariantCulture)).Body;
+
+            if (requestBody == null)
+            {
+                return responseModelList;
+            }
+
+            switch (requestBody["state"].Value<string>())
+            {
+                // The time off request is submitted in Shifts and is pending manager approval.
+                case ApiConstants.ShiftsPending:
+                    {
+                        // Request came from the correct workforce integration
+                        if (isRequestFromCorrectIntegration)
+                        {
+                            var timeOffRequest = JsonConvert.DeserializeObject<OpenShiftRequestIS>(requestBody.ToString());
+                            responseModelList = await this.ProcessOutboundOpenShiftRequestAsync(openShiftRequest, updateProps, teamsId).ConfigureAwait(false);
+                        }
+
+                        // Request came from Shifts UI
+                        else
+                        {
+                        }
+                    }
+
+                    break;
+
+                case ApiConstants.ShiftsApproved:
+                    {
+                        // Request came from the correct workforce integration
+                        if (isRequestFromCorrectIntegration)
+                        {
+                            var timeOffRequest = JsonConvert.DeserializeObject<OpenShiftRequestIS>(requestBody.ToString());
+                            responseModelList = await this.ProcessOutboundOpenShiftRequestAsync(openShiftRequest, updateProps, teamsId).ConfigureAwait(false);
+                        }
+
+                        // Request came from Shifts UI
+                        else
+                        {
+                        }
+                    }
+
+                    break;
+
+                case ApiConstants.ShiftsDeclined:
+                    {
+                        // Request came from the correct workforce integration
+                        if (isRequestFromCorrectIntegration)
+                        {
+                            var timeOffRequest = JsonConvert.DeserializeObject<OpenShiftRequestIS>(requestBody.ToString());
+                            responseModelList = await this.ProcessOutboundOpenShiftRequestAsync(openShiftRequest, updateProps, teamsId).ConfigureAwait(false);
+                        }
+
+                        // Request came from Shifts UI
+                        else
+                        {
+                        }
+                    }
+
+                    break;
+            }
         }
 
         /// <summary>

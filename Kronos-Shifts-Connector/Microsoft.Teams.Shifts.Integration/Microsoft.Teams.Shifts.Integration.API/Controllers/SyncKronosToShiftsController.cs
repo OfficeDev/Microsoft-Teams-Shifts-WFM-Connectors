@@ -192,7 +192,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                 try
                 {
-                    // Sync timeoff from Kronos to Shifts.
+                    // Sync timeoff requests from Kronos to Shifts.
                     await this.timeOffRequestsController.ProcessTimeOffRequestsAsync(isRequestFromLogicApp).ConfigureAwait(false);
 
                     this.telemetryClient.TrackTrace($"{Resource.SyncTimeOffRequestsFromShiftsToKronos} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");

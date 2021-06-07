@@ -1341,7 +1341,7 @@
             <param name="autoDeclinedRequests">An open shift request.</param>
             <param name="responseModelList">The list of responses.</param>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.ApproveOpenShiftRequest(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.OpenShiftRequestIS,Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.OpenShiftIS,System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels.ShiftsIntegResponse})">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.ApproveOpenShiftRequestInTables(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.OpenShiftRequestIS,Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.OpenShiftIS,System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels.ShiftsIntegResponse})">
             <summary>
             Approves the open shift request.
             Removes the existing open shift.
