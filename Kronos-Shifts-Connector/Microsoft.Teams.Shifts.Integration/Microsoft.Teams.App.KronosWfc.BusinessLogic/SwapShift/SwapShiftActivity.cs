@@ -588,8 +588,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
             bool approved,
             string kronosId)
         {
-            this.telemetryClient.TrackTrace("ShiftSwapActivity - ApproveOrDenySwapShiftRequestsForUserAsync");
-
             var xmlTimeOffRequest = this.CreateApprovalRequest(queryDateSpan, kronosPersonNumber, approved, kronosId);
             var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
                 endPointUrl,
@@ -597,6 +595,13 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
                 xmlTimeOffRequest,
                 ApiConstants.SoapEnvClose,
                 jSession).ConfigureAwait(false);
+
+            this.telemetryClient.TrackTrace(
+                "ShiftSwapActivity - ApproveOrDenySwapShiftRequestsForUserAsync",
+                new Dictionary<string, string>()
+                {
+                    { "Response",  tupleResponse.Item1 }
+                });
 
             return this.ProcessSwapShiftApprovalResponse(tupleResponse.Item1);
         }
