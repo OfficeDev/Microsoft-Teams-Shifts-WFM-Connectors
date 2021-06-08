@@ -564,60 +564,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         }
 
         /// <summary>
-        /// Get Openshift.
+        /// Generic get for items in the jsonModel.
         /// </summary>
-        /// <param name="jsonModel">Incoming payload for the request been made in Shifts.</param>
-        private OpenShiftIS GetOpenShift(RequestModel jsonModel, bool approved = true)
-        {
-            var openShiftObj = jsonModel?.Requests?.FirstOrDefault(x => x.Url.Contains("/openshifts/", StringComparison.InvariantCulture));
-            OpenShiftIS openShift = null;
-            if (approved)
-            {
-                openShift = JsonConvert.DeserializeObject<OpenShiftIS>(openShiftObj.Body.ToString());
-            }
-
-            return openShift;
-        }
-
-        /// <summary>
-        /// Get Shift.
-        /// </summary>
-        /// <param name="jsonModel">Incoming payload for the request been made in Shifts.</param>
-        private Shift GetShift(RequestModel jsonModel, bool approved = true)
-        {
-            var shiftObj = jsonModel?.Requests?.FirstOrDefault(x => x.Url.Contains("/shifts/", StringComparison.InvariantCulture));
-            Shift shift = null;
-            if (approved)
-            {
-                shift = JsonConvert.DeserializeObject<Shift>(shiftObj.Body.ToString());
-            }
-
-            return shift;
-        }
-
-        /// <summary>
-        /// Get Openshift Request.
-        /// </summary>
-        /// <param name="jsonModel">Incoming payload for the request been made in Shifts.</param>
-        private OpenShiftRequestIS GetOpenShiftRequest(RequestModel jsonModel, bool approved = true)
-        {
-            var openShiftRequests = jsonModel?.Requests?.Where(x => x.Url.Contains("/openshiftrequests/", StringComparison.InvariantCulture));
-
-            IncomingRequest request;
-            if (approved)
-            {
-                request = openShiftRequests.FirstOrDefault(c => c.Body?["state"].Value<string>() == ApiConstants.ShiftsApproved
-                && c.Body["assignedTo"].Value<string>() == ApiConstants.ShiftsManager);
-            }
-            else
-            {
-                request = openShiftRequests.FirstOrDefault(c => c.Body?["state"].Value<string>() == ApiConstants.ShiftsDeclined
-                && c.Body["assignedTo"].Value<string>() == ApiConstants.ShiftsManager);
-            }
-
-            return JsonConvert.DeserializeObject<OpenShiftRequestIS>(request.Body.ToString());
-        }
-
+        /// <typeparam name="T">The type of the request.</typeparam>
+        /// <param name="jsonModel">The Json payload.</param>
+        /// <param name="urlValue">The request type you are looking for.</param>
+        /// <param name="approved">Whether you are looking for an approved (true) or denied (false) request.</param>
         private T Get<T>(RequestModel jsonModel, string urlValue, bool approved = true)
         {
             var obj = jsonModel?.Requests?.FirstOrDefault(x => x.Url.Contains(urlValue, StringComparison.InvariantCulture));
@@ -821,9 +773,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private async Task<List<ShiftsIntegResponse>> ProcessOpenShiftRequestApprovalAsync(RequestModel jsonModel, Dictionary<string, string> updateProps, string kronosTimeZone)
         {
             List<ShiftsIntegResponse> responseModelList = new List<ShiftsIntegResponse>();
-            var finalShift = this.GetShift(jsonModel);
-            var finalOpenShiftRequest = this.GetOpenShiftRequest(jsonModel);
-            var finalOpenShift = this.GetOpenShift(jsonModel);
+            var finalShift = this.Get<Shift>(jsonModel, "/shifts/");
+            var finalOpenShiftRequest = this.GetRequest<OpenShiftRequestIS>(jsonModel, "/openshiftrequests/");
+            var finalOpenShift = this.Get<OpenShiftIS>(jsonModel, "/openshifts/");
             var autoDeclinedRequests = this.GetAutoDeclinedRequests(jsonModel);
 
             updateProps.Add("NewShiftId", finalShift.Id);
@@ -1044,7 +996,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             this.telemetryClient.TrackTrace("Processing approval of OpenShiftRequests received from Shifts app", updateProps);
             List<ShiftsIntegResponse> responseModelList = new List<ShiftsIntegResponse>();
 
-            var openShiftRequest = this.GetOpenShiftRequest(jsonModel, approved);
+            var openShiftRequest = this.GetRequest<OpenShiftRequestIS>(jsonModel, "/openshiftrequests/", approved);
             var success = false;
 
             try
@@ -1087,7 +1039,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                 if (success)
                 {
-                    var shift = this.GetShift(jsonModel, approved);
+                    var shift = this.Get<Shift>(jsonModel, "/shifts/", approved);
                     var shiftsTemp = await this.shiftController.GetShiftsForUser(kronosUserId, openShiftRequestMapping.PartitionKey).ConfigureAwait(false);
                     var date = this.utility.UTCToKronosTimeZone(shift.SharedShift.StartDateTime, kronosTimeZone).ToString("d", CultureInfo.InvariantCulture);
 
@@ -1098,7 +1050,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                     if (newKronosShift != null)
                     {
-                        var openShift = this.GetOpenShift(jsonModel, approved);
+                        var openShift = this.Get<OpenShiftIS>(jsonModel, "/openshifts/", approved);
                         var kronosUniqueId = this.utility.CreateUniqueId(shift, kronosTimeZone);
                         var newShiftLinkEntity = this.shiftController.CreateNewShiftMappingEntity(shift, kronosUniqueId, kronosUserId, kronosTimeZone);
                         await this.ApproveOpenShiftRequestInTables(openShiftRequest, openShift, responseModelList).ConfigureAwait(false);
