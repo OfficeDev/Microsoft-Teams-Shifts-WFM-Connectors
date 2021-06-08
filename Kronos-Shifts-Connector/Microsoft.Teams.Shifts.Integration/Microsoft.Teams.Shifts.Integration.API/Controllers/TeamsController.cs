@@ -21,6 +21,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.Teams.Shifts.Integration.API.Common;
     using Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI;
     using Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming;
+    using Microsoft.Teams.Shifts.Integration.API.Models.Response.TimeOffRequest;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels;
@@ -600,52 +601,72 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         // Request came from the correct workforce integration
                         if (isRequestFromCorrectIntegration)
                         {
-                            var timeOffRequest = JsonConvert.DeserializeObject<OpenShiftRequestIS>(requestBody.ToString());
-                            responseModelList = await this.ProcessOutboundOpenShiftRequestAsync(openShiftRequest, updateProps, teamsId).ConfigureAwait(false);
+                            this.telemetryClient.TrackTrace("Create time off request came from correct workforce integration.");
+                            var requestId = jsonModel.Requests.First(x => x.Url.Contains("/timeOffRequests/", StringComparison.InvariantCulture)).Id;
+
+                            // All required work handled by logic app so just return ok response
+                            responseModelList.Add(GenerateResponse(requestId, HttpStatusCode.OK, null, null));
                         }
 
                         // Request came from Shifts UI
                         else
                         {
+                            this.telemetryClient.TrackTrace($"Request coming from Shifts UI.");
                         }
                     }
 
                     break;
 
+                // The time off request is approved by a manager
                 case ApiConstants.ShiftsApproved:
                     {
                         // Request came from the correct workforce integration
                         if (isRequestFromCorrectIntegration)
                         {
-                            var timeOffRequest = JsonConvert.DeserializeObject<OpenShiftRequestIS>(requestBody.ToString());
-                            responseModelList = await this.ProcessOutboundOpenShiftRequestAsync(openShiftRequest, updateProps, teamsId).ConfigureAwait(false);
+                            this.telemetryClient.TrackTrace("Approve time off request came from correct workforce integration.");
+                            var requestId = jsonModel.Requests.First(x => x.Url.Contains("/timeOffRequests/", StringComparison.InvariantCulture)).Id;
+
+                            // All required work handled by logic app so just return ok response
+                            responseModelList.Add(GenerateResponse(requestId, HttpStatusCode.OK, null, null));
                         }
 
                         // Request came from Shifts UI
                         else
                         {
+                            this.telemetryClient.TrackTrace($"Request coming from Shifts UI.");
+
+                            // TODO: Implement WFi approve time off request.
                         }
                     }
 
                     break;
 
+                // The time off request is declined by a manager
                 case ApiConstants.ShiftsDeclined:
                     {
                         // Request came from the correct workforce integration
                         if (isRequestFromCorrectIntegration)
                         {
-                            var timeOffRequest = JsonConvert.DeserializeObject<OpenShiftRequestIS>(requestBody.ToString());
-                            responseModelList = await this.ProcessOutboundOpenShiftRequestAsync(openShiftRequest, updateProps, teamsId).ConfigureAwait(false);
+                            this.telemetryClient.TrackTrace("Decline time off request came from correct workforce integration.");
+                            var requestId = jsonModel.Requests.First(x => x.Url.Contains("/timeOffRequests/", StringComparison.InvariantCulture)).Id;
+
+                            // All required work handled by logic app so just return ok response
+                            responseModelList.Add(GenerateResponse(requestId, HttpStatusCode.OK, null, null));
                         }
 
                         // Request came from Shifts UI
                         else
                         {
+                            this.telemetryClient.TrackTrace($"Request coming from Shifts UI.");
+
+                            // TODO: Implement WFi decline time off request.
                         }
                     }
 
                     break;
             }
+
+            return responseModelList;
         }
 
         /// <summary>
@@ -840,6 +861,25 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             this.telemetryClient.TrackTrace($"Finished dealing with OpenShiftRequest {openShiftRequest.Id}");
         }
+
+        /////// <summary>
+        /////// This method takes a time off request created in the Shifts app
+        /////// Creates the request to be sent to Kronos, sends it and depending on the response updates the relevant tables.
+        /////// </summary>
+        /////// <param name="jsonModel">The decrypted JSON payload.</param>
+        /////// <param name="kronosTimeZone">The time zone to use when converting the times.</param>
+        /////// <returns>A unit of execution.</returns>
+        ////private async Task<List<ShiftsIntegResponse>> ProcessCreateTimeOffRequestViaTeamsAsync(RequestModel jsonModel, string kronosTimeZone)
+        ////{
+        ////    this.telemetryClient.TrackTrace("Processing creation of a TimeOffRequest received from Shifts app");
+        ////    List<ShiftsIntegResponse> responseModelList = new List<ShiftsIntegResponse>();
+        ////    var updateProps = new Dictionary<string, string>();
+        ////    var timeOffObject = jsonModel?.Requests?.FirstOrDefault(x => x.Url.Contains("/timeOffRequests/", StringComparison.InvariantCulture));
+        ////    TimeOffRequestItem timeOffEntity = null;
+
+        ////    timeOffEntity = JsonConvert.DeserializeObject<TimeOffRequestItem>(timeOffObject.Body.ToString());
+        ////    return;
+        ////}
 
         /// <summary>
         /// This method processes the open shift request approval, and proceeds to update the Azure table storage accordingly with the Shifts status
