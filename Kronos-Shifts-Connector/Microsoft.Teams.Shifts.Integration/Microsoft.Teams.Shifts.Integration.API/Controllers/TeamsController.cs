@@ -1034,11 +1034,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                 // approve in kronos
                 success = await this.openShiftRequestController.ApproveOrDenyOpenShiftRequestInKronos(kronosReqId, kronosUserId, openShiftRequestMapping, approved).ConfigureAwait(false);
-                responseModelList.Add(GenerateResponse(openShiftRequest.Id, HttpStatusCode.OK, null, null));
                 updateProps.Add("SuccessfullyApprovedInKronos", $"{success}");
 
                 if (success)
                 {
+                    responseModelList.Add(GenerateResponse(openShiftRequest.Id, HttpStatusCode.OK, null, null));
                     var shift = this.Get<Shift>(jsonModel, "/shifts/", approved);
                     var shiftsTemp = await this.shiftController.GetShiftsForUser(kronosUserId, openShiftRequestMapping.PartitionKey).ConfigureAwait(false);
                     var date = this.utility.UTCToKronosTimeZone(shift.SharedShift.StartDateTime, kronosTimeZone).ToString("d", CultureInfo.InvariantCulture);
@@ -1111,7 +1111,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var kronosRequestingUserId = swapShiftRequestMapping.RequestorKronosPersonNumber;
                 var kronosRequestedUserId = swapShiftRequestMapping.RequestedKronosPersonNumber;
 
-                updateProps.Add("KronosPersonNumber", kronosRequestingUserId);
+                updateProps.Add("KronosRequestingPersonNumber", kronosRequestingUserId);
                 updateProps.Add("SwapShiftRequestID", swapRequest.Id);
                 updateProps.Add("KronosOpenShiftRequestId", kronosReqId);
 
@@ -1135,39 +1135,40 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                 // approve in kronos
                 success = await this.swapShiftController.ApproveSwapShiftInKronos(kronosReqId, kronosRequestingUserId, swapShiftRequestMapping, approved).ConfigureAwait(false);
-                responseModelList.Add(GenerateResponse(swapRequest.Id, HttpStatusCode.OK, null, null));
                 updateProps.Add("SuccessfullyApprovedInKronos", $"{success}");
 
                 if (success)
                 {
-                    var newShiftFirst = JsonConvert.DeserializeObject<Shift>(postedShifts?.First().Body.ToString());
-                    var newShiftSecond = JsonConvert.DeserializeObject<Shift>(postedShifts?.Last().Body.ToString());
+                    responseModelList.Add(GenerateResponse(swapRequest.Id, HttpStatusCode.OK, null, null));
+                    var requestorShift = JsonConvert.DeserializeObject<Shift>(postedShifts?.First().Body.ToString());
+                    var requestedShift = JsonConvert.DeserializeObject<Shift>(postedShifts?.Last().Body.ToString());
 
                     await this.shiftMappingEntityProvider.DeleteOrphanDataFromShiftMappingAsync(offeredShiftMap).ConfigureAwait(false);
                     await this.shiftMappingEntityProvider.DeleteOrphanDataFromShiftMappingAsync(requestedShiftMap).ConfigureAwait(false);
 
-                    var shiftsTemp = await this.shiftController.GetShiftsForUser(kronosRequestingUserId, swapShiftRequestMapping.PartitionKey).ConfigureAwait(false);
-                    var firstShiftDate = this.utility.UTCToKronosTimeZone(newShiftFirst.SharedShift.StartDateTime, kronosTimeZone).ToString("d", CultureInfo.InvariantCulture);
-                    var secondShiftDate = this.utility.UTCToKronosTimeZone(newShiftSecond.SharedShift.StartDateTime, kronosTimeZone).ToString("d", CultureInfo.InvariantCulture);
+                    var requestingUserShifts = await this.shiftController.GetShiftsForUser(kronosRequestingUserId, swapShiftRequestMapping.PartitionKey).ConfigureAwait(false);
+                    var requestedUserShifts = await this.shiftController.GetShiftsForUser(kronosRequestedUserId, swapShiftRequestMapping.PartitionKey).ConfigureAwait(false);
+                    var requestorShiftDate = this.utility.UTCToKronosTimeZone(requestorShift.SharedShift.StartDateTime, kronosTimeZone).ToString("d", CultureInfo.InvariantCulture);
+                    var requestedShiftDate = this.utility.UTCToKronosTimeZone(requestedShift.SharedShift.StartDateTime, kronosTimeZone).ToString("d", CultureInfo.InvariantCulture);
 
                     // confirm new shifts exists on kronos
-                    var newKronosFirstShift = shiftsTemp
+                    var requestedShiftKronos = requestingUserShifts
                         .Schedule.ScheduleItems.ScheduleShift
-                        .FirstOrDefault(x => x.Employee.FirstOrDefault().PersonNumber == kronosRequestingUserId && x.StartDate == firstShiftDate);
-                    var newKronosSecondShift = shiftsTemp
+                        .FirstOrDefault(x => x.Employee.FirstOrDefault().PersonNumber == kronosRequestingUserId && x.StartDate == requestorShiftDate);
+                    var requestorsShiftKronos = requestedUserShifts
                         .Schedule.ScheduleItems.ScheduleShift
-                        .FirstOrDefault(x => x.Employee.FirstOrDefault().PersonNumber == kronosRequestingUserId && x.StartDate == secondShiftDate);
+                        .FirstOrDefault(x => x.Employee.FirstOrDefault().PersonNumber == kronosRequestedUserId && x.StartDate == requestedShiftDate);
 
-                    if (newKronosFirstShift != null && newKronosSecondShift != null)
+                    if (requestedShiftKronos != null && requestorsShiftKronos != null)
                     {
-                        var kronosFirstShiftUniqueId = this.utility.CreateUniqueId(newShiftFirst, kronosTimeZone);
-                        var kronosSecondShiftUniqueId = this.utility.CreateUniqueId(newShiftSecond, kronosTimeZone);
-                        var newShiftFirstLinkEntity = this.shiftController.CreateNewShiftMappingEntity(newShiftFirst, kronosFirstShiftUniqueId, kronosRequestedUserId, kronosTimeZone);
-                        var newShiftSecondLinkEntity = this.shiftController.CreateNewShiftMappingEntity(newShiftSecond, kronosSecondShiftUniqueId, kronosRequestingUserId, kronosTimeZone);
+                        var kronosRequestorsShiftUniqueId = this.utility.CreateUniqueId(requestorShift, kronosTimeZone);
+                        var kronosRequestedShiftUniqueId = this.utility.CreateUniqueId(requestedShift, kronosTimeZone);
+                        var requestorsShiftLink = this.shiftController.CreateNewShiftMappingEntity(requestorShift, kronosRequestorsShiftUniqueId, kronosRequestedUserId, kronosTimeZone);
+                        var requestedShiftLink = this.shiftController.CreateNewShiftMappingEntity(requestedShift, kronosRequestedShiftUniqueId, kronosRequestingUserId, kronosTimeZone);
 
                         await this.ApproveSwapShiftRequestInTables(swapRequest, swapShiftRequestMapping, responseModelList).ConfigureAwait(false);
-                        await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(newShiftFirstLinkEntity, newShiftFirst.Id, swapShiftRequestMapping.PartitionKey).ConfigureAwait(false);
-                        await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(newShiftSecondLinkEntity, newShiftSecond.Id, swapShiftRequestMapping.PartitionKey).ConfigureAwait(false);
+                        await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(requestorsShiftLink, requestorShift.Id, swapShiftRequestMapping.PartitionKey).ConfigureAwait(false);
+                        await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(requestedShiftLink, requestedShift.Id, swapShiftRequestMapping.PartitionKey).ConfigureAwait(false);
                     }
                     else
                     {
