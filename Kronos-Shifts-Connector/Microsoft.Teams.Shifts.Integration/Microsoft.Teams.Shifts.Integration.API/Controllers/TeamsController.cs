@@ -1139,7 +1139,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                 if (success)
                 {
-                    responseModelList.Add(GenerateResponse(swapRequest.Id, HttpStatusCode.OK, null, null));
                     var requestorShift = JsonConvert.DeserializeObject<Shift>(postedShifts?.First().Body.ToString());
                     var requestedShift = JsonConvert.DeserializeObject<Shift>(postedShifts?.Last().Body.ToString());
 
@@ -1169,13 +1168,18 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         await this.ApproveSwapShiftRequestInTables(swapRequest, swapShiftRequestMapping, responseModelList).ConfigureAwait(false);
                         await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(requestorsShiftLink, requestorShift.Id, swapShiftRequestMapping.PartitionKey).ConfigureAwait(false);
                         await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(requestedShiftLink, requestedShift.Id, swapShiftRequestMapping.PartitionKey).ConfigureAwait(false);
+                        responseModelList.Add(GenerateResponse(swapRequest.Id, HttpStatusCode.OK, null, null));
                     }
                     else
                     {
                         this.telemetryClient.TrackTrace($"Error during approval of {swapRequest.Id}", updateProps);
                         responseModelList.Add(GenerateResponse(swapRequest.Id, HttpStatusCode.NotFound, null, null));
-                        return responseModelList;
                     }
+                }
+                else
+                {
+                    this.telemetryClient.TrackTrace($"Error during approval of {swapRequest.Id}", updateProps);
+                    responseModelList.Add(GenerateResponse(swapRequest.Id, HttpStatusCode.BadRequest, null, null));
                 }
             }
             catch (Exception ex)
