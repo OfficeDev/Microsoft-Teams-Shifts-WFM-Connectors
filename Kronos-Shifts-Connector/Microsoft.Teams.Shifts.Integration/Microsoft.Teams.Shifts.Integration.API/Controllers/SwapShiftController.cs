@@ -824,6 +824,61 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         }
 
         /// <summary>
+        /// Creates and sends the relevant request to approve or deny a swap shift request.
+        /// </summary>
+        /// <param name="kronosReqId">The Kronos request id for the swap shift request.</param>
+        /// <param name="kronosUserId">The Kronos user id for the assigned user.</param>
+        /// <param name="swapShiftMapping">The mapping for the swap shift.</param>
+        /// <param name="approved">Whether the swap shift should be approved (true) or denied (false).</param>
+        /// <returns>Returns a bool that represents whether the request was a success (true) or not (false).</returns>
+        internal async Task<bool> ApproveSwapShiftInKronos(
+            string kronosReqId,
+            string kronosUserId,
+            SwapShiftMappingEntity swapShiftMapping,
+            bool approved)
+        {
+            var provider = CultureInfo.InvariantCulture;
+            this.telemetryClient.TrackTrace($"{Resource.ProcessOpenShiftsRequests} start at: {DateTime.Now.ToString("o", provider)}");
+            this.utility.SetQuerySpan(true, out var openShiftStartDate, out var openShiftEndDate);
+
+            var openShiftQueryDateSpan = $"{openShiftStartDate}-{openShiftEndDate}";
+
+            // Get all the necessary prerequisites.
+            var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
+
+            // Check whether date range are in correct format.
+            var isCorrectDateRange = Utility.CheckDates(openShiftStartDate, openShiftEndDate);
+
+            if ((bool)allRequiredConfigurations?.IsAllSetUpExists && isCorrectDateRange)
+            {
+                var response =
+                    await this.swapShiftActivity.ApproveOrDenySwapShiftRequestsForUserAsync(
+                        new Uri(allRequiredConfigurations.WfmEndPoint),
+                        allRequiredConfigurations.KronosSession,
+                        openShiftQueryDateSpan,
+                        kronosUserId,
+                        approved,
+                        kronosReqId).ConfigureAwait(false);
+
+                if (response.Status == "Success" && approved)
+                {
+                    swapShiftMapping.KronosStatus = ApiConstants.ApprovedStatus;
+                    await this.swapShiftMappingEntityProvider.AddOrUpdateSwapShiftMappingAsync(swapShiftMapping).ConfigureAwait(false);
+                    return true;
+                }
+
+                if (response.Status == "Success" && !approved)
+                {
+                    swapShiftMapping.KronosStatus = ApiConstants.Refused;
+                    await this.swapShiftMappingEntityProvider.AddOrUpdateSwapShiftMappingAsync(swapShiftMapping).ConfigureAwait(false);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Method that will calculate the monthwise partition key.
         /// </summary>
         /// <param name="swapRequestDateTime">The date/time object of the Swap Request entity.</param>
