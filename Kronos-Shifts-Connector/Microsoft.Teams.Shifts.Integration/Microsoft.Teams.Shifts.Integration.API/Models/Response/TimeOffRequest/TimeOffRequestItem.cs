@@ -64,7 +64,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Models.Response.TimeOffRequest
         /// Gets or sets the SenderUserId.
         /// </summary>
         [JsonProperty("senderUserId")]
-        public Guid SenderUserId { get; set; }
+        public string SenderUserId { get; set; }
 
         /// <summary>
         /// Gets or sets the ManagerActionDateTime.

@@ -387,4 +387,11 @@
     <value>Please check the argument passed.</value>
     <comment>The message that will be displayed when the argument passed to service is incorrect.</comment>
   </data>
+  <data name="TimeOffReasonNotFound" xml:space="preserve">
+    <value>Unable to find that time off reason.</value>
+    <comment>This message is displayed when a time off reason has not been mapped between the two systems in storage.</comment>
+  </data>
+  <data name="TimeOffRequestCreationFailed" xml:space="preserve">
+    <value>Unable to create the time off request.</value>
+  </data>
 </root>
