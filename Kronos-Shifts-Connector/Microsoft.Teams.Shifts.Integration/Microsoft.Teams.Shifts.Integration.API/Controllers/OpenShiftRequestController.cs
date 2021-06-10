@@ -365,7 +365,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="kronosReqId">The Kronos request id for the open shift request.</param>
         /// <param name="kronosUserId">The Kronos user id for the assigned user.</param>
         /// <param name="openShiftRequestMapping">The mapping for the open shift request.</param>
-        /// <param name="approved">Whether the openshift should be approved (true) or denied (false).</param>
+        /// <param name="approved">Whether the open shift should be approved (true) or denied (false).</param>
         /// <returns>Returns a bool that represents whether the request was a success (true) or not (false).</returns>
         internal async Task<bool> ApproveOrDenyOpenShiftRequestInKronos(
             string kronosReqId,
@@ -375,7 +375,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         {
             var provider = CultureInfo.InvariantCulture;
             this.telemetryClient.TrackTrace($"{Resource.ProcessOpenShiftsRequests} start at: {DateTime.Now.ToString("o", provider)}");
-            this.utility.SetQuerySpan(Convert.ToBoolean(false, CultureInfo.InvariantCulture), out var openShiftStartDate, out var openShiftEndDate);
+            this.utility.SetQuerySpan(true, out var openShiftStartDate, out var openShiftEndDate);
 
             var openShiftQueryDateSpan = $"{openShiftStartDate}-{openShiftEndDate}";
 
@@ -384,6 +384,16 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             // Check whether date range are in correct format.
             var isCorrectDateRange = Utility.CheckDates(openShiftStartDate, openShiftEndDate);
+
+            Dictionary<string, string> data = new Dictionary<string, string>
+            {
+                { "KronosPersonNumber", $"{kronosUserId}" },
+                { "KronosOpenShiftRequestId", $"{kronosReqId}" },
+                { "Approved", $"{approved}" },
+                { "Configured correctly", $"{allRequiredConfigurations.IsAllSetUpExists}" },
+                { "Correct date range", $"{isCorrectDateRange}" },
+                { "Date range", $"{openShiftQueryDateSpan}" }
+            };
 
             if ((bool)allRequiredConfigurations?.IsAllSetUpExists && isCorrectDateRange)
             {
@@ -396,8 +406,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         approved,
                         kronosReqId).ConfigureAwait(false);
 
+                data.Add("ResponseStatus", $"{response.Status}");
+
                 if (response.Status == "Success" && approved)
                 {
+                    this.telemetryClient.TrackTrace($"Update table for approval of {kronosReqId}", data);
                     openShiftRequestMapping.KronosStatus = ApiConstants.ApprovedStatus;
                     await this.openShiftRequestMappingEntityProvider.SaveOrUpdateOpenShiftRequestMappingEntityAsync(openShiftRequestMapping).ConfigureAwait(false);
                     return true;
@@ -405,12 +418,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                 if (response.Status == "Success" && !approved)
                 {
+                    this.telemetryClient.TrackTrace($"Update table for refusal of {kronosReqId}", data);
                     openShiftRequestMapping.KronosStatus = ApiConstants.Refused;
                     await this.openShiftRequestMappingEntityProvider.SaveOrUpdateOpenShiftRequestMappingEntityAsync(openShiftRequestMapping).ConfigureAwait(false);
                     return true;
                 }
             }
 
+            this.telemetryClient.TrackTrace("ApproveOrDenyOpenShiftRequestInKronos - Configuration incorrect", data);
             return false;
         }
 

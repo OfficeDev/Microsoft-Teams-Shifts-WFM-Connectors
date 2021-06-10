@@ -917,7 +917,7 @@
             <param name="kronosReqId">The Kronos request id for the open shift request.</param>
             <param name="kronosUserId">The Kronos user id for the assigned user.</param>
             <param name="openShiftRequestMapping">The mapping for the open shift request.</param>
-            <param name="approved">Whether the openshift should be approved (true) or denied (false).</param>
+            <param name="approved">Whether the open shift should be approved (true) or denied (false).</param>
             <returns>Returns a bool that represents whether the request was a success (true) or not (false).</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.OpenShiftRequestController.ProcessOpenShiftsRequests(System.String)">
@@ -1106,6 +1106,16 @@
             </summary>
             <param name="isRequestFromLogicApp">Checks if request is coming from logic app or portal.</param>
             <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation.</returns>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.SwapShiftController.ApproveSwapShiftInKronos(System.String,System.String,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.SwapShiftMappingEntity,System.Boolean)">
+            <summary>
+            Creates and sends the relevant request to approve or deny a swap shift request.
+            </summary>
+            <param name="kronosReqId">The Kronos request id for the swap shift request.</param>
+            <param name="kronosUserId">The Kronos user id for the assigned user.</param>
+            <param name="swapShiftMapping">The mapping for the swap shift.</param>
+            <param name="approved">Whether the swap shift should be approved (true) or denied (false).</param>
+            <returns>Returns a bool that represents whether the request was a success (true) or not (false).</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.SwapShiftController.GetPartitionKey(System.DateTime)">
             <summary>
@@ -1352,6 +1362,15 @@
             Get Openshift Request.
             </summary>
             <param name="jsonModel">Incoming payload for the request been made in Shifts.</param>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.GetRequest``1(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming.RequestModel,System.String,System.Boolean)">
+            <summary>
+            Generic get for requests.
+            </summary>
+            <typeparam name="T">The type of the request.</typeparam>
+            <param name="jsonModel">The Json payload.</param>
+            <param name="urlValue">The request type you are looking for.</param>
+            <param name="approved">Whether you are looking for an approved (true) or denied (false) request.</param>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.GetAutoDeclinedRequests(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming.RequestModel)">
             <summary>
