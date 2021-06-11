@@ -82,6 +82,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
             if (teamMappingEntity == null)
             {
                 telemetryClient.TrackTrace($"Team {mappedUserResult.PartitionKey} not mapped.");
+                return null;
             }
 
             return new UserDetailsModel
