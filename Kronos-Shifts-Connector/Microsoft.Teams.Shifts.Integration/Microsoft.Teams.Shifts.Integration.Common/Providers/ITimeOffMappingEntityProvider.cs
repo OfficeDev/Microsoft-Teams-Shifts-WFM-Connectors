@@ -22,5 +22,13 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         Task<List<TimeOffMappingEntity>> GetAllTimeOffMappingEntitiesAsync(
           IEnumerable<UserDetailsModel> processKronosUsersInBatchList,
           string monthPartitionKey);
+
+        /// <summary>
+        /// Method definition to get aTimeOffReqMappingEntity.
+        /// </summary>
+        /// <param name="monthPartitionKey">The Month partition key.</param>
+        /// <param name="timeOffRequestId">The TimeOffRequestId of the request to retrieve.</param>
+        /// <returns>A time off request.</returns>
+        Task<TimeOffMappingEntity> GetTimeOffRequestMappingEntityAsync(string monthPartitionKey, string timeOffRequestId);
     }
 }

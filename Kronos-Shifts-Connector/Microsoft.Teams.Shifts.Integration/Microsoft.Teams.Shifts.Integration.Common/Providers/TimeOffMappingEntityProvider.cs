@@ -66,6 +66,44 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         }
 
         /// <summary>
+        /// Method to get a TimeOffReqMappingEntity.
+        /// </summary>
+        /// <param name="monthPartitionKey">The month partition key.</param>
+        /// <param name="timeOffRequestId">The TimeOffRequestId of the request to retrieve.</param>
+        /// <returns>A <see cref="TimeOffMappingEntity"/>.</returns>
+        public async Task<TimeOffMappingEntity> GetTimeOffRequestMappingEntityAsync(string monthPartitionKey, string timeOffRequestId)
+        {
+            await this.EnsureInitializedAsync().ConfigureAwait(false);
+
+            var getEntitiesProps = new Dictionary<string, string>()
+            {
+                { "CurrentCallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
+            };
+
+            this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, getEntitiesProps);
+
+            // Table query
+            TableQuery<TimeOffMappingEntity> query = new TableQuery<TimeOffMappingEntity>();
+            query.Where(TableQuery.CombineFilters(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, monthPartitionKey), TableOperators.And, TableQuery.CombineFilters(TableQuery.GenerateFilterCondition("ShiftsRequestId", QueryComparisons.Equal, timeOffRequestId), TableOperators.And, TableQuery.GenerateFilterConditionForBool("IsActive", QueryComparisons.Equal, true))));
+
+            // Results list
+            List<TimeOffMappingEntity> results = new List<TimeOffMappingEntity>();
+            TableContinuationToken continuationToken = null;
+            if (await this.timeoffEntityMappingTable.ExistsAsync().ConfigureAwait(false))
+            {
+                do
+                {
+                    TableQuerySegment<TimeOffMappingEntity> queryResults = await this.timeoffEntityMappingTable.ExecuteQuerySegmentedAsync(query, continuationToken).ConfigureAwait(false);
+                    continuationToken = queryResults.ContinuationToken;
+                    results.AddRange(queryResults.Results);
+                }
+                while (continuationToken != null);
+            }
+
+            return results.FirstOrDefault(x => x.ShiftsRequestId == timeOffRequestId);
+        }
+
+        /// <summary>
         /// Get all the time off mapping entities.
         /// </summary>
         /// <param name="userModel">User in batch.</param>
