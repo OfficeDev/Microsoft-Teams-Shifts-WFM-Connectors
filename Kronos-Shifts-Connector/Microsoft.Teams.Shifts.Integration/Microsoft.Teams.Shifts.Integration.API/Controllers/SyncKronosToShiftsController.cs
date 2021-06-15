@@ -22,6 +22,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     [Route("api/SyncKronosToShifts")]
     public class SyncKronosToShiftsController : ControllerBase
     {
+        private static bool hasMappedPaycodes = false;
         private readonly TelemetryClient telemetryClient;
         private readonly IConfigurationProvider configurationProvider;
         private readonly OpenShiftController openShiftController;
@@ -109,6 +110,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <returns>Returns task.</returns>
         private async Task ProcessKronosToShiftsShiftsAsync(string isRequestFromLogicApp)
         {
+#pragma warning disable CA1031 // Do not catch general exception types
             var isOpenShiftRequestSyncSuccessful = false;
             var isSwapShiftRequestSyncSuccessful = false;
             var isMapPayCodeTimeOffReasonsSuccessful = false;
@@ -121,9 +123,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                 this.telemetryClient.TrackTrace($"{Resource.ProcessOpenShiftsAsync} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception ex)
-#pragma warning restore CA1031 // Do not catch general exception types
             {
                 this.telemetryClient.TrackException(ex);
             }
@@ -135,9 +135,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 isOpenShiftRequestSyncSuccessful = true;
                 this.telemetryClient.TrackTrace($"{Resource.ProcessOpenShiftsRequests} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception ex)
-#pragma warning restore CA1031 // Do not catch general exception types
             {
                 isOpenShiftRequestSyncSuccessful = false;
                 this.telemetryClient.TrackException(ex);
@@ -150,9 +148,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 isSwapShiftRequestSyncSuccessful = true;
                 this.telemetryClient.TrackTrace($"{Resource.ProcessSwapShiftsAsync} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception ex)
-#pragma warning restore CA1031 // Do not catch general exception types
             {
                 isSwapShiftRequestSyncSuccessful = false;
                 this.telemetryClient.TrackException(ex);
@@ -164,17 +160,16 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 await this.timeOffReasonController.MapPayCodeTimeOffReasonsAsync().ConfigureAwait(false);
                 isMapPayCodeTimeOffReasonsSuccessful = true;
                 this.telemetryClient.TrackTrace($"{Resource.MapPayCodeTimeOffReasonsAsync} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
+                hasMappedPaycodes = true;
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception ex)
-#pragma warning restore CA1031 // Do not catch general exception types
             {
                 isMapPayCodeTimeOffReasonsSuccessful = false;
                 this.telemetryClient.TrackException(ex);
             }
 
             // Sync TimeOff and TimeOffRequest only if Paycodes in Kronos synced successfully.
-            if (isMapPayCodeTimeOffReasonsSuccessful)
+            if (hasMappedPaycodes)
             {
                 try
                 {
@@ -225,6 +220,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             }
 
             this.telemetryClient.TrackTrace($"{Resource.ProcessKronosToShiftsShiftsAsync} completed at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}" + " for isRequestFromLogicApp: " + isRequestFromLogicApp);
+#pragma warning restore CA1031 // Do not catch general exception types
         }
     }
 }

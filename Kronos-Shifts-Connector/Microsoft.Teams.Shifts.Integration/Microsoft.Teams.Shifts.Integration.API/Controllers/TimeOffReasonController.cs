@@ -20,6 +20,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.Teams.Shifts.Integration.API.Common;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers;
+    using Microsoft.WindowsAzure.Storage.Table;
     using Newtonsoft.Json;
     using TimeOffReasonRequest = Microsoft.Teams.Shifts.Integration.API.Models.Request;
     using TimeOffReasonResponse = Microsoft.Teams.Shifts.Integration.API.Models.Response;
@@ -41,6 +42,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private readonly ITeamDepartmentMappingProvider teamDepartmentMappingProvider;
         private readonly Utility utility;
         private readonly string tenantId;
+        private static bool runOnce = false;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TimeOffReasonController"/> class.
@@ -88,6 +90,16 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var result = await this.teamDepartmentMappingProvider.GetMappedTeamToDeptsWithJobPathsAsync().ConfigureAwait(false);
                 if (result != null)
                 {
+                    if (!runOnce)
+                    {
+                        await this.InitialTimeOffReasonsSyncAsync(
+                                allRequiredConfigurations.ShiftsAccessToken,
+                                result[0].TeamId,
+                                allRequiredConfigurations.WfmEndPoint,
+                                allRequiredConfigurations.KronosSession).ConfigureAwait(false);
+                        runOnce = true;
+                    }
+
                     foreach (var team in result)
                     {
                         await this.UpdateTimeOffReasonsAsync(
@@ -112,6 +124,35 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         }
 
         /// <summary>
+        /// Creates mapping reasons in storage.
+        /// </summary>
+        /// <param name="accessToken">Cached AccessToken.</param>
+        /// <param name="teamsId">MS Teams Id.</param>
+        /// <param name="tenantId">tenant Id.</param>
+        /// <param name="kronosEndpoint">The Kronos WFC API endpoint.</param>
+        /// <param name="kronosSession">The Kronos WFC Jsession.</param>
+        /// <returns>List of TimeOffReasons.</returns>
+        private async Task InitialTimeOffReasonsSyncAsync(
+            string accessToken,
+            string teamsId,
+            string kronosEndpoint,
+            string kronosSession)
+        {
+            var kronosReasons = await this.payCodeActivity.FetchPayCodesAsync(new Uri(kronosEndpoint), kronosSession).ConfigureAwait(false);
+            var initialshiftReasons = await this.GetTimeOffReasonAsync(accessToken, teamsId).ConfigureAwait(false);
+            await this.RemoveReasonsExceptAsync(initialshiftReasons, accessToken, teamsId).ConfigureAwait(false);
+
+            if (kronosReasons != null)
+            {
+                await this.AddMultipleReasons(accessToken, teamsId, kronosReasons).ConfigureAwait(false);
+                return;
+            }
+
+            await this.AddSingleReason(accessToken, teamsId, "Off").ConfigureAwait(false);
+            return;
+        }
+
+        /// <summary>
         /// Update mapping reasons in storage.
         /// </summary>
         /// <param name="accessToken">Cached AccessToken.</param>
@@ -120,48 +161,46 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="kronosEndpoint">The Kronos WFC API endpoint.</param>
         /// <param name="kronosSession">The Kronos WFC Jsession.</param>
         /// <returns>List of TimeOffReasons.</returns>
-        private async Task<dynamic> UpdateTimeOffReasonsAsync(
+        private async Task UpdateTimeOffReasonsAsync(
             string accessToken,
             string teamsId,
             string tenantId,
             string kronosEndpoint,
             string kronosSession)
         {
-            this.telemetryClient.TrackTrace($"{MethodBase.GetCurrentMethod().Name}");
-            var paycodeList = await this.payCodeActivity.FetchPayCodesAsync(new Uri(kronosEndpoint), kronosSession).ConfigureAwait(true);
-            var lstTimeOffReasons = await this.GetTimeOffReasonAsync(accessToken, teamsId).ConfigureAwait(true);
-            if (lstTimeOffReasons != null)
+            /*
+                future syncs
+                get kronosReasons
+                get mapped table things
+
+                use table - if there is a table entity that isn't in the kronosReasons - delete it in shifts and the table
+                use table - if you find a new kronosReason add it in shifts and the table
+            */
+
+            var kronosReasons = await this.payCodeActivity.FetchPayCodesAsync(new Uri(kronosEndpoint), kronosSession).ConfigureAwait(true);
+            var mappedReasons = await this.timeOffReasonProvider.FetchReasonsForTeamsAsync(teamsId, tenantId).ConfigureAwait(true);
+            var removeActions = new List<Task>();
+            var addActions = new List<Task>();
+
+            foreach (var reason in mappedReasons)
             {
-                var reasonList = lstTimeOffReasons.Select(c => c.DisplayName).ToList();
-                var newCodes = paycodeList.Except(reasonList);
-
-                foreach (var payCode in newCodes)
+                if (!kronosReasons.Contains(reason.Value))
                 {
-                    await this.CreateTimeOffReasonAsync(accessToken, teamsId, payCode).ConfigureAwait(true);
-                }
-
-                var timeOffReasons = await this.GetTimeOffReasonAsync(accessToken, teamsId).ConfigureAwait(true);
-                var mappedReasons = await this.timeOffReasonProvider.FetchReasonsForTeamsAsync(teamsId, tenantId).ConfigureAwait(true);
-                foreach (var timeOffReason in timeOffReasons)
-                {
-                    if ((paycodeList.Contains(timeOffReason.DisplayName) && !mappedReasons.ContainsKey(timeOffReason.Id))
-                    || (paycodeList.Contains(timeOffReason.DisplayName)
-                        && mappedReasons.ContainsKey(timeOffReason.Id)
-                        && !mappedReasons[timeOffReason.Id].Contains(timeOffReason.DisplayName, StringComparison.InvariantCulture)))
-                    {
-                        var payCodeToTimeOffReasonsMappingEntity = new PayCodeToTimeOffReasonsMappingEntity
-                        {
-                            PartitionKey = teamsId,
-                            RowKey = timeOffReason.DisplayName,
-                            TimeOffReasonId = timeOffReason.Id,
-                        };
-
-                        await this.azureTableStorageHelper.InsertOrMergeTableEntityAsync(payCodeToTimeOffReasonsMappingEntity, "PayCodeToTimeOffReasonsMapping").ConfigureAwait(true);
-                    }
+                    removeActions.Add(this.DeleteSingleReason(accessToken, teamsId, reason.Value));
                 }
             }
 
-            return null;
+            foreach (var reason in kronosReasons)
+            {
+                if (!mappedReasons.ContainsValue(reason))
+                {
+                    addActions.Add(this.AddSingleReason(accessToken, teamsId, reason));
+                }
+            }
+
+            await Task.WhenAll(removeActions).ConfigureAwait(false);
+            await Task.WhenAll(addActions).ConfigureAwait(false);
+            return;
         }
 
         /// <summary>
@@ -188,7 +227,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         if (result != null)
                         {
                             var res = JsonConvert.DeserializeObject<TimeOffReasonResponse.Temp>(result);
-                            return res.Value.Where(c => c.IsActive == true).ToList();
+                            return res.Value.Where(c => c.IsActive).ToList();
                         }
                     }
                 }
@@ -213,7 +252,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="teamsId">MS Teams Id.</param>
         /// <param name="payCode">Kronos payCode.</param>
         /// <returns>None.</returns>
-        private async Task<dynamic> CreateTimeOffReasonAsync(string accessToken, string teamsId, string payCode)
+        private async Task<bool> CreateTimeOffReasonAsync(string accessToken, string teamsId, string payCode)
         {
             this.telemetryClient.TrackTrace($"{MethodBase.GetCurrentMethod().Name}");
 
@@ -236,7 +275,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 if (response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
-                    return responseContent;
+                    return true;
                 }
                 else
                 {
@@ -247,8 +286,134 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     };
 
                     this.telemetryClient.TrackTrace($"{MethodBase.GetCurrentMethod().Name}", failedCreateTimeOffReasonsProps);
-                    return string.Empty;
+                    return false;
                 }
+            }
+        }
+
+        private async Task<bool> DeleteTimeOffReasonAsync(string accessToken, string teamsId, string timeOffId)
+        {
+            this.telemetryClient.TrackTrace($"{MethodBase.GetCurrentMethod().Name}");
+            var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Delete, "teams/" + teamsId + "/schedule/timeOffReasons/" + timeOffId))
+            {
+                var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(true);
+                if (response.IsSuccessStatusCode)
+                {
+                    return true;
+                }
+                else
+                {
+                    var failedCreateTimeOffReasonsProps = new Dictionary<string, string>()
+                    {
+                        { "TeamId", teamsId },
+                        { "TeamOffId", timeOffId },
+                    };
+
+                    this.telemetryClient.TrackTrace($"{MethodBase.GetCurrentMethod().Name}", failedCreateTimeOffReasonsProps);
+                    return false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Removes all reasons in Shifts except any given.
+        /// </summary>
+        /// <param name="reasons">The list of reasons to edit.</param>
+        /// <param name="accessToken">Cached AccessToken.</param>
+        /// <param name="teamsId">MS Teams Id.</param>
+        /// <param name="reasonsToKeep">The reasons to keep.</param>
+        private async Task RemoveReasonsExceptAsync(List<TimeOffReasonResponse.TimeOffReason> reasons, string accessToken, string teamsId, params string[] reasonsToKeep)
+        {
+            var reasonsToRemove = reasons.Where(c => !reasonsToKeep.Contains(c.DisplayName));
+            var successfullyRemovedReasons = new List<string>();
+            foreach (var reason in reasonsToRemove)
+            {
+                var success = await this.DeleteTimeOffReasonAsync(accessToken, teamsId, reason.Id).ConfigureAwait(false);
+                if (success)
+                {
+                    successfullyRemovedReasons.Add(reason.DisplayName);
+                }
+            }
+
+            await this.timeOffReasonProvider.DeleteSpecificReasons(successfullyRemovedReasons.ToArray()).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Adds a given reason to both Shifts and the Database.
+        /// </summary>
+        /// <param name="accessToken">Cached AccessToken.</param>
+        /// <param name="teamsId">MS Teams Id.</param>
+        /// <param name="reason">The name of the reason.</param>
+        private async Task AddSingleReason(string accessToken, string teamsId, string reason)
+        {
+            if (await this.CreateTimeOffReasonAsync(accessToken, teamsId, reason).ConfigureAwait(false))
+            {
+                var reasonToAdd = (await this.GetTimeOffReasonAsync(accessToken, teamsId).ConfigureAwait(false))
+                    .Find(c => c.DisplayName == reason);
+
+                var paycodeMapping = new PayCodeToTimeOffReasonsMappingEntity
+                {
+                    PartitionKey = teamsId,
+                    RowKey = reasonToAdd.DisplayName,
+                    TimeOffReasonId = reasonToAdd.Id,
+                };
+
+                await this.azureTableStorageHelper.InsertOrMergeTableEntityAsync(paycodeMapping, "PayCodeToTimeOffReasonsMapping").ConfigureAwait(true);
+            }
+        }
+
+        /// <summary>
+        /// Deletes a given reason to both Shifts and the Database.
+        /// </summary>
+        /// <param name="accessToken">Cached AccessToken.</param>
+        /// <param name="teamsId">MS Teams Id.</param>
+        /// <param name="reason">The name of the reason.</param>
+        private async Task DeleteSingleReason(string accessToken, string teamsId, string reason)
+        {
+            var reasonToDelete = (await this.GetTimeOffReasonAsync(accessToken, teamsId).ConfigureAwait(false))
+                    .Find(c => c.DisplayName == reason);
+
+            if (await this.DeleteTimeOffReasonAsync(accessToken, teamsId, reasonToDelete.Id).ConfigureAwait(false))
+            {
+                await this.timeOffReasonProvider.DeleteSpecificReasons(reasonToDelete.DisplayName).ConfigureAwait(false);
+            }
+        }
+
+        /// <summary>
+        /// Adds a list of given reasons to both Shifts and the Database.
+        /// </summary>
+        /// <param name="accessToken">Cached AccessToken.</param>
+        /// <param name="teamsId">MS Teams Id.</param>
+        /// <param name="kronosReasons">The list of reasons pulled from Kronos.</param>
+        private async Task AddMultipleReasons(string accessToken, string teamsId, List<string> kronosReasons)
+        {
+            var successList = new List<string>();
+
+            foreach (var reason in kronosReasons)
+            {
+                var success = await this.CreateTimeOffReasonAsync(accessToken, teamsId, reason).ConfigureAwait(false);
+                if (success)
+                {
+                    successList.Add(reason);
+                }
+            }
+
+            var shiftReasons = await this.GetTimeOffReasonAsync(accessToken, teamsId).ConfigureAwait(false);
+
+            foreach (var reason in successList)
+            {
+                var reasonInShifts = shiftReasons.Find(c => c.DisplayName == reason);
+
+                var payCodeToTimeOffReasonsMappingEntity = new PayCodeToTimeOffReasonsMappingEntity
+                {
+                    PartitionKey = teamsId,
+                    RowKey = reasonInShifts.DisplayName,
+                    TimeOffReasonId = reasonInShifts.Id,
+                };
+
+                await this.azureTableStorageHelper.InsertOrMergeTableEntityAsync(payCodeToTimeOffReasonsMappingEntity, "PayCodeToTimeOffReasonsMapping").ConfigureAwait(true);
             }
         }
     }
