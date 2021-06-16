@@ -311,18 +311,7 @@ namespace Microsoft.Teams.Shifts.Integration.API {
                 return ResourceManager.GetString("InternalServerErrorMessage", resourceCulture);
             }
         }
-
-        /// <summary>
-        ///   Looks up a localized string similar to The action you are trying to perform should only be done in Kronos.
-        /// </summary>
-        public static string InvalidApproval
-        {
-            get
-            {
-                return ResourceManager.GetString("InvalidApproval", resourceCulture);
-            }
-        }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Unable to login Kronos..
         /// </summary>
@@ -558,11 +547,11 @@ namespace Microsoft.Teams.Shifts.Integration.API {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to ProcessTimeOffRequetsAsync.
+        ///   Looks up a localized string similar to ProcessTimeOffRequestsAsync.
         /// </summary>
-        public static string ProcessTimeOffRequetsAsync {
+        public static string ProcessTimeOffRequestsAsync {
             get {
-                return ResourceManager.GetString("ProcessTimeOffRequetsAsync", resourceCulture);
+                return ResourceManager.GetString("ProcessTimeOffRequestsAsync", resourceCulture);
             }
         }
         
@@ -747,11 +736,29 @@ namespace Microsoft.Teams.Shifts.Integration.API {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to approve the time off request..
+        /// </summary>
+        public static string TimeOffRequestApproveFailed {
+            get {
+                return ResourceManager.GetString("TimeOffRequestApproveFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to create the time off request..
         /// </summary>
         public static string TimeOffRequestCreationFailed {
             get {
                 return ResourceManager.GetString("TimeOffRequestCreationFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to decline the time off request..
+        /// </summary>
+        public static string TimeOffRequestDeclineFailed {
+            get {
+                return ResourceManager.GetString("TimeOffRequestDeclineFailed", resourceCulture);
             }
         }
         

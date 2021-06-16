@@ -357,8 +357,8 @@
   <data name="ProcessSwapShiftsAsync" xml:space="preserve">
     <value>ProcessSwapShiftsAsync</value>
   </data>
-  <data name="ProcessTimeOffRequetsAsync" xml:space="preserve">
-    <value>ProcessTimeOffRequetsAsync</value>
+  <data name="ProcessTimeOffRequestsAsync" xml:space="preserve">
+    <value>ProcessTimeOffRequestsAsync</value>
   </data>
   <data name="ProcessTimeOffsAsync" xml:space="preserve">
     <value>ProcessTimeOffsAsync</value>
@@ -393,5 +393,11 @@
   </data>
   <data name="TimeOffRequestCreationFailed" xml:space="preserve">
     <value>Unable to create the time off request.</value>
+  </data>
+  <data name="TimeOffRequestApproveFailed" xml:space="preserve">
+    <value>Unable to approve the time off request.</value>
+  </data>
+  <data name="TimeOffRequestDeclineFailed" xml:space="preserve">
+    <value>Unable to decline the time off request.</value>
   </data>
 </root>

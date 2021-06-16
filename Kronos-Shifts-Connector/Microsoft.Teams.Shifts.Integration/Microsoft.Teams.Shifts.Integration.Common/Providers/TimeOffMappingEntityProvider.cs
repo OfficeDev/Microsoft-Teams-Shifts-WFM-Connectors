@@ -66,12 +66,11 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         }
 
         /// <summary>
-        /// Method to get a TimeOffReqMappingEntity.
+        /// Method to get a TimeOffMappingEntity by time off request id.
         /// </summary>
-        /// <param name="monthPartitionKey">The month partition key.</param>
         /// <param name="timeOffRequestId">The TimeOffRequestId of the request to retrieve.</param>
         /// <returns>A <see cref="TimeOffMappingEntity"/>.</returns>
-        public async Task<TimeOffMappingEntity> GetTimeOffRequestMappingEntityAsync(string monthPartitionKey, string timeOffRequestId)
+        public async Task<TimeOffMappingEntity> GetTimeOffRequestMappingEntityByRequestIdAsync(string timeOffRequestId)
         {
             await this.EnsureInitializedAsync().ConfigureAwait(false);
 
@@ -84,7 +83,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
 
             // Table query
             TableQuery<TimeOffMappingEntity> query = new TableQuery<TimeOffMappingEntity>();
-            query.Where(TableQuery.CombineFilters(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, monthPartitionKey), TableOperators.And, TableQuery.CombineFilters(TableQuery.GenerateFilterCondition("ShiftsRequestId", QueryComparisons.Equal, timeOffRequestId), TableOperators.And, TableQuery.GenerateFilterConditionForBool("IsActive", QueryComparisons.Equal, true))));
+            query.Where(TableQuery.CombineFilters(TableQuery.GenerateFilterCondition("ShiftsRequestId", QueryComparisons.Equal, timeOffRequestId), TableOperators.And, TableQuery.GenerateFilterConditionForBool("IsActive", QueryComparisons.Equal, true)));
 
             // Results list
             List<TimeOffMappingEntity> results = new List<TimeOffMappingEntity>();
@@ -101,6 +100,33 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             }
 
             return results.FirstOrDefault(x => x.ShiftsRequestId == timeOffRequestId);
+        }
+
+        /// <summary>
+        /// Saves or updates an time off mapping to Azure table storage.
+        /// </summary>
+        /// <param name="entity">The time off mapping entity.</param>
+        /// <returns>A unit of execution.</returns>
+        public Task SaveOrUpdateTimeOffMappingEntityAsync(
+            TimeOffMappingEntity entity)
+        {
+            if (entity is null)
+            {
+                throw new ArgumentNullException(nameof(entity));
+            }
+
+            var saveOrUpdateTimeOffMappingProps = new Dictionary<string, string>()
+            {
+                { "KronosRequestId", entity?.KronosRequestId },
+                { "ShiftsRequestId", entity?.ShiftsRequestId },
+                { "CallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
+            };
+
+            this.telemetryClient.TrackTrace(
+                MethodBase.GetCurrentMethod().Name,
+                saveOrUpdateTimeOffMappingProps);
+
+            return this.StoreOrUpdateEntityAsync(entity);
         }
 
         /// <summary>
@@ -165,6 +191,26 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             CloudTableClient cloudTableClient = storageAccount.CreateCloudTableClient();
             this.timeoffEntityMappingTable = cloudTableClient.GetTableReference(TimeOffTable);
             await this.timeoffEntityMappingTable.CreateIfNotExistsAsync().ConfigureAwait(false);
+        }
+
+        private async Task<TableResult> StoreOrUpdateEntityAsync(TimeOffMappingEntity entity)
+        {
+            if (entity is null)
+            {
+                throw new ArgumentNullException(nameof(entity));
+            }
+
+            await this.EnsureInitializedAsync().ConfigureAwait(false);
+
+            var storeOrUpdateEntityProps = new Dictionary<string, string>()
+            {
+                { "CallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
+            };
+
+            this.telemetryClient.TrackEvent("StoreOrUpdateEntityAsync", storeOrUpdateEntityProps);
+
+            TableOperation addOrUpdateOperation = TableOperation.InsertOrReplace(entity);
+            return await this.timeoffEntityMappingTable.ExecuteAsync(addOrUpdateOperation).ConfigureAwait(false);
         }
     }
 }
