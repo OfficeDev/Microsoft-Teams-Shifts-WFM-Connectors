@@ -173,9 +173,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                     this.telemetryClient.TrackTrace($"{Resource.ProcessTimeOffsAsync} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
                 }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception ex)
-#pragma warning restore CA1031 // Do not catch general exception types
                 {
                     this.telemetryClient.TrackException(ex);
                 }
