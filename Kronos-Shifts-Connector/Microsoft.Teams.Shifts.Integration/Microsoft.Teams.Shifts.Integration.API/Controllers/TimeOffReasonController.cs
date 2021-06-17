@@ -334,8 +334,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var successfullyRemovedReasons = new List<string>();
             foreach (var reason in reasonsToRemove)
             {
-                var success = await this.DeleteTimeOffReasonAsync(accessToken, teamsId, reason.Id).ConfigureAwait(false);
-                if (success)
+                if (await this.DeleteTimeOffReasonAsync(accessToken, teamsId, reason.Id).ConfigureAwait(false))
                 {
                     successfullyRemovedReasons.Add(reason.DisplayName);
                 }
