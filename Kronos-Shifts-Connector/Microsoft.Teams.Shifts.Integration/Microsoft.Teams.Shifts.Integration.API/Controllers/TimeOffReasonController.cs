@@ -147,6 +147,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var initialshiftReasons = await this.GetTimeOffReasonAsync(accessToken, teamsId).ConfigureAwait(false);
             await this.RemoveReasonsExceptAsync(initialshiftReasons, accessToken, teamsId).ConfigureAwait(false);
 
+            if (initialshiftReasons == null)
+            {
+                return;
+            }
+
             if (kronosReasons != null)
             {
                 await this.AddMultipleReasons(accessToken, teamsId, kronosReasons).ConfigureAwait(false);
@@ -186,6 +191,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             foreach (var team in teamsIds)
             {
                 var shiftReasons = await this.GetTimeOffReasonAsync(accessToken, team).ConfigureAwait(false);
+                if (shiftReasons == null)
+                {
+                    return;
+                }
+
                 foreach (var mappedReason in mappedReasons.Values)
                 {
                     if (!kronosReasons.Contains(mappedReason))
