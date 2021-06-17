@@ -22,7 +22,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     [Route("api/SyncKronosToShifts")]
     public class SyncKronosToShiftsController : ControllerBase
     {
-        private static bool hasMappedPaycodes = false;
         private readonly TelemetryClient telemetryClient;
         private readonly IConfigurationProvider configurationProvider;
         private readonly OpenShiftController openShiftController;
@@ -30,7 +29,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private readonly SwapShiftController swapShiftController;
         private readonly TimeOffController timeOffController;
         private readonly TimeOffReasonController timeOffReasonController;
-        private readonly TimeOffRequestsController timeOffRequestsController;
         private readonly ShiftController shiftController;
         private readonly BackgroundTaskWrapper taskWrapper;
 
@@ -55,7 +53,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             SwapShiftController swapShiftController,
             TimeOffController timeOffController,
             TimeOffReasonController timeOffReasonController,
-            TimeOffRequestsController timeOffRequestsController,
             ShiftController shiftController,
             BackgroundTaskWrapper taskWrapper)
         {
@@ -66,7 +63,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             this.swapShiftController = swapShiftController;
             this.timeOffController = timeOffController;
             this.timeOffReasonController = timeOffReasonController;
-            this.timeOffRequestsController = timeOffRequestsController;
             this.shiftController = shiftController;
             this.taskWrapper = taskWrapper;
         }
@@ -160,7 +156,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 await this.timeOffReasonController.MapPayCodeTimeOffReasonsAsync(isRequestFromLogicApp).ConfigureAwait(false);
                 isMapPayCodeTimeOffReasonsSuccessful = true;
                 this.telemetryClient.TrackTrace($"{Resource.MapPayCodeTimeOffReasonsAsync} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
-                hasMappedPaycodes = true;
             }
             catch (Exception ex)
             {
@@ -168,8 +163,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 this.telemetryClient.TrackException(ex);
             }
 
-            // Sync TimeOff and TimeOffRequest only if Paycodes in Kronos synced successfully.
-            if (hasMappedPaycodes)
+            // Sync TimeOff only if Paycodes in Kronos synced successfully.
+            if (isMapPayCodeTimeOffReasonsSuccessful)
             {
                 try
                 {
@@ -177,20 +172,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     await this.timeOffController.ProcessTimeOffsAsync(isRequestFromLogicApp).ConfigureAwait(false);
 
                     this.telemetryClient.TrackTrace($"{Resource.ProcessTimeOffsAsync} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
-                }
-#pragma warning disable CA1031 // Do not catch general exception types
-                catch (Exception ex)
-#pragma warning restore CA1031 // Do not catch general exception types
-                {
-                    this.telemetryClient.TrackException(ex);
-                }
-
-                try
-                {
-                    // Sync timeoff from Kronos to Shifts.
-                    await this.timeOffRequestsController.ProcessTimeOffRequestsAsync(isRequestFromLogicApp).ConfigureAwait(false);
-
-                    this.telemetryClient.TrackTrace($"{Resource.SyncTimeOffRequestsFromShiftsToKronos} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
                 }
 #pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception ex)

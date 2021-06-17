@@ -231,7 +231,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
         /// <param name="configurationId">The configuration ID of the selected configuration.</param>
         /// <returns>A unit of execution.</returns>
         public async Task<IActionResult> RegisterWorkforceIntegrationAsync(
-            [FromQuery]string tenantId,
+            [FromQuery] string tenantId,
             string configurationId)
         {
             var workforceIntegrationRegProps = new Dictionary<string, string>()
@@ -420,7 +420,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                 ApiVersion = 1,
                 IsActive = true,
                 Url = this.appSettings.IntegrationApiUrl,
-                Supports = Constants.WFISupports,
+                SupportedEntities = Constants.WFISupports,
                 Encryption = this.EstablishEncryption(),
             };
 

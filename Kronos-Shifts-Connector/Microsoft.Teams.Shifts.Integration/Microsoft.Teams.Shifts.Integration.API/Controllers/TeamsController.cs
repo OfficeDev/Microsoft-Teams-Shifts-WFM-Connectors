@@ -21,6 +21,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.Teams.Shifts.Integration.API.Common;
     using Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI;
     using Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming;
+    using Microsoft.Teams.Shifts.Integration.API.Models.Response.TimeOffRequest;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels;
@@ -40,6 +41,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private readonly OpenShiftRequestController openShiftRequestController;
         private readonly SwapShiftController swapShiftController;
         private readonly ShiftController shiftController;
+        private readonly TimeOffController timeOffController;
         private readonly Common.Utility utility;
         private readonly IUserMappingProvider userMappingProvider;
         private readonly IShiftMappingEntityProvider shiftMappingEntityProvider;
@@ -47,6 +49,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private readonly IOpenShiftMappingEntityProvider openShiftMappingEntityProvider;
         private readonly ISwapShiftMappingEntityProvider swapShiftMappingEntityProvider;
         private readonly ITeamDepartmentMappingProvider teamDepartmentMappingProvider;
+        private readonly ITimeOffReasonProvider timeOffReasonProvider;
+        private readonly ITimeOffRequestProvider timeOffReqMappingEntityProvider;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TeamsController"/> class.
@@ -57,6 +61,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="openShiftRequestController">OpenShiftRequestController DI.</param>
         /// <param name="swapShiftController">SwapShiftController DI.</param>
         /// <param name="shiftController">ShiftController DI.</param>
+        /// <param name="timeOffController">TimeOffCntroller DI.</param>
         /// <param name="utility">The common utility methods DI.</param>
         /// <param name="userMappingProvider">The user mapping provider DI.</param>
         /// <param name="shiftMappingEntityProvider">The shift entity mapping provider DI.</param>
@@ -64,6 +69,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="openShiftMappingEntityProvider">The open shift mapping entity provider DI.</param>
         /// <param name="swapShiftMappingEntityProvider">The swap shift mapping entity provider DI.</param>
         /// <param name="teamDepartmentMappingProvider">The team department mapping entity provider DI.</param>
+        /// <param name="timeOffReasonProvider">Paycodes to Time Off Reasons Mapping provider.</param>
+        /// <param name="timeOffReqMappingEntityProvider">time off entity provider.</param>
         public TeamsController(
             AppSettings appSettings,
             TelemetryClient telemetryClient,
@@ -71,13 +78,16 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             OpenShiftRequestController openShiftRequestController,
             SwapShiftController swapShiftController,
             ShiftController shiftController,
+            TimeOffController timeOffController,
             Common.Utility utility,
             IUserMappingProvider userMappingProvider,
             IShiftMappingEntityProvider shiftMappingEntityProvider,
             IOpenShiftRequestMappingEntityProvider openShiftRequestMappingEntityProvider,
             IOpenShiftMappingEntityProvider openShiftMappingEntityProvider,
             ISwapShiftMappingEntityProvider swapShiftMappingEntityProvider,
-            ITeamDepartmentMappingProvider teamDepartmentMappingProvider)
+            ITeamDepartmentMappingProvider teamDepartmentMappingProvider,
+            ITimeOffReasonProvider timeOffReasonProvider,
+            ITimeOffRequestProvider timeOffReqMappingEntityProvider)
         {
             this.appSettings = appSettings;
             this.telemetryClient = telemetryClient;
@@ -85,6 +95,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             this.openShiftRequestController = openShiftRequestController;
             this.swapShiftController = swapShiftController;
             this.shiftController = shiftController;
+            this.timeOffController = timeOffController;
             this.utility = utility;
             this.userMappingProvider = userMappingProvider;
             this.shiftMappingEntityProvider = shiftMappingEntityProvider;
@@ -92,6 +103,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             this.openShiftMappingEntityProvider = openShiftMappingEntityProvider;
             this.swapShiftMappingEntityProvider = swapShiftMappingEntityProvider;
             this.teamDepartmentMappingProvider = teamDepartmentMappingProvider;
+            this.timeOffReasonProvider = timeOffReasonProvider;
+            this.timeOffReqMappingEntityProvider = timeOffReqMappingEntityProvider;
         }
 
         /// <summary>
@@ -182,6 +195,15 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                 // Process payload for swap shift request.
                 responseModelList = await this.ProcessSwapShiftRequest(jsonModel, aadGroupId, isRequestFromCorrectIntegration, kronosTimeZone).ConfigureAwait(true);
+            }
+
+            // Check if payload is for time off request.
+            else if (jsonModel.Requests.Any(x => x.Url.Contains("/timeOffRequests/", StringComparison.InvariantCulture)))
+            {
+                this.telemetryClient.TrackTrace("Teams Controller timeOffRequests " + JsonConvert.SerializeObject(jsonModel));
+
+                // Process payload for time off request.
+                responseModelList = await this.ProcessTimeOffRequest(jsonModel, aadGroupId, isRequestFromCorrectIntegration, kronosTimeZone).ConfigureAwait(true);
             }
 
             // Check if payload is for open shift.
@@ -564,7 +586,101 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         }
 
         /// <summary>
-        /// Generic get for items in the jsonModel.
+        /// Process time off request outbound calls.
+        /// </summary>
+        /// <param name="jsonModel">Incoming payload for the request been made in Shifts.</param>
+        /// <param name="aadGroupId">AAD Group id.</param>
+        /// <param name="isRequestFromCorrectIntegration">Whether the request originated from the correct workforce integration or not.</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting the times.</param>
+        /// <returns>Returns list of ShiftIntegResponse for request.</returns>
+        private async Task<List<ShiftsIntegResponse>> ProcessTimeOffRequest(RequestModel jsonModel, string aadGroupId, bool isRequestFromCorrectIntegration, string kronosTimeZone)
+        {
+            List<ShiftsIntegResponse> responseModelList = new List<ShiftsIntegResponse>();
+            var requestBody = jsonModel.Requests.First(x => x.Url.Contains("/timeOffRequests/", StringComparison.InvariantCulture)).Body;
+
+            if (requestBody == null)
+            {
+                return responseModelList;
+            }
+
+            switch (requestBody["state"].Value<string>())
+            {
+                // The time off request is submitted in Shifts and is pending manager approval.
+                case ApiConstants.ShiftsPending:
+                    {
+                        // Request came from the correct workforce integration
+                        if (isRequestFromCorrectIntegration)
+                        {
+                            this.telemetryClient.TrackTrace("Create time off request came from correct workforce integration however we dont support this sync.");
+
+                            // All required work handled by logic app so just return ok response
+                            responseModelList.AddRange(GenerateResponseToPreventAction(jsonModel, "We do not support syncing time off requests created in Kronos."));
+                        }
+
+                        // Request came from Shifts UI
+                        else
+                        {
+                            this.telemetryClient.TrackTrace($"Request coming from Shifts UI.");
+                            responseModelList = await this.ProcessCreateTimeOffRequestViaTeamsAsync(jsonModel, aadGroupId, kronosTimeZone).ConfigureAwait(false);
+                        }
+                    }
+
+                    break;
+
+                // The time off request is approved by a manager
+                case ApiConstants.ShiftsApproved:
+                    {
+                        // Request came from the correct workforce integration
+                        if (isRequestFromCorrectIntegration)
+                        {
+                            this.telemetryClient.TrackTrace("Approve time off request came from correct workforce integration.");
+                            var requestId = jsonModel.Requests.First(x => x.Url.Contains("/timeOffRequests/", StringComparison.InvariantCulture)).Id;
+
+                            // All required work handled by logic app so just return ok response
+                            responseModelList.Add(GenerateResponse(requestId, HttpStatusCode.OK, null, null));
+                        }
+
+                        // Request came from Shifts UI
+                        else
+                        {
+                            this.telemetryClient.TrackTrace($"Request coming from Shifts UI.");
+
+                            // TODO: Implement WFi approve time off request.
+                        }
+                    }
+
+                    break;
+
+                // The time off request is declined by a manager
+                case ApiConstants.ShiftsDeclined:
+                    {
+                        // Request came from the correct workforce integration
+                        if (isRequestFromCorrectIntegration)
+                        {
+                            this.telemetryClient.TrackTrace("Decline time off request came from correct workforce integration.");
+                            var requestId = jsonModel.Requests.First(x => x.Url.Contains("/timeOffRequests/", StringComparison.InvariantCulture)).Id;
+
+                            // All required work handled by logic app so just return ok response
+                            responseModelList.Add(GenerateResponse(requestId, HttpStatusCode.OK, null, null));
+                        }
+
+                        // Request came from Shifts UI
+                        else
+                        {
+                            this.telemetryClient.TrackTrace($"Request coming from Shifts UI.");
+
+                            // TODO: Implement WFi decline time off request.
+                        }
+                    }
+
+                    break;
+            }
+
+            return responseModelList;
+        }
+
+        /// <summary>
+        /// Get Openshift.
         /// </summary>
         /// <typeparam name="T">The type of the request.</typeparam>
         /// <param name="jsonModel">The Json payload.</param>
@@ -760,6 +876,73 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             }
 
             this.telemetryClient.TrackTrace($"Finished dealing with OpenShiftRequest {openShiftRequest.Id}");
+        }
+
+        /// <summary>
+        /// This method takes a time off request created in the Shifts app
+        /// Creates the request to be sent to Kronos, sends it and depending on the response updates the relevant tables.
+        /// </summary>
+        /// <param name="jsonModel">The decrypted JSON payload.</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting the times.</param>
+        /// <returns>A unit of execution.</returns>
+        private async Task<List<ShiftsIntegResponse>> ProcessCreateTimeOffRequestViaTeamsAsync(RequestModel jsonModel, string teamsId, string kronosTimeZone)
+        {
+            this.telemetryClient.TrackTrace("Processing creation of a TimeOffRequest received from Shifts app");
+            List<ShiftsIntegResponse> responseModelList = new List<ShiftsIntegResponse>();
+            var updateProps = new Dictionary<string, string>();
+            var timeOffObject = jsonModel?.Requests?.FirstOrDefault(x => x.Url.Contains("/timeOffRequests/", StringComparison.InvariantCulture));
+            TimeOffRequestItem timeOffEntity = null;
+
+            timeOffEntity = JsonConvert.DeserializeObject<TimeOffRequestItem>(timeOffObject.Body.ToString());
+
+            try
+            {
+                var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
+
+                // Get the requestors user details
+                var user = await UsersHelper.GetMappedUserDetailsAsync(allRequiredConfigurations.WFIId, timeOffEntity.SenderUserId, teamsId, this.userMappingProvider, this.teamDepartmentMappingProvider, this.telemetryClient).ConfigureAwait(false);
+                if (user is null)
+                {
+                    this.telemetryClient.TrackTrace($"Create time off request from teams failed - Could not find user {timeOffEntity.SenderUserId}");
+                    responseModelList.AddRange(GenerateResponseToPreventAction(jsonModel, Resource.UserMappingNotFound));
+                }
+
+                // Get list of time off reasons from pay code to time off reason mapping table
+                var timeOffReasons = await this.timeOffReasonProvider.GetTimeOffReasonsAsync().ConfigureAwait(false);
+
+                var timeOffReason = timeOffReasons.SingleOrDefault(t => t.TimeOffReasonId == timeOffEntity.TimeOffReasonId);
+                if (timeOffReason is null)
+                {
+                    this.telemetryClient.TrackTrace($"Create time off request from teams failed - Could not find the time off reason with id: {timeOffEntity.TimeOffReasonId}");
+                    responseModelList.AddRange(GenerateResponseToPreventAction(jsonModel, Resource.TimeOffReasonNotFound));
+                }
+
+                var wasSuccess = await this.timeOffController.CreateTimeOffRequestFromTeamsAsync(user, timeOffEntity, timeOffReason, allRequiredConfigurations, kronosTimeZone).ConfigureAwait(true);
+                if (wasSuccess is false)
+                {
+                    this.telemetryClient.TrackTrace($"Time off request creation was unsuccessful.");
+                    responseModelList.AddRange(GenerateResponseToPreventAction(jsonModel, Resource.TimeOffRequestCreationFailed));
+                }
+                else
+                {
+                    this.telemetryClient.TrackTrace($"Time off request creation was successful.");
+                    responseModelList.Add(GenerateResponse(timeOffEntity.Id, HttpStatusCode.OK, null, null));
+                }
+            }
+            catch (Exception ex)
+            {
+                var exceptionProps = new Dictionary<string, string>()
+                    {
+                        { "TimeOffRequestId", timeOffEntity.Id },
+                        { "UserId", timeOffEntity.SenderUserId },
+                    };
+
+                this.telemetryClient.TrackException(ex, exceptionProps);
+                throw;
+            }
+
+            this.telemetryClient.TrackTrace($"Time off request creation sync process from Teams complete.");
+            return responseModelList;
         }
 
         /// <summary>

@@ -43,20 +43,17 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.ShiftsToKronos.CreateTimeO
         /// <param name="jSession">jSession object.</param>
         /// <param name="personNumber">Person number.</param>
         /// <param name="reqId">RequestId of the time off request.</param>
-        /// <param name="queryStartDate">Query Start.</param>
-        /// <param name="queryEndDate">Query End.</param>
+        /// <param name="queryDateSpan">Query date span.</param>
         /// <param name="endPointUrl">Endpoint url for Kronos.</param>
         /// <returns>Time of submit response.</returns>
         public async Task<TimeOffSubmitResponse.Response> SubmitTimeOffRequestAsync(
             string jSession,
             string personNumber,
             string reqId,
-            string queryStartDate,
-            string queryEndDate,
+            string queryDateSpan,
             Uri endPointUrl)
         {
-            string querySpan = queryStartDate + '-' + queryEndDate;
-            string xmlTimeOffRequest = this.CreateSubmitTimeOffRequest(personNumber, reqId, querySpan);
+            string xmlTimeOffRequest = this.CreateSubmitTimeOffRequest(personNumber, reqId, queryDateSpan);
             var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
                 endPointUrl,
                 ApiConstants.SoapEnvOpen,
@@ -73,23 +70,23 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.ShiftsToKronos.CreateTimeO
         /// Send time off request to Kronos API and get response.
         /// </summary>
         /// <param name="jSession">J Session.</param>
-        /// <param name="startDateTime">Start Date.</param>
-        /// <param name="endDateTime">End Date.</param>
+        /// <param name="startDateTimeUtc">Start Date in Utc.</param>
+        /// <param name="endDateTimeUtc">End Date in Utc.</param>
+        /// <param name="queryDateSpan">The query date span.</param>
         /// <param name="personNumber">Person Number.</param>
         /// <param name="reason">Reason string.</param>
         /// <param name="endPointUrl">Endpoint url for Kronos.</param>
-        /// <param name="kronosTimeZone">The time zone for Kronos WFC.</param>
-        /// <returns>Time of add response.</returns>
-        public async Task<TimeOffAddResponse.Response> TimeOffRequestAsync(
+        /// <returns>Time off add response.</returns>
+        public async Task<TimeOffAddResponse.Response> CreateTimeOffRequestAsync(
             string jSession,
-            DateTimeOffset startDateTime,
-            DateTimeOffset endDateTime,
+            DateTimeOffset startDateTimeUtc,
+            DateTimeOffset endDateTimeUtc,
+            string queryDateSpan,
             string personNumber,
             string reason,
-            Uri endPointUrl,
-            TimeZoneInfo kronosTimeZone)
+            Uri endPointUrl)
         {
-            string xmlTimeOffRequest = this.CreateAddTimeOffRequest(startDateTime, endDateTime, personNumber, reason, kronosTimeZone);
+            string xmlTimeOffRequest = this.CreateAddTimeOffRequest(startDateTimeUtc, endDateTimeUtc, queryDateSpan, personNumber, reason);
             var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
                 endPointUrl,
                 ApiConstants.SoapEnvOpen,
@@ -109,14 +106,12 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.ShiftsToKronos.CreateTimeO
         /// <param name="endDateTime">The end date/time stamp for the time off request.</param>
         /// <param name="reason">The time off reason from Shifts.</param>
         /// <param name="timeOffPeriod">The list of Time Off periods.</param>
-        /// <param name="kronosTimeZone">The time zone of Kronos WFC.</param>
         /// <returns>A string that represents the duration period.</returns>
         private static string CalculateTimeOffPeriod(
             DateTimeOffset startDateTime,
             DateTimeOffset endDateTime,
             string reason,
-            List<TimeOffAddRequest.TimeOffPeriod> timeOffPeriod,
-            TimeZoneInfo kronosTimeZone)
+            List<TimeOffAddRequest.TimeOffPeriod> timeOffPeriod)
         {
             string duration;
             var length = (endDateTime - startDateTime).TotalHours;
@@ -143,7 +138,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.ShiftsToKronos.CreateTimeO
                         EndDate = endDateTime.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
                         PayCodeName = reason,
                         StartDate = startDateTime.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
-                        StartTime = TimeZoneInfo.ConvertTime(startDateTime, kronosTimeZone).ToString("hh:mm tt", CultureInfo.InvariantCulture),
+                        StartTime = startDateTime.ToString("hh:mm tt", CultureInfo.InvariantCulture),
                         Length = Convert.ToString(length, CultureInfo.InvariantCulture),
                     });
             }
@@ -160,8 +155,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.ShiftsToKronos.CreateTimeO
         /// <returns>Submit time off request.</returns>
         private string CreateSubmitTimeOffRequest(string personNumber, string reqId, string querySpan)
         {
-            var monthStartDt = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-            var monthEndDt = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.DaysInMonth(monthStartDt.Year, monthStartDt.Month));
             TimeOffSubmitRequest.Request rq = new TimeOffSubmitRequest.Request()
             {
                 Action = ApiConstants.SubmitRequests,
@@ -193,15 +186,15 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.ShiftsToKronos.CreateTimeO
         /// </summary>
         /// <param name="startDateTime">Start date.</param>
         /// <param name="endDateTime">End Date.</param>
+        /// <param name="queryDateSpan">The query date span.</param>
         /// <param name="personNumber">Person number.</param>
         /// <param name="reason">Reason string.</param>
-        /// <param name="kronosTimeZone">The time zone of Kronos WFC.</param>
         /// <returns>Add time of request.</returns>
-        private string CreateAddTimeOffRequest(DateTimeOffset startDateTime, DateTimeOffset endDateTime, string personNumber, string reason, TimeZoneInfo kronosTimeZone)
+        private string CreateAddTimeOffRequest(DateTimeOffset startDateTime, DateTimeOffset endDateTime, string queryDateSpan, string personNumber, string reason)
         {
             var duration = string.Empty;
             var timeOffPeriod = new List<TimeOffAddRequest.TimeOffPeriod>();
-            duration = CalculateTimeOffPeriod(startDateTime, endDateTime, reason, timeOffPeriod, kronosTimeZone);
+            duration = CalculateTimeOffPeriod(startDateTime, endDateTime, reason, timeOffPeriod);
 
             TimeOffAddRequest.Request rq = new TimeOffAddRequest.Request()
             {
@@ -209,7 +202,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.ShiftsToKronos.CreateTimeO
                 EmployeeRequestMgm = new TimeOffAddRequest.EmployeeRequestMgmt()
                 {
                     Employees = new TimeOffAddRequest.Employee() { PersonIdentity = new TimeOffAddRequest.PersonIdentity() { PersonNumber = personNumber } },
-                    QueryDateSpan = $"{startDateTime.ToString("M/d/yyyy", CultureInfo.InvariantCulture)} - {endDateTime.ToString("M/d/yyyy", CultureInfo.InvariantCulture)}",
+                    QueryDateSpan = queryDateSpan,
                     RequestItems = new TimeOffAddRequest.RequestItems()
                     {
                         GlobalTimeOffRequestItem = new TimeOffAddRequest.GlobalTimeOffRequestItem()
