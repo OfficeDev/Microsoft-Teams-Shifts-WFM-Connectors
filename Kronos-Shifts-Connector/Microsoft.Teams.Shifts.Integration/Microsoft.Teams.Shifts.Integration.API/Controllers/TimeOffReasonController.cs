@@ -178,6 +178,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var removeActions = new List<Task>();
             var addActions = new List<Task>();
 
+            if (kronosReasons == null || mappedReasons == null)
+            {
+                return;
+            }
+
             foreach (var team in teamsIds)
             {
                 var shiftReasons = await this.GetTimeOffReasonAsync(accessToken, team).ConfigureAwait(false);
