@@ -326,7 +326,6 @@
     <Compile Include="Providers\ITeamDepartmentMappingProvider.cs" />
     <Compile Include="Providers\ITimeOffMappingEntityProvider.cs" />
     <Compile Include="Providers\ITimeOffReasonProvider.cs" />
-    <Compile Include="Providers\ITimeOffRequestProvider.cs" />
     <Compile Include="Providers\IUserMappingProvider.cs" />
     <Compile Include="Providers\OpenShiftMappingEntityProvider.cs" />
     <Compile Include="Providers\OpenShiftRequestMappingEntityProvider.cs" />
@@ -335,7 +334,6 @@
     <Compile Include="Providers\TeamDepartmentMappingProvider.cs" />
     <Compile Include="Providers\TimeOffMappingEntityProvider.cs" />
     <Compile Include="Providers\TimeOffReasonProvider.cs" />
-    <Compile Include="Providers\TimeOffRequestProvider.cs" />
     <Compile Include="Providers\UserMappingProvider.cs" />
     <Compile Include="QueueExtensions.cs" />
     <Compile Include="BusinessLogicResource.Designer.cs">

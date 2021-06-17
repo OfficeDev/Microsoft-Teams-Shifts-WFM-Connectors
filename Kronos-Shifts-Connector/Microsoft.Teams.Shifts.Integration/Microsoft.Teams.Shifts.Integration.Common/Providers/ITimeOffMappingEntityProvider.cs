@@ -22,5 +22,19 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         Task<List<TimeOffMappingEntity>> GetAllTimeOffMappingEntitiesAsync(
           IEnumerable<UserDetailsModel> processKronosUsersInBatchList,
           string monthPartitionKey);
+
+        /// <summary>
+        /// Method definition to get aTimeOffReqMappingEntity.
+        /// </summary>
+        /// <param name="timeOffRequestId">The TimeOffRequestId of the request to retrieve.</param>
+        /// <returns>A time off request.</returns>
+        Task<TimeOffMappingEntity> GetTimeOffRequestMappingEntityByRequestIdAsync(string timeOffRequestId);
+
+        /// <summary>
+        /// Method definition for saving or updating the TimeOffMappingEntity.
+        /// </summary>
+        /// <param name="entity">An object of type <see cref="TimeOffMappingEntity"/> which is to be saved or updated.</param>
+        /// <returns>A unit of execution.</returns>
+        Task SaveOrUpdateTimeOffMappingEntityAsync(TimeOffMappingEntity entity);
     }
 }

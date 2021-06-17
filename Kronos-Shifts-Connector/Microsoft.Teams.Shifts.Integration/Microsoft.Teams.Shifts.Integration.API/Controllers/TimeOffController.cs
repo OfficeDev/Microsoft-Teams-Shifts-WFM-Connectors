@@ -292,12 +292,78 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             newTimeOffReq.RowKey = timeOffResponse.EmployeeRequestMgm.RequestItem.GlobalTimeOffRequestItms.FirstOrDefault().Id;
             newTimeOffReq.ShiftsRequestId = timeOffEntity.Id;
             newTimeOffReq.KronosRequestId = timeOffResponse.EmployeeRequestMgm.RequestItem.GlobalTimeOffRequestItms.FirstOrDefault().Id;
-            newTimeOffReq.StatusName = ApiConstants.SubmitRequests;
+            newTimeOffReq.KronosStatus = ApiConstants.Submitted;
+            newTimeOffReq.ShiftsStatus = ApiConstants.Pending;
 
             this.AddorUpdateTimeOffMappingAsync(newTimeOffReq);
 
             // If isActive is false time off request was not submitted so return false and vice versa.
             return newTimeOffReq.IsActive;
+        }
+
+        /// <summary>
+        /// Creates and sends the relevant request to approve or deny a time off request.
+        /// </summary>
+        /// <param name="kronosReqId">The Kronos request id for the time off request.</param>
+        /// <param name="kronosUserId">The Kronos user id for the assigned user.</param>
+        /// <param name="timeOffRequestMapping">The mapping for the time off request.</param>
+        /// <param name="approved">Whether the request should be approved (true) or denied (false).</param>
+        /// <returns>Returns a bool that represents whether the request was a success (true) or not (false).</returns>
+        internal async Task<bool> ApproveOrDenyTimeOffRequestInKronos(
+            string kronosReqId,
+            string kronosUserId,
+            TimeOffMappingEntity timeOffRequestMapping,
+            bool approved)
+        {
+            var provider = CultureInfo.InvariantCulture;
+            this.telemetryClient.TrackTrace($"{Resource.ProcessTimeOffRequestsAsync} start at: {DateTime.Now.ToString("o", provider)}");
+
+            var timeOffRequestQueryDateSpan = $"{timeOffRequestMapping.StartDate}-{timeOffRequestMapping.EndDate}";
+
+            // Get all the necessary prerequisites.
+            var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
+
+            Dictionary<string, string> data = new Dictionary<string, string>
+            {
+                { "KronosPersonNumber", $"{kronosUserId}" },
+                { "KronosTimeOffRequestId", $"{kronosReqId}" },
+                { "Approved", $"{approved}" },
+                { "Configured correctly", $"{allRequiredConfigurations.IsAllSetUpExists}" },
+                { "Date range", $"{timeOffRequestQueryDateSpan}" },
+            };
+
+            if (allRequiredConfigurations.IsAllSetUpExists)
+            {
+                var response =
+                    await this.timeOffActivity.ApproveOrDenyTimeOffRequestAsync(
+                        new Uri(allRequiredConfigurations.WfmEndPoint),
+                        allRequiredConfigurations.KronosSession,
+                        timeOffRequestQueryDateSpan,
+                        kronosUserId,
+                        approved,
+                        kronosReqId).ConfigureAwait(false);
+
+                data.Add("ResponseStatus", $"{response.Status}");
+
+                if (response.Status == "Success" && approved)
+                {
+                    this.telemetryClient.TrackTrace($"Update table for approval of time off request: {kronosReqId}", data);
+                    timeOffRequestMapping.KronosStatus = ApiConstants.ApprovedStatus;
+                    await this.timeOffMappingEntityProvider.SaveOrUpdateTimeOffMappingEntityAsync(timeOffRequestMapping).ConfigureAwait(false);
+                    return true;
+                }
+
+                if (response.Status == "Success" && !approved)
+                {
+                    this.telemetryClient.TrackTrace($"Update table for refusal of time off request: {kronosReqId}", data);
+                    timeOffRequestMapping.KronosStatus = ApiConstants.Refused;
+                    await this.timeOffMappingEntityProvider.SaveOrUpdateTimeOffMappingEntityAsync(timeOffRequestMapping).ConfigureAwait(false);
+                    return true;
+                }
+            }
+
+            this.telemetryClient.TrackTrace("ApproveOrDenyTimeOffRequestInKronos - Configuration incorrect", data);
+            return false;
         }
 
         /// <summary>
@@ -372,7 +438,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             this.telemetryClient.TrackTrace($"ProcessTimeOffEntitiesBatchAsync PaycodeName : {timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName} ");
                             this.telemetryClient.TrackTrace($"ProcessTimeOffEntitiesBatchAsync ReqId : {timeOffRequestItem.Id} ");
 
-                            if (kronosUniqueIdExists.Any() && kronosUniqueIdExists.FirstOrDefault().StatusName == ApiConstants.SubmitRequests)
+                            if (kronosUniqueIdExists.Any() && kronosUniqueIdExists.FirstOrDefault().KronosStatus == ApiConstants.Submitted)
                             {
                                 // Getting a TimeOffReasonId object based on the TimeOff paycode from Kronos and the team ID in Shifts.
                                 var timeOffReasonId = timeOffReasons.
@@ -425,7 +491,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     {
                         var reqDetails = lookUpData.Where(c => c.KronosRequestId == timeOffRequestItem.Id).FirstOrDefault();
                         var timeOffReasonIdtoUpdate = timeOffReasons.Where(t => t.RowKey == timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName && t.PartitionKey == item.ShiftTeamId).FirstOrDefault();
-                        if (reqDetails != null && timeOffReasonIdtoUpdate != null && reqDetails.StatusName == ApiConstants.SubmitRequests)
+                        if (reqDetails != null && timeOffReasonIdtoUpdate != null && reqDetails.KronosStatus == ApiConstants.Submitted)
                         {
                             await this.DeclineTimeOffRequestAsync(
                                     timeOffRequestItem,
@@ -636,7 +702,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         RowKey = timeOffNotFoundList[i].Id,
                         ShiftsRequestId = timeOffs.Id,
                         KronosRequestId = timeOffNotFoundList[i].Id,
-                        StatusName = timeOffNotFoundList[i].StatusName,
+                        ShiftsStatus = ApiConstants.Pending,
+                        KronosStatus = ApiConstants.Submitted,
                         IsActive = true,
                     };
 
@@ -728,7 +795,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             ShiftsRequestId = timeOffLookUpEntriesFoundList[i].ShiftsRequestId,
                             IsActive = true,
                             KronosRequestId = globalTimeOffRequestDetails[i].Id,
-                            StatusName = ApiConstants.ApprovedStatus,
+                            ShiftsStatus = ApiConstants.ApprovedStatus,
+                            KronosStatus = ApiConstants.ApprovedStatus,
                         };
 
                         this.AddorUpdateTimeOffMappingAsync(timeOffMappingEntity);
@@ -779,7 +847,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         ShiftsRequestId = timeOffId,
                         IsActive = true,
                         KronosRequestId = globalTimeOffRequestItem.Id,
-                        StatusName = globalTimeOffRequestItem.StatusName,
+                        ShiftsStatus = globalTimeOffRequestItem.StatusName,
+                        KronosStatus = ApiConstants.Refused,
                     };
 
                     this.AddorUpdateTimeOffMappingAsync(timeOffMappingEntity);
