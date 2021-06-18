@@ -158,7 +158,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 return;
             }
 
-            await this.AddSingleReason(accessToken, teamsId, "Off").ConfigureAwait(false);
+            this.telemetryClient.TrackTrace("No paycodes received from Kronos during initial sync. Please add a paycode to Kronos.");
             return;
         }
 
