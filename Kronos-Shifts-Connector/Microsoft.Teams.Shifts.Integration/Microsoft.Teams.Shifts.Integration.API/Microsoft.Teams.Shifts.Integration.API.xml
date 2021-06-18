@@ -1267,6 +1267,12 @@
             <param name="aadGroupId">The AAD Group Id for the Team.</param>
             <returns>An action result.</returns>
         </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.ReturnEligibleShiftsForSwappingOnGivenDate(System.String)">
+            <summary>
+            Method that is called by shifts to get the eligible shifts.
+            </summary>
+            <param name="aadGroupId">The AAD Group Id for the Team.</param>
+        </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.ProcessShiftAcknowledgement(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming.RequestModel,System.Collections.Generic.Dictionary{System.String,System.String})">
             <summary>
             This method will create the necessary acknowledgement response whenever Shift entities are created, or updated.

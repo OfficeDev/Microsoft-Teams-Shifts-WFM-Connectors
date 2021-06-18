@@ -188,6 +188,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RequestEntities\Comment.cs" />
     <Compile Include="RequestEntities\Comments.cs" />
+    <Compile Include="RequestEntities\Common\EmployeeTag.cs" />
+    <Compile Include="RequestEntities\Common\PersonIdentityTag.cs" />
+    <Compile Include="RequestEntities\Common\Request.cs" />
     <Compile Include="RequestEntities\HyperFind\Request.cs" />
     <Compile Include="RequestEntities\HyperFind\RequestHyperFindQuery.cs" />
     <Compile Include="RequestEntities\JobAssignment\Identity.cs" />
@@ -253,6 +256,8 @@
     <Compile Include="RequestEntities\ShiftsToKronos\SubmitRequest\Request.cs" />
     <Compile Include="RequestEntities\ShiftsToKronos\SubmitRequest\RequestId.cs" />
     <Compile Include="RequestEntities\ShiftsToKronos\SubmitRequest\RequestIds.cs" />
+    <Compile Include="RequestEntities\SwapShiftEligibility\Request.cs" />
+    <Compile Include="RequestEntities\SwapShiftEligibility\SwapShiftEmployeesTag.cs" />
     <Compile Include="RequestEntities\SwapShift\SubmitRequest\EmployeeRequestMgmt.cs" />
     <Compile Include="RequestEntities\SwapShift\SubmitRequest\OfferedShift.cs" />
     <Compile Include="RequestEntities\SwapShift\SubmitRequest\Request.cs" />
@@ -267,6 +272,8 @@
     <Compile Include="RequestEntities\TimeOffRequests\Request.cs" />
     <Compile Include="RequestEntities\TimeOffRequests\RequestMgmt.cs" />
     <Compile Include="RequestEntities\Schedule\Request.cs" />
+    <Compile Include="ResponseEntities\Common\PersonTag.cs" />
+    <Compile Include="ResponseEntities\Common\Response.cs" />
     <Compile Include="ResponseEntities\Error.cs" />
     <Compile Include="ResponseEntities\ErrorArr.cs" />
     <Compile Include="ResponseEntities\HyperFindLoadAll\HyperFindQuery.cs" />
@@ -334,6 +341,7 @@
     <Compile Include="ResponseEntities\ShiftsToKronos\TimeOffRequests\SubmitResponse\Response.cs" />
     <Compile Include="ResponseEntities\ShiftsToKronos\TimeOffRequests\TimeOffPeriod.cs" />
     <Compile Include="ResponseEntities\ShiftsToKronos\TimeOffRequests\TimeOffPeriods.cs" />
+    <Compile Include="ResponseEntities\SwapShiftEligibility\Response.cs" />
     <Compile Include="ResponseEntities\SwapShift\FetchSwapShift\EmployeeRequestMgmt.cs" />
     <Compile Include="ResponseEntities\SwapShift\FetchSwapShift\Response.cs" />
     <Compile Include="ResponseEntities\SwapShift\FetchSwapShift\RequestItems.cs" />
