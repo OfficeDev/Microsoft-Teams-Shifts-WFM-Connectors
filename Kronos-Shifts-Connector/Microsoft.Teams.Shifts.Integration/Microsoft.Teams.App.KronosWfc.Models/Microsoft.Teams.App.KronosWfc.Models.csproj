@@ -270,6 +270,12 @@
     <Compile Include="RequestEntities\TimeOffRequests\Request.cs" />
     <Compile Include="RequestEntities\TimeOffRequests\RequestMgmt.cs" />
     <Compile Include="RequestEntities\Schedule\Request.cs" />
+    <Compile Include="RequestEntities\TimeOffRequests\TimeOffApproveDecline\Employees.cs" />
+    <Compile Include="RequestEntities\TimeOffRequests\TimeOffApproveDecline\PersonIdentity.cs" />
+    <Compile Include="RequestEntities\TimeOffRequests\TimeOffApproveDecline\Request.cs" />
+    <Compile Include="RequestEntities\TimeOffRequests\TimeOffApproveDecline\RequestId.cs" />
+    <Compile Include="RequestEntities\TimeOffRequests\TimeOffApproveDecline\RequestIds.cs" />
+    <Compile Include="RequestEntities\TimeOffRequests\TimeOffApproveDecline\RequestMgmt.cs" />
     <Compile Include="ResponseEntities\Common\PersonTag.cs" />
     <Compile Include="ResponseEntities\Common\Response.cs" />
     <Compile Include="ResponseEntities\Error.cs" />
@@ -392,6 +398,7 @@
     <Compile Include="ResponseEntities\TimeOffRequests\RequestStatusChange.cs" />
     <Compile Include="ResponseEntities\TimeOffRequests\RequestStatusChanges.cs" />
     <Compile Include="ResponseEntities\TimeOffRequests\Response.cs" />
+    <Compile Include="ResponseEntities\TimeOffRequests\TimeOffApproveDecline\Response.cs" />
     <Compile Include="ResponseEntities\TimeOffRequests\TimeOffPeriod.cs" />
     <Compile Include="ResponseEntities\TimeOffRequests\TimeOffPeriods.cs" />
     <Compile Include="ResponseEntities\TimeOffRequests\User.cs" />
