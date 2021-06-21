@@ -93,8 +93,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     var kronosReasons = await this.payCodeActivity.FetchPayCodesAsync(
                         new Uri(allRequiredConfigurations.WfmEndPoint), allRequiredConfigurations.KronosSession).ConfigureAwait(false);
 
-                    if (kronosReasons != null)
+                    if (kronosReasons == null)
                     {
+                        this.telemetryClient.TrackTrace("No paycodes received from Kronos during sync. Please add a paycode to Kronos.");
                         return;
                     }
 
@@ -159,7 +160,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 return;
             }
 
-            this.telemetryClient.TrackTrace("No paycodes received from Kronos during initial sync. Please add a paycode to Kronos.");
             return;
         }
 
