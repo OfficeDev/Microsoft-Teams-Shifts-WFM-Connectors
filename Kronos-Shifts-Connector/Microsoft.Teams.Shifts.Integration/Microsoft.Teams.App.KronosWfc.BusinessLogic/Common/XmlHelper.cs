@@ -35,7 +35,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Common
 
             XDocument xDoc = XDocument.Parse(response.Item1);
             var xResponse = xDoc.Root.Descendants().FirstOrDefault(d => d.Name.LocalName.Equals(Response, StringComparison.Ordinal));
-            return XmlConvertHelper.DeserializeObject<T>(xResponse.ToString());
+            return xResponse.ToString().DeserializeObject<T>();
         }
     }
 }
