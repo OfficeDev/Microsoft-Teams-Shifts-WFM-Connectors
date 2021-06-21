@@ -145,12 +145,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         {
             var kronosReasons = await this.payCodeActivity.FetchPayCodesAsync(new Uri(kronosEndpoint), kronosSession).ConfigureAwait(false);
             var initialshiftReasons = await this.GetTimeOffReasonAsync(accessToken, teamsId).ConfigureAwait(false);
-            await this.RemoveReasonsExceptAsync(initialshiftReasons, accessToken, teamsId).ConfigureAwait(false);
 
-            if (initialshiftReasons == null)
+            if (initialshiftReasons != null)
             {
-                return;
+                await this.RemoveReasonsExceptAsync(initialshiftReasons, accessToken, teamsId).ConfigureAwait(false);
             }
+
 
             if (kronosReasons != null)
             {
