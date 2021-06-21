@@ -301,6 +301,33 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             return newTimeOffReq.IsActive;
         }
 
+        /////// <summary>
+        /////// Cancels a time off request that was  in Teams.
+        /////// </summary>
+        /////// <param name="user">The user details of the time off requestor.</param>
+        /////// <param name="timeOffEntity">The time off to be cancelled.</param>
+        /////// <param name="timeOffReason">The time off reason.</param>
+        /////// <param name="allRequiredConfigurations">Setup details.</param>
+        /////// <param name="kronosTimeZone">The kronos timezone.</param>
+        /////// <returns>Whether the time off request was created successfully or not.</returns>
+        ////internal async Task<bool> CancelTimeOffRequestFromTeamsAsync(
+        ////    UserDetailsModel user,
+        ////    TimeOffRequestItem timeOffEntity,
+        ////    PayCodeToTimeOffReasonsMappingEntity timeOffReason,
+        ////    SetupDetails allRequiredConfigurations,
+        ////    string kronosTimeZone)
+        ////{
+        ////    // Create the Kronos Time Off Request.
+        ////    var timeOffResponse = await this.createTimeOffActivity.CreateTimeOffRequestAsync(
+        ////        allRequiredConfigurations.KronosSession,
+        ////        localStartDateTime,
+        ////        localEndDateTime,
+        ////        timeOffReqQueryDateSpan,
+        ////        user.KronosPersonNumber,
+        ////        timeOffReason.RowKey,
+        ////        new Uri(allRequiredConfigurations.WfmEndPoint)).ConfigureAwait(false);
+        ////}
+
         /// <summary>
         /// Creates and sends the relevant request to approve or deny a time off request.
         /// </summary>

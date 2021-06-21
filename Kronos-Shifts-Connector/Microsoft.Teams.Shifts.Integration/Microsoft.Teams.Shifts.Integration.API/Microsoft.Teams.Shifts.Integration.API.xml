@@ -3331,9 +3331,19 @@
               Looks up a localized string similar to Unable to find that time off reason..
             </summary>
         </member>
+        <member name="P:Microsoft.Teams.Shifts.Integration.API.Resource.TimeOffRequestApproveFailed">
+            <summary>
+              Looks up a localized string similar to Unable to approve the time off request..
+            </summary>
+        </member>
         <member name="P:Microsoft.Teams.Shifts.Integration.API.Resource.TimeOffRequestCreationFailed">
             <summary>
               Looks up a localized string similar to Unable to create the time off request..
+            </summary>
+        </member>
+        <member name="P:Microsoft.Teams.Shifts.Integration.API.Resource.TimeOffRequestDeclineFailed">
+            <summary>
+              Looks up a localized string similar to Unable to decline the time off request..
             </summary>
         </member>
         <member name="P:Microsoft.Teams.Shifts.Integration.API.Resource.TokenNotPresentWithCurrentRequest">

@@ -67,6 +67,40 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
             return timeOffResponse;
         }
 
+        /////// <summary>
+        /////// Cancels the time off request.
+        /////// </summary>
+        /////// <param name="endPointUrl">The Kronos WFC endpoint URL.</param>
+        /////// <param name="jSession">JSession.</param>
+        /////// <param name="queryDateSpan">QueryDateSpan string.</param>
+        /////// <param name="kronosPersonNumber">The Kronos Person Number.</param>
+        /////// <param name="kronosId">The Kronos id of the request.</param>
+        /////// <returns>Request details response object.</returns>
+        ////public async Task<TimeOffResponse.Response> CancelTimeOffRequestAsync(
+        ////    Uri endPointUrl,
+        ////    string jSession,
+        ////    string queryDateSpan,
+        ////    string kronosPersonNumber,
+        ////    string kronosId)
+        ////{
+        ////    var xmlTimeOffCancelRequest = this.CreateCancelTimeOffRequest(queryDateSpan, kronosPersonNumber, kronosId);
+        ////    var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
+        ////        endPointUrl,
+        ////        ApiConstants.SoapEnvOpen,
+        ////        xmlTimeOffApprovalRequest,
+        ////        ApiConstants.SoapEnvClose,
+        ////        jSession).ConfigureAwait(false);
+
+        ////    this.telemetryClient.TrackTrace(
+        ////        "TimeOffActivity - ApproveOrDenyTimeOffRequestAsync",
+        ////        new Dictionary<string, string>()
+        ////        {
+        ////            { "Response", tupleResponse.Item1 },
+        ////        });
+
+        ////    return this.ProcessTimeOffRequestApprovedDeclinedResponse(tupleResponse.Item1);
+        ////}
+
         /// <summary>
         /// Approves or Denies the time off request.
         /// </summary>
@@ -150,6 +184,45 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
             return XmlConvertHelper.DeserializeObject<TimeOffResponse.TimeOffApproveDecline.Response>(
                 xResponse.ToString());
         }
+
+        /////// <summary>
+        /////// Creates a cancel time off request.
+        /////// </summary>
+        /////// <param name="queryDateSpan">The queryDateSpan string.</param>
+        /////// <param name="personNumber">The Kronos Person Number.</param>
+        /////// <param name="id">The Kronos id of the request.</param>
+        /////// <returns>XML request string.</returns>
+        ////private string CreateCancelTimeOffRequest(
+        ////    string queryDateSpan,
+        ////    string personNumber,
+        ////    string id)
+        ////{
+        ////    var request =
+        ////        new TimeOffApproveDenyRequest.Request
+        ////        {
+        ////            Action = ApiConstants.,
+        ////            RequestMgmt = new TimeOffApproveDenyRequest.RequestMgmt
+        ////            {
+        ////                Employees = new TimeOffApproveDenyRequest.Employees
+        ////                {
+        ////                    PersonIdentity = new TimeOffApproveDenyRequest.PersonIdentity
+        ////                    {
+        ////                        PersonNumber = personNumber,
+        ////                    },
+        ////                },
+        ////                QueryDateSpan = queryDateSpan,
+        ////                RequestIds = new TimeOffApproveDenyRequest.RequestIds
+        ////                {
+        ////                    RequestId = new TimeOffApproveDenyRequest.RequestId[1]
+        ////                    {
+        ////                        new TimeOffApproveDenyRequest.RequestId() { Id = id },
+        ////                    },
+        ////                },
+        ////            },
+        ////        };
+
+        ////    return request.XmlSerialize();
+        ////}
 
         /// <summary>
         /// Creates an Approval/Denial time off request.
