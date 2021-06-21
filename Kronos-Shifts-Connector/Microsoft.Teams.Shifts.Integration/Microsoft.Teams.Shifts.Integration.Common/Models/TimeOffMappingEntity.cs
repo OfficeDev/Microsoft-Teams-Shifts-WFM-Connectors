@@ -52,9 +52,14 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Models
         public string Duration { get; set; }
 
         /// <summary>
-        /// Gets or sets the StatusName.
+        /// Gets or sets the KronosStatus.
         /// </summary>
-        public string StatusName { get; set; }
+        public string KronosStatus { get; set; }
+
+        /// <summary>
+        /// Gets or sets the ShiftsStatus.
+        /// </summary>
+        public string ShiftsStatus { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether or not a time off is requested.

@@ -238,10 +238,6 @@ namespace Microsoft.Teams.Shifts.Integration.API
                 provider.GetRequiredService<TelemetryClient>(),
                 appSettings.StorageConnectionString));
 
-            services.AddSingleton<ITimeOffRequestProvider, TimeOffRequestProvider>((provider) => new TimeOffRequestProvider(
-                provider.GetRequiredService<TelemetryClient>(),
-                appSettings.StorageConnectionString));
-
             services.AddSingleton<IOpenShiftActivity, OpenShiftActivity>((provider) => new OpenShiftActivity(
                 provider.GetRequiredService<TelemetryClient>(),
                 provider.GetRequiredService<IApiHelper>()));
