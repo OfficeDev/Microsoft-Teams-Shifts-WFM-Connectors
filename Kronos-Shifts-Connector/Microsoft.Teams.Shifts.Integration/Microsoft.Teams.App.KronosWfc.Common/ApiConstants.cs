@@ -238,5 +238,10 @@ namespace Microsoft.Teams.App.KronosWfc.Common
         /// Error message when Kronos login is failed.
         /// </summary>
         public const string KronosFailedLogin = "Unable to login to Kronos. Please check credentials and try again.";
+
+        /// <summary>
+        /// Defines the action for loading eligible employees.
+        /// </summary>
+        public const string LoadEligibleEmployees = "LoadEligibleEmployees";
     }
 }
