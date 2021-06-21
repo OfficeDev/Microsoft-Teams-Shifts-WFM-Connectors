@@ -1625,13 +1625,25 @@
             <param name="teamDepartmentMappingProvider">Team department mapping provider DI.</param>
             <param name="utility">Utility common methods DI.</param>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffReasonController.MapPayCodeTimeOffReasonsAsync">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffReasonController.MapPayCodeTimeOffReasonsAsync(System.String)">
             <summary>
             Maps the Paycode of Kronos with TimeOffReasons.
             </summary>
+            <param name="isRequestFromLogicApp"> If this is the first time sync or not.</param>
             <returns>JSONResult.</returns>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffReasonController.UpdateTimeOffReasonsAsync(System.String,System.String,System.String,System.String,System.String)">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffReasonController.InitialTimeOffReasonsSyncAsync(System.String,System.String,System.String,System.String)">
+            <summary>
+            Creates mapping reasons in storage.
+            </summary>
+            <param name="accessToken">Cached AccessToken.</param>
+            <param name="teamsId">MS Teams Id.</param>
+            <param name="tenantId">tenant Id.</param>
+            <param name="kronosEndpoint">The Kronos WFC API endpoint.</param>
+            <param name="kronosSession">The Kronos WFC Jsession.</param>
+            <returns>List of TimeOffReasons.</returns>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffReasonController.UpdateTimeOffReasonsAsync(System.String,System.Collections.Generic.List{System.String},System.String,System.String,System.String)">
             <summary>
             Update mapping reasons in storage.
             </summary>
@@ -1658,6 +1670,39 @@
             <param name="teamsId">MS Teams Id.</param>
             <param name="payCode">Kronos payCode.</param>
             <returns>None.</returns>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffReasonController.RemoveReasonsExceptAsync(System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.API.Models.Response.TimeOffReason},System.String,System.String,System.String[])">
+            <summary>
+            Removes all reasons in Shifts except any given.
+            </summary>
+            <param name="reasons">The list of reasons to edit.</param>
+            <param name="accessToken">Cached AccessToken.</param>
+            <param name="teamsId">MS Teams Id.</param>
+            <param name="reasonsToKeep">The reasons to keep.</param>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffReasonController.AddSingleReason(System.String,System.String,System.String)">
+            <summary>
+            Adds a given reason to both Shifts and the Database.
+            </summary>
+            <param name="accessToken">Cached AccessToken.</param>
+            <param name="teamsId">MS Teams Id.</param>
+            <param name="reason">The name of the reason.</param>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffReasonController.DeleteSingleReason(System.String,System.String,Microsoft.Teams.Shifts.Integration.API.Models.Response.TimeOffReason)">
+            <summary>
+            Deletes a given reason to both Shifts and the Database.
+            </summary>
+            <param name="accessToken">Cached AccessToken.</param>
+            <param name="teamsId">MS Teams Id.</param>
+            <param name="reason">The reason.</param>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffReasonController.AddMultipleReasons(System.String,System.String,System.Collections.Generic.List{System.String})">
+            <summary>
+            Adds a list of given reasons to both Shifts and the Database.
+            </summary>
+            <param name="accessToken">Cached AccessToken.</param>
+            <param name="teamsId">MS Teams Id.</param>
+            <param name="kronosReasons">The list of reasons pulled from Kronos.</param>
         </member>
         <member name="T:Microsoft.Teams.Shifts.Integration.API.CustomAuthorize">
             <summary>

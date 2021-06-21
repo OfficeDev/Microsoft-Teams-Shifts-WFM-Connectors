@@ -106,6 +106,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <returns>Returns task.</returns>
         private async Task ProcessKronosToShiftsShiftsAsync(string isRequestFromLogicApp)
         {
+#pragma warning disable CA1031 // Do not catch general exception types
             var isOpenShiftRequestSyncSuccessful = false;
             var isSwapShiftRequestSyncSuccessful = false;
             var isMapPayCodeTimeOffReasonsSuccessful = false;
@@ -118,9 +119,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                 this.telemetryClient.TrackTrace($"{Resource.ProcessOpenShiftsAsync} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception ex)
-#pragma warning restore CA1031 // Do not catch general exception types
             {
                 this.telemetryClient.TrackException(ex);
             }
@@ -132,9 +131,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 isOpenShiftRequestSyncSuccessful = true;
                 this.telemetryClient.TrackTrace($"{Resource.ProcessOpenShiftsRequests} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception ex)
-#pragma warning restore CA1031 // Do not catch general exception types
             {
                 isOpenShiftRequestSyncSuccessful = false;
                 this.telemetryClient.TrackException(ex);
@@ -147,9 +144,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 isSwapShiftRequestSyncSuccessful = true;
                 this.telemetryClient.TrackTrace($"{Resource.ProcessSwapShiftsAsync} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception ex)
-#pragma warning restore CA1031 // Do not catch general exception types
             {
                 isSwapShiftRequestSyncSuccessful = false;
                 this.telemetryClient.TrackException(ex);
@@ -158,13 +153,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             try
             {
                 // Sync TimeOffReasons from Kronos to Shifts.
-                await this.timeOffReasonController.MapPayCodeTimeOffReasonsAsync().ConfigureAwait(false);
+                await this.timeOffReasonController.MapPayCodeTimeOffReasonsAsync(isRequestFromLogicApp).ConfigureAwait(false);
                 isMapPayCodeTimeOffReasonsSuccessful = true;
                 this.telemetryClient.TrackTrace($"{Resource.MapPayCodeTimeOffReasonsAsync} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
             }
-#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception ex)
-#pragma warning restore CA1031 // Do not catch general exception types
             {
                 isMapPayCodeTimeOffReasonsSuccessful = false;
                 this.telemetryClient.TrackException(ex);
@@ -180,9 +173,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                     this.telemetryClient.TrackTrace($"{Resource.ProcessTimeOffsAsync} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
                 }
-#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception ex)
-#pragma warning restore CA1031 // Do not catch general exception types
                 {
                     this.telemetryClient.TrackException(ex);
                 }
@@ -208,6 +199,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             }
 
             this.telemetryClient.TrackTrace($"{Resource.ProcessKronosToShiftsShiftsAsync} completed at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}" + " for isRequestFromLogicApp: " + isRequestFromLogicApp);
+#pragma warning restore CA1031 // Do not catch general exception types
         }
     }
 }
