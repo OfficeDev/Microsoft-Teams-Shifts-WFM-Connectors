@@ -123,7 +123,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var processNumberOfUsersInBatch = this.appSettings.ProcessNumberOfUsersInBatch;
                 var userCount = allUsers.Count();
                 int userIteration = Utility.GetIterablesCount(Convert.ToInt32(processNumberOfUsersInBatch, CultureInfo.InvariantCulture), userCount);
-                var graphClient = await this.CreateGraphClientWithDelegatedAccessAsync(allRequiredConfigurations.ShiftsAccessToken).ConfigureAwait(false);
+                var graphClient = await this.CreateGraphClientWithDelegatedAccessAsync(allRequiredConfigurations.ShiftsAccessToken, allRequiredConfigurations.WFIId).ConfigureAwait(false);
 
                 if (monthPartitions?.Count > 0)
                 {
@@ -199,7 +199,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 graphClient,
                                 monthPartitionKey,
                                 timeOffRequestsPayCodeList,
-                                globalTimeOffRequestDetails).ConfigureAwait(false);
+                                globalTimeOffRequestDetails,
+                                allRequiredConfigurations.WFIId).ConfigureAwait(false);
                         }
                     }
                 }
@@ -425,7 +426,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             GraphServiceClient graphClient,
             string monthPartitionKey,
             List<PayCodeToTimeOffReasonsMappingEntity> timeOffRequestsPayCodeList,
-            List<GlobalTimeOffRequestItem> globalTimeOffRequestDetails)
+            List<GlobalTimeOffRequestItem> globalTimeOffRequestDetails,
+            string workForceIntegrationId)
         {
             this.telemetryClient.TrackTrace($"ProcessTimeOffEntitiesBatchAsync start at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
 
@@ -525,7 +527,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                     item,
                                     reqDetails.ShiftsRequestId,
                                     accessToken,
-                                    monthPartitionKey).ConfigureAwait(false);
+                                    monthPartitionKey,
+                                    workForceIntegrationId).ConfigureAwait(false);
                         }
                         else
                         {
@@ -542,7 +545,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                  timeOffRequestsPayCodeList,
                  accessToken,
                  monthPartitionKey,
-                 globalTimeOffRequestDetails).ConfigureAwait(false);
+                 globalTimeOffRequestDetails,
+                 workForceIntegrationId).ConfigureAwait(false);
 
             await this.AddTimeOffRequestAsync(
                 graphClient,
@@ -598,7 +602,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
         private async Task<GraphServiceClient> CreateGraphClientWithDelegatedAccessAsync(
-            string token)
+            string token,
+            string workforceIntegrationId)
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             if (string.IsNullOrEmpty(token))
@@ -614,6 +619,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 (requestMessage) =>
                 {
                     requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    requestMessage.Headers.Add("X-MS-WFMPassthrough", workforceIntegrationId);
                     return Task.FromResult(0);
                 }));
             return graphClient;
@@ -676,7 +683,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <summary>
         /// Method that will add a time off request.
         /// </summary>
-        /// <param name="graphClient">The MS Graph Client.</param>
+        /// <param name="graphClient">The MS Graph client.</param>
         /// <param name="userModelNotFoundList">The list of users that are not found.</param>
         /// <param name="timeOffNotFoundList">This list of time off records that are not found.</param>
         /// <param name="kronosPayCodeList">The list of Kronos WFC Paycodes.</param>
@@ -754,6 +761,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="accessToken">The MS Graph Access Token.</param>
         /// <param name="monthPartitionKey">The monthwise partition key.</param>
         /// <param name="globalTimeOffRequestDetails">The list of global time off request details.</param>
+        /// <param name="workforceIntegrationId">The workforce integration id.</param>
         /// <returns>A unit of execution.</returns>
         private async Task ApproveTimeOffRequestAsync(
             List<TimeOffMappingEntity> timeOffLookUpEntriesFoundList,
@@ -761,7 +769,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             List<PayCodeToTimeOffReasonsMappingEntity> timeOffReasonId,
             string accessToken,
             string monthPartitionKey,
-            List<GlobalTimeOffRequestItem> globalTimeOffRequestDetails)
+            List<GlobalTimeOffRequestItem> globalTimeOffRequestDetails,
+            string workforceIntegrationId)
         {
             this.telemetryClient.TrackTrace($"ApproveTimeOffRequestAsync started for {monthPartitionKey}.");
 
@@ -800,6 +809,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
                 httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                // Send Passthrough header to indicate the sender of request in outbound call.
+                httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", workforceIntegrationId);
+
                 using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, "teams/" + user[i].ShiftTeamId + "/schedule/timeOffRequests/" + timeOffLookUpEntriesFoundList[i].ShiftsRequestId + "/approve")
                 {
                     Content = new StringContent(requestString, Encoding.UTF8, "application/json"),
@@ -842,19 +855,25 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="timeOffId">The time off Id from Kronos.</param>
         /// <param name="accessToken">The MS Graph Access token.</param>
         /// <param name="monthPartitionKey">The month wise partition key.</param>
+        /// <param name="workforceIntegrationId">The workforce integration id.</param>
         /// <returns>A unit of execution.</returns>
         private async Task DeclineTimeOffRequestAsync(
             GlobalTimeOffRequestItem globalTimeOffRequestItem,
             UserDetailsModel user,
             string timeOffId,
             string accessToken,
-            string monthPartitionKey)
+            string monthPartitionKey,
+            string workforceIntegrationId)
         {
             this.telemetryClient.TrackTrace($"DeclineTimeOffRequestAsync started for time off id {timeOffId}.");
             var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
             httpClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", accessToken);
             httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            // Send Passthrough header to indicate the sender of request in outbound call.
+            httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", workforceIntegrationId);
+
             using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, "teams/" + user.ShiftTeamId + "/schedule/timeOffRequests/" + timeOffId + "/decline"))
             {
                 var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);

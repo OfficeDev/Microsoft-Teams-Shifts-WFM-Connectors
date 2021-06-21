@@ -26,5 +26,18 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// <param name="tenantId">tenant id.</param>
         /// <returns>time off reasons.</returns>
         Task<Dictionary<string, string>> FetchReasonsForTeamsAsync(string teamsId, string tenantId);
+
+        /// <summary>
+        /// Function that will return the mapping for a given reason name.
+        /// </summary>
+        /// <param name="reason">The reason you are looking for.</param>
+        /// <returns>The mapping for the reason.</returns>
+        Task<PayCodeToTimeOffReasonsMappingEntity> FetchReasonAsync(string reason);
+
+        /// <summary>
+        /// Delete all mappings except for ones with a given name.
+        /// </summary>
+        /// <param name="reasonsToKeep">The reasons name for the mappings you want to keep.</param>
+        Task DeleteSpecificReasons(params string[] reasonsToKeep);
     }
 }
