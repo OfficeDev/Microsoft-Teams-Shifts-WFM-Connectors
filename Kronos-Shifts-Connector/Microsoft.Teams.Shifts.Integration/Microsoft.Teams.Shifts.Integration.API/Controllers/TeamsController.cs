@@ -232,48 +232,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         }
 
         /// <summary>
-        /// Method that is called by shifts to get the eligible shifts.
-        /// </summary>
-        /// <param name="aadGroupId">The AAD Group Id for the Team.</param>
-        /// <returns>A task</returns>
-        [HttpPost]
-        [Route("/v1/teams/{aadGroupId}/read")]
-        public async Task ReturnEligibleShiftsForSwappingOnGivenDate([FromRoute] string aadGroupId)
-        {
-            var request = this.Request;
-            var requestHeaders = request.Headers;
-            Microsoft.Extensions.Primitives.StringValues passThroughValue = string.Empty;
-            var configurationEntity = (await this.configurationProvider.GetConfigurationsAsync().ConfigureAwait(false))?.FirstOrDefault();
-            var isRequestFromCorrectIntegration = requestHeaders.TryGetValue("X-MS-WFMPassthrough", out passThroughValue) &&
-                                           string.Equals(passThroughValue, configurationEntity.WorkforceIntegrationId, StringComparison.Ordinal);
-            byte[] secretKeyBytes = Encoding.UTF8.GetBytes(configurationEntity?.WorkforceIntegrationSecret);
-            var jsonModel = await DecryptEncryptedRequestFromShiftsAsync(secretKeyBytes, this.Request).ConfigureAwait(false);
-
-            var requestorShift = await this.shiftMappingEntityProvider.GetShiftMappingEntityByRowKeyAsync(jsonModel.Requests[0].Id).ConfigureAwait(false);
-
-            /*
-            for each day get all of the eligible employees you can swap with - get all of their shifts and return them in the following format
-            the below is a shiftIntegResponse
-
-            "id": "{shiftId}",
-            "status: 200,
-            "body": {
-                "data": [{ShiftId}, {ShiftId}...]
-                "error": null
-            }
-
-            */
-
-            IntegrationApiResponseModel responseModel = new IntegrationApiResponseModel();
-            ShiftsIntegResponse integrationResponse;
-            List<ShiftsIntegResponse> responseModelList = new List<ShiftsIntegResponse>();
-            string responseModelStr = string.Empty;
-            var kronosTimeZone = string.IsNullOrEmpty(mappedTeam?.KronosTimeZone) ? this.appSettings.KronosTimeZone : mappedTeam.KronosTimeZone;
-
-            return;
-        }
-
-        /// <summary>
         /// This method will create the necessary acknowledgement response whenever Shift entities are created, or updated.
         /// </summary>
         /// <param name="jsonModel">The decrypted JSON payload.</param>
