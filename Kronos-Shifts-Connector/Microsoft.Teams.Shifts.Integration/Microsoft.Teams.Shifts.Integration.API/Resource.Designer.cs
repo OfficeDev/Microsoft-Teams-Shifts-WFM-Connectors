@@ -745,6 +745,15 @@ namespace Microsoft.Teams.Shifts.Integration.API {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to cancel the time off request..
+        /// </summary>
+        public static string TimeOffRequestCancellationFailed {
+            get {
+                return ResourceManager.GetString("TimeOffRequestCancellationFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to create the time off request..
         /// </summary>
         public static string TimeOffRequestCreationFailed {

@@ -2,9 +2,10 @@
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
-namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.TimeOffRequests.TimeOffApproveDecline
+namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.TimeOffRequests.CancelTimeOff
 {
     using System.Xml.Serialization;
+    using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common;
 
     /// <summary>
     /// This class models the RequestMgmt.
@@ -15,7 +16,7 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.TimeOffRequests.T
         /// Gets or sets the Employees.
         /// </summary>
         [XmlElement(ElementName = "Employees")]
-        public Common.Employees Employees { get; set; }
+        public Employees Employees { get; set; }
 
         /// <summary>
         /// Gets or sets the QueryDateSpan.
