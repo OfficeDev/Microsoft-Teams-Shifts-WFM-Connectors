@@ -190,7 +190,6 @@
     <Compile Include="RequestEntities\Comments.cs" />
     <Compile Include="RequestEntities\Common\Employees.cs" />
     <Compile Include="RequestEntities\Common\PersonIdentity.cs" />
-    <Compile Include="RequestEntities\Common\Request.cs" />
     <Compile Include="RequestEntities\HyperFind\Request.cs" />
     <Compile Include="RequestEntities\HyperFind\RequestHyperFindQuery.cs" />
     <Compile Include="RequestEntities\JobAssignment\Identity.cs" />
@@ -383,7 +382,6 @@
     <Compile Include="ResponseEntities\SwapShift\SwapShiftData\SwapShiftRequestItem.cs" />
     <Compile Include="ResponseEntities\SwapShift\SwapShiftData\User.cs" />
     <Compile Include="ResponseEntities\TimeOffRequests\ApprovalTimeOffPeriods.cs" />
-    <Compile Include="ResponseEntities\TimeOffRequests\CancelTimeOff\Response.cs" />
     <Compile Include="ResponseEntities\TimeOffRequests\Comment.cs" />
     <Compile Include="ResponseEntities\TimeOffRequests\Comments.cs" />
     <Compile Include="ResponseEntities\TimeOffRequests\CreatedByUser.cs" />
@@ -401,7 +399,6 @@
     <Compile Include="ResponseEntities\TimeOffRequests\RequestStatusChange.cs" />
     <Compile Include="ResponseEntities\TimeOffRequests\RequestStatusChanges.cs" />
     <Compile Include="ResponseEntities\TimeOffRequests\Response.cs" />
-    <Compile Include="ResponseEntities\TimeOffRequests\TimeOffApproveDecline\Response.cs" />
     <Compile Include="ResponseEntities\TimeOffRequests\TimeOffPeriod.cs" />
     <Compile Include="ResponseEntities\TimeOffRequests\TimeOffPeriods.cs" />
     <Compile Include="ResponseEntities\TimeOffRequests\User.cs" />

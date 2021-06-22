@@ -4,6 +4,7 @@
 
 namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common
 {
+    using System.Collections.Generic;
     using System.Xml.Serialization;
 
     /// <summary>
@@ -15,6 +16,6 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common
         /// Gets or sets the Person Identity element.
         /// </summary>
         [XmlElement]
-        public PersonIdentity PersonIdentity { get; set; }
+        public List<PersonIdentity> PersonIdentity { get; set; }
     }
 }

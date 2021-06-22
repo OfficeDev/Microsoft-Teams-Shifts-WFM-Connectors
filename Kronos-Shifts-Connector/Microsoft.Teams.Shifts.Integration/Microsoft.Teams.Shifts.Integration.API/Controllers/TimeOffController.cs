@@ -341,6 +341,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 {
                     this.telemetryClient.TrackTrace($"Update table for cancellation of time off request: {kronosRequestId}", data);
                     timeOffRequestMapping.KronosStatus = ApiConstants.Retracted;
+                    timeOffRequestMapping.ShiftsStatus = ApiConstants.Retracted;
                     await this.timeOffMappingEntityProvider.SaveOrUpdateTimeOffMappingEntityAsync(timeOffRequestMapping).ConfigureAwait(false);
                     return true;
                 }

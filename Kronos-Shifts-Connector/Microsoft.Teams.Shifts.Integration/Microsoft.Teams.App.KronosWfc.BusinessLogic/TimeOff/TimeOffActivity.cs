@@ -14,6 +14,8 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
     using Microsoft.Teams.App.KronosWfc.Common;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common;
     using Microsoft.Teams.App.KronosWfc.Service;
+    using ApproveDeclineResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Common.Response;
+    using CancelResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Common.Response;
     using TimeOffApproveDenyRequest = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.TimeOffRequests.TimeOffApproveDecline;
     using TimeOffCancelRequest = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.TimeOffRequests.CancelTimeOff;
     using TimeOffRequest = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.TimeOffRequests;
@@ -79,7 +81,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
         /// <param name="kronosPersonNumber">The Kronos Person Number.</param>
         /// <param name="kronosId">The Kronos id of the request.</param>
         /// <returns>Request details response object.</returns>
-        public async Task<TimeOffResponse.CancelTimeOff.Response> CancelTimeOffRequestAsync(
+        public async Task<CancelResponse> CancelTimeOffRequestAsync(
             Uri endPointUrl,
             string jSession,
             string queryDateSpan,
@@ -102,7 +104,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
                     { "Response", tupleResponse.Item1 },
                 });
 
-            return tupleResponse.ProcessResponse<TimeOffResponse.CancelTimeOff.Response>(this.telemetryClient);
+            return tupleResponse.ProcessResponse<CancelResponse>(this.telemetryClient);
         }
 
         /// <summary>
@@ -115,7 +117,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
         /// <param name="approved">Whether the request needs to be approved or denied.</param>
         /// <param name="kronosId">The Kronos id of the request.</param>
         /// <returns>Request details response object.</returns>
-        public async Task<TimeOffResponse.TimeOffApproveDecline.Response> ApproveOrDenyTimeOffRequestAsync(
+        public async Task<ApproveDeclineResponse> ApproveOrDenyTimeOffRequestAsync(
             Uri endPointUrl,
             string jSession,
             string queryDateSpan,
@@ -139,7 +141,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
                     { "Response", tupleResponse.Item1 },
                 });
 
-            return tupleResponse.ProcessResponse<TimeOffResponse.TimeOffApproveDecline.Response>(this.telemetryClient);
+            return tupleResponse.ProcessResponse<ApproveDeclineResponse>(this.telemetryClient);
         }
 
         /// <summary>
@@ -182,14 +184,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
             return XmlConvertHelper.DeserializeObject<TimeOffResponse.Response>(xResponse.ToString());
         }
 
-        private TimeOffResponse.TimeOffApproveDecline.Response ProcessTimeOffRequestApprovedDeclinedResponse(string strResponse)
-        {
-            XDocument xDoc = XDocument.Parse(strResponse);
-            var xResponse = xDoc.Root.Descendants().FirstOrDefault(d => d.Name.LocalName.Equals(ApiConstants.Response, StringComparison.Ordinal));
-            return XmlConvertHelper.DeserializeObject<TimeOffResponse.TimeOffApproveDecline.Response>(
-                xResponse.ToString());
-        }
-
         /// <summary>
         /// Creates a cancel time off request.
         /// </summary>
@@ -208,11 +202,11 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
                     Action = ApiConstants.RetractRequests,
                     RequestMgmt = new TimeOffCancelRequest.RequestMgmt
                     {
-                        Employees = new TimeOffRequest.Employees
+                        Employees = new Employees
                         {
-                            PersonIdentity = new List<TimeOffRequest.PersonIdentity>
+                            PersonIdentity = new List<PersonIdentity>
                             {
-                                new TimeOffRequest.PersonIdentity { PersonNumber = personNumber },
+                                new PersonIdentity { PersonNumber = personNumber },
                             },
                         },
                         QueryDateSpan = queryDateSpan,
@@ -251,9 +245,9 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
                     {
                         Employees = new Employees
                         {
-                            PersonIdentity = new PersonIdentity
+                            PersonIdentity = new List<PersonIdentity>
                             {
-                                PersonNumber = personNumber,
+                                new PersonIdentity { PersonNumber = personNumber },
                             },
                         },
                         QueryDateSpan = queryDateSpan,

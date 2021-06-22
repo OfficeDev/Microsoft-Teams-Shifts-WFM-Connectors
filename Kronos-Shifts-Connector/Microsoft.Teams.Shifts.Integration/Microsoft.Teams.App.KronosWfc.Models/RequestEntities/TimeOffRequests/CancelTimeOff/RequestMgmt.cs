@@ -5,6 +5,7 @@
 namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.TimeOffRequests.CancelTimeOff
 {
     using System.Xml.Serialization;
+    using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common;
 
     /// <summary>
     /// This class models the RequestMgmt.

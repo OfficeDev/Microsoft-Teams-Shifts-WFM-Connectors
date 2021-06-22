@@ -8,8 +8,8 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests;
-    using TimeOffApproveDeclineResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests.TimeOffApproveDecline;
-    using TimeOffCancelResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests.CancelTimeOff;
+    using ApproveDeclineResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Common.Response;
+    using CancelResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Common.Response;
 
     /// <summary>
     /// TimeOff Activity Interface.
@@ -39,7 +39,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
         /// <param name="kronosPersonNumber">The Kronos person number.</param>
         /// <param name="kronosId">The id of the TimeOffRequest in Kronos.</param>
         /// <returns>A response.</returns>
-        Task<TimeOffCancelResponse.Response> CancelTimeOffRequestAsync(
+        Task<CancelResponse> CancelTimeOffRequestAsync(
             Uri endPointUrl,
             string jSession,
             string queryDateSpan,
@@ -56,7 +56,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
         /// <param name="approved">Whether the request is being accepted or denied.</param>
         /// <param name="kronosId">The id of the TimeOffRequest in Kronos.</param>
         /// <returns>A response.</returns>
-        Task<TimeOffApproveDeclineResponse.Response> ApproveOrDenyTimeOffRequestAsync(
+        Task<ApproveDeclineResponse> ApproveOrDenyTimeOffRequestAsync(
                 Uri endPointUrl,
                 string jSession,
                 string queryDateSpan,

@@ -963,16 +963,16 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <returns>A unit of execution.</returns>
         private async Task<List<ShiftsIntegResponse>> ProcessCancelTimeOffRequestViaTeamsAsync(RequestModel jsonModel)
         {
-            this.telemetryClient.TrackTrace("Processing cancel of a TimeOffRequest received from Shifts app");
+            this.telemetryClient.TrackTrace("Processing cancellation of a TimeOffRequest received from Shifts app");
             List<ShiftsIntegResponse> responseModelList = new List<ShiftsIntegResponse>();
 
-            var deleteTimeOffRequestId = jsonModel.Requests.First(x => x.Url.Contains("/timeOffRequests/", StringComparison.InvariantCulture)).Id;
+            var cancelTimeOffRequestId = jsonModel.Requests.First(x => x.Url.Contains("/timeOffRequests/", StringComparison.InvariantCulture)).Id;
 
             try
             {
                 var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
 
-                var entityToCancel = await this.timeOffReqMappingEntityProvider.GetTimeOffRequestMappingEntityByRequestIdAsync(deleteTimeOffRequestId).ConfigureAwait(false);
+                var entityToCancel = await this.timeOffReqMappingEntityProvider.GetTimeOffRequestMappingEntityByRequestIdAsync(cancelTimeOffRequestId).ConfigureAwait(false);
 
                 var wasSuccess = await this.timeOffController.CancelTimeOffRequestInKronosAsync(entityToCancel).ConfigureAwait(true);
                 if (wasSuccess is false)
@@ -983,14 +983,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 else
                 {
                     this.telemetryClient.TrackTrace($"Time off request cancellation was successful.");
-                    responseModelList.Add(GenerateResponse(deleteTimeOffRequestId, HttpStatusCode.OK, null, null));
+                    responseModelList.Add(GenerateResponse(cancelTimeOffRequestId, HttpStatusCode.OK, null, null));
                 }
             }
             catch (Exception ex)
             {
                 var exceptionProps = new Dictionary<string, string>()
                     {
-                        { "TimeOffRequestId", deleteTimeOffRequestId },
+                        { "TimeOffRequestId", cancelTimeOffRequestId },
                     };
 
                 this.telemetryClient.TrackException(ex, exceptionProps);
