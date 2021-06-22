@@ -10,7 +10,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.SwapShift;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.SwapShift;
     using FetchApprove = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.SwapShift.FetchApprovals;
-    using SubmitResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.SwapShift.SubmitSwapShift;
+    using SubmitResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.SwapShift.SubmitSwapShift.Response;
 
     /// <summary>
     /// The Swap Shift Activity interface.
@@ -40,7 +40,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
         /// <param name="swapShiftobj">The SwapShift Object.</param>
         /// <param name="kronosApiEndpoint">The Kronos API Endpoint.</param>
         /// <returns>A response that is boxed in a unit of execution.</returns>
-        Task<SubmitResponse.Response> DraftSwapShiftAsync(
+        Task<SubmitResponse> DraftSwapShiftAsync(
             string jSession,
             SwapShiftObj swapShiftobj,
             string kronosApiEndpoint);
@@ -55,7 +55,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
         /// <param name="comment">The comment to apply for the submission - if there is any comment.</param>
         /// <param name="endpointUrl">The Kronos WFC API Endpoint URL.</param>
         /// <returns>A unit of execution that contains a response object.</returns>
-        Task<SubmitResponse.Response> SubmitSwapShiftAsync(
+        Task<SubmitResponse> SubmitSwapShiftAsync(
             string jSession,
             string personNumber,
             string reqId,
