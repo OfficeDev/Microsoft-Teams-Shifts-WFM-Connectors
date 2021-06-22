@@ -591,52 +591,34 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             return swapShiftResponse;
         }
 
-        /// <summary>
-        /// This method retracts a request.
-        /// </summary>
-        /// <param name="reqId">Swap shift request ID.</param>
-        /// <returns>A type of <see cref="ShiftsIntegResponse"/> which represents an acknowledgment to be returned to Shifts.</returns>
-        public async Task<ShiftsIntegResponse> RetractOfferedShiftAsync(string reqId)
+        public async Task<ShiftsIntegResponse> RetractOfferedShiftAsync(
+            SwapShiftMappingEntity map)
         {
-            var shiftStartDate = this.appSettings.ShiftStartDate;
-            var shiftEndDate = this.appSettings.ShiftEndDate;
-
             var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
-
             var swapShiftResponse = new ShiftsIntegResponse();
 
-            // Validates the date range between the shift start date and the shift end date.
-            var isCorrectDateRange = Utility.CheckDates(shiftStartDate, shiftEndDate);
+            this.utility.SetQuerySpan(
+                Convert.ToBoolean(true, CultureInfo.InvariantCulture),
+                out var shiftStartDate,
+                out var shiftEndDate);
 
-            var telemetryProps = new Dictionary<string, string>()
+            if ((bool)allRequiredConfigurations?.IsAllSetUpExists)
             {
-                { "CallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
-                { "APIRoute", this.ControllerContext.ActionDescriptor.AttributeRouteInfo.Name },
-            };
+                var success = await this.swapShiftActivity.SubmitRetractionRequest(
+                    allRequiredConfigurations.KronosSession,
+                    map.KronosReqId,
+                    map.RequestorKronosPersonNumber,
+                    $"{shiftStartDate} - {shiftEndDate}",
+                    new Uri(allRequiredConfigurations.WfmEndPoint)).ConfigureAwait(false);
 
-            // Check if all required configurations are present.
-            if (allRequiredConfigurations != null && (bool)allRequiredConfigurations?.IsAllSetUpExists && isCorrectDateRange)
-            {
-                var swapShiftEntity = await this.swapShiftMappingEntityProvider.GetKronosReqAsync(reqId).ConfigureAwait(false);
-                var swapShiftRes = await this.swapShiftActivity.SubmitApprovalAsync(
-                           allRequiredConfigurations.KronosSession,
-                           swapShiftEntity.KronosReqId,
-                           swapShiftEntity.RequestedKronosPersonNumber,
-                           ApiConstants.Retract,
-                           $"{shiftStartDate}-{shiftEndDate}",
-                           Resource.Cancle,
-                           new Uri(allRequiredConfigurations.WfmEndPoint)).ConfigureAwait(false);
-
-                if (swapShiftRes?.Status == ApiConstants.Success)
+                if (success?.Status == ApiConstants.Success)
                 {
-                    // Update the ShiftEntityMapping table.
-                    swapShiftEntity.KronosStatus = ApiConstants.Retract;
-                    swapShiftEntity.Timestamp = DateTime.Now;
-                    await this.swapShiftMappingEntityProvider.AddOrUpdateSwapShiftMappingAsync(swapShiftEntity).ConfigureAwait(false);
+                    map.KronosStatus = ApiConstants.Retract;
+                    await this.swapShiftMappingEntityProvider.AddOrUpdateSwapShiftMappingAsync(map).ConfigureAwait(false);
 
                     swapShiftResponse = new ShiftsIntegResponse()
                     {
-                        Id = reqId,
+                        Id = map.KronosReqId,
                         Status = (int)HttpStatusCode.OK,
                         Body = new Body()
                         {
@@ -647,38 +629,19 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 }
                 else
                 {
-                    // If the Retract request fails in Kronos.
                     swapShiftResponse.Status = (int)HttpStatusCode.InternalServerError;
                     swapShiftResponse.Body = new Body()
                     {
                         Error = new ResponseError
                         {
                             Code = Resource.KronosErrorStatus,
-                            Message = swapShiftRes?.Error.DetailErrors.Error.FirstOrDefault().Message,
+                            Message = "Failed to cancel the shift in Kronos.",
                         },
 
                         ETag = null,
                     };
-                    swapShiftResponse.Id = reqId;
+                    swapShiftResponse.Id = map.KronosReqId;
                 }
-            }
-            else
-            {
-                // Neither all the tokens are present nor the configuration is correct.
-                swapShiftResponse.Body = new Body()
-                {
-                    Error = new ResponseError
-                    {
-                        Code = Resource.SetUpNotDoneMessage,
-                        Message = Resource.SetUpNotDoneMessage,
-                    },
-                };
-
-                swapShiftResponse.Id = reqId;
-                swapShiftResponse.Status = (int)HttpStatusCode.InternalServerError;
-
-                telemetryProps.Add("SetupStatus", Resource.SetUpNotDoneMessage);
-                this.telemetryClient.TrackTrace($"{MethodBase.GetCurrentMethod().Name}", telemetryProps);
             }
 
             return swapShiftResponse;

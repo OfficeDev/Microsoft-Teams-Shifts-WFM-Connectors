@@ -4,6 +4,7 @@
 
 namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common
 {
+    using System.Collections.Generic;
     using System.Xml.Serialization;
 
     /// <summary>
@@ -14,7 +15,7 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common
         /// <summary>
         /// Gets or Sets the Id for a request.
         /// </summary>
-        [XmlAttribute]
-        public string Id { get; set; }
+        [XmlElement]
+        public List<RequestId> RequestId { get; set; }
     }
 }

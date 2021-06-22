@@ -190,6 +190,7 @@
     <Compile Include="RequestEntities\Comments.cs" />
     <Compile Include="RequestEntities\Common\Employee.cs" />
     <Compile Include="RequestEntities\Common\PersonIdentity.cs" />
+    <Compile Include="RequestEntities\Common\RequestId.cs" />
     <Compile Include="RequestEntities\Common\RequestIds.cs" />
     <Compile Include="RequestEntities\Common\Employees.cs" />
     <Compile Include="RequestEntities\Common\RequestMgmt.cs" />

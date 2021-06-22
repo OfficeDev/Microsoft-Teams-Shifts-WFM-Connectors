@@ -16,14 +16,5 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common
         /// </summary>
         [XmlElement]
         public PersonIdentity PersonIdentity { get; set; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Employee"/> class.
-        /// </summary>
-        /// <param name="id">The person id to use.</param>
-        public Employee(string id)
-        {
-            this.PersonIdentity = new PersonIdentity() { PersonNumber = id };
-        }
     }
 }

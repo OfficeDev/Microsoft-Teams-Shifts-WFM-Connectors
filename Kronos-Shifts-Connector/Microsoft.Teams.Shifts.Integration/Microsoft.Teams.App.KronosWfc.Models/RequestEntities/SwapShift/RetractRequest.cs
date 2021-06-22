@@ -24,26 +24,5 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.SwapShift
         /// </summary>
         [XmlAttribute]
         public string Action { get; set; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="RetractRequest"/> class.
-        /// </summary>
-        public RetractRequest()
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="RetractRequest"/> class.
-        /// </summary>
-        /// <param name="action">The action for the request.</param>
-        /// <param name="queryDateSpan">The date span for the request.</param>
-        /// <param name="id">The kronos id for the user.</param>
-        /// <param name="reqId">The kronos id for the request.</param>
-        public RetractRequest(string action, string queryDateSpan, string id, string reqId)
-            : this()
-        {
-            this.Action = action;
-            this.EmployeeRequestMgmt = new EmployeeRequestMgmt() { QueryDateSpan = queryDateSpan, Employee = new Employee(id), RequestIds = { Id = reqId } };
-        }
     }
 }

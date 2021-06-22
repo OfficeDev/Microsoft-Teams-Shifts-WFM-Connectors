@@ -593,7 +593,20 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
             string personNumber,
             string id)
         {
-            var request = new RetractRequest(RetractRequests, queryDateSpan, personNumber, id);
+            var request = new RetractRequest()
+            {
+                Action = RetractRequests,
+                EmployeeRequestMgmt = new Models.RequestEntities.Common.EmployeeRequestMgmt()
+                {
+                    QueryDateSpan = queryDateSpan,
+                    Employee = new Employee() { PersonIdentity = new PersonIdentity() { PersonNumber = personNumber } },
+                    RequestIds = new RequestIds()
+                    {
+                        RequestId = new List<RequestId> { new RequestId { Id = id } },
+                    },
+                },
+            };
+
             return request.XmlSerialize();
         }
     }
