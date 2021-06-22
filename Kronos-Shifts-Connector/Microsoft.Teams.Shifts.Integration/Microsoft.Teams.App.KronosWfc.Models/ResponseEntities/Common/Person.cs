@@ -1,4 +1,4 @@
-﻿// <copyright file="PersonTag.cs" company="Microsoft">
+﻿// <copyright file="Person.cs" company="Microsoft">
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
@@ -9,7 +9,7 @@ namespace Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Common
     /// <summary>
     /// Models the Person tag.
     /// </summary>
-    public class PersonTag
+    public class Person
     {
         /// <summary>
         /// Gets or Sets the Person Name.

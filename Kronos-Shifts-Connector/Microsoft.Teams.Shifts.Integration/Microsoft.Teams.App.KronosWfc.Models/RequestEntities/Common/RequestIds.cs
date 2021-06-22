@@ -1,4 +1,4 @@
-﻿// <copyright file="EmployeeTag.cs" company="Microsoft">
+﻿// <copyright file="RequestIds.cs" company="Microsoft">
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
@@ -7,14 +7,14 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common
     using System.Xml.Serialization;
 
     /// <summary>
-    /// The Employee tag.
+    /// Model representing a list of Request Ids.
     /// </summary>
-    public class EmployeeTag
+    public class RequestIds
     {
         /// <summary>
-        /// Gets or sets the Person Identity element.
+        /// Gets or Sets the Id for a request.
         /// </summary>
-        [XmlElement]
-        public PersonIdentityTag PersonIdentity { get; set; }
+        [XmlAttribute]
+        public string Id { get; set; }
     }
 }

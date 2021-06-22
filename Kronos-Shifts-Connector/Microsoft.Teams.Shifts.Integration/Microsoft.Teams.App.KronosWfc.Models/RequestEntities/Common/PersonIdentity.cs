@@ -1,4 +1,4 @@
-﻿// <copyright file="Request.cs" company="Microsoft">
+﻿// <copyright file="PersonIdentity.cs" company="Microsoft">
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
@@ -7,14 +7,14 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common
     using System.Xml.Serialization;
 
     /// <summary>
-    /// The class models Requests.
+    /// The PersonIdentity tag.
     /// </summary>
-    public class Request
+    public class PersonIdentity
     {
         /// <summary>
-        /// Gets or sets the Action.
+        /// Gets or Sets the Person Number attribute.
         /// </summary>
         [XmlAttribute]
-        public string Action { get; set; }
+        public string PersonNumber { get; set;  }
     }
 }

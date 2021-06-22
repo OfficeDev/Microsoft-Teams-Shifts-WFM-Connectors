@@ -188,9 +188,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RequestEntities\Comment.cs" />
     <Compile Include="RequestEntities\Comments.cs" />
-    <Compile Include="RequestEntities\Common\EmployeeTag.cs" />
-    <Compile Include="RequestEntities\Common\PersonIdentityTag.cs" />
-    <Compile Include="RequestEntities\Common\Request.cs" />
+    <Compile Include="RequestEntities\Common\Employee.cs" />
+    <Compile Include="RequestEntities\Common\PersonIdentity.cs" />
+    <Compile Include="RequestEntities\Common\RequestIds.cs" />
     <Compile Include="RequestEntities\HyperFind\Request.cs" />
     <Compile Include="RequestEntities\HyperFind\RequestHyperFindQuery.cs" />
     <Compile Include="RequestEntities\JobAssignment\Identity.cs" />
@@ -256,6 +256,8 @@
     <Compile Include="RequestEntities\ShiftsToKronos\SubmitRequest\Request.cs" />
     <Compile Include="RequestEntities\ShiftsToKronos\SubmitRequest\RequestId.cs" />
     <Compile Include="RequestEntities\ShiftsToKronos\SubmitRequest\RequestIds.cs" />
+    <Compile Include="RequestEntities\Common\EmployeeRequestMgmt.cs" />
+    <Compile Include="RequestEntities\SwapShift\RetractRequest.cs" />
     <Compile Include="RequestEntities\SwapShift\SubmitRequest\EmployeeRequestMgmt.cs" />
     <Compile Include="RequestEntities\SwapShift\SubmitRequest\OfferedShift.cs" />
     <Compile Include="RequestEntities\SwapShift\SubmitRequest\Request.cs" />
@@ -276,7 +278,7 @@
     <Compile Include="RequestEntities\TimeOffRequests\TimeOffApproveDecline\RequestId.cs" />
     <Compile Include="RequestEntities\TimeOffRequests\TimeOffApproveDecline\RequestIds.cs" />
     <Compile Include="RequestEntities\TimeOffRequests\TimeOffApproveDecline\RequestMgmt.cs" />
-    <Compile Include="ResponseEntities\Common\PersonTag.cs" />
+    <Compile Include="ResponseEntities\Common\Person.cs" />
     <Compile Include="ResponseEntities\Common\Response.cs" />
     <Compile Include="ResponseEntities\Error.cs" />
     <Compile Include="ResponseEntities\ErrorArr.cs" />
