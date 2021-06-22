@@ -596,22 +596,28 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         {
             var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
             var swapShiftResponse = new ShiftsIntegResponse();
+            var user = map.RequestorKronosPersonNumber;
 
             this.utility.SetQuerySpan(
                 Convert.ToBoolean(true, CultureInfo.InvariantCulture),
                 out var shiftStartDate,
                 out var shiftEndDate);
 
+            if (map.KronosStatus == ApiConstants.Submitted)
+            {
+                user = map.RequestedKronosPersonNumber;
+            }
+
             if ((bool)allRequiredConfigurations?.IsAllSetUpExists)
             {
-                var success = await this.swapShiftActivity.SubmitRetractionRequest(
+                var response = await this.swapShiftActivity.SubmitRetractionRequest(
                     allRequiredConfigurations.KronosSession,
                     map.KronosReqId,
-                    map.RequestorKronosPersonNumber,
+                    user,
                     $"{shiftStartDate} - {shiftEndDate}",
                     new Uri(allRequiredConfigurations.WfmEndPoint)).ConfigureAwait(false);
 
-                if (success?.Status == ApiConstants.Success)
+                if (response?.Status == ApiConstants.Success)
                 {
                     map.KronosStatus = ApiConstants.Retract;
                     await this.swapShiftMappingEntityProvider.AddOrUpdateSwapShiftMappingAsync(map).ConfigureAwait(false);
@@ -635,7 +641,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         Error = new ResponseError
                         {
                             Code = Resource.KronosErrorStatus,
-                            Message = "Failed to cancel the shift in Kronos.",
+                            Message = response.Error.Message,
                         },
 
                         ETag = null,
