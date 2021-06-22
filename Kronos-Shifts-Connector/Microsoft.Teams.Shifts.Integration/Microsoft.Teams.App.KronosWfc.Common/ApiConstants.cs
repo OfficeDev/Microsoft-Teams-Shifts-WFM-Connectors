@@ -110,11 +110,6 @@ namespace Microsoft.Teams.App.KronosWfc.Common
         public const string RetractRequests = "RetractRequests";
 
         /// <summary>
-        /// Defines the Action to retract requests.
-        /// </summary>
-        public const string RetractRequests = "RetractRequests";
-
-        /// <summary>
         /// Defines the pending status when migrating the data from Kronos to Shifts.
         /// </summary>
         public const string Pending = "pending";

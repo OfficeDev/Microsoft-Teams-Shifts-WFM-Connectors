@@ -192,6 +192,7 @@
     <Compile Include="RequestEntities\Common\PersonIdentity.cs" />
     <Compile Include="RequestEntities\Common\RequestIds.cs" />
     <Compile Include="RequestEntities\Common\Employees.cs" />
+    <Compile Include="RequestEntities\Common\RequestMgmt.cs" />
     <Compile Include="RequestEntities\HyperFind\Request.cs" />
     <Compile Include="RequestEntities\HyperFind\RequestHyperFindQuery.cs" />
     <Compile Include="RequestEntities\JobAssignment\Identity.cs" />
@@ -258,6 +259,7 @@
     <Compile Include="RequestEntities\ShiftsToKronos\SubmitRequest\RequestId.cs" />
     <Compile Include="RequestEntities\ShiftsToKronos\SubmitRequest\RequestIds.cs" />
     <Compile Include="RequestEntities\Common\EmployeeRequestMgmt.cs" />
+    <Compile Include="RequestEntities\SwapShift\GetDetailsRequest.cs" />
     <Compile Include="RequestEntities\SwapShift\RetractRequest.cs" />
     <Compile Include="RequestEntities\SwapShift\SubmitRequest\EmployeeRequestMgmt.cs" />
     <Compile Include="RequestEntities\SwapShift\SubmitRequest\OfferedShift.cs" />
