@@ -9,6 +9,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
     using System.Threading.Tasks;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests;
     using TimeOffApproveDeclineResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests.TimeOffApproveDecline;
+    using TimeOffCancelResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests.CancelTimeOff;
 
     /// <summary>
     /// TimeOff Activity Interface.
@@ -30,6 +31,22 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
             List<Models.ResponseEntities.HyperFind.ResponseHyperFindResult> employees);
 
         /// <summary>
+        /// Cancels the given time off request.
+        /// </summary>
+        /// <param name="endPointUrl">Kronos API Endpoint.</param>
+        /// <param name="jSession">The jSession.</param>
+        /// <param name="queryDateSpan">The query date span.</param>
+        /// <param name="kronosPersonNumber">The Kronos person number.</param>
+        /// <param name="kronosId">The id of the TimeOffRequest in Kronos.</param>
+        /// <returns>A response.</returns>
+        Task<TimeOffCancelResponse.Response> CancelTimeOffRequestAsync(
+            Uri endPointUrl,
+            string jSession,
+            string queryDateSpan,
+            string kronosPersonNumber,
+            string kronosId);
+
+        /// <summary>
         /// Approves or Denies the given time off request.
         /// </summary>
         /// <param name="endPointUrl">Kronos API Endpoint.</param>
@@ -40,11 +57,11 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
         /// <param name="kronosId">The id of the TimeOffRequest in Kronos.</param>
         /// <returns>A response.</returns>
         Task<TimeOffApproveDeclineResponse.Response> ApproveOrDenyTimeOffRequestAsync(
-            Uri endPointUrl,
-            string jSession,
-            string queryDateSpan,
-            string kronosPersonNumber,
-            bool approved,
-            string kronosId);
+                Uri endPointUrl,
+                string jSession,
+                string queryDateSpan,
+                string kronosPersonNumber,
+                bool approved,
+                string kronosId);
     }
 }

@@ -226,7 +226,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="allRequiredConfigurations">Setup details.</param>
         /// <param name="kronosTimeZone">The kronos timezone.</param>
         /// <returns>Whether the time off request was created successfully or not.</returns>
-        internal async Task<bool> CreateTimeOffRequestFromTeamsAsync(
+        internal async Task<bool> CreateTimeOffRequestInKronosAsync(
             UserDetailsModel user,
             TimeOffRequestItem timeOffEntity,
             PayCodeToTimeOffReasonsMappingEntity timeOffReason,
@@ -302,32 +302,53 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             return newTimeOffReq.IsActive;
         }
 
-        /////// <summary>
-        /////// Cancels a time off request that was  in Teams.
-        /////// </summary>
-        /////// <param name="user">The user details of the time off requestor.</param>
-        /////// <param name="timeOffEntity">The time off to be cancelled.</param>
-        /////// <param name="timeOffReason">The time off reason.</param>
-        /////// <param name="allRequiredConfigurations">Setup details.</param>
-        /////// <param name="kronosTimeZone">The kronos timezone.</param>
-        /////// <returns>Whether the time off request was created successfully or not.</returns>
-        ////internal async Task<bool> CancelTimeOffRequestFromTeamsAsync(
-        ////    UserDetailsModel user,
-        ////    TimeOffRequestItem timeOffEntity,
-        ////    PayCodeToTimeOffReasonsMappingEntity timeOffReason,
-        ////    SetupDetails allRequiredConfigurations,
-        ////    string kronosTimeZone)
-        ////{
-        ////    // Create the Kronos Time Off Request.
-        ////    var timeOffResponse = await this.createTimeOffActivity.CreateTimeOffRequestAsync(
-        ////        allRequiredConfigurations.KronosSession,
-        ////        localStartDateTime,
-        ////        localEndDateTime,
-        ////        timeOffReqQueryDateSpan,
-        ////        user.KronosPersonNumber,
-        ////        timeOffReason.RowKey,
-        ////        new Uri(allRequiredConfigurations.WfmEndPoint)).ConfigureAwait(false);
-        ////}
+        /// <summary>
+        /// Cancels a time off request that was  in Teams.
+        /// </summary>
+        /// <param name="timeOffRequestMapping">The mapping for the time off request.</param>
+        /// <returns>Whether the time off request was cancelled successfully or not.</returns>
+        internal async Task<bool> CancelTimeOffRequestInKronosAsync(TimeOffMappingEntity timeOffRequestMapping)
+        {
+            var timeOffRequestQueryDateSpan = $"{timeOffRequestMapping.StartDate}-{timeOffRequestMapping.EndDate}";
+
+            // Get all the necessary prerequisites.
+            var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
+
+            var kronosUserId = timeOffRequestMapping.KronosPersonNumber;
+            var kronosRequestId = timeOffRequestMapping.KronosRequestId;
+
+            Dictionary<string, string> data = new Dictionary<string, string>
+            {
+                { "KronosPersonNumber", $"{kronosUserId}" },
+                { "KronosTimeOffRequestId", $"{kronosRequestId}" },
+                { "Configured correctly", $"{allRequiredConfigurations.IsAllSetUpExists}" },
+                { "Date range", $"{timeOffRequestQueryDateSpan}" },
+            };
+
+            if (allRequiredConfigurations.IsAllSetUpExists)
+            {
+                var response =
+                    await this.timeOffActivity.CancelTimeOffRequestAsync(
+                        new Uri(allRequiredConfigurations.WfmEndPoint),
+                        allRequiredConfigurations.KronosSession,
+                        timeOffRequestQueryDateSpan,
+                        kronosUserId,
+                        kronosRequestId).ConfigureAwait(false);
+
+                data.Add("ResponseStatus", $"{response.Status}");
+
+                if (response.Status == "Success")
+                {
+                    this.telemetryClient.TrackTrace($"Update table for cancellation of time off request: {kronosRequestId}", data);
+                    timeOffRequestMapping.KronosStatus = ApiConstants.Retracted;
+                    await this.timeOffMappingEntityProvider.SaveOrUpdateTimeOffMappingEntityAsync(timeOffRequestMapping).ConfigureAwait(false);
+                    return true;
+                }
+            }
+
+            this.telemetryClient.TrackTrace("CancelTimeOffRequestInKronos Failed", data);
+            return false;
+        }
 
         /// <summary>
         /// Creates and sends the relevant request to approve or deny a time off request.
