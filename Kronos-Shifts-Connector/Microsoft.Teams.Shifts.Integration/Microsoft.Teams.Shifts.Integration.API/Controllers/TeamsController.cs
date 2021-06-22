@@ -598,80 +598,93 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             List<ShiftsIntegResponse> responseModelList = new List<ShiftsIntegResponse>();
             var requestBody = jsonModel.Requests.First(x => x.Url.Contains("/timeOffRequests/", StringComparison.InvariantCulture)).Body;
 
-            if (requestBody == null)
+            try
             {
-                return responseModelList;
+                if (requestBody != null)
+                {
+                    switch (requestBody["state"].Value<string>())
+                    {
+                        // The time off request is submitted in Shifts and is pending manager approval.
+                        case ApiConstants.ShiftsPending:
+                            {
+                                // Request came from the correct workforce integration
+                                if (isRequestFromCorrectIntegration)
+                                {
+                                    this.telemetryClient.TrackTrace("Create time off request came from correct workforce integration however we dont support this sync.");
+
+                                    // All required work handled by logic app so just return ok response
+                                    responseModelList.AddRange(GenerateResponseToPreventAction(jsonModel, "Syncing time off requests created in Kronos is not supported."));
+                                }
+
+                                // Request came from Shifts UI
+                                else
+                                {
+                                    this.telemetryClient.TrackTrace($"Create time off request coming from Shifts UI.");
+                                    responseModelList = await this.ProcessCreateTimeOffRequestViaTeamsAsync(jsonModel, aadGroupId, kronosTimeZone).ConfigureAwait(false);
+                                }
+                            }
+
+                            break;
+
+                        // The time off request is approved by a manager
+                        case ApiConstants.ShiftsApproved:
+                            {
+                                // Request came from the correct workforce integration
+                                if (isRequestFromCorrectIntegration)
+                                {
+                                    this.telemetryClient.TrackTrace("Approve time off request came from correct workforce integration.");
+                                    var requestId = jsonModel.Requests.First(x => x.Url.Contains("/timeOffRequests/", StringComparison.InvariantCulture)).Id;
+
+                                    // All required work handled by logic app so just return ok response
+                                    responseModelList.Add(GenerateResponse(requestId, HttpStatusCode.OK, null, null));
+                                }
+
+                                // Request came from Shifts UI
+                                else
+                                {
+                                    this.telemetryClient.TrackTrace($"Approve time off request coming from Shifts UI.");
+                                    responseModelList = await this.ProcessTimeOffRequestApprovalViaTeamsAsync(jsonModel, kronosTimeZone, true).ConfigureAwait(false);
+                                }
+                            }
+
+                            break;
+
+                        // The time off request is declined by a manager
+                        case ApiConstants.ShiftsDeclined:
+                            {
+                                // Request came from the correct workforce integration
+                                if (isRequestFromCorrectIntegration)
+                                {
+                                    this.telemetryClient.TrackTrace("Decline time off request came from correct workforce integration.");
+                                    var requestId = jsonModel.Requests.First(x => x.Url.Contains("/timeOffRequests/", StringComparison.InvariantCulture)).Id;
+
+                                    // All required work handled by logic app so just return ok response
+                                    responseModelList.Add(GenerateResponse(requestId, HttpStatusCode.OK, null, null));
+                                }
+
+                                // Request came from Shifts UI
+                                else
+                                {
+                                    this.telemetryClient.TrackTrace($"Decline time off request coming from Shifts UI.");
+                                    responseModelList = await this.ProcessTimeOffRequestApprovalViaTeamsAsync(jsonModel, kronosTimeZone, false).ConfigureAwait(false);
+                                }
+                            }
+
+                            break;
+                    }
+                }
+
+                // Request has been cancelled in Shifts app
+                else if (jsonModel.Requests.Any(c => c.Method == "DELETE"))
+                {
+                    this.telemetryClient.TrackTrace($"Cancel time off request coming from Shifts UI.");
+                    responseModelList = await this.ProcessCancelTimeOffRequestViaTeamsAsync(jsonModel).ConfigureAwait(false);
+                }
             }
-
-            switch (requestBody["state"].Value<string>())
+            catch (Exception)
             {
-                // The time off request is submitted in Shifts and is pending manager approval.
-                case ApiConstants.ShiftsPending:
-                    {
-                        // Request came from the correct workforce integration
-                        if (isRequestFromCorrectIntegration)
-                        {
-                            this.telemetryClient.TrackTrace("Create time off request came from correct workforce integration however we dont support this sync.");
-
-                            // All required work handled by logic app so just return ok response
-                            responseModelList.AddRange(GenerateResponseToPreventAction(jsonModel, "Syncing time off requests created in Kronos is not supported."));
-                        }
-
-                        // Request came from Shifts UI
-                        else
-                        {
-                            this.telemetryClient.TrackTrace($"Request coming from Shifts UI.");
-                            responseModelList = await this.ProcessCreateTimeOffRequestViaTeamsAsync(jsonModel, aadGroupId, kronosTimeZone).ConfigureAwait(false);
-                        }
-                    }
-
-                    break;
-
-                // The time off request is approved by a manager
-                case ApiConstants.ShiftsApproved:
-                    {
-                        // Request came from the correct workforce integration
-                        if (isRequestFromCorrectIntegration)
-                        {
-                            this.telemetryClient.TrackTrace("Approve time off request came from correct workforce integration.");
-                            var requestId = jsonModel.Requests.First(x => x.Url.Contains("/timeOffRequests/", StringComparison.InvariantCulture)).Id;
-
-                            // All required work handled by logic app so just return ok response
-                            responseModelList.Add(GenerateResponse(requestId, HttpStatusCode.OK, null, null));
-                        }
-
-                        // Request came from Shifts UI
-                        else
-                        {
-                            this.telemetryClient.TrackTrace($"Request coming from Shifts UI.");
-                            responseModelList = await this.ProcessTimeOffRequestApprovalViaTeamsAsync(jsonModel, kronosTimeZone, true).ConfigureAwait(false);
-                        }
-                    }
-
-                    break;
-
-                // The time off request is declined by a manager
-                case ApiConstants.ShiftsDeclined:
-                    {
-                        // Request came from the correct workforce integration
-                        if (isRequestFromCorrectIntegration)
-                        {
-                            this.telemetryClient.TrackTrace("Decline time off request came from correct workforce integration.");
-                            var requestId = jsonModel.Requests.First(x => x.Url.Contains("/timeOffRequests/", StringComparison.InvariantCulture)).Id;
-
-                            // All required work handled by logic app so just return ok response
-                            responseModelList.Add(GenerateResponse(requestId, HttpStatusCode.OK, null, null));
-                        }
-
-                        // Request came from Shifts UI
-                        else
-                        {
-                            this.telemetryClient.TrackTrace($"Request coming from Shifts UI.");
-                            responseModelList = await this.ProcessTimeOffRequestApprovalViaTeamsAsync(jsonModel, kronosTimeZone, false).ConfigureAwait(false);
-                        }
-                    }
-
-                    break;
+                this.telemetryClient.TrackTrace("Teams Controller timeOffRequests responseModelList Exception" + JsonConvert.SerializeObject(responseModelList));
+                throw;
             }
 
             return responseModelList;
@@ -915,7 +928,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     responseModelList.AddRange(GenerateResponseToPreventAction(jsonModel, Resource.TimeOffReasonNotFound));
                 }
 
-                var wasSuccess = await this.timeOffController.CreateTimeOffRequestFromTeamsAsync(user, timeOffEntity, timeOffReason, allRequiredConfigurations, kronosTimeZone).ConfigureAwait(true);
+                var wasSuccess = await this.timeOffController.CreateTimeOffRequestInKronosAsync(user, timeOffEntity, timeOffReason, allRequiredConfigurations, kronosTimeZone).ConfigureAwait(true);
                 if (wasSuccess is false)
                 {
                     this.telemetryClient.TrackTrace($"Time off request creation was unsuccessful.");
@@ -940,6 +953,50 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             }
 
             this.telemetryClient.TrackTrace($"Time off request creation sync process from Teams complete.");
+            return responseModelList;
+        }
+
+        /// <summary>
+        /// This method cancels a time off request via teams
+        /// </summary>
+        /// <param name="jsonModel">The decrypted JSON payload.</param>
+        /// <returns>A unit of execution.</returns>
+        private async Task<List<ShiftsIntegResponse>> ProcessCancelTimeOffRequestViaTeamsAsync(RequestModel jsonModel)
+        {
+            this.telemetryClient.TrackTrace("Processing cancellation of a TimeOffRequest received from Shifts app");
+            List<ShiftsIntegResponse> responseModelList = new List<ShiftsIntegResponse>();
+
+            var cancelTimeOffRequestId = jsonModel.Requests.First(x => x.Url.Contains("/timeOffRequests/", StringComparison.InvariantCulture)).Id;
+
+            try
+            {
+                var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
+
+                var entityToCancel = await this.timeOffReqMappingEntityProvider.GetTimeOffRequestMappingEntityByRequestIdAsync(cancelTimeOffRequestId).ConfigureAwait(false);
+
+                var wasSuccess = await this.timeOffController.CancelTimeOffRequestInKronosAsync(entityToCancel).ConfigureAwait(true);
+                if (wasSuccess is false)
+                {
+                    this.telemetryClient.TrackTrace($"Time off request cancellation failed.");
+                    responseModelList.AddRange(GenerateResponseToPreventAction(jsonModel, Resource.TimeOffRequestCancellationFailed));
+                }
+                else
+                {
+                    this.telemetryClient.TrackTrace($"Time off request cancellation was successful.");
+                    responseModelList.Add(GenerateResponse(cancelTimeOffRequestId, HttpStatusCode.OK, null, null));
+                }
+            }
+            catch (Exception ex)
+            {
+                var exceptionProps = new Dictionary<string, string>()
+                    {
+                        { "TimeOffRequestId", cancelTimeOffRequestId },
+                    };
+
+                this.telemetryClient.TrackException(ex, exceptionProps);
+                throw;
+            }
+
             return responseModelList;
         }
 

@@ -191,6 +191,7 @@
     <Compile Include="RequestEntities\Common\Employee.cs" />
     <Compile Include="RequestEntities\Common\PersonIdentity.cs" />
     <Compile Include="RequestEntities\Common\RequestIds.cs" />
+    <Compile Include="RequestEntities\Common\Employees.cs" />
     <Compile Include="RequestEntities\HyperFind\Request.cs" />
     <Compile Include="RequestEntities\HyperFind\RequestHyperFindQuery.cs" />
     <Compile Include="RequestEntities\JobAssignment\Identity.cs" />
@@ -267,13 +268,15 @@
     <Compile Include="RequestEntities\SwapShift\SubmitRequest\ShiftRequestItem.cs" />
     <Compile Include="RequestEntities\SwapShift\SubmitRequest\SwapShiftRequestItem.cs" />
     <Compile Include="RequestEntities\SwapShift\SwapShiftObj.cs" />
+    <Compile Include="RequestEntities\TimeOffRequests\CancelTimeOff\Request.cs" />
+    <Compile Include="RequestEntities\TimeOffRequests\CancelTimeOff\RequestId.cs" />
+    <Compile Include="RequestEntities\TimeOffRequests\CancelTimeOff\RequestIds.cs" />
+    <Compile Include="RequestEntities\TimeOffRequests\CancelTimeOff\RequestMgmt.cs" />
     <Compile Include="RequestEntities\TimeOffRequests\Employees.cs" />
     <Compile Include="RequestEntities\TimeOffRequests\PersonIdentity.cs" />
     <Compile Include="RequestEntities\TimeOffRequests\Request.cs" />
     <Compile Include="RequestEntities\TimeOffRequests\RequestMgmt.cs" />
     <Compile Include="RequestEntities\Schedule\Request.cs" />
-    <Compile Include="RequestEntities\TimeOffRequests\TimeOffApproveDecline\Employees.cs" />
-    <Compile Include="RequestEntities\TimeOffRequests\TimeOffApproveDecline\PersonIdentity.cs" />
     <Compile Include="RequestEntities\TimeOffRequests\TimeOffApproveDecline\Request.cs" />
     <Compile Include="RequestEntities\TimeOffRequests\TimeOffApproveDecline\RequestId.cs" />
     <Compile Include="RequestEntities\TimeOffRequests\TimeOffApproveDecline\RequestIds.cs" />
@@ -400,7 +403,6 @@
     <Compile Include="ResponseEntities\TimeOffRequests\RequestStatusChange.cs" />
     <Compile Include="ResponseEntities\TimeOffRequests\RequestStatusChanges.cs" />
     <Compile Include="ResponseEntities\TimeOffRequests\Response.cs" />
-    <Compile Include="ResponseEntities\TimeOffRequests\TimeOffApproveDecline\Response.cs" />
     <Compile Include="ResponseEntities\TimeOffRequests\TimeOffPeriod.cs" />
     <Compile Include="ResponseEntities\TimeOffRequests\TimeOffPeriods.cs" />
     <Compile Include="ResponseEntities\TimeOffRequests\User.cs" />
