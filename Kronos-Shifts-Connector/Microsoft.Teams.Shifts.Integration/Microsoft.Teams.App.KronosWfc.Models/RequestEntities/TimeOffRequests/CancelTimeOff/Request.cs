@@ -10,12 +10,18 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.TimeOffRequests.C
     /// This class models the Request.
     /// </summary>
     [XmlRoot(ElementName = "Request")]
-    public class Request : Common.Request
+    public class Request
     {
         /// <summary>
         /// Gets or sets the RequestMgmt object.
         /// </summary>
         [XmlElement(ElementName = "RequestMgmt")]
         public RequestMgmt RequestMgmt { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Action.
+        /// </summary>
+        [XmlAttribute]
+        public string Action { get; set; }
     }
 }

@@ -1413,6 +1413,13 @@
             <param name="kronosTimeZone">The time zone to use when converting the times.</param>
             <returns>A unit of execution.</returns>
         </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.ProcessCancelTimeOffRequestViaTeamsAsync(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming.RequestModel)">
+            <summary>
+            This method cancels a time off request via teams
+            </summary>
+            <param name="jsonModel">The decrypted JSON payload.</param>
+            <returns>A unit of execution.</returns>
+        </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.ProcessTimeOffRequestApprovalViaTeamsAsync(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming.RequestModel,System.String,System.Boolean)">
             <summary>
             This method takes an approval or Decline that happens in the Shifts app
@@ -1499,7 +1506,7 @@
             <param name="isRequestFromLogicApp">True if request is coming from logic app.</param>
             <returns>A <see cref="T:System.Threading.Tasks.Task`1"/> representing the result of the asynchronous operation.</returns>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffController.CreateTimeOffRequestFromTeamsAsync(Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.UserDetailsModel,Microsoft.Teams.Shifts.Integration.API.Models.Response.TimeOffRequest.TimeOffRequestItem,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.PayCodeToTimeOffReasonsMappingEntity,Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.SetupDetails,System.String)">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffController.CreateTimeOffRequestInKronosAsync(Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.UserDetailsModel,Microsoft.Teams.Shifts.Integration.API.Models.Response.TimeOffRequest.TimeOffRequestItem,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.PayCodeToTimeOffReasonsMappingEntity,Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.SetupDetails,System.String)">
             <summary>
             Creates a time off request that was requested in Teams.
             </summary>
@@ -1509,6 +1516,13 @@
             <param name="allRequiredConfigurations">Setup details.</param>
             <param name="kronosTimeZone">The kronos timezone.</param>
             <returns>Whether the time off request was created successfully or not.</returns>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffController.CancelTimeOffRequestInKronosAsync(Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TimeOffMappingEntity)">
+            <summary>
+            Cancels a time off request that was  in Teams.
+            </summary>
+            <param name="timeOffRequestMapping">The mapping for the time off request.</param>
+            <returns>Whether the time off request was cancelled successfully or not.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffController.ApproveOrDenyTimeOffRequestInKronos(System.String,System.String,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TimeOffMappingEntity,System.Boolean)">
             <summary>
@@ -3376,6 +3390,11 @@
         <member name="P:Microsoft.Teams.Shifts.Integration.API.Resource.TimeOffRequestApproveFailed">
             <summary>
               Looks up a localized string similar to Unable to approve the time off request..
+            </summary>
+        </member>
+        <member name="P:Microsoft.Teams.Shifts.Integration.API.Resource.TimeOffRequestCancellationFailed">
+            <summary>
+              Looks up a localized string similar to Unable to cancel the time off request..
             </summary>
         </member>
         <member name="P:Microsoft.Teams.Shifts.Integration.API.Resource.TimeOffRequestCreationFailed">

@@ -15,7 +15,7 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.TimeOffRequests.C
         /// Gets or sets the Employees.
         /// </summary>
         [XmlElement(ElementName = "Employees")]
-        public Common.Employees Employees { get; set; }
+        public Employees Employees { get; set; }
 
         /// <summary>
         /// Gets or sets the QueryDateSpan.

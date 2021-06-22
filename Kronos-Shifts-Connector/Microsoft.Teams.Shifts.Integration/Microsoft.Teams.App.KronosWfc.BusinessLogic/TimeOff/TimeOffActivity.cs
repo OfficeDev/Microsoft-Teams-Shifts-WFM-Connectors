@@ -208,11 +208,11 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
                     Action = ApiConstants.RetractRequests,
                     RequestMgmt = new TimeOffCancelRequest.RequestMgmt
                     {
-                        Employees = new Employees
+                        Employees = new TimeOffRequest.Employees
                         {
-                            PersonIdentity = new PersonIdentity
+                            PersonIdentity = new List<TimeOffRequest.PersonIdentity>
                             {
-                                PersonNumber = personNumber,
+                                new TimeOffRequest.PersonIdentity { PersonNumber = personNumber },
                             },
                         },
                         QueryDateSpan = queryDateSpan,
