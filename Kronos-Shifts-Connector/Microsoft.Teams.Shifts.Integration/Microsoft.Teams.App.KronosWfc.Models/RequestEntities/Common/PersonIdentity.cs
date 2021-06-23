@@ -1,4 +1,4 @@
-﻿// <copyright file="PersonIdentityTag.cs" company="Microsoft">
+﻿// <copyright file="PersonIdentity.cs" company="Microsoft">
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
@@ -15,6 +15,6 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common
         /// Gets or Sets the Person Number attribute.
         /// </summary>
         [XmlAttribute]
-        public string PersonNumber { get; set;  }
+        public string PersonNumber { get; set; }
     }
 }

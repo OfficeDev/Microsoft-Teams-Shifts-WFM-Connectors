@@ -1093,13 +1093,6 @@
             <param name="teamsId">User teams id.</param>
             <returns>A unit of execution.</returns>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.SwapShiftController.RetractOfferedShiftAsync(System.String)">
-            <summary>
-            This method retracts a request.
-            </summary>
-            <param name="reqId">Swap shift request ID.</param>
-            <returns>A type of <see cref="T:Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels.ShiftsIntegResponse"/> which represents an acknowledgment to be returned to Shifts.</returns>
-        </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.SwapShiftController.ProcessSwapShiftsAsync(System.String)">
             <summary>
             start swap shift sync from Kronos and push it to Shifts.

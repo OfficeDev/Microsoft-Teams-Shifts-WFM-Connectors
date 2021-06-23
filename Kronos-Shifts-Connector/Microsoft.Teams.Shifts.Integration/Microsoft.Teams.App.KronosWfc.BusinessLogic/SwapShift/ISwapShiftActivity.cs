@@ -9,8 +9,9 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
     using System.Threading.Tasks;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.SwapShift;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.SwapShift;
+    using CommonResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Common.Response;
     using FetchApprove = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.SwapShift.FetchApprovals;
-    using SubmitResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.SwapShift.SubmitSwapShift;
+    using SubmitResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.SwapShift.SubmitSwapShift.Response;
 
     /// <summary>
     /// The Swap Shift Activity interface.
@@ -40,7 +41,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
         /// <param name="swapShiftobj">The SwapShift Object.</param>
         /// <param name="kronosApiEndpoint">The Kronos API Endpoint.</param>
         /// <returns>A response that is boxed in a unit of execution.</returns>
-        Task<SubmitResponse.Response> DraftSwapShiftAsync(
+        Task<SubmitResponse> DraftSwapShiftAsync(
             string jSession,
             SwapShiftObj swapShiftobj,
             string kronosApiEndpoint);
@@ -55,7 +56,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
         /// <param name="comment">The comment to apply for the submission - if there is any comment.</param>
         /// <param name="endpointUrl">The Kronos WFC API Endpoint URL.</param>
         /// <returns>A unit of execution that contains a response object.</returns>
-        Task<SubmitResponse.Response> SubmitSwapShiftAsync(
+        Task<SubmitResponse> SubmitSwapShiftAsync(
             string jSession,
             string personNumber,
             string reqId,
@@ -100,5 +101,21 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
             string kronosPersonNumber,
             bool approved,
             string kronosId);
+
+        /// <summary>
+        /// The method to retract a given swap request.
+        /// </summary>
+        /// <param name="jSession">The JSession (Kronos "token").</param>
+        /// <param name="reqId">The SwapShift Request ID.</param>
+        /// <param name="personNumber">The Kronos Person Number.</param>
+        /// <param name="querySpan">The query date span.</param>
+        /// <param name="endpointUrl">The Kronos WFC API Endpoint URL.</param>
+        /// <returns>A unit of execution that contains the response object.</returns>
+        Task<CommonResponse> SubmitRetractionRequest(
+            string jSession,
+            string reqId,
+            string personNumber,
+            string querySpan,
+            Uri endpointUrl);
     }
 }

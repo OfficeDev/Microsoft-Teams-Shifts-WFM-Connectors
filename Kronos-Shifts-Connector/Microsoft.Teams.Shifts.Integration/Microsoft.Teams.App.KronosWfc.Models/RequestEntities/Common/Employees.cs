@@ -1,4 +1,4 @@
-﻿// <copyright file="EmployeeTag.cs" company="Microsoft">
+﻿// <copyright file="Employees.cs" company="Microsoft">
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
@@ -8,12 +8,12 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common
     using System.Xml.Serialization;
 
     /// <summary>
-    /// The Employee tag.
+    /// This class models the Employees.
     /// </summary>
     public class Employees
     {
         /// <summary>
-        /// Gets or sets the Person Identity element.
+        /// Gets or sets the PersonIdentity.
         /// </summary>
         [XmlElement]
         public List<PersonIdentity> PersonIdentity { get; set; }

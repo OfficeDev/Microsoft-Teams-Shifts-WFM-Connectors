@@ -12,16 +12,16 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.SwapShift.SubmitR
     [XmlRoot]
     public class Request
     {
-         /// <summary>
-         /// Gets or sets the Action.
-         /// </summary>
-        [XmlAttribute]
-        public string Action { get; set; }
-
         /// <summary>
         /// Gets or sets the Employee request management.
         /// </summary>
         [XmlElement]
         public EmployeeRequestMgmt EmployeeRequestMgmt { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Action.
+        /// </summary>
+        [XmlAttribute]
+        public string Action { get; set; }
     }
 }

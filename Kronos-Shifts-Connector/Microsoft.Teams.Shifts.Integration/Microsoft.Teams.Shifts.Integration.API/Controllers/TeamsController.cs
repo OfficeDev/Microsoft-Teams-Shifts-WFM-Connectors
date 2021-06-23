@@ -564,11 +564,15 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                     var entityToCancel = await this.swapShiftMappingEntityProvider.GetKronosReqAsync(deleteSwapRequestId).ConfigureAwait(false);
 
-                    // Updating the ShiftsStatus to Cancelled.
-                    entityToCancel.ShiftsStatus = ApiConstants.SwapShiftCancelled;
-
-                    // Updating the entity accordingly
-                    await this.swapShiftMappingEntityProvider.AddOrUpdateSwapShiftMappingAsync(entityToCancel).ConfigureAwait(false);
+                    if (entityToCancel != null)
+                    {
+                        if (entityToCancel.KronosStatus != ApiConstants.Retract)
+                        {
+                            responseModelList.Add(await this.swapShiftController.RetractOfferedShiftAsync(entityToCancel).ConfigureAwait(false));
+                            entityToCancel.ShiftsStatus = ApiConstants.SwapShiftCancelled;
+                            await this.swapShiftMappingEntityProvider.AddOrUpdateSwapShiftMappingAsync(entityToCancel).ConfigureAwait(false);
+                        }
+                    }
 
                     integrationResponseSwap = GenerateResponse(deleteSwapRequestId, HttpStatusCode.OK, null, null);
                     responseModelList.Add(integrationResponseSwap);
