@@ -1,4 +1,4 @@
-﻿// <copyright file="TimeOffReasonController.cs" company="Microsoft">
+// <copyright file="TimeOffReasonController.cs" company="Microsoft">
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
@@ -99,14 +99,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         return;
                     }
 
-                    if (string.Equals(isRequestFromLogicApp, "false", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        await this.InitialTimeOffReasonsSyncAsync(
-                                allRequiredConfigurations.ShiftsAccessToken,
-                                result[0].TeamId,
-                                kronosReasons).ConfigureAwait(false);
-                    }
-
                     var teams = new List<string>();
                     foreach (var team in result)
                     {
@@ -114,6 +106,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         {
                             teams.Add(team.TeamId);
                         }
+                    }
+
+                    if (string.Equals(isRequestFromLogicApp, "false", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        await this.InitialTimeOffReasonsSyncAsync(
+                                allRequiredConfigurations.ShiftsAccessToken,
+                                teams,
+                                kronosReasons).ConfigureAwait(false);
                     }
 
                     await this.UpdateTimeOffReasonsAsync(
@@ -139,25 +139,28 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// Creates mapping reasons in storage.
         /// </summary>
         /// <param name="accessToken">Cached AccessToken.</param>
-        /// <param name="teamsId">MS Teams Id.</param>
+        /// <param name="teams">List of team ids.</param>
         /// <param name="kronosReasons">The reasons received from Kronos.</param>
         /// <returns>List of TimeOffReasons.</returns>
         private async Task InitialTimeOffReasonsSyncAsync(
             string accessToken,
-            string teamsId,
+            List<string> teams,
             List<string> kronosReasons)
         {
-            var initialshiftReasons = await this.GetTimeOffReasonAsync(accessToken, teamsId).ConfigureAwait(false);
-
-            if (initialshiftReasons != null)
+            foreach (var team in teams)
             {
-                await this.DeleteMultipleReasons(accessToken, teamsId, initialshiftReasons).ConfigureAwait(false);
-            }
+                var initialshiftReasons = await this.GetTimeOffReasonAsync(accessToken, team).ConfigureAwait(false);
 
-            if (kronosReasons != null)
-            {
-                await this.AddMultipleReasons(accessToken, teamsId, kronosReasons).ConfigureAwait(false);
-                return;
+                if (initialshiftReasons != null)
+                {
+                    await this.DeleteMultipleReasons(accessToken, team, initialshiftReasons).ConfigureAwait(false);
+                }
+
+                if (kronosReasons != null)
+                {
+                    await this.AddMultipleReasons(accessToken, team, kronosReasons).ConfigureAwait(false);
+                    return;
+                }
             }
 
             return;
@@ -193,17 +196,17 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     return;
                 }
 
-                foreach (var mappedReason in mappedReasons.Values)
+                foreach (var shiftReason in shiftReasons)
                 {
-                    if (!kronosReasons.Contains(mappedReason))
+                    if (!kronosReasons.Contains(shiftReason.DisplayName))
                     {
-                        removeActions.Add(this.DeleteSingleReason(accessToken, team, shiftReasons.Find(c => c.DisplayName == mappedReason)));
+                        removeActions.Add(this.DeleteSingleReason(accessToken, team, shiftReason));
                     }
                 }
 
                 foreach (var reason in kronosReasons)
                 {
-                    if (!mappedReasons.ContainsValue(reason))
+                    if (shiftReasons.Find(c => c.DisplayName == reason) == null)
                     {
                         addActions.Add(this.AddSingleReason(accessToken, team, reason));
                     }
