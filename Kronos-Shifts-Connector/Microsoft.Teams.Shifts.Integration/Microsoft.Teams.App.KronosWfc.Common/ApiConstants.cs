@@ -105,7 +105,7 @@ namespace Microsoft.Teams.App.KronosWfc.Common
         public const string RefuseRequests = "RefuseRequests";
 
         /// <summary>
-        /// Defines the Action to deny requests.
+        /// Defines the Action to retract requests.
         /// </summary>
         public const string RetractRequests = "RetractRequests";
 
