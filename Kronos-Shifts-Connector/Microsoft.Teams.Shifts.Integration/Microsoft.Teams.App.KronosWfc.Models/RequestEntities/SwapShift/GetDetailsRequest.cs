@@ -10,6 +10,7 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.SwapShift
     /// <summary>
     /// This class models the Request.
     /// </summary>
+    [XmlRoot(ElementName = "Request")]
     public class GetDetailsRequest
     {
         /// <summary>
