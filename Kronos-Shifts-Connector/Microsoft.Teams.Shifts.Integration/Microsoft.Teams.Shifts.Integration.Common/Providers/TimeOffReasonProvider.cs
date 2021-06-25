@@ -153,12 +153,14 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
                 {
                     if (reasonsToRemove.Contains(reason.RowKey))
                     {
+                        this.telemetryClient.TrackTrace($"Adding {reason.RowKey} to delete operation.");
                         batchDeleteOperation.Delete(reason);
                     }
                 }
 
                 if (batchDeleteOperation.Count == 0)
                 {
+                    this.telemetryClient.TrackTrace("There are no time off reasons to be deleted.");
                     return;
                 }
 
@@ -179,7 +181,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// <returns>A unit of execution.</returns>
         private async Task InitializeAsync(string connectionString)
         {
-            this.telemetryClient.TrackTrace($"{MethodBase.GetCurrentMethod().Name}");
+            this.telemetryClient.TrackTrace("Ensuring azure table for time off reasons exists.");
             CloudStorageAccount storageAccount = CloudStorageAccount.Parse(connectionString);
             CloudTableClient cloudTableClient = storageAccount.CreateCloudTableClient();
             this.timeOffReasonsCloudTable = cloudTableClient.GetTableReference(ConfigurationTableName);
@@ -192,7 +194,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// <returns>A unit of execution.</returns>
         private async Task EnsureInitializedAsync()
         {
-            this.telemetryClient.TrackTrace($"{MethodBase.GetCurrentMethod().Name}");
+            this.telemetryClient.TrackTrace("Ensuring necessary entities exist for time off reasons.");
             await this.initializeTask.Value.ConfigureAwait(false);
         }
     }
