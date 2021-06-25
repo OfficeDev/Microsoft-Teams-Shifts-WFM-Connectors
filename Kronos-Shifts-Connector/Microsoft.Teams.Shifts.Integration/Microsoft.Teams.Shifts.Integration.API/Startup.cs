@@ -154,6 +154,7 @@ namespace Microsoft.Teams.Shifts.Integration.API
             services.AddSingleton((provider) => new SyncKronosToShiftsController(
                provider.GetRequiredService<TelemetryClient>(),
                provider.GetRequiredService<BusinessLogic.Providers.IConfigurationProvider>(),
+               provider.GetRequiredService<UserController>(),
                provider.GetRequiredService<OpenShiftController>(),
                provider.GetRequiredService<OpenShiftRequestController>(),
                provider.GetRequiredService<SwapShiftController>(),
@@ -303,6 +304,13 @@ namespace Microsoft.Teams.Shifts.Integration.API
                 provider.GetRequiredService<ITeamDepartmentMappingProvider>(),
                 provider.GetRequiredService<IHttpClientFactory>(),
                 provider.GetRequiredService<BackgroundTaskWrapper>()));
+
+            services.AddSingleton((provider) => new UserController(
+                provider.GetRequiredService<AppSettings>(),
+                provider.GetRequiredService<TelemetryClient>(),
+                provider.GetRequiredService<IUserMappingProvider>(),
+                provider.GetRequiredService<IHyperFindActivity>(),
+                provider.GetRequiredService<Utility>()));
 
             services.AddSingleton<BackgroundTaskWrapper>();
             services.AddHostedService<Common.BackgroundService>();

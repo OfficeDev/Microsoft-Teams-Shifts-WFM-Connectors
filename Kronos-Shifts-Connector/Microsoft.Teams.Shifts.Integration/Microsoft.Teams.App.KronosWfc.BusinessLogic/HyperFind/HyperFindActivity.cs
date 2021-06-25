@@ -11,10 +11,12 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.HyperFind
     using System.Threading.Tasks;
     using System.Xml.Linq;
     using Microsoft.ApplicationInsights;
+    using Microsoft.Teams.App.KronosWfc.BusinessLogic.Common;
     using Microsoft.Teams.App.KronosWfc.Common;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.HyperFind;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.HyperFind;
     using Microsoft.Teams.App.KronosWfc.Service;
+    using HyperFindResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.HyperFind.Response;
 
     /// <summary>
     /// Hyper Find Activity class.
@@ -40,7 +42,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.HyperFind
         /// Returns all the home employees.
         /// </summary>
         /// <param name="endPointUrl">The Kronos WFC endpoint URL.</param>
-        /// <param name="tenantId">The TenantId.</param>
         /// <param name="jSession">The jSession string.</param>
         /// <param name="startDate">The startDate.</param>
         /// <param name="endDate">The endDate.</param>
@@ -49,7 +50,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.HyperFind
         /// <returns>A unit of execution that contains the type <see cref="Response"/>.</returns>
         public async Task<Response> GetHyperFindQueryValuesAsync(
             Uri endPointUrl,
-            string tenantId,
             string jSession,
             string startDate,
             string endDate,
@@ -61,7 +61,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.HyperFind
                 { "AssemblyName", Assembly.GetExecutingAssembly().FullName },
             };
 
-            this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, telemetryProps);
+            this.telemetryClient.TrackTrace("Get all home employees from Kronos.", telemetryProps);
 
             string hyperFindRequest = this.CreateHyperFindRequest(startDate, endDate, hyperFindQueryName, visibilityCode);
 
@@ -72,9 +72,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.HyperFind
                 ApiConstants.SoapEnvClose,
                 jSession).ConfigureAwait(false);
 
-            Response hyperFindResponse = this.ProcessResponse(tupleResponse.Item1);
-
-            return hyperFindResponse;
+            return tupleResponse.ProcessResponse<HyperFindResponse>(this.telemetryClient);
         }
 
         /// <summary>
@@ -87,13 +85,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.HyperFind
         /// <returns>Request string.</returns>
         private string CreateHyperFindRequest(string startDate, string endDate, string hyperFindQueryName, string visibilityCode)
         {
-            var telemetryProps = new Dictionary<string, string>()
-            {
-                { "AssemblyName", Assembly.GetExecutingAssembly().FullName },
-            };
-
-            this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, telemetryProps);
-
             Request rq = new Request()
             {
                 HyperFindQuery = new RequestHyperFindQuery()
@@ -105,25 +96,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.HyperFind
                 Action = ApiConstants.RunQueryAction,
             };
             return rq.XmlSerialize();
-        }
-
-        /// <summary>
-        /// Process response class.
-        /// </summary>
-        /// <param name="strResponse">String response.</param>
-        /// <returns>Process response.</returns>
-        private Response ProcessResponse(string strResponse)
-        {
-            var telemetryProps = new Dictionary<string, string>()
-            {
-                { "AssemblyName", Assembly.GetExecutingAssembly().FullName },
-            };
-
-            this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, telemetryProps);
-
-            XDocument xDoc = XDocument.Parse(strResponse);
-            var xResponse = xDoc.Root.Descendants().FirstOrDefault(d => d.Name.LocalName.Equals(ApiConstants.Response, StringComparison.Ordinal));
-            return XmlConvertHelper.DeserializeObject<Response>(xResponse.ToString());
         }
     }
 }

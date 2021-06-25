@@ -1192,18 +1192,18 @@
             Sync Kronos To Shifts Controller.
             </summary>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.SyncKronosToShiftsController.#ctor(Microsoft.ApplicationInsights.TelemetryClient,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IConfigurationProvider,Microsoft.Teams.Shifts.Integration.API.Controllers.OpenShiftController,Microsoft.Teams.Shifts.Integration.API.Controllers.OpenShiftRequestController,Microsoft.Teams.Shifts.Integration.API.Controllers.SwapShiftController,Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffController,Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffReasonController,Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController,Microsoft.Teams.Shifts.Integration.API.Common.BackgroundTaskWrapper)">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.SyncKronosToShiftsController.#ctor(Microsoft.ApplicationInsights.TelemetryClient,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IConfigurationProvider,Microsoft.Teams.Shifts.Integration.API.Controllers.UserController,Microsoft.Teams.Shifts.Integration.API.Controllers.OpenShiftController,Microsoft.Teams.Shifts.Integration.API.Controllers.OpenShiftRequestController,Microsoft.Teams.Shifts.Integration.API.Controllers.SwapShiftController,Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffController,Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffReasonController,Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController,Microsoft.Teams.Shifts.Integration.API.Common.BackgroundTaskWrapper)">
             <summary>
             Initializes a new instance of the <see cref="T:Microsoft.Teams.Shifts.Integration.API.Controllers.SyncKronosToShiftsController"/> class.
             </summary>
             <param name="telemetryClient">ApplicationInsights DI.</param>
             <param name="configurationProvider">The Configuration Provider DI.</param>
+            <param name="usersController">UsersController DI.</param>
             <param name="openShiftController">OpenShiftController DI.</param>
             <param name="openShiftRequestController">OpenShiftRequestController DI.</param>
             <param name="swapShiftController">SwapShiftController DI.</param>
             <param name="timeOffController">TimeOffController DI.</param>
             <param name="timeOffReasonController">TimeOffReasonController DI.</param>
-            <param name="timeOffRequestsController">TimeOffRequestsController DI.</param>
             <param name="shiftController">ShiftController DI.</param>
             <param name="taskWrapper">Wrapper class instance for BackgroundTask.</param>
         </member>
@@ -1706,6 +1706,27 @@
             <param name="accessToken">Cached AccessToken.</param>
             <param name="teamsId">MS Teams Id.</param>
             <param name="kronosReasons">The list of reasons pulled from Kronos.</param>
+        </member>
+        <member name="T:Microsoft.Teams.Shifts.Integration.API.Controllers.UserController">
+            <summary>
+            The Users controller.
+            </summary>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.UserController.#ctor(Microsoft.Teams.Shifts.Integration.API.Common.AppSettings,Microsoft.ApplicationInsights.TelemetryClient,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IUserMappingProvider,Microsoft.Teams.App.KronosWfc.BusinessLogic.HyperFind.IHyperFindActivity,Microsoft.Teams.Shifts.Integration.API.Common.Utility)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.Teams.Shifts.Integration.API.Controllers.UserController"/> class.
+            </summary>
+            <param name="appSettings">Application Settings DI.</param>
+            <param name="telemetryClient">ApplicationInsights DI.</param>
+            <param name="hyperFindActivity">Kronos Hyper Find Activity DI.</param>
+            <param name="userMappingProvider">The User Mapping Provider DI.</param>
+            <param name="utility">Utility DI.</param>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.UserController.ProcessUsersAsync">
+            <summary>
+            Start user sync from Kronos to Shifts.
+            </summary>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation.</returns>
         </member>
         <member name="T:Microsoft.Teams.Shifts.Integration.API.CustomAuthorize">
             <summary>
@@ -3282,6 +3303,11 @@
         <member name="P:Microsoft.Teams.Shifts.Integration.API.Resource.ProcessTimeOffsAsync">
             <summary>
               Looks up a localized string similar to ProcessTimeOffsAsync.
+            </summary>
+        </member>
+        <member name="P:Microsoft.Teams.Shifts.Integration.API.Resource.ProcessUsersAsync">
+            <summary>
+              Looks up a localized string similar to ProcessUsersAsync.
             </summary>
         </member>
         <member name="P:Microsoft.Teams.Shifts.Integration.API.Resource.RecipientShiftNotFound">

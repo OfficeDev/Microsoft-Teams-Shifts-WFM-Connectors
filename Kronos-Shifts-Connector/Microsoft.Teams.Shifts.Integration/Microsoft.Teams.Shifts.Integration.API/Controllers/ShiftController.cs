@@ -469,7 +469,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         {
             List<UserDetailsModel> kronosUsers = new List<UserDetailsModel>();
 
-            List<AllUserMappingEntity> mappedUsersResult = await this.userMappingProvider.GetAllMappedUserDetailsAsync().ConfigureAwait(false);
+            List<AllUserMappingEntity> mappedUsersResult = await this.userMappingProvider.GetAllActiveMappedUserDetailsAsync().ConfigureAwait(false);
 
             foreach (var element in mappedUsersResult)
             {

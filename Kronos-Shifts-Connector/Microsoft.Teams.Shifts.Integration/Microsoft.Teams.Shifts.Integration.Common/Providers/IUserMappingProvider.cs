@@ -15,10 +15,10 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
     public interface IUserMappingProvider
     {
         /// <summary>
-        /// Function that will return all of the Users that are mapped in Azure Table storage.
+        /// Function that will return all of the active Users that are mapped in Azure Table storage.
         /// </summary>
         /// <returns>A list of the mapped Users.</returns>
-        Task<List<AllUserMappingEntity>> GetAllMappedUserDetailsAsync();
+        Task<List<AllUserMappingEntity>> GetAllActiveMappedUserDetailsAsync();
 
         /// <summary>
         /// Gets a single user entity mapping record.
@@ -32,11 +32,11 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             string teamId);
 
         /// <summary>
-        /// Method to import Kronons and Shift users data.
+        /// Method definition for saving or updating the AllUserMappingEntity.
         /// </summary>
-        /// <param name="entity">Mapped User Entity.</param>
-        /// <returns>Success if Kronos, Shift mapped users are fetched.</returns>
-        Task<bool> KronosShiftUsersMappingAsync(AllUserMappingEntity entity);
+        /// <param name="entity">An object of type <see cref="AllUserMappingEntity"/> which is to be saved or updated.</param>
+        /// <returns>A unit of execution.</returns>
+        Task SaveOrUpdateUserMappingEntityAsync(AllUserMappingEntity entity);
 
         /// <summary>
         /// Method to get distinct Kronos org job path.

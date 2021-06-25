@@ -40,12 +40,13 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// Function that will return all of the Users that are mapped in Azure Table storage.
         /// </summary>
         /// <returns>A list of the mapped Users.</returns>
-        public async Task<List<AllUserMappingEntity>> GetAllMappedUserDetailsAsync()
+        public async Task<List<AllUserMappingEntity>> GetAllActiveMappedUserDetailsAsync()
         {
             await this.EnsureInitializedAsync().ConfigureAwait(false);
 
             // Table query
             TableQuery<AllUserMappingEntity> query = new TableQuery<AllUserMappingEntity>();
+            query.Where(TableQuery.GenerateFilterConditionForBool("IsActive", QueryComparisons.Equal, true));
 
             // Results list
             List<AllUserMappingEntity> results = new List<AllUserMappingEntity>();
@@ -92,12 +93,12 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             TableContinuationToken continuationToken = null;
             if (await this.userMappingCloudTable.ExistsAsync().ConfigureAwait(false))
             {
-                    TableQuerySegment<AllUserMappingEntity> queryResults = await this.userMappingCloudTable.ExecuteQuerySegmentedAsync(
-                        query,
-                        continuationToken).ConfigureAwait(false);
+                TableQuerySegment<AllUserMappingEntity> queryResults = await this.userMappingCloudTable.ExecuteQuerySegmentedAsync(
+                    query,
+                    continuationToken).ConfigureAwait(false);
 
-                    continuationToken = queryResults.ContinuationToken;
-                    results = queryResults.Results;
+                continuationToken = queryResults.ContinuationToken;
+                results = queryResults.Results;
             }
 
             return results.FirstOrDefault();
@@ -108,23 +109,14 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// </summary>
         /// <param name="entity">Mapping entity reference.</param>
         /// <returns>http status code representing the asynchronous operation.</returns>
-        public async Task<bool> KronosShiftUsersMappingAsync(AllUserMappingEntity entity)
+        public Task SaveOrUpdateUserMappingEntityAsync(AllUserMappingEntity entity)
         {
             if (entity is null)
             {
                 throw new ArgumentNullException(nameof(entity));
             }
 
-            try
-            {
-                var result = await this.StoreOrUpdateEntityAsync(entity).ConfigureAwait(false);
-                return result.HttpStatusCode == (int)HttpStatusCode.NoContent;
-            }
-            catch (Exception)
-            {
-                return false;
-                throw;
-            }
+            return this.StoreOrUpdateEntityAsync(entity);
         }
 
         /// <summary>
