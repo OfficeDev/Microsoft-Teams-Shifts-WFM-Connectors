@@ -35,5 +35,11 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Models
         /// </summary>
         [JsonProperty("KronosUserName")]
         public string KronosUserName { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the employee IsActive.
+        /// </summary>
+        [JsonProperty("IsActive")]
+        public bool IsActive { get; set; }
     }
 }

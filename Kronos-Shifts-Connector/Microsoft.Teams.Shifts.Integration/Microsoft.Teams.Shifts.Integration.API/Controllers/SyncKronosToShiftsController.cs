@@ -24,6 +24,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     {
         private readonly TelemetryClient telemetryClient;
         private readonly IConfigurationProvider configurationProvider;
+        private readonly UserController usersController;
         private readonly OpenShiftController openShiftController;
         private readonly OpenShiftRequestController openShiftRequestController;
         private readonly SwapShiftController swapShiftController;
@@ -37,17 +38,18 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// </summary>
         /// <param name="telemetryClient">ApplicationInsights DI.</param>
         /// <param name="configurationProvider">The Configuration Provider DI.</param>
+        /// <param name="usersController">UsersController DI.</param>
         /// <param name="openShiftController">OpenShiftController DI.</param>
         /// <param name="openShiftRequestController">OpenShiftRequestController DI.</param>
         /// <param name="swapShiftController">SwapShiftController DI.</param>
         /// <param name="timeOffController">TimeOffController DI.</param>
         /// <param name="timeOffReasonController">TimeOffReasonController DI.</param>
-        /// <param name="timeOffRequestsController">TimeOffRequestsController DI.</param>
         /// <param name="shiftController">ShiftController DI.</param>
         /// <param name="taskWrapper">Wrapper class instance for BackgroundTask.</param>
         public SyncKronosToShiftsController(
             TelemetryClient telemetryClient,
             IConfigurationProvider configurationProvider,
+            UserController usersController,
             OpenShiftController openShiftController,
             OpenShiftRequestController openShiftRequestController,
             SwapShiftController swapShiftController,
@@ -58,6 +60,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         {
             this.telemetryClient = telemetryClient;
             this.configurationProvider = configurationProvider;
+            this.usersController = usersController;
             this.openShiftController = openShiftController;
             this.openShiftRequestController = openShiftRequestController;
             this.swapShiftController = swapShiftController;
@@ -99,6 +102,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             }
         }
 
+#pragma warning disable CA1031 // Do not catch general exception types
+
         /// <summary>
         /// Process all the entities from Kronos to Shifts.
         /// </summary>
@@ -106,17 +111,35 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <returns>Returns task.</returns>
         private async Task ProcessKronosToShiftsShiftsAsync(string isRequestFromLogicApp)
         {
-#pragma warning disable CA1031 // Do not catch general exception types
+            this.telemetryClient.TrackTrace($"{Resource.ProcessKronosToShiftsShiftsAsync} start at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}" + " for isRequestFromLogicApp: " + isRequestFromLogicApp);
+
+            var isUsersSyncSuccessful = false;
             var isOpenShiftRequestSyncSuccessful = false;
             var isSwapShiftRequestSyncSuccessful = false;
             var isMapPayCodeTimeOffReasonsSuccessful = false;
+
+            // Sync users from Kronos to Shifts.
             try
             {
-                this.telemetryClient.TrackTrace($"{Resource.ProcessKronosToShiftsShiftsAsync} start at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}" + " for isRequestFromLogicApp: " + isRequestFromLogicApp);
+                isUsersSyncSuccessful = await this.usersController.ProcessUsersAsync().ConfigureAwait(false);
+                this.telemetryClient.TrackTrace($"{Resource.ProcessUsersAsync} completed from {Resource.ProcessKronosToShiftsShiftsAsync}. ");
+            }
+            catch (Exception ex)
+            {
+                this.telemetryClient.TrackException(ex);
+            }
 
-                // Sync open shifts from Kronos to Shifts.
+            // We require a successful user sync to ensure we are only processing active employees
+            if (!isUsersSyncSuccessful)
+            {
+                this.telemetryClient.TrackTrace($"{Resource.ProcessUsersAsync} failed. No other syncs were performed. ");
+                return;
+            }
+
+            // Sync open shifts from Kronos to Shifts.
+            try
+            {
                 await this.openShiftController.ProcessOpenShiftsAsync(isRequestFromLogicApp).ConfigureAwait(false);
-
                 this.telemetryClient.TrackTrace($"{Resource.ProcessOpenShiftsAsync} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
             }
             catch (Exception ex)
@@ -124,9 +147,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 this.telemetryClient.TrackException(ex);
             }
 
+            // Sync open shifts requests from Kronos to Shifts.
             try
             {
-                // Sync open shifts requests from Kronos to Shifts.
                 await this.openShiftRequestController.ProcessOpenShiftsRequests(isRequestFromLogicApp).ConfigureAwait(false);
                 isOpenShiftRequestSyncSuccessful = true;
                 this.telemetryClient.TrackTrace($"{Resource.ProcessOpenShiftsRequests} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
@@ -137,9 +160,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 this.telemetryClient.TrackException(ex);
             }
 
+            // Sync swap shifts from Kronos to Shifts.
             try
             {
-                // Sync swap shifts from Kronos to Shifts.
                 await this.swapShiftController.ProcessSwapShiftsAsync(isRequestFromLogicApp).ConfigureAwait(false);
                 isSwapShiftRequestSyncSuccessful = true;
                 this.telemetryClient.TrackTrace($"{Resource.ProcessSwapShiftsAsync} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
@@ -150,9 +173,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 this.telemetryClient.TrackException(ex);
             }
 
+            // Sync TimeOffReasons from Kronos to Shifts.
             try
             {
-                // Sync TimeOffReasons from Kronos to Shifts.
                 await this.timeOffReasonController.MapPayCodeTimeOffReasonsAsync(isRequestFromLogicApp).ConfigureAwait(false);
                 isMapPayCodeTimeOffReasonsSuccessful = true;
                 this.telemetryClient.TrackTrace($"{Resource.MapPayCodeTimeOffReasonsAsync} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
@@ -166,11 +189,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             // Sync TimeOff only if Paycodes in Kronos synced successfully.
             if (isMapPayCodeTimeOffReasonsSuccessful)
             {
+                // Sync timeoff from Kronos to Shifts.
                 try
                 {
-                    // Sync timeoff from Kronos to Shifts.
                     await this.timeOffController.ProcessTimeOffsAsync(isRequestFromLogicApp).ConfigureAwait(false);
-
                     this.telemetryClient.TrackTrace($"{Resource.ProcessTimeOffsAsync} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
                 }
                 catch (Exception ex)
@@ -188,7 +210,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             {
                 // Sync shifts from Kronos to Shifts.
                 await this.shiftController.ProcessShiftsAsync(isRequestFromLogicApp).ConfigureAwait(false);
-
                 this.telemetryClient.TrackTrace($"{Resource.ProcessShiftsAsync} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
             }
 
@@ -199,7 +220,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             }
 
             this.telemetryClient.TrackTrace($"{Resource.ProcessKronosToShiftsShiftsAsync} completed at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}" + " for isRequestFromLogicApp: " + isRequestFromLogicApp);
-#pragma warning restore CA1031 // Do not catch general exception types
         }
+
+#pragma warning restore CA1031 // Do not catch general exception types
     }
 }

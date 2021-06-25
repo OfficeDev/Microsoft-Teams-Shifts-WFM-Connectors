@@ -154,6 +154,7 @@ namespace Microsoft.Teams.Shifts.Integration.API
             services.AddSingleton((provider) => new SyncKronosToShiftsController(
                provider.GetRequiredService<TelemetryClient>(),
                provider.GetRequiredService<BusinessLogic.Providers.IConfigurationProvider>(),
+               provider.GetRequiredService<UserController>(),
                provider.GetRequiredService<OpenShiftController>(),
                provider.GetRequiredService<OpenShiftRequestController>(),
                provider.GetRequiredService<SwapShiftController>(),

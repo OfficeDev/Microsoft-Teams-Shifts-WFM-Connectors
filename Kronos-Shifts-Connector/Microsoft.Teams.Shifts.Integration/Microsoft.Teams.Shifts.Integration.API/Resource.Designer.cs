@@ -565,6 +565,15 @@ namespace Microsoft.Teams.Shifts.Integration.API {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to ProcessUsersAsync.
+        /// </summary>
+        public static string ProcessUsersAsync {
+            get {
+                return ResourceManager.GetString("ProcessUsersAsync", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Recipient shift not found.
         /// </summary>
         public static string RecipientShiftNotFound {

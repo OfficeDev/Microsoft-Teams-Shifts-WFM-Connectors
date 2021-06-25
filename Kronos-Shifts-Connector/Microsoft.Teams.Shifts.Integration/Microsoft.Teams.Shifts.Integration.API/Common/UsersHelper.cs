@@ -26,7 +26,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
             Dictionary<string, TeamToDepartmentJobMappingEntity> teamMappingEntities = new Dictionary<string, TeamToDepartmentJobMappingEntity>();
             List<UserDetailsModel> kronosUsers = new List<UserDetailsModel>();
 
-            List<AllUserMappingEntity> mappedUsersResult = await userMappingProvider.GetAllMappedUserDetailsAsync().ConfigureAwait(false);
+            List<AllUserMappingEntity> mappedUsersResult = await userMappingProvider.GetAllActiveMappedUserDetailsAsync().ConfigureAwait(false);
 
             foreach (var element in mappedUsersResult)
             {

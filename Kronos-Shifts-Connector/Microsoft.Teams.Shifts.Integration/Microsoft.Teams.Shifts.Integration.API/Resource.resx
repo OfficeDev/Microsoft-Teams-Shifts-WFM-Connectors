@@ -403,4 +403,7 @@
   <data name="TimeOffRequestCancellationFailed" xml:space="preserve">
     <value>Unable to cancel the time off request.</value>
   </data>
+  <data name="ProcessUsersAsync" xml:space="preserve">
+    <value>ProcessUsersAsync</value>
+  </data>
 </root>
