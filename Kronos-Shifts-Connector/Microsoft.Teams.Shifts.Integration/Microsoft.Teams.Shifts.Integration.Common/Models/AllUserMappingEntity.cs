@@ -40,6 +40,6 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Models
         /// Gets or sets a value indicating whether the employee IsActive.
         /// </summary>
         [JsonProperty("IsActive")]
-        public bool IsActive { get; set; }
+        public bool IsActive { get; set; } = true;
     }
 }
