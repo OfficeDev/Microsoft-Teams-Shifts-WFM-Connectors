@@ -143,7 +143,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             string accessToken,
             List<string> teams)
         {
-            this.telemetryClient.TrackTrace("Initial time off sync.");
+            this.telemetryClient.TrackTrace("Began clearing of time off reasons.");
             foreach (var team in teams)
             {
                 var initialshiftReasons = await this.GetTimeOffReasonAsync(accessToken, team).ConfigureAwait(false);
@@ -155,7 +155,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 }
             }
 
-            this.telemetryClient.TrackTrace("Ending initial time off sync.");
+            this.telemetryClient.TrackTrace("Ended clearing of time off reasons.");
             return;
         }
 
