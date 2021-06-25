@@ -1641,13 +1641,12 @@
             <param name="isRequestFromLogicApp"> If this is the first time sync or not.</param>
             <returns>JSONResult.</returns>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffReasonController.ClearTimeOffReasons(System.String,System.Collections.Generic.List{System.String},System.Collections.Generic.List{System.String})">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffReasonController.ClearTimeOffReasons(System.String,System.Collections.Generic.List{System.String})">
             <summary>
             Creates mapping reasons in storage.
             </summary>
             <param name="accessToken">Cached AccessToken.</param>
             <param name="teams">List of team ids.</param>
-            <param name="kronosReasons">The reasons received from Kronos.</param>
             <returns>List of TimeOffReasons.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffReasonController.UpdateTimeOffReasonsAsync(System.String,System.Collections.Generic.List{System.String},System.Collections.Generic.List{System.String})">
