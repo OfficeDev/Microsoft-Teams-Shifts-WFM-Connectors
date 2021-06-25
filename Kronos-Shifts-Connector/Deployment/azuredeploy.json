@@ -411,7 +411,7 @@
             },
             "resources": [
                 {
-                    "apiVersion": "2015-08-01",
+                    "apiVersion": "2020-12-01",
                     "name": "web",
                     "type": "sourcecontrols",
                     "dependsOn": [
@@ -588,7 +588,7 @@
             },
             "resources": [
                 {
-                    "apiVersion": "2015-08-01",
+                    "apiVersion": "2020-12-01",
                     "name": "web",
                     "type": "sourcecontrols",
                     "dependsOn": [
