@@ -117,15 +117,15 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 return;
             }
 
-            await this.ProcessTask(this.openShiftController.ProcessOpenShiftsAsync(isRequestFromLogicApp), Resource.ProcessKronosToShiftsShiftsAsync).ConfigureAwait(false);
-            bool isOpenShiftRequestSyncSuccessful = await this.ProcessTask(this.openShiftRequestController.ProcessOpenShiftsRequests(isRequestFromLogicApp), Resource.ProcessKronosToShiftsShiftsAsync).ConfigureAwait(false);
+            await this.ProcessTask(this.openShiftController.ProcessOpenShiftsAsync(isRequestFromLogicApp), Resource.ProcessOpenShiftsAsync).ConfigureAwait(false);
+            bool isOpenShiftRequestSyncSuccessful = await this.ProcessTask(this.openShiftRequestController.ProcessOpenShiftsRequests(isRequestFromLogicApp), Resource.ProcessOpenShiftsRequests).ConfigureAwait(false);
             bool isSwapShiftRequestSyncSuccessful = await this.ProcessTask(this.swapShiftController.ProcessSwapShiftsAsync(isRequestFromLogicApp), Resource.ProcessSwapShiftsAsync).ConfigureAwait(false);
-            bool isMapPayCodeTimeOffReasonsSuccessful = await this.ProcessTask(this.timeOffReasonController.MapPayCodeTimeOffReasonsAsync(isRequestFromLogicApp), Resource.ProcessKronosToShiftsShiftsAsync).ConfigureAwait(false);
+            bool isMapPayCodeTimeOffReasonsSuccessful = await this.ProcessTask(this.timeOffReasonController.MapPayCodeTimeOffReasonsAsync(isRequestFromLogicApp), Resource.MapPayCodeTimeOffReasonsAsync).ConfigureAwait(false);
 
             // Sync TimeOff only if Paycodes in Kronos synced successfully.
             if (isMapPayCodeTimeOffReasonsSuccessful)
             {
-                await this.ProcessTask(this.timeOffController.ProcessTimeOffsAsync(isRequestFromLogicApp), Resource.ProcessKronosToShiftsShiftsAsync).ConfigureAwait(false);
+                await this.ProcessTask(this.timeOffController.ProcessTimeOffsAsync(isRequestFromLogicApp), Resource.ProcessTimeOffsAsync).ConfigureAwait(false);
             }
             else
             {
@@ -135,7 +135,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             // sync Shifts from Kronos to Shifts only if OpenShiftRequest and SwapShiftRequest sync is successful.
             if (isSwapShiftRequestSyncSuccessful && isOpenShiftRequestSyncSuccessful)
             {
-                await this.ProcessTask(this.shiftController.ProcessShiftsAsync(isRequestFromLogicApp), Resource.ProcessKronosToShiftsShiftsAsync).ConfigureAwait(false);
+                await this.ProcessTask(this.shiftController.ProcessShiftsAsync(isRequestFromLogicApp), Resource.ProcessShiftsAsync).ConfigureAwait(false);
             }
             else
             {
