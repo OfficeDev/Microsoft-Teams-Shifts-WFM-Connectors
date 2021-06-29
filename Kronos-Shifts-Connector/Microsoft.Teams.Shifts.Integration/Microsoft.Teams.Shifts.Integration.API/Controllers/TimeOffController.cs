@@ -17,17 +17,20 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Graph;
+    using Microsoft.Teams.App.KronosWfc.BusinessLogic.ShiftsToKronos.CreateTimeOff;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff;
     using Microsoft.Teams.App.KronosWfc.Common;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.HyperFind;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests;
     using Microsoft.Teams.Shifts.Integration.API.Common;
+    using Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI;
     using Microsoft.Teams.Shifts.Integration.API.Models.Response.TimeOffRequest;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers;
     using Newtonsoft.Json;
+    using LastModifiedBy = Microsoft.Teams.Shifts.Integration.API.Models.Response.TimeOffRequest.LastModifiedBy;
     using TimeOffReq = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests;
-    using TimeOffRequest = Microsoft.Teams.Shifts.Integration.API.Models.Response.TimeOffRequest;
+    using User = Microsoft.Teams.Shifts.Integration.API.Models.Response.TimeOffRequest.User;
 
     /// <summary>
     /// Time off controller.
@@ -41,6 +44,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private readonly TelemetryClient telemetryClient;
         private readonly IUserMappingProvider userMappingProvider;
         private readonly ITimeOffActivity timeOffActivity;
+        private readonly ICreateTimeOffActivity createTimeOffActivity;
         private readonly ITimeOffReasonProvider timeOffReasonProvider;
         private readonly IAzureTableStorageHelper azureTableStorageHelper;
         private readonly ITimeOffMappingEntityProvider timeOffMappingEntityProvider;
@@ -56,6 +60,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="telemetryClient">ApplicationInsights DI.</param>
         /// <param name="userMappingProvider">The User Mapping Provider DI.</param>
         /// <param name="timeOffActivity">Time Off Activity DI.</param>
+        /// <param name="createTimeOffActivity">Create time off activity DI.</param>
         /// <param name="timeOffReasonProvider">Time Off Reason Provider DI.</param>
         /// <param name="azureTableStorageHelper">Azure Storage Helper DI.</param>
         /// <param name="timeOffMappingEntityProvider">Time Off Mapping Provider DI.</param>
@@ -68,6 +73,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             TelemetryClient telemetryClient,
             IUserMappingProvider userMappingProvider,
             ITimeOffActivity timeOffActivity,
+            ICreateTimeOffActivity createTimeOffActivity,
             ITimeOffReasonProvider timeOffReasonProvider,
             IAzureTableStorageHelper azureTableStorageHelper,
             ITimeOffMappingEntityProvider timeOffMappingEntityProvider,
@@ -80,6 +86,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             this.telemetryClient = telemetryClient;
             this.userMappingProvider = userMappingProvider;
             this.timeOffActivity = timeOffActivity;
+            this.createTimeOffActivity = createTimeOffActivity;
             this.timeOffReasonProvider = timeOffReasonProvider;
             this.azureTableStorageHelper = azureTableStorageHelper;
             this.timeOffMappingEntityProvider = timeOffMappingEntityProvider ?? throw new ArgumentNullException(nameof(timeOffMappingEntityProvider));
@@ -116,7 +123,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var processNumberOfUsersInBatch = this.appSettings.ProcessNumberOfUsersInBatch;
                 var userCount = allUsers.Count();
                 int userIteration = Utility.GetIterablesCount(Convert.ToInt32(processNumberOfUsersInBatch, CultureInfo.InvariantCulture), userCount);
-                var graphClient = await this.CreateGraphClientWithDelegatedAccessAsync(allRequiredConfigurations.ShiftsAccessToken).ConfigureAwait(false);
+                var graphClient = await this.CreateGraphClientWithDelegatedAccessAsync(allRequiredConfigurations.ShiftsAccessToken, allRequiredConfigurations.WFIId).ConfigureAwait(false);
 
                 if (monthPartitions?.Count > 0)
                 {
@@ -192,7 +199,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 graphClient,
                                 monthPartitionKey,
                                 timeOffRequestsPayCodeList,
-                                globalTimeOffRequestDetails).ConfigureAwait(false);
+                                globalTimeOffRequestDetails,
+                                allRequiredConfigurations.WFIId).ConfigureAwait(false);
                         }
                     }
                 }
@@ -207,6 +215,205 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             }
 
             this.telemetryClient.TrackTrace($"{Resource.ProcessTimeOffsAsync} ended; isRequestFromLogicApp: {isRequestFromLogicApp}");
+        }
+
+        /// <summary>
+        /// Creates a time off request that was requested in Teams.
+        /// </summary>
+        /// <param name="user">The user details of the time off requestor.</param>
+        /// <param name="timeOffEntity">The time off to be created.</param>
+        /// <param name="timeOffReason">The time off reason.</param>
+        /// <param name="allRequiredConfigurations">Setup details.</param>
+        /// <param name="kronosTimeZone">The kronos timezone.</param>
+        /// <returns>Whether the time off request was created successfully or not.</returns>
+        internal async Task<bool> CreateTimeOffRequestInKronosAsync(
+            UserDetailsModel user,
+            TimeOffRequestItem timeOffEntity,
+            PayCodeToTimeOffReasonsMappingEntity timeOffReason,
+            SetupDetails allRequiredConfigurations,
+            string kronosTimeZone)
+        {
+            // Teams provides date times in UTC so convert to the local time.
+            var localStartDateTime = this.utility.UTCToKronosTimeZone(timeOffEntity.StartDateTime, kronosTimeZone);
+            var localEndDateTime = this.utility.UTCToKronosTimeZone(timeOffEntity.EndDateTime, kronosTimeZone);
+
+            // Construct the query date span for the Kronos request
+            var queryStartDate = localStartDateTime.AddDays(
+                                                -Convert.ToInt16(this.appSettings.CorrectedDateSpanForOutboundCalls, CultureInfo.InvariantCulture))
+                                                .ToString(this.appSettings.KronosQueryDateSpanFormat, CultureInfo.InvariantCulture);
+
+            var queryEndDate = localEndDateTime.AddDays(
+                               Convert.ToInt16(this.appSettings.CorrectedDateSpanForOutboundCalls, CultureInfo.InvariantCulture))
+                               .ToString(this.appSettings.KronosQueryDateSpanFormat, CultureInfo.InvariantCulture);
+
+            var timeOffReqQueryDateSpan = $"{queryStartDate}-{queryEndDate}";
+
+            // Create the Kronos Time Off Request.
+            var timeOffResponse = await this.createTimeOffActivity.CreateTimeOffRequestAsync(
+                allRequiredConfigurations.KronosSession,
+                localStartDateTime,
+                localEndDateTime,
+                timeOffReqQueryDateSpan,
+                user.KronosPersonNumber,
+                timeOffReason.RowKey,
+                new Uri(allRequiredConfigurations.WfmEndPoint)).ConfigureAwait(false);
+
+            if (!string.IsNullOrWhiteSpace(timeOffResponse?.Error?.Message))
+            {
+                this.telemetryClient.TrackTrace($"Could not create the time off request : {timeOffResponse?.Error?.Message} ");
+                return false;
+            }
+
+            var submitTimeOffResponse = await this.createTimeOffActivity.SubmitTimeOffRequestAsync(
+                    allRequiredConfigurations.KronosSession,
+                    user.KronosPersonNumber,
+                    timeOffResponse?.EmployeeRequestMgm?.RequestItem?.GlobalTimeOffRequestItms?.FirstOrDefault()?.Id,
+                    timeOffReqQueryDateSpan,
+                    new Uri(allRequiredConfigurations.WfmEndPoint)).ConfigureAwait(false);
+
+            TimeOffMappingEntity newTimeOffReq = new TimeOffMappingEntity();
+
+            // IsActive represents whether the time off was successfully created.
+            if (submitTimeOffResponse?.Status == ApiConstants.Failure)
+            {
+                newTimeOffReq.IsActive = false;
+            }
+            else
+            {
+                newTimeOffReq.IsActive = true;
+            }
+
+            newTimeOffReq.Duration = timeOffResponse.EmployeeRequestMgm.RequestItem.GlobalTimeOffRequestItms.FirstOrDefault().TimeOffPeriodsList.TimeOffPerd.FirstOrDefault().Duration;
+            newTimeOffReq.EndDate = timeOffResponse.EmployeeRequestMgm.RequestItem.GlobalTimeOffRequestItms.FirstOrDefault().TimeOffPeriodsList.TimeOffPerd.FirstOrDefault().EndDate;
+            newTimeOffReq.StartDate = timeOffResponse.EmployeeRequestMgm.RequestItem.GlobalTimeOffRequestItms.FirstOrDefault().TimeOffPeriodsList.TimeOffPerd.FirstOrDefault().StartDate;
+            newTimeOffReq.StartTime = timeOffResponse.EmployeeRequestMgm.RequestItem.GlobalTimeOffRequestItms.FirstOrDefault().TimeOffPeriodsList.TimeOffPerd.FirstOrDefault().StartTime;
+            newTimeOffReq.PayCodeName = timeOffResponse.EmployeeRequestMgm.RequestItem.GlobalTimeOffRequestItms.FirstOrDefault().TimeOffPeriodsList.TimeOffPerd.FirstOrDefault().PayCodeName;
+            newTimeOffReq.KronosPersonNumber = timeOffResponse.EmployeeRequestMgm.Employees.PersonIdentity.PersonNumber;
+            newTimeOffReq.PartitionKey = $"{localStartDateTime.Month}_{localStartDateTime.Year}";
+            newTimeOffReq.RowKey = timeOffResponse.EmployeeRequestMgm.RequestItem.GlobalTimeOffRequestItms.FirstOrDefault().Id;
+            newTimeOffReq.ShiftsRequestId = timeOffEntity.Id;
+            newTimeOffReq.KronosRequestId = timeOffResponse.EmployeeRequestMgm.RequestItem.GlobalTimeOffRequestItms.FirstOrDefault().Id;
+            newTimeOffReq.KronosStatus = ApiConstants.Submitted;
+            newTimeOffReq.ShiftsStatus = ApiConstants.Pending;
+
+            this.AddorUpdateTimeOffMappingAsync(newTimeOffReq);
+
+            // If isActive is false time off request was not submitted so return false and vice versa.
+            return newTimeOffReq.IsActive;
+        }
+
+        /// <summary>
+        /// Cancels a time off request that was  in Teams.
+        /// </summary>
+        /// <param name="timeOffRequestMapping">The mapping for the time off request.</param>
+        /// <returns>Whether the time off request was cancelled successfully or not.</returns>
+        internal async Task<bool> CancelTimeOffRequestInKronosAsync(TimeOffMappingEntity timeOffRequestMapping)
+        {
+            var timeOffRequestQueryDateSpan = $"{timeOffRequestMapping.StartDate}-{timeOffRequestMapping.EndDate}";
+
+            // Get all the necessary prerequisites.
+            var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
+
+            var kronosUserId = timeOffRequestMapping.KronosPersonNumber;
+            var kronosRequestId = timeOffRequestMapping.KronosRequestId;
+
+            Dictionary<string, string> data = new Dictionary<string, string>
+            {
+                { "KronosPersonNumber", $"{kronosUserId}" },
+                { "KronosTimeOffRequestId", $"{kronosRequestId}" },
+                { "Configured correctly", $"{allRequiredConfigurations.IsAllSetUpExists}" },
+                { "Date range", $"{timeOffRequestQueryDateSpan}" },
+            };
+
+            if (allRequiredConfigurations.IsAllSetUpExists)
+            {
+                var response =
+                    await this.timeOffActivity.CancelTimeOffRequestAsync(
+                        new Uri(allRequiredConfigurations.WfmEndPoint),
+                        allRequiredConfigurations.KronosSession,
+                        timeOffRequestQueryDateSpan,
+                        kronosUserId,
+                        kronosRequestId).ConfigureAwait(false);
+
+                data.Add("ResponseStatus", $"{response.Status}");
+
+                if (response.Status == "Success")
+                {
+                    this.telemetryClient.TrackTrace($"Update table for cancellation of time off request: {kronosRequestId}", data);
+                    timeOffRequestMapping.KronosStatus = ApiConstants.Retracted;
+                    timeOffRequestMapping.ShiftsStatus = ApiConstants.Retracted;
+                    await this.timeOffMappingEntityProvider.SaveOrUpdateTimeOffMappingEntityAsync(timeOffRequestMapping).ConfigureAwait(false);
+                    return true;
+                }
+            }
+
+            this.telemetryClient.TrackTrace("CancelTimeOffRequestInKronos Failed", data);
+            return false;
+        }
+
+        /// <summary>
+        /// Creates and sends the relevant request to approve or deny a time off request.
+        /// </summary>
+        /// <param name="kronosReqId">The Kronos request id for the time off request.</param>
+        /// <param name="kronosUserId">The Kronos user id for the assigned user.</param>
+        /// <param name="timeOffRequestMapping">The mapping for the time off request.</param>
+        /// <param name="approved">Whether the request should be approved (true) or denied (false).</param>
+        /// <returns>Returns a bool that represents whether the request was a success (true) or not (false).</returns>
+        internal async Task<bool> ApproveOrDenyTimeOffRequestInKronos(
+            string kronosReqId,
+            string kronosUserId,
+            TimeOffMappingEntity timeOffRequestMapping,
+            bool approved)
+        {
+            var provider = CultureInfo.InvariantCulture;
+            this.telemetryClient.TrackTrace($"{Resource.ProcessTimeOffRequestsAsync} start at: {DateTime.Now.ToString("o", provider)}");
+
+            var timeOffRequestQueryDateSpan = $"{timeOffRequestMapping.StartDate}-{timeOffRequestMapping.EndDate}";
+
+            // Get all the necessary prerequisites.
+            var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
+
+            Dictionary<string, string> data = new Dictionary<string, string>
+            {
+                { "KronosPersonNumber", $"{kronosUserId}" },
+                { "KronosTimeOffRequestId", $"{kronosReqId}" },
+                { "Approved", $"{approved}" },
+                { "Configured correctly", $"{allRequiredConfigurations.IsAllSetUpExists}" },
+                { "Date range", $"{timeOffRequestQueryDateSpan}" },
+            };
+
+            if (allRequiredConfigurations.IsAllSetUpExists)
+            {
+                var response =
+                    await this.timeOffActivity.ApproveOrDenyTimeOffRequestAsync(
+                        new Uri(allRequiredConfigurations.WfmEndPoint),
+                        allRequiredConfigurations.KronosSession,
+                        timeOffRequestQueryDateSpan,
+                        kronosUserId,
+                        approved,
+                        kronosReqId).ConfigureAwait(false);
+
+                data.Add("ResponseStatus", $"{response.Status}");
+
+                if (response.Status == "Success" && approved)
+                {
+                    this.telemetryClient.TrackTrace($"Update table for approval of time off request: {kronosReqId}", data);
+                    timeOffRequestMapping.KronosStatus = ApiConstants.ApprovedStatus;
+                    await this.timeOffMappingEntityProvider.SaveOrUpdateTimeOffMappingEntityAsync(timeOffRequestMapping).ConfigureAwait(false);
+                    return true;
+                }
+
+                if (response.Status == "Success" && !approved)
+                {
+                    this.telemetryClient.TrackTrace($"Update table for refusal of time off request: {kronosReqId}", data);
+                    timeOffRequestMapping.KronosStatus = ApiConstants.Refused;
+                    await this.timeOffMappingEntityProvider.SaveOrUpdateTimeOffMappingEntityAsync(timeOffRequestMapping).ConfigureAwait(false);
+                    return true;
+                }
+            }
+
+            this.telemetryClient.TrackTrace("ApproveOrDenyTimeOffRequestInKronos - Configuration incorrect", data);
+            return false;
         }
 
         /// <summary>
@@ -241,7 +448,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             GraphServiceClient graphClient,
             string monthPartitionKey,
             List<PayCodeToTimeOffReasonsMappingEntity> timeOffRequestsPayCodeList,
-            List<GlobalTimeOffRequestItem> globalTimeOffRequestDetails)
+            List<GlobalTimeOffRequestItem> globalTimeOffRequestDetails,
+            string workForceIntegrationId)
         {
             this.telemetryClient.TrackTrace($"ProcessTimeOffEntitiesBatchAsync start at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
 
@@ -281,7 +489,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             this.telemetryClient.TrackTrace($"ProcessTimeOffEntitiesBatchAsync PaycodeName : {timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName} ");
                             this.telemetryClient.TrackTrace($"ProcessTimeOffEntitiesBatchAsync ReqId : {timeOffRequestItem.Id} ");
 
-                            if (kronosUniqueIdExists.Any() && kronosUniqueIdExists.FirstOrDefault().StatusName == ApiConstants.SubmitRequests)
+                            if (kronosUniqueIdExists.Any() && kronosUniqueIdExists.FirstOrDefault().KronosStatus == ApiConstants.Submitted)
                             {
                                 // Getting a TimeOffReasonId object based on the TimeOff paycode from Kronos and the team ID in Shifts.
                                 var timeOffReasonId = timeOffReasons.
@@ -334,14 +542,15 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     {
                         var reqDetails = lookUpData.Where(c => c.KronosRequestId == timeOffRequestItem.Id).FirstOrDefault();
                         var timeOffReasonIdtoUpdate = timeOffReasons.Where(t => t.RowKey == timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName && t.PartitionKey == item.ShiftTeamId).FirstOrDefault();
-                        if (reqDetails != null && timeOffReasonIdtoUpdate != null && reqDetails.StatusName == ApiConstants.SubmitRequests)
+                        if (reqDetails != null && timeOffReasonIdtoUpdate != null && reqDetails.KronosStatus == ApiConstants.Submitted)
                         {
                             await this.DeclineTimeOffRequestAsync(
                                     timeOffRequestItem,
                                     item,
                                     reqDetails.ShiftsRequestId,
                                     accessToken,
-                                    monthPartitionKey).ConfigureAwait(false);
+                                    monthPartitionKey,
+                                    workForceIntegrationId).ConfigureAwait(false);
                         }
                         else
                         {
@@ -358,7 +567,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                  timeOffRequestsPayCodeList,
                  accessToken,
                  monthPartitionKey,
-                 globalTimeOffRequestDetails).ConfigureAwait(false);
+                 globalTimeOffRequestDetails,
+                 workForceIntegrationId).ConfigureAwait(false);
 
             await this.AddTimeOffRequestAsync(
                 graphClient,
@@ -412,8 +622,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="token">The Graph Access token.</param>
         /// <returns>A type of <see cref="GraphServiceClient"/> contained in a unit of execution.</returns>
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+
         private async Task<GraphServiceClient> CreateGraphClientWithDelegatedAccessAsync(
-            string token)
+            string token,
+            string workforceIntegrationId)
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             if (string.IsNullOrEmpty(token))
@@ -429,6 +641,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 (requestMessage) =>
                 {
                     requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    requestMessage.Headers.Add("X-MS-WFMPassthrough", workforceIntegrationId);
                     return Task.FromResult(0);
                 }));
             return graphClient;
@@ -491,7 +705,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <summary>
         /// Method that will add a time off request.
         /// </summary>
-        /// <param name="graphClient">The MS Graph Client.</param>
+        /// <param name="graphClient">The MS Graph client.</param>
         /// <param name="userModelNotFoundList">The list of users that are not found.</param>
         /// <param name="timeOffNotFoundList">This list of time off records that are not found.</param>
         /// <param name="kronosPayCodeList">The list of Kronos WFC Paycodes.</param>
@@ -544,7 +758,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         RowKey = timeOffNotFoundList[i].Id,
                         ShiftsRequestId = timeOffs.Id,
                         KronosRequestId = timeOffNotFoundList[i].Id,
-                        StatusName = timeOffNotFoundList[i].StatusName,
+                        ShiftsStatus = ApiConstants.Pending,
+                        KronosStatus = ApiConstants.Submitted,
                         IsActive = true,
                     };
 
@@ -568,6 +783,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="accessToken">The MS Graph Access Token.</param>
         /// <param name="monthPartitionKey">The monthwise partition key.</param>
         /// <param name="globalTimeOffRequestDetails">The list of global time off request details.</param>
+        /// <param name="workforceIntegrationId">The workforce integration id.</param>
         /// <returns>A unit of execution.</returns>
         private async Task ApproveTimeOffRequestAsync(
             List<TimeOffMappingEntity> timeOffLookUpEntriesFoundList,
@@ -575,7 +791,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             List<PayCodeToTimeOffReasonsMappingEntity> timeOffReasonId,
             string accessToken,
             string monthPartitionKey,
-            List<GlobalTimeOffRequestItem> globalTimeOffRequestDetails)
+            List<GlobalTimeOffRequestItem> globalTimeOffRequestDetails,
+            string workforceIntegrationId)
         {
             this.telemetryClient.TrackTrace($"ApproveTimeOffRequestAsync started for {monthPartitionKey}.");
 
@@ -590,7 +807,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     State = ApiConstants.Pending,
                     SenderDateTime = DateTime.Now,
                     SenderMessage = globalTimeOffRequestDetails[i].Comments?.Comment.FirstOrDefault()?.CommentText,
-                    SenderUserId = Guid.Parse(user[i].ShiftUserId),
+                    SenderUserId = user[i].ShiftUserId,
                     ManagerActionDateTime = null,
                     ManagerActionMessage = null,
                     ManagerUserId = string.Empty,
@@ -602,7 +819,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         Application = null,
                         Device = null,
                         Conversation = null,
-                        User = new TimeOffRequest.User
+                        User = new User
                         {
                             Id = Guid.Parse(user[i].ShiftUserId),
                             DisplayName = user[i].ShiftUserDisplayName,
@@ -614,6 +831,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
                 httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                // Send Passthrough header to indicate the sender of request in outbound call.
+                httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", workforceIntegrationId);
+
                 using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, "teams/" + user[i].ShiftTeamId + "/schedule/timeOffRequests/" + timeOffLookUpEntriesFoundList[i].ShiftsRequestId + "/approve")
                 {
                     Content = new StringContent(requestString, Encoding.UTF8, "application/json"),
@@ -636,7 +857,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             ShiftsRequestId = timeOffLookUpEntriesFoundList[i].ShiftsRequestId,
                             IsActive = true,
                             KronosRequestId = globalTimeOffRequestDetails[i].Id,
-                            StatusName = ApiConstants.ApprovedStatus,
+                            ShiftsStatus = ApiConstants.ApprovedStatus,
+                            KronosStatus = ApiConstants.ApprovedStatus,
                         };
 
                         this.AddorUpdateTimeOffMappingAsync(timeOffMappingEntity);
@@ -655,19 +877,25 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="timeOffId">The time off Id from Kronos.</param>
         /// <param name="accessToken">The MS Graph Access token.</param>
         /// <param name="monthPartitionKey">The month wise partition key.</param>
+        /// <param name="workforceIntegrationId">The workforce integration id.</param>
         /// <returns>A unit of execution.</returns>
         private async Task DeclineTimeOffRequestAsync(
             GlobalTimeOffRequestItem globalTimeOffRequestItem,
             UserDetailsModel user,
             string timeOffId,
             string accessToken,
-            string monthPartitionKey)
+            string monthPartitionKey,
+            string workforceIntegrationId)
         {
             this.telemetryClient.TrackTrace($"DeclineTimeOffRequestAsync started for time off id {timeOffId}.");
             var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
             httpClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", accessToken);
             httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            // Send Passthrough header to indicate the sender of request in outbound call.
+            httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", workforceIntegrationId);
+
             using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, "teams/" + user.ShiftTeamId + "/schedule/timeOffRequests/" + timeOffId + "/decline"))
             {
                 var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
@@ -687,7 +915,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         ShiftsRequestId = timeOffId,
                         IsActive = true,
                         KronosRequestId = globalTimeOffRequestItem.Id,
-                        StatusName = globalTimeOffRequestItem.StatusName,
+                        ShiftsStatus = globalTimeOffRequestItem.StatusName,
+                        KronosStatus = ApiConstants.Refused,
                     };
 
                     this.AddorUpdateTimeOffMappingAsync(timeOffMappingEntity);

@@ -17,7 +17,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.HyperFind
         /// Returns all the home employees.
         /// </summary>
         /// <param name="endPointUrl">The Kronos WFC endpoint URL.</param>
-        /// <param name="tenantId">The TenantId.</param>
         /// <param name="jSession">The jSession string.</param>
         /// <param name="startDate">The startDate.</param>
         /// <param name="endDate">The endDate.</param>
@@ -26,7 +25,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.HyperFind
         /// <returns>A unit of execution that contains the type <see cref="Response"/>.</returns>
         Task<Response> GetHyperFindQueryValuesAsync(
             Uri endPointUrl,
-            string tenantId,
             string jSession,
             string startDate,
             string endDate,

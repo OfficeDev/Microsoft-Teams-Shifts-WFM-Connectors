@@ -6,6 +6,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.Net.Http;
     using System.Reflection;
@@ -24,12 +25,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     {
         private readonly TelemetryClient telemetryClient;
         private readonly IConfigurationProvider configurationProvider;
+        private readonly UserController usersController;
         private readonly OpenShiftController openShiftController;
         private readonly OpenShiftRequestController openShiftRequestController;
         private readonly SwapShiftController swapShiftController;
         private readonly TimeOffController timeOffController;
         private readonly TimeOffReasonController timeOffReasonController;
-        private readonly TimeOffRequestsController timeOffRequestsController;
         private readonly ShiftController shiftController;
         private readonly BackgroundTaskWrapper taskWrapper;
 
@@ -38,34 +39,34 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// </summary>
         /// <param name="telemetryClient">ApplicationInsights DI.</param>
         /// <param name="configurationProvider">The Configuration Provider DI.</param>
+        /// <param name="usersController">UsersController DI.</param>
         /// <param name="openShiftController">OpenShiftController DI.</param>
         /// <param name="openShiftRequestController">OpenShiftRequestController DI.</param>
         /// <param name="swapShiftController">SwapShiftController DI.</param>
         /// <param name="timeOffController">TimeOffController DI.</param>
         /// <param name="timeOffReasonController">TimeOffReasonController DI.</param>
-        /// <param name="timeOffRequestsController">TimeOffRequestsController DI.</param>
         /// <param name="shiftController">ShiftController DI.</param>
         /// <param name="taskWrapper">Wrapper class instance for BackgroundTask.</param>
         public SyncKronosToShiftsController(
             TelemetryClient telemetryClient,
             IConfigurationProvider configurationProvider,
+            UserController usersController,
             OpenShiftController openShiftController,
             OpenShiftRequestController openShiftRequestController,
             SwapShiftController swapShiftController,
             TimeOffController timeOffController,
             TimeOffReasonController timeOffReasonController,
-            TimeOffRequestsController timeOffRequestsController,
             ShiftController shiftController,
             BackgroundTaskWrapper taskWrapper)
         {
             this.telemetryClient = telemetryClient;
             this.configurationProvider = configurationProvider;
+            this.usersController = usersController;
             this.openShiftController = openShiftController;
             this.openShiftRequestController = openShiftRequestController;
             this.swapShiftController = swapShiftController;
             this.timeOffController = timeOffController;
             this.timeOffReasonController = timeOffReasonController;
-            this.timeOffRequestsController = timeOffRequestsController;
             this.shiftController = shiftController;
             this.taskWrapper = taskWrapper;
         }
@@ -109,122 +110,78 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <returns>Returns task.</returns>
         private async Task ProcessKronosToShiftsShiftsAsync(string isRequestFromLogicApp)
         {
-            var isOpenShiftRequestSyncSuccessful = false;
-            var isSwapShiftRequestSyncSuccessful = false;
-            var isMapPayCodeTimeOffReasonsSuccessful = false;
-            try
+            // We require a successful user sync to ensure we are only processing active employees
+            if (!await this.ProcessTask(this.usersController.ProcessUsersAsync(), Resource.ProcessUsersAsync).ConfigureAwait(false))
             {
-                this.telemetryClient.TrackTrace($"{Resource.ProcessKronosToShiftsShiftsAsync} start at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}" + " for isRequestFromLogicApp: " + isRequestFromLogicApp);
-
-                // Sync open shifts from Kronos to Shifts.
-                await this.openShiftController.ProcessOpenShiftsAsync(isRequestFromLogicApp).ConfigureAwait(false);
-
-                this.telemetryClient.TrackTrace($"{Resource.ProcessOpenShiftsAsync} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
-            }
-#pragma warning disable CA1031 // Do not catch general exception types
-            catch (Exception ex)
-#pragma warning restore CA1031 // Do not catch general exception types
-            {
-                this.telemetryClient.TrackException(ex);
+                this.telemetryClient.TrackTrace($"{Resource.ProcessUsersAsync} failed. No other syncs were performed. ");
+                return;
             }
 
-            try
-            {
-                // Sync open shifts requests from Kronos to Shifts.
-                await this.openShiftRequestController.ProcessOpenShiftsRequests(isRequestFromLogicApp).ConfigureAwait(false);
-                isOpenShiftRequestSyncSuccessful = true;
-                this.telemetryClient.TrackTrace($"{Resource.ProcessOpenShiftsRequests} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
-            }
-#pragma warning disable CA1031 // Do not catch general exception types
-            catch (Exception ex)
-#pragma warning restore CA1031 // Do not catch general exception types
-            {
-                isOpenShiftRequestSyncSuccessful = false;
-                this.telemetryClient.TrackException(ex);
-            }
+            await this.ProcessTask(this.openShiftController.ProcessOpenShiftsAsync(isRequestFromLogicApp), Resource.ProcessOpenShiftsAsync).ConfigureAwait(false);
+            bool isOpenShiftRequestSyncSuccessful = await this.ProcessTask(this.openShiftRequestController.ProcessOpenShiftsRequests(isRequestFromLogicApp), Resource.ProcessOpenShiftsRequests).ConfigureAwait(false);
+            bool isSwapShiftRequestSyncSuccessful = await this.ProcessTask(this.swapShiftController.ProcessSwapShiftsAsync(isRequestFromLogicApp), Resource.ProcessSwapShiftsAsync).ConfigureAwait(false);
+            bool isMapPayCodeTimeOffReasonsSuccessful = await this.ProcessTask(this.timeOffReasonController.MapPayCodeTimeOffReasonsAsync(isRequestFromLogicApp), Resource.MapPayCodeTimeOffReasonsAsync).ConfigureAwait(false);
 
-            try
-            {
-                // Sync swap shifts from Kronos to Shifts.
-                await this.swapShiftController.ProcessSwapShiftsAsync(isRequestFromLogicApp).ConfigureAwait(false);
-                isSwapShiftRequestSyncSuccessful = true;
-                this.telemetryClient.TrackTrace($"{Resource.ProcessSwapShiftsAsync} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
-            }
-#pragma warning disable CA1031 // Do not catch general exception types
-            catch (Exception ex)
-#pragma warning restore CA1031 // Do not catch general exception types
-            {
-                isSwapShiftRequestSyncSuccessful = false;
-                this.telemetryClient.TrackException(ex);
-            }
-
-            try
-            {
-                // Sync TimeOffReasons from Kronos to Shifts.
-                await this.timeOffReasonController.MapPayCodeTimeOffReasonsAsync().ConfigureAwait(false);
-                isMapPayCodeTimeOffReasonsSuccessful = true;
-                this.telemetryClient.TrackTrace($"{Resource.MapPayCodeTimeOffReasonsAsync} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
-            }
-#pragma warning disable CA1031 // Do not catch general exception types
-            catch (Exception ex)
-#pragma warning restore CA1031 // Do not catch general exception types
-            {
-                isMapPayCodeTimeOffReasonsSuccessful = false;
-                this.telemetryClient.TrackException(ex);
-            }
-
-            // Sync TimeOff and TimeOffRequest only if Paycodes in Kronos synced successfully.
+            // Sync TimeOff only if Paycodes in Kronos synced successfully.
             if (isMapPayCodeTimeOffReasonsSuccessful)
             {
-                try
-                {
-                    // Sync timeoff from Kronos to Shifts.
-                    await this.timeOffController.ProcessTimeOffsAsync(isRequestFromLogicApp).ConfigureAwait(false);
-
-                    this.telemetryClient.TrackTrace($"{Resource.ProcessTimeOffsAsync} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
-                }
-#pragma warning disable CA1031 // Do not catch general exception types
-                catch (Exception ex)
-#pragma warning restore CA1031 // Do not catch general exception types
-                {
-                    this.telemetryClient.TrackException(ex);
-                }
-
-                try
-                {
-                    // Sync timeoff from Kronos to Shifts.
-                    await this.timeOffRequestsController.ProcessTimeOffRequestsAsync(isRequestFromLogicApp).ConfigureAwait(false);
-
-                    this.telemetryClient.TrackTrace($"{Resource.SyncTimeOffRequestsFromShiftsToKronos} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
-                }
-#pragma warning disable CA1031 // Do not catch general exception types
-                catch (Exception ex)
-#pragma warning restore CA1031 // Do not catch general exception types
-                {
-                    this.telemetryClient.TrackException(ex);
-                }
+                await this.ProcessTask(this.timeOffController.ProcessTimeOffsAsync(isRequestFromLogicApp), Resource.ProcessTimeOffsAsync).ConfigureAwait(false);
             }
             else
             {
-                this.telemetryClient.TrackTrace($"{Resource.MapPayCodeTimeOffReasonsAsync} status:  " + isMapPayCodeTimeOffReasonsSuccessful);
+                this.telemetryClient.TrackTrace($"{Resource.MapPayCodeTimeOffReasonsAsync} status: " + isMapPayCodeTimeOffReasonsSuccessful);
             }
 
             // sync Shifts from Kronos to Shifts only if OpenShiftRequest and SwapShiftRequest sync is successful.
             if (isSwapShiftRequestSyncSuccessful && isOpenShiftRequestSyncSuccessful)
             {
-                // Sync shifts from Kronos to Shifts.
-                await this.shiftController.ProcessShiftsAsync(isRequestFromLogicApp).ConfigureAwait(false);
-
-                this.telemetryClient.TrackTrace($"{Resource.ProcessShiftsAsync} completed from {Resource.ProcessKronosToShiftsShiftsAsync} ");
+                await this.ProcessTask(this.shiftController.ProcessShiftsAsync(isRequestFromLogicApp), Resource.ProcessShiftsAsync).ConfigureAwait(false);
             }
-
-            // Do not sync shifts from Kronos to Shifts. Log the status of OpenShiftRequest and SwapShiftRequest sync.
             else
             {
                 this.telemetryClient.TrackTrace("Shifts sync not processed. isSwapShiftRequestSuccessful: " + isSwapShiftRequestSyncSuccessful + ", isOpenShiftRequestSuccessful: " + isOpenShiftRequestSyncSuccessful);
             }
 
             this.telemetryClient.TrackTrace($"{Resource.ProcessKronosToShiftsShiftsAsync} completed at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}" + " for isRequestFromLogicApp: " + isRequestFromLogicApp);
+        }
+
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Keeping consistent with previous code.")]
+        private async Task<bool> ProcessTask(Task task, string name)
+        {
+            this.telemetryClient.TrackTrace($"Begun {name} at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
+            try
+            {
+                await task.ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                this.telemetryClient.TrackException(ex);
+                this.telemetryClient.TrackTrace($"Failed {name} at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
+                return false;
+            }
+
+            this.telemetryClient.TrackTrace($"Ended {name} at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
+            return true;
+        }
+
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Keeping consistent with previous code.")]
+        private async Task<bool> ProcessTask(Task<bool> task, string name)
+        {
+            var result = false;
+            this.telemetryClient.TrackTrace($"Begun {name} at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
+            try
+            {
+                result = await task.ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                this.telemetryClient.TrackException(ex);
+                this.telemetryClient.TrackTrace($"Failed {name} at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
+                return result;
+            }
+
+            this.telemetryClient.TrackTrace($"Ended {name} at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
+            return result;
         }
     }
 }

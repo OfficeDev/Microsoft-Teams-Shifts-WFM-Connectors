@@ -357,8 +357,8 @@
   <data name="ProcessSwapShiftsAsync" xml:space="preserve">
     <value>ProcessSwapShiftsAsync</value>
   </data>
-  <data name="ProcessTimeOffRequetsAsync" xml:space="preserve">
-    <value>ProcessTimeOffRequetsAsync</value>
+  <data name="ProcessTimeOffRequestsAsync" xml:space="preserve">
+    <value>ProcessTimeOffRequestsAsync</value>
   </data>
   <data name="ProcessTimeOffsAsync" xml:space="preserve">
     <value>ProcessTimeOffsAsync</value>
@@ -386,5 +386,24 @@
   <data name="IncorrectArgumentType" xml:space="preserve">
     <value>Please check the argument passed.</value>
     <comment>The message that will be displayed when the argument passed to service is incorrect.</comment>
+  </data>
+  <data name="TimeOffReasonNotFound" xml:space="preserve">
+    <value>Unable to find that time off reason.</value>
+    <comment>This message is displayed when a time off reason has not been mapped between the two systems in storage.</comment>
+  </data>
+  <data name="TimeOffRequestCreationFailed" xml:space="preserve">
+    <value>Unable to create the time off request.</value>
+  </data>
+  <data name="TimeOffRequestApproveFailed" xml:space="preserve">
+    <value>Unable to approve the time off request.</value>
+  </data>
+  <data name="TimeOffRequestDeclineFailed" xml:space="preserve">
+    <value>Unable to decline the time off request.</value>
+  </data>
+  <data name="TimeOffRequestCancellationFailed" xml:space="preserve">
+    <value>Unable to cancel the time off request.</value>
+  </data>
+  <data name="ProcessUsersAsync" xml:space="preserve">
+    <value>ProcessUsersAsync</value>
   </data>
 </root>

@@ -1002,12 +1002,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// <summary>
         /// Set the query date span based on incoming request.
         /// </summary>
-        /// <param name="isCallFromLogicApp">true if request is coming from logic app, else false.</param>
+        /// <param name="isNotFirstTimeSync">true if request is coming any time after the initial sync, else false.</param>
         /// <param name="startDate">returns start date.</param>
         /// <param name="endDate">returns end date.</param>
-        public void SetQuerySpan(bool isCallFromLogicApp, out string startDate, out string endDate)
+        public void SetQuerySpan(bool isNotFirstTimeSync, out string startDate, out string endDate)
         {
-            if (isCallFromLogicApp)
+            if (isNotFirstTimeSync)
             {
                 var currentDate = DateTime.UtcNow;
                 startDate = currentDate.AddDays(-Convert.ToDouble(this.appSettings.SyncFromPreviousDays, CultureInfo.InvariantCulture)).ToString("M/dd/yyyy", CultureInfo.InvariantCulture);

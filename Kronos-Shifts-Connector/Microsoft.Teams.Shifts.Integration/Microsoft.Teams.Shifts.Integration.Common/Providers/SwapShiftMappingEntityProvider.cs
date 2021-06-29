@@ -249,6 +249,49 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         }
 
         /// <summary>
+        /// Gets the mapping that contains the given shift ids.
+        /// </summary>
+        /// <param name="senderShiftId">The id for the sent shift.</param>
+        /// <param name="requestedShiftId">The id for the shift being recieved.</param>
+        /// <returns>A SwapShiftMapping Entity.</returns>
+        public async Task<SwapShiftMappingEntity> GetMapping(string senderShiftId, string requestedShiftId)
+        {
+            await this.EnsureInitializedAsync().ConfigureAwait(false);
+
+            // Table query
+            TableQuery<SwapShiftMappingEntity> query = new TableQuery<SwapShiftMappingEntity>();
+            query.Where(TableQuery.CombineFilters(
+                  TableQuery.GenerateFilterCondition(
+                      "TeamsOfferedShiftId",
+                      QueryComparisons.Equal,
+                      senderShiftId),
+                  TableOperators.And,
+                  TableQuery.GenerateFilterCondition(
+                      "TeamsRequestedShiftId",
+                      QueryComparisons.Equal,
+                      requestedShiftId)));
+
+            // Results list of pending request.
+            SwapShiftMappingEntity result = new SwapShiftMappingEntity();
+            TableContinuationToken continuationToken = null;
+            if (await this.swapShiftEntityMappingTable.ExistsAsync().ConfigureAwait(false))
+            {
+                do
+                {
+                    TableQuerySegment<SwapShiftMappingEntity> queryResults = await this.swapShiftEntityMappingTable.ExecuteQuerySegmentedAsync(
+                    query,
+                    continuationToken).ConfigureAwait(false);
+
+                    continuationToken = queryResults.ContinuationToken;
+                    result = queryResults.Results?.FirstOrDefault();
+                }
+                while (continuationToken != null);
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// Get all the pending request entities.
         /// </summary>
         /// <returns>List of Swap Shift Enity.</returns>

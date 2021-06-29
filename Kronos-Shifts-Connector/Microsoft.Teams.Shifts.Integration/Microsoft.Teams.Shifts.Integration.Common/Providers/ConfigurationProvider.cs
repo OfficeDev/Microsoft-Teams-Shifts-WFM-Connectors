@@ -105,7 +105,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
                 { "CurrentCallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
             };
 
-            this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, getConfigurationsProps);
+            this.telemetryClient.TrackTrace("Getting configurations.", getConfigurationsProps);
 
             // Table query
             TableQuery<ConfigurationEntity> query = new TableQuery<ConfigurationEntity>();

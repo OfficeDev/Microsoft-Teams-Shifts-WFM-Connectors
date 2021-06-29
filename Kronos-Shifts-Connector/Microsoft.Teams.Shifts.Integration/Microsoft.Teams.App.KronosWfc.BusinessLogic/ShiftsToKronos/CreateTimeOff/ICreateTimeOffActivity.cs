@@ -18,12 +18,11 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.ShiftsToKronos.CreateTimeO
         /// <param name="jSession">jSession object.</param>
         /// <param name="personNumber">Person number.</param>
         /// <param name="reqId">RequestId of the time off request.</param>
-        /// <param name="queryStartDate">Query Start.</param>
-        /// <param name="queryEndDate">Query End.</param>
+        /// <param name="queryDateSpan">Query date span.</param>
         /// <param name="endPointUrl">Endpoint url for Kronos.</param>
         /// <returns>Time of submit response.</returns>
         Task<Models.ResponseEntities.ShiftsToKronos.TimeOffRequests.SubmitResponse.Response> SubmitTimeOffRequestAsync(
-            string jSession, string personNumber, string reqId, string queryStartDate, string queryEndDate, Uri endPointUrl);
+            string jSession, string personNumber, string reqId, string queryDateSpan, Uri endPointUrl);
 
         /// <summary>
         /// Send time off request to Kronos API and get response.
@@ -31,18 +30,18 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.ShiftsToKronos.CreateTimeO
         /// <param name="jSession">J Session.</param>
         /// <param name="startDateTime">Start Date.</param>
         /// <param name="endDateTime">End Date.</param>
+        /// <param name="queryDateSpan">The query date span.</param>
         /// <param name="personNumber">Person Number.</param>
         /// <param name="reason">Reason string.</param>
         /// <param name="endPointUrl">Endpoint url for Kronos.</param>
-        /// <param name="kronosTimeZone">The time zone for Kronos WFC API.</param>
         /// <returns>Time of add response.</returns>
-        Task<Models.ResponseEntities.ShiftsToKronos.TimeOffRequests.Response> TimeOffRequestAsync(
+        Task<Models.ResponseEntities.ShiftsToKronos.TimeOffRequests.Response> CreateTimeOffRequestAsync(
             string jSession,
             DateTimeOffset startDateTime,
             DateTimeOffset endDateTime,
+            string queryDateSpan,
             string personNumber,
             string reason,
-            Uri endPointUrl,
-            TimeZoneInfo kronosTimeZone);
+            Uri endPointUrl);
     }
 }

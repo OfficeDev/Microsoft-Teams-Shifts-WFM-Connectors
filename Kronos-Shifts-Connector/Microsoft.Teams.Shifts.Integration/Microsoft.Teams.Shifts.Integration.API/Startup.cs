@@ -154,12 +154,12 @@ namespace Microsoft.Teams.Shifts.Integration.API
             services.AddSingleton((provider) => new SyncKronosToShiftsController(
                provider.GetRequiredService<TelemetryClient>(),
                provider.GetRequiredService<BusinessLogic.Providers.IConfigurationProvider>(),
+               provider.GetRequiredService<UserController>(),
                provider.GetRequiredService<OpenShiftController>(),
                provider.GetRequiredService<OpenShiftRequestController>(),
                provider.GetRequiredService<SwapShiftController>(),
                provider.GetRequiredService<TimeOffController>(),
                provider.GetRequiredService<TimeOffReasonController>(),
-               provider.GetRequiredService<TimeOffRequestsController>(),
                provider.GetRequiredService<ShiftController>(),
                provider.GetRequiredService<BackgroundTaskWrapper>()));
 
@@ -239,10 +239,6 @@ namespace Microsoft.Teams.Shifts.Integration.API
                 provider.GetRequiredService<TelemetryClient>(),
                 appSettings.StorageConnectionString));
 
-            services.AddSingleton<ITimeOffRequestProvider, TimeOffRequestProvider>((provider) => new TimeOffRequestProvider(
-                provider.GetRequiredService<TelemetryClient>(),
-                appSettings.StorageConnectionString));
-
             services.AddSingleton<IOpenShiftActivity, OpenShiftActivity>((provider) => new OpenShiftActivity(
                 provider.GetRequiredService<TelemetryClient>(),
                 provider.GetRequiredService<IApiHelper>()));
@@ -300,6 +296,7 @@ namespace Microsoft.Teams.Shifts.Integration.API
                 provider.GetRequiredService<TelemetryClient>(),
                 provider.GetRequiredService<IUserMappingProvider>(),
                 provider.GetRequiredService<ITimeOffActivity>(),
+                provider.GetRequiredService<ICreateTimeOffActivity>(),
                 provider.GetRequiredService<ITimeOffReasonProvider>(),
                 provider.GetRequiredService<IAzureTableStorageHelper>(),
                 provider.GetRequiredService<ITimeOffMappingEntityProvider>(),
@@ -308,18 +305,12 @@ namespace Microsoft.Teams.Shifts.Integration.API
                 provider.GetRequiredService<IHttpClientFactory>(),
                 provider.GetRequiredService<BackgroundTaskWrapper>()));
 
-            services.AddSingleton((provider) => new TimeOffRequestsController(
-               provider.GetRequiredService<AppSettings>(),
-               provider.GetRequiredService<TelemetryClient>(),
-               provider.GetRequiredService<ICreateTimeOffActivity>(),
-               provider.GetRequiredService<IUserMappingProvider>(),
-               provider.GetRequiredService<ITimeOffReasonProvider>(),
-               provider.GetRequiredService<IAzureTableStorageHelper>(),
-               provider.GetRequiredService<ITimeOffRequestProvider>(),
-               provider.GetRequiredService<ITeamDepartmentMappingProvider>(),
-               provider.GetRequiredService<Utility>(),
-               provider.GetRequiredService<IHttpClientFactory>(),
-               provider.GetRequiredService<BackgroundTaskWrapper>()));
+            services.AddSingleton((provider) => new UserController(
+                provider.GetRequiredService<AppSettings>(),
+                provider.GetRequiredService<TelemetryClient>(),
+                provider.GetRequiredService<IUserMappingProvider>(),
+                provider.GetRequiredService<IHyperFindActivity>(),
+                provider.GetRequiredService<Utility>()));
 
             services.AddSingleton<BackgroundTaskWrapper>();
             services.AddHostedService<Common.BackgroundService>();
@@ -333,6 +324,7 @@ namespace Microsoft.Teams.Shifts.Integration.API
         /// <param name="env">env hosting.</param>
         /// <param name="telemetryClient">Application Insights.</param>
 #pragma warning disable CA1822 // Mark members as static
+
         public void Configure(IApplicationBuilder app, Microsoft.Extensions.Hosting.IHostingEnvironment env, TelemetryClient telemetryClient)
 #pragma warning restore CA1822 // Mark members as static
         {

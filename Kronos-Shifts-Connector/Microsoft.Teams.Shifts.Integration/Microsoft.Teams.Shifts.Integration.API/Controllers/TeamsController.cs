@@ -21,6 +21,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.Teams.Shifts.Integration.API.Common;
     using Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI;
     using Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming;
+    using Microsoft.Teams.Shifts.Integration.API.Models.Response.TimeOffRequest;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels;
@@ -39,6 +40,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private readonly IConfigurationProvider configurationProvider;
         private readonly OpenShiftRequestController openShiftRequestController;
         private readonly SwapShiftController swapShiftController;
+        private readonly ShiftController shiftController;
+        private readonly TimeOffController timeOffController;
         private readonly Common.Utility utility;
         private readonly IUserMappingProvider userMappingProvider;
         private readonly IShiftMappingEntityProvider shiftMappingEntityProvider;
@@ -46,6 +49,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private readonly IOpenShiftMappingEntityProvider openShiftMappingEntityProvider;
         private readonly ISwapShiftMappingEntityProvider swapShiftMappingEntityProvider;
         private readonly ITeamDepartmentMappingProvider teamDepartmentMappingProvider;
+        private readonly ITimeOffReasonProvider timeOffReasonProvider;
+        private readonly ITimeOffMappingEntityProvider timeOffReqMappingEntityProvider;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TeamsController"/> class.
@@ -55,6 +60,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="configurationProvider">ConfigurationProvider DI.</param>
         /// <param name="openShiftRequestController">OpenShiftRequestController DI.</param>
         /// <param name="swapShiftController">SwapShiftController DI.</param>
+        /// <param name="shiftController">ShiftController DI.</param>
+        /// <param name="timeOffController">TimeOffCntroller DI.</param>
         /// <param name="utility">The common utility methods DI.</param>
         /// <param name="userMappingProvider">The user mapping provider DI.</param>
         /// <param name="shiftMappingEntityProvider">The shift entity mapping provider DI.</param>
@@ -62,25 +69,33 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="openShiftMappingEntityProvider">The open shift mapping entity provider DI.</param>
         /// <param name="swapShiftMappingEntityProvider">The swap shift mapping entity provider DI.</param>
         /// <param name="teamDepartmentMappingProvider">The team department mapping entity provider DI.</param>
+        /// <param name="timeOffReasonProvider">Paycodes to Time Off Reasons Mapping provider.</param>
+        /// <param name="timeOffReqMappingEntityProvider">time off entity provider.</param>
         public TeamsController(
             AppSettings appSettings,
             TelemetryClient telemetryClient,
             IConfigurationProvider configurationProvider,
             OpenShiftRequestController openShiftRequestController,
             SwapShiftController swapShiftController,
+            ShiftController shiftController,
+            TimeOffController timeOffController,
             Common.Utility utility,
             IUserMappingProvider userMappingProvider,
             IShiftMappingEntityProvider shiftMappingEntityProvider,
             IOpenShiftRequestMappingEntityProvider openShiftRequestMappingEntityProvider,
             IOpenShiftMappingEntityProvider openShiftMappingEntityProvider,
             ISwapShiftMappingEntityProvider swapShiftMappingEntityProvider,
-            ITeamDepartmentMappingProvider teamDepartmentMappingProvider)
+            ITeamDepartmentMappingProvider teamDepartmentMappingProvider,
+            ITimeOffReasonProvider timeOffReasonProvider,
+            ITimeOffMappingEntityProvider timeOffReqMappingEntityProvider)
         {
             this.appSettings = appSettings;
             this.telemetryClient = telemetryClient;
             this.configurationProvider = configurationProvider;
             this.openShiftRequestController = openShiftRequestController;
             this.swapShiftController = swapShiftController;
+            this.shiftController = shiftController;
+            this.timeOffController = timeOffController;
             this.utility = utility;
             this.userMappingProvider = userMappingProvider;
             this.shiftMappingEntityProvider = shiftMappingEntityProvider;
@@ -88,6 +103,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             this.openShiftMappingEntityProvider = openShiftMappingEntityProvider;
             this.swapShiftMappingEntityProvider = swapShiftMappingEntityProvider;
             this.teamDepartmentMappingProvider = teamDepartmentMappingProvider;
+            this.timeOffReasonProvider = timeOffReasonProvider;
+            this.timeOffReqMappingEntityProvider = timeOffReqMappingEntityProvider;
         }
 
         /// <summary>
@@ -178,6 +195,15 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                 // Process payload for swap shift request.
                 responseModelList = await this.ProcessSwapShiftRequest(jsonModel, aadGroupId, isRequestFromCorrectIntegration, kronosTimeZone).ConfigureAwait(true);
+            }
+
+            // Check if payload is for time off request.
+            else if (jsonModel.Requests.Any(x => x.Url.Contains("/timeOffRequests/", StringComparison.InvariantCulture)))
+            {
+                this.telemetryClient.TrackTrace("Teams Controller timeOffRequests " + JsonConvert.SerializeObject(jsonModel));
+
+                // Process payload for time off request.
+                responseModelList = await this.ProcessTimeOffRequest(jsonModel, aadGroupId, isRequestFromCorrectIntegration, kronosTimeZone).ConfigureAwait(true);
             }
 
             // Check if payload is for open shift.
@@ -397,11 +423,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 responseModelList = await this.ProcessOpenShiftRequestApprovalAsync(jsonModel, updateProps, kronosTimeZone).ConfigureAwait(false);
                             }
 
-                            // Request is coming from either Shifts UI or from incorrect workforce integration.
+                            // Request is coming from the Shifts UI.
                             else
                             {
-                                this.telemetryClient.TrackTrace($"Request coming from correct workforce integration is {isRequestFromCorrectIntegration} for OpenShiftRequest approval outbound call.");
-                                responseModelList = GenerateResponseToPreventAction(jsonModel, Resource.InvalidApproval);
+                                responseModelList = await this.ProcessOpenShiftRequestApprovalFromTeams(jsonModel, updateProps, kronosTimeZone, true).ConfigureAwait(false);
                             }
                         }
 
@@ -422,11 +447,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 }
                             }
 
-                            // Request is coming from either Shifts UI or from incorrect workforce integration.
+                            // Request is coming from the Shifts UI.
                             else
                             {
-                                this.telemetryClient.TrackTrace($"Request coming from correct workforce integration is {isRequestFromCorrectIntegration} for OpenShiftRequest decline outbound call.");
-                                responseModelList = GenerateResponseToPreventAction(jsonModel, Resource.InvalidApproval);
+                                responseModelList = await this.ProcessOpenShiftRequestApprovalFromTeams(jsonModel, updateProps, kronosTimeZone, false).ConfigureAwait(false);
                             }
                         }
 
@@ -496,8 +520,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         // Request is coming from either Shifts UI or from incorrect workforce integration.
                         else
                         {
-                            this.telemetryClient.TrackTrace($"Request coming from correct workforce integration is {isRequestFromCorrectIntegration} for SwapShiftRequest decline outbound call.");
-                            responseModelList = GenerateResponseToPreventAction(jsonModel, Resource.InvalidApproval);
+                            responseModelList = await this.ProcessShiftSwapRequestApprovalViaTeams(jsonModel, kronosTimeZone, false).ConfigureAwait(false);
                         }
                     }
 
@@ -514,8 +537,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         // Request is coming from either Shifts UI or from incorrect workforce integration.
                         else
                         {
-                            this.telemetryClient.TrackTrace($"Request coming from correct workforce integration is {isRequestFromCorrectIntegration} for SwapShiftRequest approval outbound call.");
-                            responseModelList = GenerateResponseToPreventAction(jsonModel, Resource.InvalidApproval);
+                            responseModelList = await this.ProcessShiftSwapRequestApprovalViaTeams(jsonModel, kronosTimeZone, true).ConfigureAwait(false);
                         }
                     }
 
@@ -542,11 +564,15 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                     var entityToCancel = await this.swapShiftMappingEntityProvider.GetKronosReqAsync(deleteSwapRequestId).ConfigureAwait(false);
 
-                    // Updating the ShiftsStatus to Cancelled.
-                    entityToCancel.ShiftsStatus = ApiConstants.SwapShiftCancelled;
-
-                    // Updating the entity accordingly
-                    await this.swapShiftMappingEntityProvider.AddOrUpdateSwapShiftMappingAsync(entityToCancel).ConfigureAwait(false);
+                    if (entityToCancel != null)
+                    {
+                        if (entityToCancel.KronosStatus != ApiConstants.Retract)
+                        {
+                            responseModelList.Add(await this.swapShiftController.RetractOfferedShiftAsync(entityToCancel).ConfigureAwait(false));
+                            entityToCancel.ShiftsStatus = ApiConstants.SwapShiftCancelled;
+                            await this.swapShiftMappingEntityProvider.AddOrUpdateSwapShiftMappingAsync(entityToCancel).ConfigureAwait(false);
+                        }
+                    }
 
                     integrationResponseSwap = GenerateResponse(deleteSwapRequestId, HttpStatusCode.OK, null, null);
                     responseModelList.Add(integrationResponseSwap);
@@ -564,6 +590,499 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         }
 
         /// <summary>
+        /// Process time off request outbound calls.
+        /// </summary>
+        /// <param name="jsonModel">Incoming payload for the request been made in Shifts.</param>
+        /// <param name="aadGroupId">AAD Group id.</param>
+        /// <param name="isRequestFromCorrectIntegration">Whether the request originated from the correct workforce integration or not.</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting the times.</param>
+        /// <returns>Returns list of ShiftIntegResponse for request.</returns>
+        private async Task<List<ShiftsIntegResponse>> ProcessTimeOffRequest(RequestModel jsonModel, string aadGroupId, bool isRequestFromCorrectIntegration, string kronosTimeZone)
+        {
+            List<ShiftsIntegResponse> responseModelList = new List<ShiftsIntegResponse>();
+            var requestBody = jsonModel.Requests.First(x => x.Url.Contains("/timeOffRequests/", StringComparison.InvariantCulture)).Body;
+
+            try
+            {
+                if (requestBody != null)
+                {
+                    switch (requestBody["state"].Value<string>())
+                    {
+                        // The time off request is submitted in Shifts and is pending manager approval.
+                        case ApiConstants.ShiftsPending:
+                            {
+                                // Request came from the correct workforce integration
+                                if (isRequestFromCorrectIntegration)
+                                {
+                                    this.telemetryClient.TrackTrace("Create time off request came from correct workforce integration however we dont support this sync.");
+
+                                    // All required work handled by logic app so just return ok response
+                                    responseModelList.AddRange(GenerateResponseToPreventAction(jsonModel, "Syncing time off requests created in Kronos is not supported."));
+                                }
+
+                                // Request came from Shifts UI
+                                else
+                                {
+                                    this.telemetryClient.TrackTrace($"Create time off request coming from Shifts UI.");
+                                    responseModelList = await this.ProcessCreateTimeOffRequestViaTeamsAsync(jsonModel, aadGroupId, kronosTimeZone).ConfigureAwait(false);
+                                }
+                            }
+
+                            break;
+
+                        // The time off request is approved by a manager
+                        case ApiConstants.ShiftsApproved:
+                            {
+                                // Request came from the correct workforce integration
+                                if (isRequestFromCorrectIntegration)
+                                {
+                                    this.telemetryClient.TrackTrace("Approve time off request came from correct workforce integration.");
+                                    var requestId = jsonModel.Requests.First(x => x.Url.Contains("/timeOffRequests/", StringComparison.InvariantCulture)).Id;
+
+                                    // All required work handled by logic app so just return ok response
+                                    responseModelList.Add(GenerateResponse(requestId, HttpStatusCode.OK, null, null));
+                                }
+
+                                // Request came from Shifts UI
+                                else
+                                {
+                                    this.telemetryClient.TrackTrace($"Approve time off request coming from Shifts UI.");
+                                    responseModelList = await this.ProcessTimeOffRequestApprovalViaTeamsAsync(jsonModel, kronosTimeZone, true).ConfigureAwait(false);
+                                }
+                            }
+
+                            break;
+
+                        // The time off request is declined by a manager
+                        case ApiConstants.ShiftsDeclined:
+                            {
+                                // Request came from the correct workforce integration
+                                if (isRequestFromCorrectIntegration)
+                                {
+                                    this.telemetryClient.TrackTrace("Decline time off request came from correct workforce integration.");
+                                    var requestId = jsonModel.Requests.First(x => x.Url.Contains("/timeOffRequests/", StringComparison.InvariantCulture)).Id;
+
+                                    // All required work handled by logic app so just return ok response
+                                    responseModelList.Add(GenerateResponse(requestId, HttpStatusCode.OK, null, null));
+                                }
+
+                                // Request came from Shifts UI
+                                else
+                                {
+                                    this.telemetryClient.TrackTrace($"Decline time off request coming from Shifts UI.");
+                                    responseModelList = await this.ProcessTimeOffRequestApprovalViaTeamsAsync(jsonModel, kronosTimeZone, false).ConfigureAwait(false);
+                                }
+                            }
+
+                            break;
+                    }
+                }
+
+                // Request has been cancelled in Shifts app
+                else if (jsonModel.Requests.Any(c => c.Method == "DELETE"))
+                {
+                    this.telemetryClient.TrackTrace($"Cancel time off request coming from Shifts UI.");
+                    responseModelList = await this.ProcessCancelTimeOffRequestViaTeamsAsync(jsonModel).ConfigureAwait(false);
+                }
+            }
+            catch (Exception)
+            {
+                this.telemetryClient.TrackTrace("Teams Controller timeOffRequests responseModelList Exception" + JsonConvert.SerializeObject(responseModelList));
+                throw;
+            }
+
+            return responseModelList;
+        }
+
+        /// <summary>
+        /// Get Openshift.
+        /// </summary>
+        /// <typeparam name="T">The type of the request.</typeparam>
+        /// <param name="jsonModel">The Json payload.</param>
+        /// <param name="urlValue">The request type you are looking for.</param>
+        /// <param name="approved">Whether you are looking for an approved (true) or denied (false) request.</param>
+        private T Get<T>(RequestModel jsonModel, string urlValue, bool approved = true)
+        {
+            var obj = jsonModel?.Requests?.FirstOrDefault(x => x.Url.Contains(urlValue, StringComparison.InvariantCulture));
+            T result = default;
+
+            return approved ? JsonConvert.DeserializeObject<T>(obj.Body.ToString()) : result;
+        }
+
+        /// <summary>
+        /// Generic get for requests.
+        /// </summary>
+        /// <typeparam name="T">The type of the request.</typeparam>
+        /// <param name="jsonModel">The Json payload.</param>
+        /// <param name="urlValue">The request type you are looking for.</param>
+        /// <param name="approved">Whether you are looking for an approved (true) or denied (false) request.</param>
+        private T GetRequest<T>(RequestModel jsonModel, string urlValue, bool approved = true)
+        {
+            var requests = jsonModel?.Requests?.Where(x => x.Url.Contains(urlValue, StringComparison.InvariantCulture));
+
+            IncomingRequest request;
+            if (approved)
+            {
+                request = requests.FirstOrDefault(c => c.Body?["state"].Value<string>() == ApiConstants.ShiftsApproved
+                && c.Body["assignedTo"].Value<string>() == ApiConstants.ShiftsManager);
+            }
+            else
+            {
+                request = requests.FirstOrDefault(c => c.Body?["state"].Value<string>() == ApiConstants.ShiftsDeclined
+                && c.Body["assignedTo"].Value<string>() == ApiConstants.ShiftsManager);
+            }
+
+            return JsonConvert.DeserializeObject<T>(request.Body.ToString());
+        }
+
+        /// <summary>
+        /// Get System declined requests.
+        /// </summary>
+        /// <param name="jsonModel">Incoming payload for the request been made in Shifts.</param>
+        private List<IncomingRequest> GetAutoDeclinedRequests(RequestModel jsonModel)
+        {
+            var openShiftRequests = jsonModel?.Requests?.Where(x => x.Url.Contains("/openshiftrequests/", StringComparison.InvariantCulture));
+
+            // Filter all the system declined requests.
+            return openShiftRequests.Where(c => c.Body?["state"].Value<string>() == ApiConstants.Declined
+                && c.Body["assignedTo"].Value<string>() == ApiConstants.System).ToList();
+        }
+
+        /// <summary>
+        /// Updates the table to deal with auto-declined requests.
+        /// </summary>
+        /// <param name="autoDeclinedRequests">An open shift request.</param>
+        /// <param name="responseModelList">The list of responses.</param>
+        private async Task HandleOpenShiftAutoDeclines(
+            List<IncomingRequest> autoDeclinedRequests,
+            List<ShiftsIntegResponse> responseModelList)
+        {
+            this.telemetryClient.TrackTrace($"Started dealing with auto-declined open shift requests. {autoDeclinedRequests}");
+
+            foreach (var declinedRequest in autoDeclinedRequests)
+            {
+                this.telemetryClient.TrackTrace($"System has declined OpenShiftRequestId: {declinedRequest.Id}");
+                var declinedOpenShiftRequest = JsonConvert.DeserializeObject<OpenShiftRequestIS>(declinedRequest.Body.ToString());
+
+                // Update the status in Azure table storage.
+                var entityToUpdate = await this.openShiftRequestMappingEntityProvider.GetOpenShiftRequestMappingEntityByRowKeyAsync(
+                    declinedRequest.Id).ConfigureAwait(false);
+
+                entityToUpdate.KronosStatus = declinedOpenShiftRequest.State;
+                entityToUpdate.ShiftsStatus = declinedOpenShiftRequest.State;
+
+                // Commit the change to the database.
+                await this.openShiftRequestMappingEntityProvider.SaveOrUpdateOpenShiftRequestMappingEntityAsync(entityToUpdate).ConfigureAwait(false);
+
+                this.telemetryClient.TrackTrace($"OpenShiftRequestId: {declinedOpenShiftRequest.Id}, assigned to: {declinedOpenShiftRequest.AssignedTo}, state: {declinedOpenShiftRequest.State}");
+
+                // Adding response for system declined open shift request.
+                responseModelList.Add(GenerateResponse(declinedOpenShiftRequest.Id, HttpStatusCode.OK, null, null));
+            }
+
+            this.telemetryClient.TrackTrace($"Finished dealing with auto-declined open shift requests. {autoDeclinedRequests}");
+        }
+
+        /// <summary>
+        /// Approves the open shift request.
+        /// Removes the existing open shift.
+        /// </summary>
+        /// <param name="openShiftRequest">An open shift request.</param>
+        /// <param name="openShift">An open shift.</param>
+        /// <param name="responseModelList">The list of responses.</param>
+        private async Task ApproveOpenShiftRequestInTables(
+            OpenShiftRequestIS openShiftRequest,
+            OpenShiftIS openShift,
+            List<ShiftsIntegResponse> responseModelList)
+        {
+            this.telemetryClient.TrackTrace($"Started approving OpenShiftRequest {openShiftRequest.Id}");
+
+            // Find the open shift request for which we update the ShiftsStatus to Approved.
+            var openShiftRequestEntityToUpdate = await this.openShiftRequestMappingEntityProvider.GetOpenShiftRequestMappingEntityByOpenShiftRequestIdAsync(
+                openShift.Id,
+                openShiftRequest.Id).ConfigureAwait(false);
+
+            openShiftRequestEntityToUpdate.ShiftsStatus = openShiftRequest.State;
+
+            // Update the open shift request to Approved in the ShiftStatus column.
+            await this.openShiftRequestMappingEntityProvider.SaveOrUpdateOpenShiftRequestMappingEntityAsync(openShiftRequestEntityToUpdate).ConfigureAwait(false);
+
+            // Delete the open shift entity accordingly from the OpenShiftEntityMapping table in Azure Table storage as the open shift request has been approved.
+            await this.openShiftMappingEntityProvider.DeleteOrphanDataFromOpenShiftMappingByOpenShiftIdAsync(openShift.Id).ConfigureAwait(false);
+
+            // Adding response for delete open shift.
+            responseModelList.Add(GenerateResponse(openShift.Id, HttpStatusCode.OK, null, null));
+
+            // Adding response for approved open shift request.
+            responseModelList.Add(GenerateResponse(openShiftRequest.Id, HttpStatusCode.OK, null, null));
+
+            this.telemetryClient.TrackTrace($"Finished approving OpenShiftRequest {openShiftRequest.Id}");
+        }
+
+        /// <summary>
+        /// Approves the swap shift request.
+        /// </summary>
+        /// <param name="swapShiftRequest">A swap shift request.</param>
+        /// <param name="swapShiftMapping">A swap shift request mapping.</param>
+        /// <param name="responseModelList">The list of responses.</param>
+        private async Task ApproveSwapShiftRequestInTables(
+            SwapRequest swapShiftRequest,
+            SwapShiftMappingEntity swapShiftMapping,
+            List<ShiftsIntegResponse> responseModelList)
+        {
+            this.telemetryClient.TrackTrace($"Started approving SwapShiftRequest {swapShiftRequest.Id}");
+
+            swapShiftMapping.ShiftsStatus = swapShiftRequest.State;
+            await this.swapShiftMappingEntityProvider.AddOrUpdateSwapShiftMappingAsync(swapShiftMapping).ConfigureAwait(false);
+            responseModelList.Add(GenerateResponse(swapShiftRequest.Id, HttpStatusCode.OK, null, null));
+
+            this.telemetryClient.TrackTrace($"Finished approving SwapShiftRequest {swapShiftRequest.Id}");
+        }
+
+        /// <summary>
+        /// Gets the temporary shift.
+        /// Creates a new shift using all of the temporary shift's data besides the RowKey.
+        /// Deletes the temporary shift.
+        /// </summary>
+        /// <param name="openShiftRequest">An open shift request.</param>
+        /// <param name="shift">A shift.</param>
+        /// <param name="kronosTimeZone">The Kronos time zone.</param>
+        /// <param name="responseModelList">The list of responses.</param>
+        private async Task CreateShiftFromTempShift(
+            OpenShiftRequestIS openShiftRequest,
+            Shift shift,
+            string kronosTimeZone,
+            List<ShiftsIntegResponse> responseModelList)
+        {
+            this.telemetryClient.TrackTrace($"Started dealing with OpenShiftRequest {openShiftRequest.Id}");
+
+            // Step 1 - Get the temp shift record first by table scan against RowKey.
+            var tempShiftRowKey = $"SHFT_PENDING_{openShiftRequest.Id}";
+            var tempShiftEntity = await this.shiftMappingEntityProvider.GetShiftMappingEntityByRowKeyAsync(tempShiftRowKey).ConfigureAwait(false);
+
+            // We need to check if the tempShift is not null because in the Open Shift Request controller, the tempShift was created
+            // as part of the Graph API call to approve the Open Shift Request.
+            if (tempShiftEntity != null)
+            {
+                // Step 2 - Form the new shift record.
+                var shiftToInsert = new TeamsShiftMappingEntity()
+                {
+                    RowKey = shift.Id,
+                    KronosPersonNumber = tempShiftEntity.KronosPersonNumber,
+                    KronosUniqueId = tempShiftEntity.KronosUniqueId,
+                    PartitionKey = tempShiftEntity.PartitionKey,
+                    AadUserId = tempShiftEntity.AadUserId,
+                    ShiftStartDate = this.utility.UTCToKronosTimeZone(shift.SharedShift.StartDateTime, kronosTimeZone),
+                };
+
+                // Step 3 - Save the new shift record.
+                await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(shiftToInsert, shiftToInsert.RowKey, shiftToInsert.PartitionKey).ConfigureAwait(false);
+
+                // Step 4 - Delete the temp shift record.
+                await this.shiftMappingEntityProvider.DeleteOrphanDataFromShiftMappingAsync(tempShiftEntity).ConfigureAwait(false);
+
+                // Adding response for create new shift.
+                responseModelList.Add(GenerateResponse(shift.Id, HttpStatusCode.OK, null, null));
+            }
+            else
+            {
+                // We are logging to ApplicationInsights that the tempShift entity could not be found.
+                this.telemetryClient.TrackTrace(string.Format(CultureInfo.InvariantCulture, Resource.EntityNotFoundWithRowKey, tempShiftRowKey));
+            }
+
+            this.telemetryClient.TrackTrace($"Finished dealing with OpenShiftRequest {openShiftRequest.Id}");
+        }
+
+        /// <summary>
+        /// This method takes a time off request created in the Shifts app
+        /// Creates the request to be sent to Kronos, sends it and depending on the response updates the relevant tables.
+        /// </summary>
+        /// <param name="jsonModel">The decrypted JSON payload.</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting the times.</param>
+        /// <returns>A unit of execution.</returns>
+        private async Task<List<ShiftsIntegResponse>> ProcessCreateTimeOffRequestViaTeamsAsync(RequestModel jsonModel, string teamsId, string kronosTimeZone)
+        {
+            this.telemetryClient.TrackTrace("Processing creation of a TimeOffRequest received from Shifts app");
+            List<ShiftsIntegResponse> responseModelList = new List<ShiftsIntegResponse>();
+            var updateProps = new Dictionary<string, string>();
+            var timeOffObject = jsonModel?.Requests?.FirstOrDefault(x => x.Url.Contains("/timeOffRequests/", StringComparison.InvariantCulture));
+            TimeOffRequestItem timeOffEntity = null;
+
+            timeOffEntity = JsonConvert.DeserializeObject<TimeOffRequestItem>(timeOffObject.Body.ToString());
+
+            try
+            {
+                var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
+
+                // Get the requestors user details
+                var user = await UsersHelper.GetMappedUserDetailsAsync(allRequiredConfigurations.WFIId, timeOffEntity.SenderUserId, teamsId, this.userMappingProvider, this.teamDepartmentMappingProvider, this.telemetryClient).ConfigureAwait(false);
+                if (user is null)
+                {
+                    this.telemetryClient.TrackTrace($"Create time off request from teams failed - Could not find user {timeOffEntity.SenderUserId}");
+                    responseModelList.AddRange(GenerateResponseToPreventAction(jsonModel, Resource.UserMappingNotFound));
+                }
+
+                // Get list of time off reasons from pay code to time off reason mapping table
+                var timeOffReasons = await this.timeOffReasonProvider.GetTimeOffReasonsAsync().ConfigureAwait(false);
+
+                var timeOffReason = timeOffReasons.SingleOrDefault(t => t.TimeOffReasonId == timeOffEntity.TimeOffReasonId);
+                if (timeOffReason is null)
+                {
+                    this.telemetryClient.TrackTrace($"Create time off request from teams failed - Could not find the time off reason with id: {timeOffEntity.TimeOffReasonId}");
+                    responseModelList.AddRange(GenerateResponseToPreventAction(jsonModel, Resource.TimeOffReasonNotFound));
+                }
+
+                var wasSuccess = await this.timeOffController.CreateTimeOffRequestInKronosAsync(user, timeOffEntity, timeOffReason, allRequiredConfigurations, kronosTimeZone).ConfigureAwait(true);
+                if (wasSuccess is false)
+                {
+                    this.telemetryClient.TrackTrace($"Time off request creation was unsuccessful.");
+                    responseModelList.AddRange(GenerateResponseToPreventAction(jsonModel, Resource.TimeOffRequestCreationFailed));
+                }
+                else
+                {
+                    this.telemetryClient.TrackTrace($"Time off request creation was successful.");
+                    responseModelList.Add(GenerateResponse(timeOffEntity.Id, HttpStatusCode.OK, null, null));
+                }
+            }
+            catch (Exception ex)
+            {
+                var exceptionProps = new Dictionary<string, string>()
+                    {
+                        { "TimeOffRequestId", timeOffEntity.Id },
+                        { "UserId", timeOffEntity.SenderUserId },
+                    };
+
+                this.telemetryClient.TrackException(ex, exceptionProps);
+                throw;
+            }
+
+            this.telemetryClient.TrackTrace($"Time off request creation sync process from Teams complete.");
+            return responseModelList;
+        }
+
+        /// <summary>
+        /// This method cancels a time off request via teams
+        /// </summary>
+        /// <param name="jsonModel">The decrypted JSON payload.</param>
+        /// <returns>A unit of execution.</returns>
+        private async Task<List<ShiftsIntegResponse>> ProcessCancelTimeOffRequestViaTeamsAsync(RequestModel jsonModel)
+        {
+            this.telemetryClient.TrackTrace("Processing cancellation of a TimeOffRequest received from Shifts app");
+            List<ShiftsIntegResponse> responseModelList = new List<ShiftsIntegResponse>();
+
+            var cancelTimeOffRequestId = jsonModel.Requests.First(x => x.Url.Contains("/timeOffRequests/", StringComparison.InvariantCulture)).Id;
+
+            try
+            {
+                var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
+
+                var entityToCancel = await this.timeOffReqMappingEntityProvider.GetTimeOffRequestMappingEntityByRequestIdAsync(cancelTimeOffRequestId).ConfigureAwait(false);
+
+                var wasSuccess = await this.timeOffController.CancelTimeOffRequestInKronosAsync(entityToCancel).ConfigureAwait(true);
+                if (wasSuccess is false)
+                {
+                    this.telemetryClient.TrackTrace($"Time off request cancellation failed.");
+                    responseModelList.AddRange(GenerateResponseToPreventAction(jsonModel, Resource.TimeOffRequestCancellationFailed));
+                }
+                else
+                {
+                    this.telemetryClient.TrackTrace($"Time off request cancellation was successful.");
+                    responseModelList.Add(GenerateResponse(cancelTimeOffRequestId, HttpStatusCode.OK, null, null));
+                }
+            }
+            catch (Exception ex)
+            {
+                var exceptionProps = new Dictionary<string, string>()
+                    {
+                        { "TimeOffRequestId", cancelTimeOffRequestId },
+                    };
+
+                this.telemetryClient.TrackException(ex, exceptionProps);
+                throw;
+            }
+
+            return responseModelList;
+        }
+
+        /// <summary>
+        /// This method takes an approval or Decline that happens in the Shifts app
+        /// Creates the request to be sent to Kronos, sends it and depending on the response updates the relevant tables.
+        /// </summary>
+        /// <param name="jsonModel">The decrypted JSON payload.</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting the times.</param>
+        /// <param name="approved">Whether the request is approved or declined.</param>
+        /// <returns>A unit of execution.</returns>
+        private async Task<List<ShiftsIntegResponse>> ProcessTimeOffRequestApprovalViaTeamsAsync(
+            RequestModel jsonModel,
+            string kronosTimeZone,
+            bool approved)
+        {
+            this.telemetryClient.TrackTrace("Processing approval of TimeOffRequest received from Shifts app");
+            List<ShiftsIntegResponse> responseModelList = new List<ShiftsIntegResponse>();
+
+            var timeOffRequest = this.GetRequest<TimeOffRequestItem>(jsonModel, "/timeOffRequests/", approved);
+            var success = false;
+
+            try
+            {
+                var timeOffRequestMapping = await this.timeOffReqMappingEntityProvider.GetTimeOffRequestMappingEntityByRequestIdAsync(timeOffRequest.Id).ConfigureAwait(false);
+                var kronosReqId = timeOffRequestMapping.KronosRequestId;
+                var kronosUserId = timeOffRequestMapping.KronosPersonNumber;
+
+                var updateProps = new Dictionary<string, string>()
+                {
+                    { "KronosPersonNumber", kronosUserId },
+                    { "TimeOffRequestID", timeOffRequestMapping.ShiftsRequestId },
+                    { "KronosTimeOffRequestId", kronosReqId },
+                };
+
+                if (!approved)
+                {
+                    this.telemetryClient.TrackTrace($"Process denial of {timeOffRequest.Id}", updateProps);
+
+                    // Deny in Kronos, Update mapping for Teams.
+                    success = await this.timeOffController.ApproveOrDenyTimeOffRequestInKronos(kronosReqId, kronosUserId, timeOffRequestMapping, approved).ConfigureAwait(false);
+                    if (!success)
+                    {
+                        this.telemetryClient.TrackTrace($"Process failure to deny time off request: {timeOffRequest.Id}", updateProps);
+                        responseModelList.AddRange(GenerateResponseToPreventAction(jsonModel, Resource.TimeOffRequestDeclineFailed));
+                        return responseModelList;
+                    }
+
+                    responseModelList.Add(GenerateResponse(timeOffRequest.Id, HttpStatusCode.OK, null, null));
+                    timeOffRequestMapping.ShiftsStatus = ApiConstants.Refused;
+                    await this.timeOffReqMappingEntityProvider.SaveOrUpdateTimeOffMappingEntityAsync(timeOffRequestMapping).ConfigureAwait(false);
+                    this.telemetryClient.TrackTrace($"Finished denial of {timeOffRequest.Id}", updateProps);
+                    return responseModelList;
+                }
+
+                this.telemetryClient.TrackTrace($"Process approval of {timeOffRequest.Id}", updateProps);
+
+                // approve in kronos
+                success = await this.timeOffController.ApproveOrDenyTimeOffRequestInKronos(kronosReqId, kronosUserId, timeOffRequestMapping, approved).ConfigureAwait(false);
+                updateProps.Add("SuccessfullyApprovedInKronos", $"{success}");
+
+                if (!success)
+                {
+                    this.telemetryClient.TrackTrace($"Process failure to approve time off request: {timeOffRequest.Id}", updateProps);
+                    responseModelList.AddRange(GenerateResponseToPreventAction(jsonModel, Resource.TimeOffRequestApproveFailed));
+                    return responseModelList;
+                }
+
+                responseModelList.Add(GenerateResponse(timeOffRequest.Id, HttpStatusCode.OK, null, null));
+                timeOffRequestMapping.ShiftsStatus = ApiConstants.ShiftsApproved;
+                await this.timeOffReqMappingEntityProvider.SaveOrUpdateTimeOffMappingEntityAsync(timeOffRequestMapping).ConfigureAwait(false);
+                this.telemetryClient.TrackTrace($"Finished approval of {timeOffRequest.Id}", updateProps);
+                return responseModelList;
+            }
+            catch (Exception ex)
+            {
+                this.telemetryClient.TrackTrace($"An unexpected error occured with the following: {ex.StackTrace.ToString(CultureInfo.InvariantCulture)}");
+                throw;
+            }
+        }
+
+        /// <summary>
         /// This method processes the open shift request approval, and proceeds to update the Azure table storage accordingly with the Shifts status
         /// of the open shift request, and also ensures that the ShiftMappingEntity table is properly in sync.
         /// </summary>
@@ -574,21 +1093,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private async Task<List<ShiftsIntegResponse>> ProcessOpenShiftRequestApprovalAsync(RequestModel jsonModel, Dictionary<string, string> updateProps, string kronosTimeZone)
         {
             List<ShiftsIntegResponse> responseModelList = new List<ShiftsIntegResponse>();
-            ShiftsIntegResponse integrationResponse = null;
-
-            var openShiftRequests = jsonModel?.Requests?.Where(x => x.Url.Contains("/openshiftrequests/", StringComparison.InvariantCulture));
-            var finalOpenShiftObj = jsonModel?.Requests?.FirstOrDefault(x => x.Url.Contains("/openshifts/", StringComparison.InvariantCulture));
-            var finalShiftObj = jsonModel?.Requests?.FirstOrDefault(x => x.Url.Contains("/shifts/", StringComparison.InvariantCulture));
-
-            // Filter all the system declined requests.
-            var autoDeclinedRequests = openShiftRequests.Where(c => c.Body != null && c.Body["state"].Value<string>() == ApiConstants.Declined && c.Body["assignedTo"].Value<string>() == ApiConstants.System).ToList();
-
-            // Filter approved open shift request.
-            var approvedOpenShiftRequest = openShiftRequests.Where(c => c.Body != null && c.Body["state"].Value<string>() == ApiConstants.ShiftsApproved && c.Body["assignedTo"].Value<string>() == ApiConstants.ShiftsManager).FirstOrDefault();
-
-            var finalShift = JsonConvert.DeserializeObject<Shift>(finalShiftObj.Body.ToString());
-            var finalOpenShiftRequest = JsonConvert.DeserializeObject<OpenShiftRequestIS>(approvedOpenShiftRequest.Body.ToString());
-            var finalOpenShift = JsonConvert.DeserializeObject<OpenShiftIS>(finalOpenShiftObj.Body.ToString());
+            var finalShift = this.Get<Shift>(jsonModel, "/shifts/");
+            var finalOpenShiftRequest = this.GetRequest<OpenShiftRequestIS>(jsonModel, "/openshiftrequests/");
+            var finalOpenShift = this.Get<OpenShiftIS>(jsonModel, "/openshifts/");
+            var autoDeclinedRequests = this.GetAutoDeclinedRequests(jsonModel);
 
             updateProps.Add("NewShiftId", finalShift.Id);
             updateProps.Add("GraphOpenShiftRequestId", finalOpenShiftRequest.Id);
@@ -598,93 +1106,20 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var kronosUniqueId = this.utility.CreateUniqueId(finalShift, kronosTimeZone);
 
             this.telemetryClient.TrackTrace("KronosHash-OpenShiftRequestApproval-TeamsController: " + kronosUniqueId);
-
             try
             {
-                this.telemetryClient.TrackTrace("Updating entities-OpenShiftRequestApproval started: " + DateTime.Now.ToString(CultureInfo.InvariantCulture));
+                this.telemetryClient.TrackTrace("Starting ProcessOpenShiftRequestApprovalAsync: " + DateTime.Now.ToString(CultureInfo.InvariantCulture), updateProps);
 
-                // Step 1 - Get the temp shift record first by table scan against RowKey.
-                var tempShiftRowKey = $"SHFT_PENDING_{finalOpenShiftRequest.Id}";
-                var tempShiftEntity = await this.shiftMappingEntityProvider.GetShiftMappingEntityByRowKeyAsync(tempShiftRowKey).ConfigureAwait(false);
+                // add a new shift with the old shift ID, delete the temp one.
+                await this.CreateShiftFromTempShift(finalOpenShiftRequest, finalShift, kronosTimeZone, responseModelList).ConfigureAwait(false);
 
-                // We need to check if the tempShift is not null because in the Open Shift Request controller, the tempShift was created
-                // as part of the Graph API call to approve the Open Shift Request.
-                if (tempShiftEntity != null)
-                {
-                    // Step 2 - Form the new shift record.
-                    var shiftToInsert = new TeamsShiftMappingEntity()
-                    {
-                        RowKey = finalShift.Id,
-                        KronosPersonNumber = tempShiftEntity.KronosPersonNumber,
-                        KronosUniqueId = tempShiftEntity.KronosUniqueId,
-                        PartitionKey = tempShiftEntity.PartitionKey,
-                        AadUserId = tempShiftEntity.AadUserId,
-                        ShiftStartDate = this.utility.UTCToKronosTimeZone(finalShift.SharedShift.StartDateTime, kronosTimeZone),
-                    };
+                // update the request and delete the old openshift.
+                await this.ApproveOpenShiftRequestInTables(finalOpenShiftRequest, finalOpenShift, responseModelList).ConfigureAwait(false);
 
-                    // Step 3 - Save the new shift record.
-                    await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(shiftToInsert, shiftToInsert.RowKey, shiftToInsert.PartitionKey).ConfigureAwait(false);
+                // deal with auto declines.
+                await this.HandleOpenShiftAutoDeclines(autoDeclinedRequests, responseModelList).ConfigureAwait(false);
 
-                    // Step 4 - Delete the temp shift record.
-                    await this.shiftMappingEntityProvider.DeleteOrphanDataFromShiftMappingAsync(tempShiftEntity).ConfigureAwait(false);
-
-                    // Adding response for create new shift.
-                    integrationResponse = GenerateResponse(finalShift.Id, HttpStatusCode.OK, null, null);
-                    responseModelList.Add(integrationResponse);
-                }
-                else
-                {
-                    // We are logging to ApplicationInsights that the tempShift entity could not be found.
-                    this.telemetryClient.TrackTrace(string.Format(CultureInfo.InvariantCulture, Resource.EntityNotFoundWithRowKey, tempShiftRowKey));
-                }
-
-                // Logging to ApplicationInsights the OpenShiftRequestId.
-                this.telemetryClient.TrackTrace("OpenShiftRequestId = " + finalOpenShiftRequest.Id);
-
-                // Find the open shift request for which we update the ShiftsStatus to Approved.
-                var openShiftRequestEntityToUpdate = await this.openShiftRequestMappingEntityProvider.GetOpenShiftRequestMappingEntityByOpenShiftIdAsync(
-                    finalOpenShift.Id,
-                    finalOpenShiftRequest.Id).ConfigureAwait(false);
-
-                openShiftRequestEntityToUpdate.ShiftsStatus = finalOpenShiftRequest.State;
-
-                // Update the open shift request to Approved in the ShiftStatus column.
-                await this.openShiftRequestMappingEntityProvider.SaveOrUpdateOpenShiftRequestMappingEntityAsync(openShiftRequestEntityToUpdate).ConfigureAwait(false);
-
-                // Delete the open shift entity accordingly from the OpenShiftEntityMapping table in Azure Table storage as the open shift request has been approved.
-                await this.openShiftMappingEntityProvider.DeleteOrphanDataFromOpenShiftMappingByOpenShiftIdAsync(finalOpenShift.Id).ConfigureAwait(false);
-
-                // Adding response for delete open shift.
-                integrationResponse = GenerateResponse(finalOpenShift.Id, HttpStatusCode.OK, null, null);
-                responseModelList.Add(integrationResponse);
-
-                // Adding response for approved open shift request.
-                integrationResponse = GenerateResponse(finalOpenShiftRequest.Id, HttpStatusCode.OK, null, null);
-                responseModelList.Add(integrationResponse);
-
-                foreach (var declinedRequest in autoDeclinedRequests)
-                {
-                    this.telemetryClient.TrackTrace($"SystemDeclinedOpenShiftRequestId: {declinedRequest.Id}");
-                    var declinedOpenShiftRequest = JsonConvert.DeserializeObject<OpenShiftRequestIS>(declinedRequest.Body.ToString());
-
-                    // Update the status in Azure table storage.
-                    var entityToUpdate = await this.openShiftRequestMappingEntityProvider.GetOpenShiftRequestMappingEntityByOpenShiftRequestIdAsync(
-                        declinedRequest.Id).ConfigureAwait(false);
-
-                    entityToUpdate.KronosStatus = declinedOpenShiftRequest.State;
-                    entityToUpdate.ShiftsStatus = declinedOpenShiftRequest.State;
-
-                    // Commit the change to the database.
-                    await this.openShiftRequestMappingEntityProvider.SaveOrUpdateOpenShiftRequestMappingEntityAsync(entityToUpdate).ConfigureAwait(false);
-
-                    this.telemetryClient.TrackTrace($"OpenShiftRequestId: {declinedOpenShiftRequest.Id}, assigned to: {declinedOpenShiftRequest.AssignedTo}, state: {declinedOpenShiftRequest.State}");
-
-                    // Adding response for system declined open shift request.
-                    integrationResponse = GenerateResponse(declinedOpenShiftRequest.Id, HttpStatusCode.OK, null, null);
-                    responseModelList.Add(integrationResponse);
-                }
-
-                this.telemetryClient.TrackTrace("Updating entities-OpenShiftRequestApproval complete: " + DateTime.Now.ToString(CultureInfo.InvariantCulture));
+                this.telemetryClient.TrackTrace("Finishing ProcessOpenShiftRequestApprovalAsync: " + DateTime.Now.ToString(CultureInfo.InvariantCulture), updateProps);
             }
             catch (Exception ex)
             {
@@ -861,6 +1296,224 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             responseModelList.Add(openShiftReqSubmitResponse);
 
             this.telemetryClient.TrackTrace($"{Resource.ProcessOutboundOpenShiftRequestAsync} ends at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
+            return responseModelList;
+        }
+
+        /// <summary>
+        /// This method takes an approval that happens in the Shifts app
+        /// Creates the request to be sent to Kronos, sends it and depending on the response updates the relevant tables.
+        /// </summary>
+        /// <param name="jsonModel">The decrypted JSON payload.</param>
+        /// <param name="updateProps">A dictionary of string, string that will be logged to ApplicationInsights.</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting the times.</param>
+        /// <returns>A unit of execution.</returns>
+        private async Task<List<ShiftsIntegResponse>> ProcessOpenShiftRequestApprovalFromTeams(
+            RequestModel jsonModel,
+            Dictionary<string, string> updateProps,
+            string kronosTimeZone,
+            bool approved)
+        {
+            this.telemetryClient.TrackTrace("Processing approval of OpenShiftRequests received from Shifts app", updateProps);
+            List<ShiftsIntegResponse> responseModelList = new List<ShiftsIntegResponse>();
+
+            var openShiftRequest = this.GetRequest<OpenShiftRequestIS>(jsonModel, "/openshiftrequests/", approved);
+            var success = false;
+
+            try
+            {
+                var openShiftRequestMapping = await this.openShiftRequestMappingEntityProvider.
+                    GetOpenShiftRequestMappingEntityByOpenShiftRequestIdAsync(openShiftRequest.OpenShiftId, openShiftRequest.Id).ConfigureAwait(false);
+                var kronosReqId = openShiftRequestMapping.KronosOpenShiftRequestId;
+                var kronosUserId = openShiftRequestMapping.KronosPersonNumber;
+
+                updateProps.Add("KronosPersonNumber", kronosUserId);
+                updateProps.Add("OpenShiftRequestID", openShiftRequest.Id);
+                updateProps.Add("KronosOpenShiftRequestId", kronosReqId);
+
+                if (!approved)
+                {
+                    this.telemetryClient.TrackTrace($"Process denial of {openShiftRequest.Id}", updateProps);
+
+                    // Deny in Kronos, Update mapping for Teams.
+                    success = await this.openShiftRequestController.ApproveOrDenyOpenShiftRequestInKronos(kronosReqId, kronosUserId, openShiftRequestMapping, approved).ConfigureAwait(false);
+                    if (!success)
+                    {
+                        this.telemetryClient.TrackTrace($"Process failure of denial of {openShiftRequest.Id}", updateProps);
+                        responseModelList.Add(GenerateResponse(openShiftRequest.Id, HttpStatusCode.BadRequest, null, null));
+                        return responseModelList;
+                    }
+
+                    responseModelList.Add(GenerateResponse(openShiftRequest.Id, HttpStatusCode.OK, null, null));
+                    openShiftRequestMapping.ShiftsStatus = ApiConstants.Refused;
+                    await this.openShiftRequestMappingEntityProvider.SaveOrUpdateOpenShiftRequestMappingEntityAsync(openShiftRequestMapping).ConfigureAwait(false);
+                    this.telemetryClient.TrackTrace($"Finished denial of {openShiftRequest.Id}", updateProps);
+                    return responseModelList;
+                }
+
+                this.telemetryClient.TrackTrace($"Process approval of {openShiftRequest.Id}", updateProps);
+
+                // approve in kronos
+                success = await this.openShiftRequestController.ApproveOrDenyOpenShiftRequestInKronos(kronosReqId, kronosUserId, openShiftRequestMapping, approved).ConfigureAwait(false);
+                updateProps.Add("SuccessfullyApprovedInKronos", $"{success}");
+
+                if (success)
+                {
+                    responseModelList.Add(GenerateResponse(openShiftRequest.Id, HttpStatusCode.OK, null, null));
+                    var shift = this.Get<Shift>(jsonModel, "/shifts/", approved);
+                    var shiftsTemp = await this.shiftController.GetShiftsForUser(kronosUserId, openShiftRequestMapping.PartitionKey).ConfigureAwait(false);
+                    var date = this.utility.UTCToKronosTimeZone(shift.SharedShift.StartDateTime, kronosTimeZone).ToString("d", CultureInfo.InvariantCulture);
+
+                    // confirm new shift exists on kronos
+                    var newKronosShift = shiftsTemp
+                        .Schedule.ScheduleItems.ScheduleShift
+                        .FirstOrDefault(x => x.Employee.FirstOrDefault().PersonNumber == kronosUserId && x.StartDate == date);
+
+                    if (newKronosShift != null)
+                    {
+                        var openShift = this.Get<OpenShiftIS>(jsonModel, "/openshifts/", approved);
+                        var kronosUniqueId = this.utility.CreateUniqueId(shift, kronosTimeZone);
+                        var newShiftLinkEntity = this.shiftController.CreateNewShiftMappingEntity(shift, kronosUniqueId, kronosUserId, kronosTimeZone);
+                        await this.ApproveOpenShiftRequestInTables(openShiftRequest, openShift, responseModelList).ConfigureAwait(false);
+                        await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(newShiftLinkEntity, shift.Id, openShiftRequestMapping.PartitionKey).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        this.telemetryClient.TrackTrace($"Error during approval of {openShiftRequest.Id}", updateProps);
+                        responseModelList.Add(GenerateResponse(openShiftRequest.Id, HttpStatusCode.NotFound, null, null));
+                        return responseModelList;
+                    }
+                }
+
+                this.telemetryClient.TrackTrace($"Finished approval of {openShiftRequest.Id}", updateProps);
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException != null)
+                {
+                    this.telemetryClient.TrackTrace($"Shift mapping has failed for {openShiftRequest.Id}: " + ex.InnerException.ToString());
+                }
+
+                this.telemetryClient.TrackTrace($"Shift mapping has resulted in some type of error with the following: {ex.StackTrace.ToString(CultureInfo.InvariantCulture)}");
+                throw;
+            }
+
+            this.telemetryClient.TrackTrace("Finished approval of processing OpenShiftRequests received from Shifts app", updateProps);
+            return responseModelList;
+        }
+
+        /// <summary>
+        /// This method takes an approval that happens in the Shifts app
+        /// Creates the request to be sent to Kronos, sends it and depending on the response updates the relevant tables.
+        /// </summary>
+        /// <param name="jsonModel">The decrypted JSON payload.</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting the times.</param>
+        /// <returns>A unit of execution.</returns>
+        private async Task<List<ShiftsIntegResponse>> ProcessShiftSwapRequestApprovalViaTeams(
+           RequestModel jsonModel,
+           string kronosTimeZone,
+           bool approved)
+        {
+            this.telemetryClient.TrackTrace("Processing approval of ShiftSwapRequest received from Shifts app");
+            List<ShiftsIntegResponse> responseModelList = new List<ShiftsIntegResponse>();
+            var updateProps = new Dictionary<string, string>();
+            var swapRequest = this.GetRequest<SwapRequest>(jsonModel, "/swapRequests/", approved);
+            var postedShifts = jsonModel.Requests.Where(x => x.Url.Contains("/shifts/", StringComparison.InvariantCulture) && x.Method == "POST").ToList();
+
+            var offeredShiftMap = await this.shiftMappingEntityProvider.GetShiftMappingEntityByRowKeyAsync(swapRequest.SenderShiftId).ConfigureAwait(false);
+            var requestedShiftMap = await this.shiftMappingEntityProvider.GetShiftMappingEntityByRowKeyAsync(swapRequest.RecipientShiftId).ConfigureAwait(false);
+            var success = false;
+
+            try
+            {
+                var swapShiftRequestMapping = await this.swapShiftMappingEntityProvider.
+                    GetMapping(offeredShiftMap.RowKey, requestedShiftMap.RowKey).ConfigureAwait(false);
+                var kronosReqId = swapShiftRequestMapping.KronosReqId;
+                var kronosRequestingUserId = swapShiftRequestMapping.RequestorKronosPersonNumber;
+                var kronosRequestedUserId = swapShiftRequestMapping.RequestedKronosPersonNumber;
+
+                updateProps.Add("KronosRequestingPersonNumber", kronosRequestingUserId);
+                updateProps.Add("SwapShiftRequestID", swapRequest.Id);
+                updateProps.Add("KronosOpenShiftRequestId", kronosReqId);
+
+                if (!approved)
+                {
+                    // Deny in Kronos, Update mapping for Teams.
+                    success = await this.swapShiftController.ApproveSwapShiftInKronos(kronosReqId, kronosRequestingUserId, swapShiftRequestMapping, approved).ConfigureAwait(false);
+                    if (!success)
+                    {
+                        responseModelList.Add(GenerateResponse(swapRequest.Id, HttpStatusCode.BadRequest, null, null));
+                        return responseModelList;
+                    }
+
+                    swapShiftRequestMapping.ShiftsStatus = ApiConstants.Refused;
+                    await this.swapShiftMappingEntityProvider.AddOrUpdateSwapShiftMappingAsync(swapShiftRequestMapping).ConfigureAwait(false);
+                    responseModelList.Add(GenerateResponse(swapRequest.Id, HttpStatusCode.OK, null, null));
+                    return responseModelList;
+                }
+
+                this.telemetryClient.TrackTrace($"Process approval of {swapRequest.Id}", updateProps);
+
+                // approve in kronos
+                success = await this.swapShiftController.ApproveSwapShiftInKronos(kronosReqId, kronosRequestingUserId, swapShiftRequestMapping, approved).ConfigureAwait(false);
+                updateProps.Add("SuccessfullyApprovedInKronos", $"{success}");
+
+                if (success)
+                {
+                    var requestorShift = JsonConvert.DeserializeObject<Shift>(postedShifts?.First().Body.ToString());
+                    var requestedShift = JsonConvert.DeserializeObject<Shift>(postedShifts?.Last().Body.ToString());
+
+                    await this.shiftMappingEntityProvider.DeleteOrphanDataFromShiftMappingAsync(offeredShiftMap).ConfigureAwait(false);
+                    await this.shiftMappingEntityProvider.DeleteOrphanDataFromShiftMappingAsync(requestedShiftMap).ConfigureAwait(false);
+
+                    var requestingUserShifts = await this.shiftController.GetShiftsForUser(kronosRequestingUserId, swapShiftRequestMapping.PartitionKey).ConfigureAwait(false);
+                    var requestedUserShifts = await this.shiftController.GetShiftsForUser(kronosRequestedUserId, swapShiftRequestMapping.PartitionKey).ConfigureAwait(false);
+                    var requestorShiftDate = this.utility.UTCToKronosTimeZone(requestorShift.SharedShift.StartDateTime, kronosTimeZone).ToString("d", CultureInfo.InvariantCulture);
+                    var requestedShiftDate = this.utility.UTCToKronosTimeZone(requestedShift.SharedShift.StartDateTime, kronosTimeZone).ToString("d", CultureInfo.InvariantCulture);
+
+                    // confirm new shifts exists on kronos
+                    var requestedShiftKronos = requestingUserShifts
+                        .Schedule.ScheduleItems.ScheduleShift
+                        .FirstOrDefault(x => x.Employee.FirstOrDefault().PersonNumber == kronosRequestingUserId && x.StartDate == requestorShiftDate);
+                    var requestorsShiftKronos = requestedUserShifts
+                        .Schedule.ScheduleItems.ScheduleShift
+                        .FirstOrDefault(x => x.Employee.FirstOrDefault().PersonNumber == kronosRequestedUserId && x.StartDate == requestedShiftDate);
+
+                    if (requestedShiftKronos != null && requestorsShiftKronos != null)
+                    {
+                        var kronosRequestorsShiftUniqueId = this.utility.CreateUniqueId(requestorShift, kronosTimeZone);
+                        var kronosRequestedShiftUniqueId = this.utility.CreateUniqueId(requestedShift, kronosTimeZone);
+                        var requestorsShiftLink = this.shiftController.CreateNewShiftMappingEntity(requestorShift, kronosRequestorsShiftUniqueId, kronosRequestedUserId, kronosTimeZone);
+                        var requestedShiftLink = this.shiftController.CreateNewShiftMappingEntity(requestedShift, kronosRequestedShiftUniqueId, kronosRequestingUserId, kronosTimeZone);
+
+                        await this.ApproveSwapShiftRequestInTables(swapRequest, swapShiftRequestMapping, responseModelList).ConfigureAwait(false);
+                        await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(requestorsShiftLink, requestorShift.Id, swapShiftRequestMapping.PartitionKey).ConfigureAwait(false);
+                        await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(requestedShiftLink, requestedShift.Id, swapShiftRequestMapping.PartitionKey).ConfigureAwait(false);
+                        responseModelList.Add(GenerateResponse(swapRequest.Id, HttpStatusCode.OK, null, null));
+                    }
+                    else
+                    {
+                        this.telemetryClient.TrackTrace($"Error during approval of {swapRequest.Id}", updateProps);
+                        responseModelList.Add(GenerateResponse(swapRequest.Id, HttpStatusCode.NotFound, null, null));
+                    }
+                }
+                else
+                {
+                    this.telemetryClient.TrackTrace($"Error during approval of {swapRequest.Id}", updateProps);
+                    responseModelList.Add(GenerateResponse(swapRequest.Id, HttpStatusCode.BadRequest, null, null));
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException != null)
+                {
+                    this.telemetryClient.TrackTrace($"Shift mapping has failed for {swapRequest.Id}: " + ex.InnerException.ToString());
+                }
+
+                this.telemetryClient.TrackTrace($"Shift mapping has resulted in some type of error with the following: {ex.StackTrace.ToString(CultureInfo.InvariantCulture)}");
+                throw;
+            }
+
+            this.telemetryClient.TrackTrace("Finished approval of processing ShiftSwapRequest received from Shifts app");
             return responseModelList;
         }
     }
