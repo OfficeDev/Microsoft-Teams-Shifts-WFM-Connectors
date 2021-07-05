@@ -4,6 +4,7 @@
 
 namespace Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.SwapShiftEligibility
 {
+    using System.Collections.Generic;
     using System.Xml.Serialization;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Common;
 
@@ -11,12 +12,35 @@ namespace Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.SwapShiftEligibi
     /// This class models the response.
     /// </summary>
     [XmlRoot]
-    public class Response : Common.Response
+    public class Response
     {
         /// <summary>
         /// Gets or Sets the Person Information from Kronos.
         /// </summary>
         [XmlElement]
-        public Person Person { get; set; }
+        public List<Person> Person { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Status.
+        /// </summary>
+        [XmlAttribute]
+        public string Status { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Action.
+        /// </summary>
+        [XmlAttribute]
+        public string Action { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Jsession.
+        /// </summary>
+        [XmlIgnore]
+        public string Jsession { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Error.
+        /// </summary>
+        public Error Error { get; set; }
     }
 }

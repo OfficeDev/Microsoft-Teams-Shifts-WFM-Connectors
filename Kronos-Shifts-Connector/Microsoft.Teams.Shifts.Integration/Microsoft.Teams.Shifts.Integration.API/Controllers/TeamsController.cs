@@ -42,6 +42,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private readonly SwapShiftController swapShiftController;
         private readonly ShiftController shiftController;
         private readonly TimeOffController timeOffController;
+        private readonly SwapShiftEligibilityController swapShiftEligibilityController;
         private readonly Common.Utility utility;
         private readonly IUserMappingProvider userMappingProvider;
         private readonly IShiftMappingEntityProvider shiftMappingEntityProvider;
@@ -62,6 +63,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="swapShiftController">SwapShiftController DI.</param>
         /// <param name="shiftController">ShiftController DI.</param>
         /// <param name="timeOffController">TimeOffCntroller DI.</param>
+        /// <param name="swapShiftEligibilityController">Swap Shift Eligibility Controller DI.</param>
         /// <param name="utility">The common utility methods DI.</param>
         /// <param name="userMappingProvider">The user mapping provider DI.</param>
         /// <param name="shiftMappingEntityProvider">The shift entity mapping provider DI.</param>
@@ -79,6 +81,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             SwapShiftController swapShiftController,
             ShiftController shiftController,
             TimeOffController timeOffController,
+            SwapShiftEligibilityController swapShiftEligibilityController,
             Common.Utility utility,
             IUserMappingProvider userMappingProvider,
             IShiftMappingEntityProvider shiftMappingEntityProvider,
@@ -105,6 +108,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             this.teamDepartmentMappingProvider = teamDepartmentMappingProvider;
             this.timeOffReasonProvider = timeOffReasonProvider;
             this.timeOffReqMappingEntityProvider = timeOffReqMappingEntityProvider;
+            this.swapShiftEligibilityController = swapShiftEligibilityController;
         }
 
         /// <summary>
@@ -228,6 +232,48 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             this.telemetryClient.TrackTrace("IncomingRequest, ends for method: UpdateTeam - " + DateTime.Now.ToString(CultureInfo.InvariantCulture));
 
             // Sends response back to Shifts.
+            return this.Ok(responseModelStr);
+        }
+
+        /// <summary>
+        /// The method that will be called from Shifts.
+        /// </summary>
+        /// <param name="aadGroupId">The AAD Group Id for the Team.</param>
+        /// <returns>An action result.</returns>
+        [HttpPost]
+        [Route("/v1/teams/{aadGroupId}/read")]
+        public async Task<ActionResult> UpdateShiftEligibility([FromRoute] string aadGroupId)
+        {
+            var request = this.Request;
+            var requestHeaders = request.Headers;
+            Microsoft.Extensions.Primitives.StringValues passThroughValue = string.Empty;
+            var configurationEntity = (await this.configurationProvider.GetConfigurationsAsync().ConfigureAwait(false))?.FirstOrDefault();
+            var isRequestFromCorrectIntegration = requestHeaders.TryGetValue("X-MS-WFMPassthrough", out passThroughValue) &&
+                                           string.Equals(passThroughValue, configurationEntity.WorkforceIntegrationId, StringComparison.Ordinal);
+            byte[] secretKeyBytes = Encoding.UTF8.GetBytes(configurationEntity?.WorkforceIntegrationSecret);
+            var jsonModel = await DecryptEncryptedRequestFromShiftsAsync(
+                secretKeyBytes,
+                this.Request).ConfigureAwait(false);
+
+            var mappedTeams = await this.teamDepartmentMappingProvider.GetMappedTeamDetailsAsync(aadGroupId).ConfigureAwait(false);
+            var mappedTeam = mappedTeams.FirstOrDefault();
+            var kronosTimeZone = string.IsNullOrEmpty(mappedTeam?.KronosTimeZone) ? this.appSettings.KronosTimeZone : mappedTeam.KronosTimeZone;
+
+            var integrationResponse = await this.swapShiftEligibilityController.GetEligibleShiftsForSwappingAsync(jsonModel.Requests[0].Id, kronosTimeZone)
+                .ConfigureAwait(false);
+
+            IntegrationApiResponseModel responseModel = new IntegrationApiResponseModel();
+            List<ShiftsIntegResponse> responseModelList = new List<ShiftsIntegResponse>();
+            string responseModelStr = string.Empty;
+
+            var updateProps = new Dictionary<string, string>()
+            {
+                { "IncomingAadGroupId", aadGroupId },
+            };
+
+            responseModel.ShiftsIntegResponses = responseModelList;
+            responseModelStr = JsonConvert.SerializeObject(responseModel);
+
             return this.Ok(responseModelStr);
         }
 

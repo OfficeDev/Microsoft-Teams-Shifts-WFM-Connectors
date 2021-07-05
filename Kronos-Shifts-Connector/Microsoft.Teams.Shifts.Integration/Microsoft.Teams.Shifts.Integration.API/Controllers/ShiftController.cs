@@ -420,16 +420,24 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 { "CallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
             };
 
+            var startDateTime = responseModel.SharedShift.StartDateTime.DateTime;
+            var endDateTime = responseModel.SharedShift.EndDateTime.DateTime;
+            DateTime.SpecifyKind(responseModel.SharedShift.StartDateTime.DateTime, DateTimeKind.Utc);
+            DateTime.SpecifyKind(responseModel.SharedShift.EndDateTime.DateTime, DateTimeKind.Utc);
+            var utcStartDateTime = startDateTime.ToUniversalTime();
+            var utcEndDateTime = endDateTime.ToUniversalTime();
+
             TeamsShiftMappingEntity shiftMappingEntity = new TeamsShiftMappingEntity
             {
                 ETag = responseModel.ETag,
                 AadUserId = responseModel.UserId,
                 KronosUniqueId = uniqueId,
                 KronosPersonNumber = user.KronosPersonNumber,
-                ShiftStartDate = this.utility.UTCToKronosTimeZone(responseModel.SharedShift.StartDateTime, user.KronosTimeZone),
+                ShiftStartDate = startDateTime,
+                ShiftEndDate = endDateTime,
             };
 
-            this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, createNewShiftMappingEntityProps);
+            this.telemetryClient.TrackTrace("Creating new shift mapping entity.", createNewShiftMappingEntityProps);
 
             return shiftMappingEntity;
         }
@@ -452,10 +460,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 AadUserId = shift.UserId,
                 KronosUniqueId = uniqueId,
                 KronosPersonNumber = kronoUserId,
-                ShiftStartDate = this.utility.UTCToKronosTimeZone(shift.SharedShift.StartDateTime, kronosTimeZone),
+                ShiftStartDate = shift.SharedShift.StartDateTime,
+                ShiftEndDate = shift.SharedShift.EndDateTime,
             };
 
-            this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, createNewShiftMappingEntityProps);
+            this.telemetryClient.TrackTrace("Creating new shift mapping entity.", createNewShiftMappingEntityProps);
 
             return shiftMappingEntity;
         }

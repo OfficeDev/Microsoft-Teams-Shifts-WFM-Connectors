@@ -317,6 +317,14 @@ namespace Microsoft.Teams.Shifts.Integration.API
                 provider.GetRequiredService<IHyperFindActivity>(),
                 provider.GetRequiredService<Utility>()));
 
+            services.AddSingleton((provider) => new SwapShiftEligibilityController(
+                provider.GetRequiredService<AppSettings>(),
+                provider.GetRequiredService<TelemetryClient>(),
+                provider.GetRequiredService<ISwapShiftEligibilityActivity>(),
+                provider.GetRequiredService<Utility>(),
+                provider.GetRequiredService<IHttpClientFactory>(),
+                provider.GetRequiredService<IShiftMappingEntityProvider>()));
+
             services.AddSingleton<BackgroundTaskWrapper>();
             services.AddHostedService<Common.BackgroundService>();
             services.AddApplicationInsightsTelemetry();

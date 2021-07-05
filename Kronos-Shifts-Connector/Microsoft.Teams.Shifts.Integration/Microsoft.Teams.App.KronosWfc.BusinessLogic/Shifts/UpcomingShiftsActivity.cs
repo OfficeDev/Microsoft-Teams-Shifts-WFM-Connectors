@@ -13,8 +13,9 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
     using Microsoft.Teams.App.KronosWfc.Common;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.HyperFind;
     using Microsoft.Teams.App.KronosWfc.Service;
+    using static Microsoft.Teams.App.KronosWfc.BusinessLogic.Common.XmlHelper;
+    using Response = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.Response;
     using ScheduleRequest = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Schedule;
-    using UpcomingShifts = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts;
 
     /// <summary>
     /// Upcoming shifts activity class.
@@ -45,7 +46,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
         /// <param name="endDate">The query end date.</param>
         /// <param name="employees">The list of users to query.</param>
         /// <returns>A unit of execution that contains the response.</returns>
-        public async Task<UpcomingShifts.Response> ShowUpcomingShiftsInBatchAsync(
+        public async Task<Response> ShowUpcomingShiftsInBatchAsync(
             Uri endPointUrl,
             string jSession,
             string startDate,
@@ -69,7 +70,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
                 ApiConstants.SoapEnvClose,
                 jSession).ConfigureAwait(false);
 
-            UpcomingShifts.Response scheduleResponse = this.ProcessResponse(tupleResponse.Item1);
+            var scheduleResponse = tupleResponse.ProcessResponse<Response>(this.telemetryClient);
             scheduleResponse.Jsession = tupleResponse.Item2;
             return scheduleResponse;
         }
@@ -90,18 +91,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
             request.Schedule.Employees.AddRange(scheduledEmployees);
 
             return request.XmlSerialize();
-        }
-
-        /// <summary>
-        /// Read the xml response into Response object.
-        /// </summary>
-        /// <param name="strResponse">xml response string.</param>
-        /// <returns>Response object.</returns>
-        private UpcomingShifts.Response ProcessResponse(string strResponse)
-        {
-            XDocument xDoc = XDocument.Parse(strResponse);
-            var xResponse = xDoc.Root.Descendants().FirstOrDefault(d => d.Name.LocalName.Equals(ApiConstants.Response, StringComparison.Ordinal));
-            return XmlConvertHelper.DeserializeObject<UpcomingShifts.Response>(xResponse.ToString());
         }
     }
 }

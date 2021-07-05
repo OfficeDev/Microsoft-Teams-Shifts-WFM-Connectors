@@ -1187,6 +1187,22 @@
             <param name="queryDateSpan">Query date span for Kronos details.</param>
             <returns>A unit of execution that contains the retracted response.</returns>
         </member>
+        <member name="T:Microsoft.Teams.Shifts.Integration.API.Controllers.SwapShiftEligibilityController">
+            <summary>
+            This is the SwapShiftController.
+            </summary>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.SwapShiftEligibilityController.#ctor(Microsoft.Teams.Shifts.Integration.API.Common.AppSettings,Microsoft.ApplicationInsights.TelemetryClient,Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShiftEligibility.ISwapShiftEligibilityActivity,Microsoft.Teams.Shifts.Integration.API.Common.Utility,System.Net.Http.IHttpClientFactory,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IShiftMappingEntityProvider)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.Teams.Shifts.Integration.API.Controllers.SwapShiftEligibilityController"/> class.
+            </summary>
+            <param name="appSettings">Configuration DI.</param>
+            <param name="telemetryClient">Telemetry Client.</param>
+            <param name="swapShiftEligibilityActivity">Swap Shift Eligibility activity.</param>
+            <param name="utility">UniqueId Utility DI.</param>
+            <param name="httpClientFactory">The HTTP Client DI.</param>
+            <param name="shiftMappingEntityProvider">Shift mapping entity provider DI.</param>
+        </member>
         <member name="T:Microsoft.Teams.Shifts.Integration.API.Controllers.SyncKronosToShiftsController">
             <summary>
             Sync Kronos To Shifts Controller.
@@ -1226,7 +1242,7 @@
             This is the teams controller that is being used here.
             </summary>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.#ctor(Microsoft.Teams.Shifts.Integration.API.Common.AppSettings,Microsoft.ApplicationInsights.TelemetryClient,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IConfigurationProvider,Microsoft.Teams.Shifts.Integration.API.Controllers.OpenShiftRequestController,Microsoft.Teams.Shifts.Integration.API.Controllers.SwapShiftController,Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController,Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffController,Microsoft.Teams.Shifts.Integration.API.Common.Utility,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IUserMappingProvider,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IShiftMappingEntityProvider,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IOpenShiftRequestMappingEntityProvider,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IOpenShiftMappingEntityProvider,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.ISwapShiftMappingEntityProvider,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.ITeamDepartmentMappingProvider,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.ITimeOffReasonProvider,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.ITimeOffMappingEntityProvider)">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.#ctor(Microsoft.Teams.Shifts.Integration.API.Common.AppSettings,Microsoft.ApplicationInsights.TelemetryClient,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IConfigurationProvider,Microsoft.Teams.Shifts.Integration.API.Controllers.OpenShiftRequestController,Microsoft.Teams.Shifts.Integration.API.Controllers.SwapShiftController,Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController,Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffController,Microsoft.Teams.Shifts.Integration.API.Controllers.SwapShiftEligibilityController,Microsoft.Teams.Shifts.Integration.API.Common.Utility,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IUserMappingProvider,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IShiftMappingEntityProvider,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IOpenShiftRequestMappingEntityProvider,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IOpenShiftMappingEntityProvider,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.ISwapShiftMappingEntityProvider,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.ITeamDepartmentMappingProvider,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.ITimeOffReasonProvider,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.ITimeOffMappingEntityProvider)">
             <summary>
             Initializes a new instance of the <see cref="T:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController"/> class.
             </summary>
@@ -1237,6 +1253,7 @@
             <param name="swapShiftController">SwapShiftController DI.</param>
             <param name="shiftController">ShiftController DI.</param>
             <param name="timeOffController">TimeOffCntroller DI.</param>
+            <param name="swapShiftEligibilityController">Swap Shift Eligibility Controller DI.</param>
             <param name="utility">The common utility methods DI.</param>
             <param name="userMappingProvider">The user mapping provider DI.</param>
             <param name="shiftMappingEntityProvider">The shift entity mapping provider DI.</param>
@@ -1254,6 +1271,13 @@
             <returns>A unit of execution that contains the HTTP Response.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.UpdateTeam(System.String)">
+            <summary>
+            The method that will be called from Shifts.
+            </summary>
+            <param name="aadGroupId">The AAD Group Id for the Team.</param>
+            <returns>An action result.</returns>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.UpdateShiftEligibility(System.String)">
             <summary>
             The method that will be called from Shifts.
             </summary>

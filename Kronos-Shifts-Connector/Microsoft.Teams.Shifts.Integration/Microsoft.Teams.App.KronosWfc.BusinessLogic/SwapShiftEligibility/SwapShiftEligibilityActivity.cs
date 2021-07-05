@@ -41,22 +41,22 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShiftEligibility
         /// </summary>
         /// <param name="endPointUrl">The Kronos WFC endpoint URL.</param>
         /// <param name="jSession">JSession.</param>
-        /// <param name="startTime">The start time for the requestor's shift.</param>
-        /// <param name="endTime">The end time for the requestor's shift.</param>
-        /// <param name="queryDate">The date for the requestor's shift.</param>
-        /// <param name="shiftSwapDate">The date time for the potential requested shift.</param>
+        /// <param name="offeredStartTime">The start time for the requestor's shift.</param>
+        /// <param name="offeredEndTime">The end time for the requestor's shift.</param>
+        /// <param name="offeredShiftDate">The date for the requestor's shift.</param>
+        /// <param name="requestedShiftDate">The date time for the potential requested shift.</param>
         /// <param name="employeeNumber">The employee number of the requestor.</param>
         /// <returns>Response object.</returns>
         public async Task<Response> SendEligibilityRequestAsync(
             Uri endPointUrl,
             string jSession,
-            string startTime,
-            string endTime,
-            string queryDate,
-            string shiftSwapDate,
+            string offeredStartTime,
+            string offeredEndTime,
+            string offeredShiftDate,
+            string requestedShiftDate,
             string employeeNumber)
         {
-            var request = this.CreateEligibilityRequest(startTime, endTime, queryDate, shiftSwapDate, employeeNumber);
+            var request = this.CreateEligibilityRequest(offeredStartTime, offeredEndTime, offeredShiftDate, requestedShiftDate, employeeNumber);
             var response = await this.apiHelper.SendSoapPostRequestAsync(endPointUrl, SoapEnvOpen, request, SoapEnvClose, jSession).ConfigureAwait(false);
             return response.ProcessResponse<Response>(this.telemetryClient);
         }
@@ -64,17 +64,17 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShiftEligibility
         /// <summary>
         /// Creates the swap eligibility request.
         /// </summary>
-        /// <param name="startTime">The start time for the requestor's shift.</param>
-        /// <param name="endTime">The end time for the requestor's shift.</param>
-        /// <param name="queryDate">The date for the requestor's shift.</param>
-        /// <param name="shiftSwapDate">The date time for the potential requested shift.</param>
+        /// <param name="offeredStartTime">The start time for the requestor's shift.</param>
+        /// <param name="offeredEndTime">The end time for the requestor's shift.</param>
+        /// <param name="offeredShiftDate">The date for the requestor's shift.</param>
+        /// <param name="requestedShiftDate">The date time for the potential requested shift.</param>
         /// <param name="employeeNumber">The employee number of the requestor.</param>
         /// <returns>The XML request as a string.</returns>
         private string CreateEligibilityRequest(
-            string startTime,
-            string endTime,
-            string queryDate,
-            string shiftSwapDate,
+            string offeredStartTime,
+            string offeredEndTime,
+            string offeredShiftDate,
+            string requestedShiftDate,
             string employeeNumber)
         {
             var request =
@@ -83,10 +83,10 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShiftEligibility
                     Action = LoadEligibleEmployees,
                     SwapShiftEmployees = new SwapShiftEmployees()
                     {
-                        StartTime = startTime,
-                        EndTime = endTime,
-                        QueryDate = queryDate,
-                        ShiftSwapDate = shiftSwapDate,
+                        StartTime = offeredStartTime,
+                        EndTime = offeredEndTime,
+                        QueryDate = offeredShiftDate,
+                        ShiftSwapDate = requestedShiftDate,
                         Employee = new Employee()
                         {
                             PersonIdentity = new PersonIdentity() { PersonNumber = employeeNumber },
