@@ -6,6 +6,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.Linq;
     using System.Reflection;
@@ -1019,6 +1020,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
                 endDate = this.appSettings.ShiftEndDate;
             }
         }
+
+        /// <summary>
+        /// Converts a given datetime into correct format for Kronos calls.
+        /// </summary>
+        /// <param name="date">A <see cref="DateTime"/>.</param>
+        /// <returns>A string representation of the date for a kronos call.</returns>
+        [SuppressMessage("Globalization", "CA1305:Specify IFormatProvider", Justification = "This format is needed for kronos calls.")]
+        public string ConvertToKronosDate(DateTime date) => date.ToString(this.appSettings.KronosQueryDateSpanFormat);
 
         /// <summary>
         /// Method to retrieve the necessary details from AppSettings.

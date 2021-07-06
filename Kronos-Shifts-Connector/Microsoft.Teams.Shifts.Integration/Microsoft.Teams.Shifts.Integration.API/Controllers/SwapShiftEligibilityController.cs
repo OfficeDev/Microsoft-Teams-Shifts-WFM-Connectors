@@ -74,8 +74,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var endDate = this.utility.UTCToKronosTimeZone(shift.ShiftEndDate, kronosTimeZone);
             var offeredStartTime = startDate.TimeOfDay.ToString();
             var offeredEndTime = endDate.TimeOfDay.ToString();
-            var offeredShiftDate = this.ConvertToKronosDate(startDate);
-            var swapShiftDate = this.ConvertToKronosDate(endDate);
+            var offeredShiftDate = this.utility.ConvertToKronosDate(startDate);
+            var swapShiftDate = this.utility.ConvertToKronosDate(endDate);
             var employeeNumber = shift.KronosPersonNumber;
 
             var eligibleEmployees = await this.swapShiftEligibilityActivity.SendEligibilityRequestAsync(
@@ -90,14 +90,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var users = new List<UserDetailsModel>();
             foreach (var p in eligibleEmployees.Person)
             {
-                users.Add(new UserDetailsModel {KronosPersonNumber = p.PersonNumber});
+                users.Add(new UserDetailsModel { KronosPersonNumber = p.PersonNumber });
             }
 
             var list = await this.shiftMappingEntityProvider.GetAllShiftMappingEntitiesInBatchAsync(users, monthPartition, swapShiftDate, swapShiftDate).ConfigureAwait(false);
             return CreateResponse(null, Status200OK, "Successfully added eligible shifts.");
         }
-
-        [SuppressMessage("Globalization", "CA1305:Specify IFormatProvider", Justification = "This format is needed for kronos calls.")]
-        private string ConvertToKronosDate(DateTime date) => date.ToString(this.appSettings.KronosQueryDateSpanFormat);
     }
 }

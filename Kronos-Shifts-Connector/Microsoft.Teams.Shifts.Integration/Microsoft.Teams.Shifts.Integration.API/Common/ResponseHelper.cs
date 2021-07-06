@@ -6,6 +6,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
 {
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels;
 
+    /// <summary>
+    /// A helper class dealing with responses.
+    /// </summary>
     public static class ResponseHelper
     {
         /// <summary>

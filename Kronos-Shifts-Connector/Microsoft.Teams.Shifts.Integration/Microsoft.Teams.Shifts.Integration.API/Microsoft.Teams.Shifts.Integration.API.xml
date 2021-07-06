@@ -432,6 +432,11 @@
             <param name="secretValue">The actual value of the secret.</param>
             <returns>A unit of execution which has a string value boxed in.</returns>
         </member>
+        <member name="T:Microsoft.Teams.Shifts.Integration.API.Common.ResponseHelper">
+            <summary>
+            A helper class dealing with responses.
+            </summary>
+        </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.ResponseHelper.CreateResponse(System.String,System.Int32,System.String)">
             <summary>
             Creates a Response for Shifts.
@@ -749,6 +754,13 @@
             <param name="isNotFirstTimeSync">true if request is coming any time after the initial sync, else false.</param>
             <param name="startDate">returns start date.</param>
             <param name="endDate">returns end date.</param>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.ConvertToKronosDate(System.DateTime)">
+            <summary>
+            Converts a given datetime into correct format for Kronos calls.
+            </summary>
+            <param name="date">A <see cref="T:System.DateTime"/>.</param>
+            <returns>A string representation of the date for a kronos call.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.GetTenantDetails(System.String@,System.String@,System.String@,System.String@)">
             <summary>
