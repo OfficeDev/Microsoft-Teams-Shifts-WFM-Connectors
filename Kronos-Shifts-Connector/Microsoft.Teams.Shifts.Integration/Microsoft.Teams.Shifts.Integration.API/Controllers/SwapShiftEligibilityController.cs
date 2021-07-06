@@ -11,16 +11,15 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights;
     using Microsoft.AspNetCore.Authorization;
-    using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShiftEligibility;
-    using Microsoft.Teams.App.KronosWfc.Common;
     using Microsoft.Teams.Shifts.Integration.API.Common;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels;
     using static Microsoft.AspNetCore.Http.StatusCodes;
     using static Microsoft.Teams.App.KronosWfc.Common.ApiConstants;
+    using static Microsoft.Teams.Shifts.Integration.API.Common.ResponseHelper;
 
     /// <summary>
     /// This is the SwapShiftController.
@@ -96,20 +95,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             var list = await this.shiftMappingEntityProvider.GetAllShiftMappingEntitiesInBatchAsync(users, monthPartition, swapShiftDate, swapShiftDate).ConfigureAwait(false);
             return CreateResponse(null, Status200OK, "Successfully added eligible shifts.");
-        }
-
-        private static ShiftsIntegResponse CreateResponse(string id, int statusCode, string error = null)
-        {
-            return new ShiftsIntegResponse
-            {
-                Id = id,
-                Status = statusCode,
-                Body = new Body
-                {
-                    Error = new ResponseError { Message = error },
-                    ETag = null,
-                },
-            };
         }
 
         [SuppressMessage("Globalization", "CA1305:Specify IFormatProvider", Justification = "This format is needed for kronos calls.")]
