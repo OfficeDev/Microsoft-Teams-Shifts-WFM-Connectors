@@ -6,21 +6,21 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Net.Http;
-    using System.Reflection;
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights;
     using Microsoft.AspNetCore.Authorization;
+    using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
-    using Microsoft.Teams.App.KronosWfc.BusinessLogic.Logon;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShiftEligibility;
+    using Microsoft.Teams.App.KronosWfc.Common;
     using Microsoft.Teams.Shifts.Integration.API.Common;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels;
     using static Microsoft.AspNetCore.Http.StatusCodes;
     using static Microsoft.Teams.App.KronosWfc.Common.ApiConstants;
-    using Response = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.SwapShiftEligibility.Response;
 
     /// <summary>
     /// This is the SwapShiftController.
@@ -31,11 +31,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     public class SwapShiftEligibilityController : Controller
     {
         private readonly AppSettings appSettings;
-        private readonly TelemetryClient telemetryClient;
-        private readonly ISwapShiftEligibilityActivity swapShiftEligibilityActivity;
-        private readonly Utility utility;
         private readonly IHttpClientFactory httpClientFactory;
         private readonly IShiftMappingEntityProvider shiftMappingEntityProvider;
+        private readonly ISwapShiftEligibilityActivity swapShiftEligibilityActivity;
+        private readonly TelemetryClient telemetryClient;
+        private readonly Utility utility;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SwapShiftEligibilityController"/> class.
@@ -54,12 +54,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             IHttpClientFactory httpClientFactory,
             IShiftMappingEntityProvider shiftMappingEntityProvider)
         {
-            if (appSettings is null)
-            {
-                throw new ArgumentNullException(nameof(appSettings));
-            }
-
-            this.appSettings = appSettings;
+            this.appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
             this.telemetryClient = telemetryClient;
             this.swapShiftEligibilityActivity = swapShiftEligibilityActivity;
             this.utility = utility;
@@ -72,53 +67,52 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var configuration = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
             if (configuration?.IsAllSetUpExists == false)
             {
-                // throw an error message
-                return this.CreateResponse(null, Status404NotFound, "App not configured correctly.");
+                return CreateResponse(null, Status404NotFound, "The app is not configured correctly.");
             }
 
             var shift = await this.shiftMappingEntityProvider.GetShiftMappingEntityByRowKeyAsync(shiftId).ConfigureAwait(false);
-            DateTime startDate = this.utility.UTCToKronosTimeZone(shift.ShiftStartDate, kronosTimeZone);
-            DateTime endDate = this.utility.UTCToKronosTimeZone(shift.ShiftEndDate, kronosTimeZone);
-            string offeredStartTime = startDate.TimeOfDay.ToString();
-            string offeredEndTime = endDate.TimeOfDay.ToString();
-            string offeredShiftDate = this.ConvertToKronosDate(startDate);
-            string swapShiftDate = this.ConvertToKronosDate(endDate);
-            string employeeNumber = shift.KronosPersonNumber;
+            var startDate = this.utility.UTCToKronosTimeZone(shift.ShiftStartDate, kronosTimeZone);
+            var endDate = this.utility.UTCToKronosTimeZone(shift.ShiftEndDate, kronosTimeZone);
+            var offeredStartTime = startDate.TimeOfDay.ToString();
+            var offeredEndTime = endDate.TimeOfDay.ToString();
+            var offeredShiftDate = this.ConvertToKronosDate(startDate);
+            var swapShiftDate = this.ConvertToKronosDate(endDate);
+            var employeeNumber = shift.KronosPersonNumber;
 
             var eligibleEmployees = await this.swapShiftEligibilityActivity.SendEligibilityRequestAsync(
-               new Uri(configuration.WfmEndPoint), configuration.KronosSession, offeredStartTime, offeredEndTime, offeredShiftDate, swapShiftDate, employeeNumber).ConfigureAwait(false);
+                new Uri(configuration.WfmEndPoint), configuration.KronosSession, offeredStartTime, offeredEndTime, offeredShiftDate, swapShiftDate, employeeNumber).ConfigureAwait(false);
 
             if (eligibleEmployees?.Status != Success)
             {
-                return this.CreateResponse(null, Status404NotFound, "There are no employees eligible to take this shift.");
+                return CreateResponse(null, Status404NotFound, "There are no employees eligible to take this shift.");
             }
 
             var monthPartition = Utility.GetMonthPartition(swapShiftDate, swapShiftDate)[0];
             var users = new List<UserDetailsModel>();
             foreach (var p in eligibleEmployees.Person)
             {
-                users.Add(new UserDetailsModel() { KronosPersonNumber = p.PersonNumber });
+                users.Add(new UserDetailsModel {KronosPersonNumber = p.PersonNumber});
             }
 
             var list = await this.shiftMappingEntityProvider.GetAllShiftMappingEntitiesInBatchAsync(users, monthPartition, swapShiftDate, swapShiftDate).ConfigureAwait(false);
-            return this.CreateResponse(null, Status200OK, "Successfully added eligible shifts.");
+            return CreateResponse(null, Status200OK, "Successfully added eligible shifts.");
         }
 
-        private ShiftsIntegResponse CreateResponse(string id, int statusCode, string error = null)
+        private static ShiftsIntegResponse CreateResponse(string id, int statusCode, string error = null)
         {
-            return new ShiftsIntegResponse()
+            return new ShiftsIntegResponse
             {
                 Id = id,
                 Status = statusCode,
-                Body = new Body()
+                Body = new Body
                 {
-                    Error = new ResponseError() { Message = error },
+                    Error = new ResponseError { Message = error },
                     ETag = null,
                 },
             };
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Globalization", "CA1305:Specify IFormatProvider", Justification = "This format is needed for kronos calls.")]
+        [SuppressMessage("Globalization", "CA1305:Specify IFormatProvider", Justification = "This format is needed for kronos calls.")]
         private string ConvertToKronosDate(DateTime date) => date.ToString(this.appSettings.KronosQueryDateSpanFormat);
     }
 }
