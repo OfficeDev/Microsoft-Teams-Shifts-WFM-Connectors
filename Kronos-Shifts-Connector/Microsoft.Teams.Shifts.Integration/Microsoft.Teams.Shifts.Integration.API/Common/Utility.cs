@@ -417,10 +417,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
             else
             {
                 result = string.Empty;
-                var noNotesStr = "There are no notes for this Open Shift";
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
-                this.telemetryClient.TrackTrace($"Notes-OpenShiftEntity: {noNotesStr}");
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
+                this.telemetryClient.TrackTrace("Notes-OpenShiftEntity: There are no notes for this Open Shift");
             }
 
             this.telemetryClient.TrackTrace($"GetOpenShiftNotes end at {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");

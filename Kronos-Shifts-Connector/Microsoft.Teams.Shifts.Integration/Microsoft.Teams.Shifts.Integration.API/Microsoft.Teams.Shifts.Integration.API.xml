@@ -823,7 +823,7 @@
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.OpenShiftController.ProcessOpenShiftsAsync(System.String)">
             <summary>
-            Get the list of time off details from Kronos and push it to Shifts.
+            Get the list of open shift entities from Kronos and pushes to Shifts.
             </summary>
             <param name="isRequestFromLogicApp">Checks if request is coming from logic app or portal.</param>
             <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation.</returns>
