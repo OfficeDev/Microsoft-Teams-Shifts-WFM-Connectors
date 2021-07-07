@@ -20,28 +20,14 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// </summary>
         /// <param name="workForceIntegrationId">WorkForceIntegration Id.</param>
         /// <param name="orgJobPath">Kronos Org Job Path.</param>
-        /// <returns>A unit of execution that boxes a <see cref="ShiftsTeamDepartmentMappingEntity"/>.</returns>
+        /// <returns>A unit of execution that boxes a <see cref="TeamToDepartmentJobMappingEntity"/>.</returns>
         Task<TeamToDepartmentJobMappingEntity> GetTeamMappingForOrgJobPathAsync(string workForceIntegrationId, string orgJobPath);
-
-        /// <summary>
-        /// Saving or updating a mapping between a Team in Shifts and Department in Kronos.
-        /// </summary>
-        /// <param name="shiftsTeamsDetails">Shifts team details fetched via Graph api calls.</param>
-        /// <param name="kronosDepartmentName">Department name fetched from Kronos.</param>
-        /// <param name="workforceIntegrationId">The Workforce Integration Id.</param>
-        /// <param name="tenantId">Tenant Id.</param>
-        /// <returns><see cref="Task"/> that resolves successfully if the data was saved successfully.</returns>
-        Task<bool> SaveOrUpdateShiftsTeamDepartmentMappingAsync(
-            Team shiftsTeamsDetails,
-            string kronosDepartmentName,
-            string workforceIntegrationId,
-            string tenantId);
 
         /// <summary>
         /// Function that will return all of the teams that are mapped in Azure Table storage.
         /// </summary>
         /// <returns>A list of the mapped teams.</returns>
-        Task<List<ShiftsTeamDepartmentMappingEntity>> GetMappedTeamDetailsAsync();
+        Task<List<TeamToDepartmentJobMappingEntity>> GetMappedTeamDetailsAsync();
 
         /// <summary>
         /// Function that will return all the mappings for a single team that are mapped in Azure Table storage.
@@ -68,7 +54,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// </summary>
         /// <param name="entity">The entity to delete.</param>
         /// <returns>http status code representing the asynchronous operation.</returns>
-        Task<bool> TeamsToDepartmentMappingAsync(TeamToDepartmentJobMappingEntity entity);
+        Task<bool> SaveOrUpdateTeamsToDepartmentMappingAsync(TeamToDepartmentJobMappingEntity entity);
 
         /// <summary>
         /// Method to delete teams and Department mapping.
