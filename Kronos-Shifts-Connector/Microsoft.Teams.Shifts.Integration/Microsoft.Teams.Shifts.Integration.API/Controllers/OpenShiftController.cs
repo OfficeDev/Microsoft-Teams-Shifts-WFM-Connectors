@@ -104,7 +104,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
 
-            if (allRequiredConfigurations == null || (bool)allRequiredConfigurations?.IsAllSetUpExists)
+            if (allRequiredConfigurations?.IsAllSetUpExists == false)
             {
                 throw new Exception($"{Resource.SyncOpenShiftsFromKronos} - {Resource.SetUpNotDoneMessage} - Some configuration settings were missing.");
             }
@@ -114,7 +114,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             // Check whether date range are in correct format.
             if (!Utility.CheckDates(openShiftStartDate, openShiftEndDate))
             {
-                throw new Exception($"{Resource.SyncOpenShiftsFromKronos} - {Resource.SetUpNotDoneMessage} - Query date was invalid.");
+                throw new Exception($"{Resource.SyncOpenShiftsFromKronos} - Query date was invalid.");
             }
 
             var monthPartitions = Utility.GetMonthPartition(openShiftStartDate, openShiftEndDate);
