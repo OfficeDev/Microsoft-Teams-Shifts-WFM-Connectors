@@ -546,9 +546,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                     timeOffRequestItem,
                                     item,
                                     reqDetails.ShiftsRequestId,
-                                    configurationDetails.ShiftsAccessToken,
-                                    monthPartitionKey,
-                                    configurationDetails.WFIId).ConfigureAwait(false);
+                                    configurationDetails,
+                                    monthPartitionKey).ConfigureAwait(false);
                         }
                         else
                         {
@@ -562,7 +561,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             await this.ApproveTimeOffRequestAsync(
                  timeOffLookUpEntriesFoundList,
                  userModelList,
-                 timeOffRequestsPayCodeList,
                  configurationDetails,
                  monthPartitionKey,
                  globalTimeOffRequestDetails).ConfigureAwait(false);
@@ -776,7 +774,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// </summary>
         /// <param name="timeOffLookUpEntriesFoundList">The time off look up entries that are found.</param>
         /// <param name="user">The user.</param>
-        /// <param name="timeOffReasonId">The Shifts Time Off Reason ID.</param>
         /// <param name="configurationDetails">The configuration details.</param>
         /// <param name="monthPartitionKey">The monthwise partition key.</param>
         /// <param name="globalTimeOffRequestDetails">The list of global time off request details.</param>
@@ -784,7 +781,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private async Task ApproveTimeOffRequestAsync(
             List<TimeOffMappingEntity> timeOffLookUpEntriesFoundList,
             List<UserDetailsModel> user,
-            List<PayCodeToTimeOffReasonsMappingEntity> timeOffReasonId,
             SetupDetails configurationDetails,
             string monthPartitionKey,
             List<GlobalTimeOffRequestItem> globalTimeOffRequestDetails)

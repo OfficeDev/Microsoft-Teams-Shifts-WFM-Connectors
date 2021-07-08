@@ -23,6 +23,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers;
     using Newtonsoft.Json;
+    using IntegrationApi = Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI;
 
     /// <summary>
     /// Shift controller.
@@ -159,7 +160,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 var userModelNotFoundList = new List<UserDetailsModel>();
 
                                 await this.ProcessShiftEntitiesBatchAsync(
-                                    allRequiredConfigurations.ShiftsAccessToken,
+                                    allRequiredConfigurations,
                                     lookUpEntriesFoundList,
                                     shiftsNotFoundList,
                                     userModelList,
@@ -184,7 +185,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <summary>
         /// Method to process the shift entities in a batch manner.
         /// </summary>
-        /// <param name="accessToken">The MS Graph Access token.</param>
+        /// <param name="configurationDetails">The configuration details.</param>
         /// <param name="lookUpEntriesFoundList">The lookUp entries that have been found.</param>
         /// <param name="shiftsNotFoundList">The shifts that have not been found.</param>
         /// <param name="userModelList">The users list.</param>
@@ -195,7 +196,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="monthPartitionKey">The monthwise partition.</param>
         /// <returns>A unit of execution.</returns>
         private async Task ProcessShiftEntitiesBatchAsync(
-            string accessToken,
+            IntegrationApi.SetupDetails configurationDetails,
             List<TeamsShiftMappingEntity> lookUpEntriesFoundList,
             List<Shift> shiftsNotFoundList,
             List<UserDetailsModel> userModelList,
@@ -281,10 +282,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             if (lookUpData.Except(lookUpEntriesFoundList).Any())
             {
-                await this.DeleteOrphanDataShiftsEntityMappingAsync(accessToken, lookUpEntriesFoundList, userModelList, lookUpData).ConfigureAwait(false);
+                await this.DeleteOrphanDataShiftsEntityMappingAsync(configurationDetails, lookUpEntriesFoundList, userModelList, lookUpData).ConfigureAwait(false);
             }
 
-            await this.CreateEntryShiftsEntityMappingAsync(accessToken, userModelNotFoundList, shiftsNotFoundList, monthPartitionKey).ConfigureAwait(false);
+            await this.CreateEntryShiftsEntityMappingAsync(configurationDetails, userModelNotFoundList, shiftsNotFoundList, monthPartitionKey).ConfigureAwait(false);
 
             this.telemetryClient.TrackTrace($"ShiftController - ProcessShiftEntitiesBatchAsync ended at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
         }
@@ -292,13 +293,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <summary>
         /// Method that will create the new Shifts Entity Mapping.
         /// </summary>
-        /// <param name="accessToken">The Graph Access token.</param>
+        /// <param name="configurationDetails">The configuration details.</param>
         /// <param name="userModelNotFoundList">The list of users that have not been found.</param>
         /// <param name="notFoundShifts">The shifts which have not been found.</param>
         /// <param name="monthPartitionKey">The monthwise partition key.</param>
         /// <returns>A unit of execution.</returns>
         private async Task CreateEntryShiftsEntityMappingAsync(
-            string accessToken,
+            IntegrationApi.SetupDetails configurationDetails,
             List<UserDetailsModel> userModelNotFoundList,
             List<Shift> notFoundShifts,
             string monthPartitionKey)
@@ -309,8 +310,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var requestString = JsonConvert.SerializeObject(notFoundShifts[i]);
 
                 var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", configurationDetails.ShiftsAccessToken);
                 httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                httpClient.DefaultRequestHeaders.Add("MS-APP-ACTS-AS", configurationDetails.ShiftsAdminAadObjectId);
 
                 using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, "teams/" + userModelNotFoundList[i].ShiftTeamId + "/schedule/shifts")
                 {
@@ -345,13 +347,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <summary>
         /// Method to delete an orphan shift - happens when a shift is deleted from Kronos.
         /// </summary>
-        /// <param name="accessToken">The MS Graph Access Token.</param>
+        /// <param name="configurationDetails">The configuration details.</param>
         /// <param name="lookUpDataFoundList">The list of data that has been found.</param>
         /// <param name="userModelList">The list of users.</param>
         /// <param name="lookUpData">The Shifts look up data.</param>
         /// <returns>A unit of execution.</returns>
         private async Task DeleteOrphanDataShiftsEntityMappingAsync(
-            string accessToken,
+            IntegrationApi.SetupDetails configurationDetails,
             List<TeamsShiftMappingEntity> lookUpDataFoundList,
             List<UserDetailsModel> userModelList,
             List<TeamsShiftMappingEntity> lookUpData)
@@ -364,8 +366,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             {
                 var user = userModelList.FirstOrDefault(u => u.KronosPersonNumber == item.KronosPersonNumber);
                 var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", configurationDetails.ShiftsAccessToken);
                 httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                httpClient.DefaultRequestHeaders.Add("MS-APP-ACTS-AS", configurationDetails.ShiftsAdminAadObjectId);
 
                 if (user != null)
                 {
