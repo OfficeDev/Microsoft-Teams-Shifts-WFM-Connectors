@@ -558,14 +558,18 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// Method overload for the OpenShift entity.
         /// </summary>
         /// <param name="shift">The OpenShift entity.</param>
-        /// <param name="schedulingGroupId">The scheduling group id.</param>
-        /// <param name="kronosTimeZone">The time zone to use when converting the times.</param>
+        /// <param name="orgJobMapping">The org job mapping.</param>
         /// <returns>A string that is the Unique ID of the open shift.</returns>
-        public string CreateUniqueId(OpenShift.OpenShiftRequestModel shift, string schedulingGroupId, string kronosTimeZone)
+        public string CreateUniqueId(OpenShift.OpenShiftRequestModel shift, TeamToDepartmentJobMappingEntity orgJobMapping)
         {
             if (shift is null)
             {
                 throw new ArgumentNullException(nameof(shift));
+            }
+
+            if (orgJobMapping is null)
+            {
+                throw new ArgumentNullException(nameof(orgJobMapping));
             }
 
             var createUniqueIdProps = new Dictionary<string, string>()
@@ -581,11 +585,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
             foreach (var item in shift.SharedOpenShift.Activities)
             {
                 sb.Append(item.DisplayName);
-                sb.Append(this.CalculateEndDateTime(item.EndDateTime, kronosTimeZone));
-                sb.Append(this.CalculateStartDateTime(item.StartDateTime, kronosTimeZone));
+                sb.Append(this.CalculateEndDateTime(item.EndDateTime, orgJobMapping.KronosTimeZone));
+                sb.Append(this.CalculateStartDateTime(item.StartDateTime, orgJobMapping.KronosTimeZone));
             }
 
-            var stringToHash = $"{this.CalculateStartDateTime(shift.SharedOpenShift.StartDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(shift.SharedOpenShift.EndDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}{sb}{shift.SharedOpenShift.Notes}{schedulingGroupId}";
+            var stringToHash = $"{this.CalculateStartDateTime(shift.SharedOpenShift.StartDateTime, orgJobMapping.KronosTimeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(shift.SharedOpenShift.EndDateTime, orgJobMapping.KronosTimeZone).ToString(CultureInfo.InvariantCulture)}{sb}{shift.SharedOpenShift.Notes}{orgJobMapping.RowKey}";
 
             this.telemetryClient.TrackTrace($"String to create hash - OpenShiftRequestModel: {stringToHash}");
 
