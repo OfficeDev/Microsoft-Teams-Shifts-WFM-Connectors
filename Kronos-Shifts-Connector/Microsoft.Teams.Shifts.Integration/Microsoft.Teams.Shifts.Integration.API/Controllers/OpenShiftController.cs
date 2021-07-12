@@ -241,7 +241,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                                 };
 
                                                 // Generates the uniqueId for the OpenShift.
-                                                shift.KronosUniqueId = this.utility.CreateUniqueId(shift, shift.SchedulingGroupId, mappedOrgJobEntity.KronosTimeZone);
+                                                shift.KronosUniqueId = this.utility.CreateUniqueId(shift, mappedOrgJobEntity);
 
                                                 // Logging the output of the KronosHash creation.
                                                 this.telemetryClient.TrackTrace("OpenShiftController-KronosHash: " + shift.KronosUniqueId);
