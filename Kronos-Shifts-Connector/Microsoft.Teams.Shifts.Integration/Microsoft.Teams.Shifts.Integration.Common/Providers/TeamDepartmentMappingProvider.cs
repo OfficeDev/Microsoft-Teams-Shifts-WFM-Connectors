@@ -37,12 +37,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             this.telemetryClient = telemetryClient;
         }
 
-        /// <summary>
-        /// Retrieves a single TeamDepartmentMapping from Azure Table storage.
-        /// </summary>
-        /// <param name="workForceIntegrationId">WorkForceIntegration Id.</param>
-        /// <param name="orgJobPath">Kronos Org Job Path.</param>
-        /// <returns>A unit of execution that boxes a <see cref="TeamToDepartmentJobMappingEntity"/>.</returns>
+        /// <inheritdoc/>
         public async Task<TeamToDepartmentJobMappingEntity> GetTeamMappingForOrgJobPathAsync(
             string workForceIntegrationId,
             string orgJobPath)

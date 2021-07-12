@@ -84,9 +84,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             foreach (var mappedUser in mappedUsersResult)
             {
-                var user = response.HyperFindResult.Any(h => h.PersonNumber == mappedUser.RowKey);
+                var isUserActive = response.HyperFindResult.Any(h => h.PersonNumber == mappedUser.RowKey);
 
-                if (user == false)
+                if (isUserActive == false)
                 {
                     // User is either inactive or terminated in Kronos
                     mappedUser.IsActive = false;

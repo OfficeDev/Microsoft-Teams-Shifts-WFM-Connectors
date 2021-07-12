@@ -6,7 +6,6 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
 {
     using System.Collections.Generic;
     using System.Threading.Tasks;
-    using Microsoft.Graph;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
 
     /// <summary>
@@ -20,7 +19,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// </summary>
         /// <param name="workForceIntegrationId">WorkForceIntegration Id.</param>
         /// <param name="orgJobPath">Kronos Org Job Path.</param>
-        /// <returns>A unit of execution that boxes a <see cref="TeamToDepartmentJobMappingEntity"/>.</returns>
+        /// <returns>A unit of execution that returns a <see cref="TeamToDepartmentJobMappingEntity"/>.</returns>
         Task<TeamToDepartmentJobMappingEntity> GetTeamMappingForOrgJobPathAsync(string workForceIntegrationId, string orgJobPath);
 
         /// <summary>

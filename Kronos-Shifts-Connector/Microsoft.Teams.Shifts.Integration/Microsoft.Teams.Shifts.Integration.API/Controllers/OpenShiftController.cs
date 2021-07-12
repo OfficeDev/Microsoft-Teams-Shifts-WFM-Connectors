@@ -124,7 +124,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 telemetryProps.Add("MonthPartitionsStatus", "There are no month partitions found!");
             }
 
-            var orgJobBatchSize = Convert.ToInt32(this.appSettings.ProcessNumberOfOrgJobsInBatch, CultureInfo.InvariantCulture);
+            var orgJobBatchSize = int.Parse(this.appSettings.ProcessNumberOfOrgJobsInBatch, CultureInfo.InvariantCulture);
             var orgJobPaths = await this.teamDepartmentMappingProvider.GetAllOrgJobPathsAsync().ConfigureAwait(false);
             var mappedTeams = await this.teamDepartmentMappingProvider.GetMappedTeamToDeptsWithJobPathsAsync().ConfigureAwait(false);
             int orgJobPathIterations = Utility.GetIterablesCount(orgJobBatchSize, orgJobPaths.Count);
@@ -150,7 +150,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     out string queryStartDate,
                     out string queryEndDate);
 
-                // Add to queue
                 var orgJobPathList = new List<string>(orgJobPaths);
 
                 // This for loop will iterate over the batched Org Job Paths.
