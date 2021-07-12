@@ -801,7 +801,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                 // Send Passthrough header to indicate the sender of request in outbound call.
                 httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", configurationDetails.WFIId);
-                httpClient.DefaultRequestHeaders.Add("MS-APP-ACTS-AS", configurationDetails.ShiftsAdminAadObjectId);
 
                 using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, "teams/" + user[i].ShiftTeamId + "/schedule/timeOffRequests/" + timeOffLookUpEntriesFoundList[i].ShiftsRequestId + "/approve")
                 {
@@ -861,7 +860,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             // Send Passthrough header to indicate the sender of request in outbound call.
             httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", configurationDetails.WFIId);
-            httpClient.DefaultRequestHeaders.Add("MS-APP-ACTS-AS", configurationDetails.ShiftsAdminAadObjectId);
 
             using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, "teams/" + user.ShiftTeamId + "/schedule/timeOffRequests/" + timeOffId + "/decline"))
             {

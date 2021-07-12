@@ -312,7 +312,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", configurationDetails.ShiftsAccessToken);
                 httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                httpClient.DefaultRequestHeaders.Add("MS-APP-ACTS-AS", configurationDetails.ShiftsAdminAadObjectId);
 
                 using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, "teams/" + userModelNotFoundList[i].ShiftTeamId + "/schedule/shifts")
                 {
@@ -368,7 +367,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", configurationDetails.ShiftsAccessToken);
                 httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                httpClient.DefaultRequestHeaders.Add("MS-APP-ACTS-AS", configurationDetails.ShiftsAdminAadObjectId);
 
                 if (user != null)
                 {
