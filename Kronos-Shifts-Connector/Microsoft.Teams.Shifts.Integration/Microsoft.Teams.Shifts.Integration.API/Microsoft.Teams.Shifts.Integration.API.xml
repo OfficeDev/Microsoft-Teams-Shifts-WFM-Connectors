@@ -592,13 +592,12 @@
             <param name="kronosTimeZone">The time zone to use when converting the times.</param>
             <returns>A string that represents the Kronos Unique Id.</returns>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.CreateUniqueId(Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.RequestModels.OpenShift.OpenShiftRequestModel,System.String,System.String)">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.CreateUniqueId(Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.RequestModels.OpenShift.OpenShiftRequestModel,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TeamToDepartmentJobMappingEntity)">
             <summary>
             Method overload for the OpenShift entity.
             </summary>
             <param name="shift">The OpenShift entity.</param>
-            <param name="schedulingGroupId">The scheduling group id.</param>
-            <param name="kronosTimeZone">The time zone to use when converting the times.</param>
+            <param name="orgJobMapping">The org job mapping.</param>
             <returns>A string that is the Unique ID of the open shift.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.CalculateStartDateTime(Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests.GlobalTimeOffRequestItem,System.String)">
