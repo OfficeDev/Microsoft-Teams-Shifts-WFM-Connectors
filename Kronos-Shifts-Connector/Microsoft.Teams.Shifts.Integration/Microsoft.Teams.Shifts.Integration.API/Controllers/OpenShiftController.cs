@@ -360,7 +360,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     {
                         var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                         var openShiftResponse = JsonConvert.DeserializeObject<Models.Response.OpenShifts.GraphOpenShift>(responseContent);
-                        var openShiftMappingEntity = this.CreateNewOpenShiftMappingEntity(openShiftResponse, item.KronosUniqueId, monthPartitionKey, mappedTeam?.RowKey, mappedTeam.KronosTimeZone);
+                        var openShiftMappingEntity = this.CreateNewOpenShiftMappingEntity(openShiftResponse, item.KronosUniqueId, monthPartitionKey, mappedTeam?.RowKey);
 
                         telemetryProps.Add("ResultCode", response.StatusCode.ToString());
                         telemetryProps.Add("TeamsOpenShiftId", openShiftResponse.Id);
@@ -511,8 +511,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             Models.Response.OpenShifts.GraphOpenShift responseModel,
             string uniqueId,
             string monthPartitionKey,
-            string orgJobPath,
-            string kronosTimeZone)
+            string orgJobPath)
         {
             var createNewOpenShiftMappingEntityProps = new Dictionary<string, string>()
             {
@@ -522,6 +521,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 { "CallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
             };
 
+            var startDateTime = DateTime.SpecifyKind(responseModel.SharedOpenShift.StartDateTime.DateTime, DateTimeKind.Utc);
+
             AllOpenShiftMappingEntity openShiftMappingEntity = new AllOpenShiftMappingEntity
             {
                 PartitionKey = monthPartitionKey,
@@ -530,7 +531,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 KronosSlots = Constants.KronosOpenShiftsSlotCount,
                 SchedulingGroupId = responseModel.SchedulingGroupId,
                 OrgJobPath = orgJobPath,
-                OpenShiftStartDate = this.utility.UTCToKronosTimeZone(responseModel.SharedOpenShift.StartDateTime, kronosTimeZone),
+                OpenShiftStartDate = startDateTime,
             };
 
             this.telemetryClient.TrackTrace(Resource.CreateNewOpenShiftMappingEntity, createNewOpenShiftMappingEntityProps);

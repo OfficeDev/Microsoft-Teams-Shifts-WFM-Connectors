@@ -201,6 +201,11 @@
             Gets OrgJobPath.
             </summary>public string OrgJobPath => this.configuration["OrgJobPath"];
         </member>
+        <member name="P:Microsoft.Teams.Shifts.Integration.API.Common.AppSettings.FutureSwapEligibilityDays">
+            <summary>
+            Gets the number of days in the future to sync swap shift eligiblity for.
+            </summary>
+        </member>
         <member name="P:Microsoft.Teams.Shifts.Integration.API.Common.AppSettings.SyncDelayForPolling">
             <summary>
             Gets the configuration for the polling delay in the sync functionality.
@@ -444,6 +449,15 @@
             <param name="id">The id for the response.</param>
             <param name="statusCode">The status code of the response.</param>
             <param name="error">The error message for the response.</param>
+            <returns>A <see cref="T:Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels.ShiftsIntegResponse"/>.</returns>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.ResponseHelper.CreateResponse(System.String,System.Int32,System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Creates a Response for a swap shift eligibility request.
+            </summary>
+            <param name="id">The id for the response.</param>
+            <param name="statusCode">The status code of the response.</param>
+            <param name="shifts">The error message for the response.</param>
             <returns>A <see cref="T:Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels.ShiftsIntegResponse"/>.</returns>
         </member>
         <member name="T:Microsoft.Teams.Shifts.Integration.API.Common.UsersHelper">
@@ -719,14 +733,13 @@
             <param name="kronosTimeZone">The time zone to use when converting from UTC to Kronos time.</param>
             <returns>Kronos date time.</returns>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.CreateShiftMappingEntity(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Shift,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.AllUserMappingEntity,System.String,System.String)">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.CreateShiftMappingEntity(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Shift,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.AllUserMappingEntity,System.String)">
             <summary>
             Having the ability to create a new TeamsShiftMappingEntity.
             </summary>
             <param name="shift">The Shift model.</param>
             <param name="userMappingEntity">Details of user from User Mapping Entity table.</param>
             <param name="kronosUniqueId">Kronos Unique Id corresponds to the shift.</param>
-            <param name="kronosTimeZone">The time zone to use when converting from UTC to Kronos time.</param>
             <returns>Mapping Entity associated with Team and Shift.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.GetKronosSessionAsync">
@@ -882,7 +895,7 @@
             <param name="endDate">The end date.</param>
             <returns>A unit of execution that contains the Kronos response model.</returns>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.OpenShiftController.CreateNewOpenShiftMappingEntity(Microsoft.Teams.Shifts.Integration.API.Models.Response.OpenShifts.GraphOpenShift,System.String,System.String,System.String,System.String)">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.OpenShiftController.CreateNewOpenShiftMappingEntity(Microsoft.Teams.Shifts.Integration.API.Models.Response.OpenShifts.GraphOpenShift,System.String,System.String,System.String)">
             <summary>
             Method that will create a new Open Shift Entity Mapping that conforms to the newest schema.
             </summary>
@@ -1004,6 +1017,23 @@
             <param name="httpClientFactory">The HTTP Client DI.</param>
             <param name="taskWrapper">Wrapper class instance for BackgroundTask.</param>
         </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController.CreateNewShiftMappingEntity(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Shift,System.String,System.String)">
+            <summary>
+            Creates a shift mapping entity to be stored in the table.
+            </summary>
+            <param name="shift">The shift received from Shifts.</param>
+            <param name="uniqueId">The unique ID for the shift.</param>
+            <param name="kronoUserId">The user id of the user in Kronos.</param>
+            <returns>Returns a <see cref="T:Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TeamsShiftMappingEntity"/>.</returns>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController.GetShiftsForUser(System.String,System.String)">
+            <summary>
+            Gets the shifts for a given Kronos user id.
+            </summary>
+            <param name="kronosUserId">A Kronos user id.</param>
+            <param name="partitionKey">The partition key for the shift.</param>
+            <returns>The schedule response.</returns>
+        </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController.ProcessShiftsAsync(System.String)">
             <summary>
             Start shifts sync from Kronos to Shifts.
@@ -1062,14 +1092,6 @@
             </summary>
             <param name="workForceIntegrationId">The workforce integration ID.</param>
             <returns>A task.</returns>
-        </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController.GetShiftsForUser(System.String,System.String)">
-            <summary>
-            Gets the shifts for a given Kronos user id.
-            </summary>
-            <param name="kronosUserId">A Kronos user id.</param>
-            <param name="partitionKey">The partition key for the shift.</param>
-            <returns>The schedule response.</returns>
         </member>
         <member name="T:Microsoft.Teams.Shifts.Integration.API.Controllers.SwapShiftController">
             <summary>
@@ -1210,7 +1232,7 @@
         </member>
         <member name="T:Microsoft.Teams.Shifts.Integration.API.Controllers.SwapShiftEligibilityController">
             <summary>
-            This is the SwapShiftController.
+            This is the SwapShiftEligibilityController.
             </summary>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.SwapShiftEligibilityController.#ctor(Microsoft.Teams.Shifts.Integration.API.Common.AppSettings,Microsoft.ApplicationInsights.TelemetryClient,Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShiftEligibility.ISwapShiftEligibilityActivity,Microsoft.Teams.Shifts.Integration.API.Common.Utility,System.Net.Http.IHttpClientFactory,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IShiftMappingEntityProvider)">
@@ -1223,6 +1245,14 @@
             <param name="utility">UniqueId Utility DI.</param>
             <param name="httpClientFactory">The HTTP Client DI.</param>
             <param name="shiftMappingEntityProvider">Shift mapping entity provider DI.</param>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.SwapShiftEligibilityController.GetEligibleShiftsForSwappingAsync(System.String,System.String)">
+            <summary>
+            Gets a list of eligible shifts to be swapped with.
+            </summary>
+            <param name="shiftId">The id of the shift that wants to be swapped.</param>
+            <param name="kronosTimeZone">The time zone of the for the user swapping the shift.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task`1"/> representing the result of the asynchronous operation.</returns>
         </member>
         <member name="T:Microsoft.Teams.Shifts.Integration.API.Controllers.SyncKronosToShiftsController">
             <summary>

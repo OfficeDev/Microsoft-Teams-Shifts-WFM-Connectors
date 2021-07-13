@@ -849,20 +849,20 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// <param name="shift">The Shift model.</param>
         /// <param name="userMappingEntity">Details of user from User Mapping Entity table.</param>
         /// <param name="kronosUniqueId">Kronos Unique Id corresponds to the shift.</param>
-        /// <param name="kronosTimeZone">The time zone to use when converting from UTC to Kronos time.</param>
         /// <returns>Mapping Entity associated with Team and Shift.</returns>
         public TeamsShiftMappingEntity CreateShiftMappingEntity(
            Models.IntegrationAPI.Shift shift,
            AllUserMappingEntity userMappingEntity,
-           string kronosUniqueId,
-           string kronosTimeZone)
+           string kronosUniqueId)
         {
+            var startDateTime = DateTime.SpecifyKind(shift.SharedShift.StartDateTime, DateTimeKind.Utc);
+
             return new TeamsShiftMappingEntity
             {
                 AadUserId = shift?.UserId,
                 KronosUniqueId = kronosUniqueId,
                 KronosPersonNumber = userMappingEntity?.RowKey,
-                ShiftStartDate = this.UTCToKronosTimeZone(shift.SharedShift.StartDateTime, kronosTimeZone),
+                ShiftStartDate = startDateTime,
             };
         }
 
