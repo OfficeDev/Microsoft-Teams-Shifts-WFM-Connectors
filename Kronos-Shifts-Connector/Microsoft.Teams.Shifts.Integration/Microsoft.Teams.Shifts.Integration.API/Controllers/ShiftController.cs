@@ -420,12 +420,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 { "CallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
             };
 
-            var startDateTime = responseModel.SharedShift.StartDateTime.DateTime;
-            var endDateTime = responseModel.SharedShift.EndDateTime.DateTime;
-            DateTime.SpecifyKind(responseModel.SharedShift.StartDateTime.DateTime, DateTimeKind.Utc);
-            DateTime.SpecifyKind(responseModel.SharedShift.EndDateTime.DateTime, DateTimeKind.Utc);
-            var utcStartDateTime = startDateTime.ToUniversalTime();
-            var utcEndDateTime = endDateTime.ToUniversalTime();
+            var startDateTime = DateTime.SpecifyKind(responseModel.SharedShift.StartDateTime.DateTime, DateTimeKind.Utc);
+            var endDateTime = DateTime.SpecifyKind(responseModel.SharedShift.EndDateTime.DateTime, DateTimeKind.Utc);
 
             TeamsShiftMappingEntity shiftMappingEntity = new TeamsShiftMappingEntity
             {

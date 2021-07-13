@@ -244,35 +244,21 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         [Route("/v1/teams/{aadGroupId}/read")]
         public async Task<ActionResult> UpdateShiftEligibility([FromRoute] string aadGroupId)
         {
-            var request = this.Request;
-            var requestHeaders = request.Headers;
-            Microsoft.Extensions.Primitives.StringValues passThroughValue = string.Empty;
             var configurationEntity = (await this.configurationProvider.GetConfigurationsAsync().ConfigureAwait(false))?.FirstOrDefault();
-            var isRequestFromCorrectIntegration = requestHeaders.TryGetValue("X-MS-WFMPassthrough", out passThroughValue) &&
-                                           string.Equals(passThroughValue, configurationEntity.WorkforceIntegrationId, StringComparison.Ordinal);
             byte[] secretKeyBytes = Encoding.UTF8.GetBytes(configurationEntity?.WorkforceIntegrationSecret);
-            var jsonModel = await DecryptEncryptedRequestFromShiftsAsync(
-                secretKeyBytes,
-                this.Request).ConfigureAwait(false);
+            var jsonModel = await DecryptEncryptedRequestFromShiftsAsync(secretKeyBytes, this.Request).ConfigureAwait(false);
 
-            var mappedTeams = await this.teamDepartmentMappingProvider.GetMappedTeamDetailsAsync(aadGroupId).ConfigureAwait(false);
-            var mappedTeam = mappedTeams.FirstOrDefault();
+            var mappedTeam = (await this.teamDepartmentMappingProvider.GetMappedTeamDetailsAsync(aadGroupId).ConfigureAwait(false)).FirstOrDefault();
             var kronosTimeZone = string.IsNullOrEmpty(mappedTeam?.KronosTimeZone) ? this.appSettings.KronosTimeZone : mappedTeam.KronosTimeZone;
 
             var integrationResponse = await this.swapShiftEligibilityController.GetEligibleShiftsForSwappingAsync(jsonModel.Requests[0].Id, kronosTimeZone)
                 .ConfigureAwait(false);
 
-            IntegrationApiResponseModel responseModel = new IntegrationApiResponseModel();
-            List<ShiftsIntegResponse> responseModelList = new List<ShiftsIntegResponse>();
-            string responseModelStr = string.Empty;
-
-            var updateProps = new Dictionary<string, string>()
+            IntegrationApiResponseModel responseModel = new IntegrationApiResponseModel
             {
-                { "IncomingAadGroupId", aadGroupId },
+                ShiftsIntegResponses = new List<ShiftsIntegResponse> { integrationResponse },
             };
-
-            responseModel.ShiftsIntegResponses = responseModelList;
-            responseModelStr = JsonConvert.SerializeObject(responseModel);
+            string responseModelStr = JsonConvert.SerializeObject(responseModel);
 
             return this.Ok(responseModelStr);
         }

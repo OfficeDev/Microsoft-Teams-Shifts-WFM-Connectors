@@ -6,7 +6,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
+    using System.Linq;
     using System.Net.Http;
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights;
@@ -20,9 +20,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using static Microsoft.AspNetCore.Http.StatusCodes;
     using static Microsoft.Teams.App.KronosWfc.Common.ApiConstants;
     using static Microsoft.Teams.Shifts.Integration.API.Common.ResponseHelper;
+    using SwapResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.SwapShiftEligibility.Response;
 
     /// <summary>
-    /// This is the SwapShiftController.
+    /// This is the SwapShiftEligibilityController.
     /// </summary>
     [Authorize(Policy = "AppID")]
     [Route("api/[controller]")]
@@ -61,6 +62,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             this.shiftMappingEntityProvider = shiftMappingEntityProvider;
         }
 
+        /// <summary>
+        /// Gets a list of eligible shifts to be swapped with.
+        /// </summary>
+        /// <param name="shiftId">The id of the shift that wants to be swapped.</param>
+        /// <param name="kronosTimeZone">The time zone of the for the user swapping the shift.</param>
+        /// <returns>A <see cref="Task{ShiftsIntegResponse}"/> representing the result of the asynchronous operation.</returns>
         public async Task<ShiftsIntegResponse> GetEligibleShiftsForSwappingAsync(string shiftId, string kronosTimeZone)
         {
             var configuration = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
@@ -72,29 +79,68 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var shift = await this.shiftMappingEntityProvider.GetShiftMappingEntityByRowKeyAsync(shiftId).ConfigureAwait(false);
             var startDate = this.utility.UTCToKronosTimeZone(shift.ShiftStartDate, kronosTimeZone);
             var endDate = this.utility.UTCToKronosTimeZone(shift.ShiftEndDate, kronosTimeZone);
+
+            if (startDate < DateTime.Now || endDate < DateTime.Now)
+            {
+                return CreateResponse(null, Status404NotFound, "You can't swap a shift that has already started.");
+            }
+
             var offeredStartTime = startDate.TimeOfDay.ToString();
             var offeredEndTime = endDate.TimeOfDay.ToString();
             var offeredShiftDate = this.utility.ConvertToKronosDate(startDate);
             var swapShiftDate = this.utility.ConvertToKronosDate(endDate);
-            var employeeNumber = shift.KronosPersonNumber;
+            var days = this.GetDateList();
+            List<TeamsShiftMappingEntity> eligibleShifts = new List<TeamsShiftMappingEntity>();
 
-            var eligibleEmployees = await this.swapShiftEligibilityActivity.SendEligibilityRequestAsync(
-                new Uri(configuration.WfmEndPoint), configuration.KronosSession, offeredStartTime, offeredEndTime, offeredShiftDate, swapShiftDate, employeeNumber).ConfigureAwait(false);
-
-            if (eligibleEmployees?.Status != Success)
+            foreach (var day in days)
             {
-                return CreateResponse(null, Status404NotFound, "There are no employees eligible to take this shift.");
+                var kronosDate = this.utility.ConvertToKronosDate(day);
+                var eligibleEmployees = await this.swapShiftEligibilityActivity.SendEligibilityRequestAsync(
+                    new Uri(configuration.WfmEndPoint),
+                    configuration.KronosSession,
+                    offeredStartTime,
+                    offeredEndTime,
+                    offeredShiftDate,
+                    kronosDate,
+                    shift.KronosPersonNumber)
+                        .ConfigureAwait(false);
+
+                if (eligibleEmployees?.Status != Success)
+                {
+                    return CreateResponse(null, Status404NotFound, $"There was an error finding employees eligible to take this shift on {day.ToShortDateString()}.");
+                }
+
+                var userLists = eligibleEmployees.Person.Select(x => new UserDetailsModel { KronosPersonNumber = x.PersonNumber });
+
+                var monthPartition = Utility.GetMonthPartition(kronosDate, kronosDate)[0];
+
+                eligibleShifts.AddRange(await this.shiftMappingEntityProvider.GetAllShiftMappingEntitiesInBatchAsync(
+                    userLists,
+                    monthPartition,
+                    kronosDate,
+                    kronosDate).ConfigureAwait(false));
             }
 
-            var monthPartition = Utility.GetMonthPartition(swapShiftDate, swapShiftDate)[0];
-            var users = new List<UserDetailsModel>();
-            foreach (var p in eligibleEmployees.Person)
+            return CreateResponse(
+                shift.RowKey,
+                Status200OK,
+                eligibleShifts
+                    .Where(x => x.ShiftStartDate > DateTime.Now)
+                    .Select(x => x.RowKey));
+        }
+
+        private List<DateTime> GetDateList()
+        {
+            List<DateTime> dates = new List<DateTime>();
+            var startDate = DateTime.Today;
+            var endDate = startDate.AddDays(int.Parse(this.appSettings.FutureSwapEligibilityDays));
+
+            for (DateTime i = startDate; i <= endDate; i = i.AddDays(1))
             {
-                users.Add(new UserDetailsModel { KronosPersonNumber = p.PersonNumber });
+                dates.Add(i);
             }
 
-            var list = await this.shiftMappingEntityProvider.GetAllShiftMappingEntitiesInBatchAsync(users, monthPartition, swapShiftDate, swapShiftDate).ConfigureAwait(false);
-            return CreateResponse(null, Status200OK, "Successfully added eligible shifts.");
+            return dates;
         }
     }
 }
