@@ -37,12 +37,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             this.telemetryClient = telemetryClient;
         }
 
-        /// <summary>
-        /// Retrieves a single TeamDepartmentMapping from Azure Table storage.
-        /// </summary>
-        /// <param name="workForceIntegrationId">WorkForceIntegration Id.</param>
-        /// <param name="orgJobPath">Kronos Org Job Path.</param>
-        /// <returns>A unit of execution that boxes a <see cref="ShiftsTeamDepartmentMappingEntity"/>.</returns>
+        /// <inheritdoc/>
         public async Task<TeamToDepartmentJobMappingEntity> GetTeamMappingForOrgJobPathAsync(
             string workForceIntegrationId,
             string orgJobPath)
@@ -72,71 +67,22 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         }
 
         /// <summary>
-        /// Saving or updating a mapping between a Team in Shifts and Department in Kronos.
-        /// </summary>
-        /// <param name="shiftsTeamsDetails">Shifts team details fetched via Graph api calls.</param>
-        /// <param name="kronosDepartmentName">Department name fetched from Kronos.</param>
-        /// <param name="workforceIntegrationId">The Workforce Integration Id.</param>
-        /// <param name="tenantId">Tenant Id.</param>
-        /// <returns>A unit of execution.</returns>
-        public async Task<bool> SaveOrUpdateShiftsTeamDepartmentMappingAsync(
-            Team shiftsTeamsDetails,
-            string kronosDepartmentName,
-            string workforceIntegrationId,
-            string tenantId)
-        {
-            try
-            {
-                var saveOrUpdateShiftsProps = new Dictionary<string, string>()
-                {
-                    { "CallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
-                    { "ExecutingAssembly", Assembly.GetCallingAssembly().GetName().Name },
-                };
-
-                this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, saveOrUpdateShiftsProps);
-
-                // TODO: The following code is for experimental purpose and incomplete, will change the code once the blockers are removed.
-                var entity = new ShiftsTeamDepartmentMappingEntity()
-                {
-                    PartitionKey = tenantId,
-                    RowKey = kronosDepartmentName,
-                    ShiftsTeamName = shiftsTeamsDetails?.DisplayName,
-                    TeamId = shiftsTeamsDetails.Id,
-                    WorkforceIntegrationId = workforceIntegrationId,
-                    IsArchived = shiftsTeamsDetails.IsArchived ?? false,
-                    TeamDescription = shiftsTeamsDetails.Description,
-                    TeamInternalId = shiftsTeamsDetails.InternalId,
-                    TeamUrl = shiftsTeamsDetails.WebUrl,
-                };
-
-                var result = await this.StoreOrUpdateEntityAsync(entity).ConfigureAwait(false);
-                return result.HttpStatusCode == (int)HttpStatusCode.NoContent;
-            }
-            catch (Exception ex)
-            {
-                this.telemetryClient.TrackException(ex);
-                return false;
-                throw;
-            }
-        }
-
-        /// <summary>
         /// Function that will return all of the teams that are mapped in Azure Table storage.
         /// </summary>
         /// <returns>A list of the mapped teams.</returns>
-        public async Task<List<ShiftsTeamDepartmentMappingEntity>> GetMappedTeamDetailsAsync()
+        public async Task<List<TeamToDepartmentJobMappingEntity>> GetMappedTeamDetailsAsync()
         {
             await this.EnsureInitializedAsync().ConfigureAwait(false);
 
             // Table query
-            TableQuery<ShiftsTeamDepartmentMappingEntity> query = new TableQuery<ShiftsTeamDepartmentMappingEntity>();
+            TableQuery<TeamToDepartmentJobMappingEntity> query = new TableQuery<TeamToDepartmentJobMappingEntity>();
 
             // Results list
-            List<ShiftsTeamDepartmentMappingEntity> results = new List<ShiftsTeamDepartmentMappingEntity>();
+            List<TeamToDepartmentJobMappingEntity> results = new List<TeamToDepartmentJobMappingEntity>();
             TableContinuationToken continuationToken = null;
             do
             {
-                TableQuerySegment<ShiftsTeamDepartmentMappingEntity> queryResults = await this.teamDepartmentMappingCloudTable.ExecuteQuerySegmentedAsync(query, continuationToken).ConfigureAwait(false);
+                TableQuerySegment<TeamToDepartmentJobMappingEntity> queryResults = await this.teamDepartmentMappingCloudTable.ExecuteQuerySegmentedAsync(query, continuationToken).ConfigureAwait(false);
                 continuationToken = queryResults.ContinuationToken;
                 results.AddRange(queryResults.Results);
             }
@@ -201,7 +147,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// </summary>
         /// <param name="entity">Mapping entity reference.</param>
         /// <returns>http status code representing the asynchronous operation.</returns>
-        public async Task<bool> TeamsToDepartmentMappingAsync(TeamToDepartmentJobMappingEntity entity)
+        public async Task<bool> SaveOrUpdateTeamsToDepartmentMappingAsync(TeamToDepartmentJobMappingEntity entity)
         {
             if (entity is null)
             {
@@ -313,6 +259,5 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
 
             return results;
         }
-
     }
 }

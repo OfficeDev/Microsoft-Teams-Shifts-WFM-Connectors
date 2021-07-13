@@ -26,12 +26,6 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Models
         public string KronosSlots { get; set; }
 
         /// <summary>
-        /// Gets or sets the SchedulingGroupId.
-        /// </summary>
-        [JsonProperty("SchedulingGroupId")]
-        public string SchedulingGroupId { get; set; }
-
-        /// <summary>
         /// Gets or sets the OrgJobPath.
         /// </summary>
         [JsonProperty("OrgJobPath")]

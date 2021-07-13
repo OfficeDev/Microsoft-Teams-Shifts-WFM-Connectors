@@ -131,7 +131,7 @@
     <comment>The message to log into ApplicationInsights when the month partitions are null.</comment>
   </data>
   <data name="SetUpNotDoneMessage" xml:space="preserve">
-    <value>Please verify workforce integration, user mapping, team department mapping are done and sync start date and end date are in "M/dd/yyyy" format where start date &lt; end date.</value>
+    <value>Please verify workforce integration, user mapping, team department mapping are done.</value>
     <comment>The message for checking the required setup tokens.</comment>
   </data>
   <data name="TeamDepartmentDetailsNotFoundMessage" xml:space="preserve">

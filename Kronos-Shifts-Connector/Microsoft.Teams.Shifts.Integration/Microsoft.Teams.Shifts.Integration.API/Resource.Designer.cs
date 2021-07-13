@@ -610,7 +610,7 @@ namespace Microsoft.Teams.Shifts.Integration.API {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please verify workforce integration, user mapping, team department mapping are done and sync start date and end date are in &quot;M/dd/yyyy&quot; format where start date &lt; end date..
+        ///   Looks up a localized string similar to Please verify workforce integration, user mapping, team department mapping are done..
         /// </summary>
         public static string SetUpNotDoneMessage {
             get {
