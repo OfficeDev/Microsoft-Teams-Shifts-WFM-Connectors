@@ -304,7 +304,6 @@
     <Compile Include="Models\ResponseModels\IntegrationApiResponseModel.cs" />
     <Compile Include="Models\ResponseModels\ShiftsIntegResponse.cs" />
     <Compile Include="Models\ShiftMappingEntity.cs" />
-    <Compile Include="Models\ShiftsTeamDepartmentMappingEntity.cs" />
     <Compile Include="Models\Graph\GraphTokenResponse.cs" />
     <Compile Include="Models\RequestModels\WorkforceIntegration.cs" />
     <Compile Include="Models\SwapShiftMappingEntity.cs" />

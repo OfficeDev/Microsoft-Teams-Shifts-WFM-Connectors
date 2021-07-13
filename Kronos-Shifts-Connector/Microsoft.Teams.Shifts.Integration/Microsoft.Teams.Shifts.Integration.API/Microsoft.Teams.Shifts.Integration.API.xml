@@ -620,13 +620,12 @@
             <param name="kronosTimeZone">The time zone to use when converting the times.</param>
             <returns>A string that represents the Kronos Unique Id.</returns>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.CreateUniqueId(Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.RequestModels.OpenShift.OpenShiftRequestModel,System.String,System.String)">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.CreateUniqueId(Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.RequestModels.OpenShift.OpenShiftRequestModel,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TeamToDepartmentJobMappingEntity)">
             <summary>
             Method overload for the OpenShift entity.
             </summary>
             <param name="shift">The OpenShift entity.</param>
-            <param name="schedulingGroupId">The scheduling group id.</param>
-            <param name="kronosTimeZone">The time zone to use when converting the times.</param>
+            <param name="orgJobMapping">The org job mapping.</param>
             <returns>A string that is the Unique ID of the open shift.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.Utility.CalculateStartDateTime(Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests.GlobalTimeOffRequestItem,System.String)">
@@ -857,7 +856,7 @@
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.OpenShiftController.ProcessOpenShiftsAsync(System.String)">
             <summary>
-            Get the list of time off details from Kronos and push it to Shifts.
+            Get the list of open shift entities from Kronos and pushes to Shifts.
             </summary>
             <param name="isRequestFromLogicApp">Checks if request is coming from logic app or portal.</param>
             <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation.</returns>
@@ -1041,11 +1040,11 @@
             <param name="isRequestFromLogicApp">Checks if request is coming from logic app or portal.</param>
             <returns>A <see cref="T:System.Threading.Tasks.Task"/> representing the asynchronous operation.</returns>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController.ProcessShiftEntitiesBatchAsync(System.String,System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TeamsShiftMappingEntity},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.API.Models.Request.Shift},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.UserDetailsModel},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.UserDetailsModel},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TeamsShiftMappingEntity},System.Collections.Generic.IEnumerable{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.UserDetailsModel},Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.Response,System.String)">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController.ProcessShiftEntitiesBatchAsync(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.SetupDetails,System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TeamsShiftMappingEntity},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.API.Models.Request.Shift},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.UserDetailsModel},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.UserDetailsModel},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TeamsShiftMappingEntity},System.Collections.Generic.IEnumerable{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.UserDetailsModel},Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.Response,System.String)">
             <summary>
             Method to process the shift entities in a batch manner.
             </summary>
-            <param name="accessToken">The MS Graph Access token.</param>
+            <param name="configurationDetails">The configuration details.</param>
             <param name="lookUpEntriesFoundList">The lookUp entries that have been found.</param>
             <param name="shiftsNotFoundList">The shifts that have not been found.</param>
             <param name="userModelList">The users list.</param>
@@ -1056,21 +1055,21 @@
             <param name="monthPartitionKey">The monthwise partition.</param>
             <returns>A unit of execution.</returns>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController.CreateEntryShiftsEntityMappingAsync(System.String,System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.UserDetailsModel},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.API.Models.Request.Shift},System.String)">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController.CreateEntryShiftsEntityMappingAsync(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.SetupDetails,System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.UserDetailsModel},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.API.Models.Request.Shift},System.String)">
             <summary>
             Method that will create the new Shifts Entity Mapping.
             </summary>
-            <param name="accessToken">The Graph Access token.</param>
+            <param name="configurationDetails">The configuration details.</param>
             <param name="userModelNotFoundList">The list of users that have not been found.</param>
             <param name="notFoundShifts">The shifts which have not been found.</param>
             <param name="monthPartitionKey">The monthwise partition key.</param>
             <returns>A unit of execution.</returns>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController.DeleteOrphanDataShiftsEntityMappingAsync(System.String,System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TeamsShiftMappingEntity},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.UserDetailsModel},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TeamsShiftMappingEntity})">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController.DeleteOrphanDataShiftsEntityMappingAsync(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.SetupDetails,System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TeamsShiftMappingEntity},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.UserDetailsModel},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TeamsShiftMappingEntity})">
             <summary>
             Method to delete an orphan shift - happens when a shift is deleted from Kronos.
             </summary>
-            <param name="accessToken">The MS Graph Access Token.</param>
+            <param name="configurationDetails">The configuration details.</param>
             <param name="lookUpDataFoundList">The list of data that has been found.</param>
             <param name="userModelList">The list of users.</param>
             <param name="lookUpData">The Shifts look up data.</param>
@@ -1602,11 +1601,11 @@
             <param name="approved">Whether the request should be approved (true) or denied (false).</param>
             <returns>Returns a bool that represents whether the request was a success (true) or not (false).</returns>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffController.ProcessTimeOffEntitiesBatchAsync(System.String,System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TimeOffMappingEntity},System.Collections.Generic.List{Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests.GlobalTimeOffRequestItem},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.UserDetailsModel},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.UserDetailsModel},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.PayCodeToTimeOffReasonsMappingEntity},System.Collections.Generic.IEnumerable{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.UserDetailsModel},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TimeOffMappingEntity},System.Collections.Generic.List{Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests.GlobalTimeOffRequestItem},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.PayCodeToTimeOffReasonsMappingEntity},Microsoft.Graph.GraphServiceClient,System.String,System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.PayCodeToTimeOffReasonsMappingEntity},System.Collections.Generic.List{Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests.GlobalTimeOffRequestItem},System.String)">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffController.ProcessTimeOffEntitiesBatchAsync(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.SetupDetails,System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TimeOffMappingEntity},System.Collections.Generic.List{Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests.GlobalTimeOffRequestItem},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.UserDetailsModel},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.UserDetailsModel},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.PayCodeToTimeOffReasonsMappingEntity},System.Collections.Generic.IEnumerable{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.UserDetailsModel},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TimeOffMappingEntity},System.Collections.Generic.List{Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests.GlobalTimeOffRequestItem},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.PayCodeToTimeOffReasonsMappingEntity},Microsoft.Graph.GraphServiceClient,System.String,System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.PayCodeToTimeOffReasonsMappingEntity},System.Collections.Generic.List{Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests.GlobalTimeOffRequestItem})">
             <summary>
             This method processes all of the time offs in a batch manner.
             </summary>
-            <param name="accessToken">The MS Graph Access token.</param>
+            <param name="configurationDetails">The configuration details.</param>
             <param name="timeOffLookUpEntriesFoundList">The look up Time Off entries that are not found.</param>
             <param name="timeOffNotFoundList">The list of time offs that are not found.</param>
             <param name="userModelList">The list of users.</param>
@@ -1660,29 +1659,26 @@
             <param name="monthPartitionKey">The month partition key.</param>
             <returns>A unit of execution.</returns>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffController.ApproveTimeOffRequestAsync(System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TimeOffMappingEntity},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.UserDetailsModel},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.PayCodeToTimeOffReasonsMappingEntity},System.String,System.String,System.Collections.Generic.List{Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests.GlobalTimeOffRequestItem},System.String)">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffController.ApproveTimeOffRequestAsync(System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TimeOffMappingEntity},System.Collections.Generic.List{Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.UserDetailsModel},Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.SetupDetails,System.String,System.Collections.Generic.List{Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests.GlobalTimeOffRequestItem})">
             <summary>
             Method that approves a time off request.
             </summary>
             <param name="timeOffLookUpEntriesFoundList">The time off look up entries that are found.</param>
             <param name="user">The user.</param>
-            <param name="timeOffReasonId">The Shifts Time Off Reason ID.</param>
-            <param name="accessToken">The MS Graph Access Token.</param>
+            <param name="configurationDetails">The configuration details.</param>
             <param name="monthPartitionKey">The monthwise partition key.</param>
             <param name="globalTimeOffRequestDetails">The list of global time off request details.</param>
-            <param name="workforceIntegrationId">The workforce integration id.</param>
             <returns>A unit of execution.</returns>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffController.DeclineTimeOffRequestAsync(Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests.GlobalTimeOffRequestItem,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.UserDetailsModel,System.String,System.String,System.String,System.String)">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffController.DeclineTimeOffRequestAsync(Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests.GlobalTimeOffRequestItem,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.UserDetailsModel,System.String,Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.SetupDetails,System.String)">
             <summary>
             Method to decline the time off request.
             </summary>
             <param name="globalTimeOffRequestItem">The time off request item.</param>
             <param name="user">The user.</param>
             <param name="timeOffId">The time off Id from Kronos.</param>
-            <param name="accessToken">The MS Graph Access token.</param>
+            <param name="configurationDetails">The configuration details.</param>
             <param name="monthPartitionKey">The month wise partition key.</param>
-            <param name="workforceIntegrationId">The workforce integration id.</param>
             <returns>A unit of execution.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TimeOffController.AddorUpdateTimeOffMappingAsync(Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TimeOffMappingEntity)">
@@ -3406,7 +3402,7 @@
         </member>
         <member name="P:Microsoft.Teams.Shifts.Integration.API.Resource.SetUpNotDoneMessage">
             <summary>
-              Looks up a localized string similar to Please verify workforce integration, user mapping, team department mapping are done and sync start date and end date are in &quot;M/dd/yyyy&quot; format where start date &lt; end date..
+              Looks up a localized string similar to Please verify workforce integration, user mapping, team department mapping are done..
             </summary>
         </member>
         <member name="P:Microsoft.Teams.Shifts.Integration.API.Resource.SetupStatusMessage">

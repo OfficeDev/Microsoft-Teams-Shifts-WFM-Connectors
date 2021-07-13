@@ -362,7 +362,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                                 var isSuccess = await this.graphUtility.AddWFInScheduleAsync(entity.TeamId, graphClient, configEntity.WorkforceIntegrationId, accessToken).ConfigureAwait(false);
                                 if (isSuccess)
                                 {
-                                    await this.teamDepartmentMappingProvider.TeamsToDepartmentMappingAsync(entity).ConfigureAwait(false);
+                                    await this.teamDepartmentMappingProvider.SaveOrUpdateTeamsToDepartmentMappingAsync(entity).ConfigureAwait(false);
                                 }
                             }
                         }
