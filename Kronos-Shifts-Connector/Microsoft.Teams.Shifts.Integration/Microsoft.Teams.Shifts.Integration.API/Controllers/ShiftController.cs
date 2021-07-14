@@ -77,6 +77,84 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         }
 
         /// <summary>
+        /// Creates a shift mapping entity to be stored in the table.
+        /// </summary>
+        /// <param name="shift">The shift received from Shifts.</param>
+        /// <param name="uniqueId">The unique ID for the shift.</param>
+        /// <param name="kronoUserId">The user id of the user in Kronos.</param>
+        /// <returns>Returns a <see cref="TeamsShiftMappingEntity"/>.</returns>
+        public TeamsShiftMappingEntity CreateNewShiftMappingEntity(
+            Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Shift shift,
+            string uniqueId,
+            string kronoUserId)
+        {
+            var createNewShiftMappingEntityProps = new Dictionary<string, string>()
+            {
+                { "GraphShiftId", shift?.Id },
+                { "KronosUniqueId", uniqueId },
+                { "CallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
+            };
+
+            var startDateTime = DateTime.SpecifyKind(shift.SharedShift.StartDateTime, DateTimeKind.Utc);
+            var endDateTime = DateTime.SpecifyKind(shift.SharedShift.EndDateTime, DateTimeKind.Utc);
+
+            TeamsShiftMappingEntity shiftMappingEntity = new TeamsShiftMappingEntity
+            {
+                AadUserId = shift.UserId,
+                KronosUniqueId = uniqueId,
+                KronosPersonNumber = kronoUserId,
+                ShiftStartDate = startDateTime,
+                ShiftEndDate = endDateTime,
+            };
+
+            this.telemetryClient.TrackTrace("Creating new shift mapping entity.", createNewShiftMappingEntityProps);
+
+            return shiftMappingEntity;
+        }
+
+        /// <summary>
+        /// Gets the shifts for a given Kronos user id.
+        /// </summary>
+        /// <param name="kronosUserId">A Kronos user id.</param>
+        /// <param name="partitionKey">The partition key for the shift.</param>
+        /// <returns>The schedule response.</returns>
+        public async Task<App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.Response> GetShiftsForUser(string kronosUserId, string partitionKey)
+        {
+            App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.Response shiftsResponse = null;
+
+            this.utility.SetQuerySpan(Convert.ToBoolean(false, CultureInfo.InvariantCulture), out string shiftStartDate, out string shiftEndDate);
+            var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
+
+            // Check whether date range are in correct format.
+            var isCorrectDateRange = Utility.CheckDates(shiftStartDate, shiftEndDate);
+            if (!isCorrectDateRange)
+            {
+                throw new Exception($"{Resource.SyncShiftsFromKronos} - Query date was invalid.");
+            }
+
+            if ((bool)allRequiredConfigurations?.IsAllSetUpExists)
+            {
+                string queryStartDate = Utility.GetFirstDayInMonth(partitionKey);
+                string queryEndDate = Utility.GetLastDayInMonth(partitionKey);
+
+                var user = new List<ResponseHyperFindResult>()
+                        {
+                            new ResponseHyperFindResult { PersonNumber = kronosUserId },
+                        };
+
+                // Get shift response for a batch of users.
+                shiftsResponse = await this.upcomingShiftsActivity.ShowUpcomingShiftsInBatchAsync(
+                        new Uri(allRequiredConfigurations.WfmEndPoint),
+                        allRequiredConfigurations.KronosSession,
+                        DateTime.Now.ToString(queryStartDate, CultureInfo.InvariantCulture),
+                        DateTime.Now.ToString(queryEndDate, CultureInfo.InvariantCulture),
+                        user).ConfigureAwait(false);
+            }
+
+            return shiftsResponse;
+        }
+
+        /// <summary>
         /// Start shifts sync from Kronos to Shifts.
         /// </summary>
         /// <param name="isRequestFromLogicApp">Checks if request is coming from logic app or portal.</param>
@@ -421,42 +499,20 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 { "CallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
             };
 
+            var startDateTime = DateTime.SpecifyKind(responseModel.SharedShift.StartDateTime.DateTime, DateTimeKind.Utc);
+            var endDateTime = DateTime.SpecifyKind(responseModel.SharedShift.EndDateTime.DateTime, DateTimeKind.Utc);
+
             TeamsShiftMappingEntity shiftMappingEntity = new TeamsShiftMappingEntity
             {
                 ETag = responseModel.ETag,
                 AadUserId = responseModel.UserId,
                 KronosUniqueId = uniqueId,
                 KronosPersonNumber = user.KronosPersonNumber,
-                ShiftStartDate = this.utility.UTCToKronosTimeZone(responseModel.SharedShift.StartDateTime, user.KronosTimeZone),
+                ShiftStartDate = startDateTime,
+                ShiftEndDate = endDateTime,
             };
 
-            this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, createNewShiftMappingEntityProps);
-
-            return shiftMappingEntity;
-        }
-
-        public TeamsShiftMappingEntity CreateNewShiftMappingEntity(
-            Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Shift shift,
-            string uniqueId,
-            string kronoUserId,
-            string kronosTimeZone)
-        {
-            var createNewShiftMappingEntityProps = new Dictionary<string, string>()
-            {
-                { "GraphShiftId", shift?.Id },
-                { "KronosUniqueId", uniqueId },
-                { "CallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
-            };
-
-            TeamsShiftMappingEntity shiftMappingEntity = new TeamsShiftMappingEntity
-            {
-                AadUserId = shift.UserId,
-                KronosUniqueId = uniqueId,
-                KronosPersonNumber = kronoUserId,
-                ShiftStartDate = this.utility.UTCToKronosTimeZone(shift.SharedShift.StartDateTime, kronosTimeZone),
-            };
-
-            this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, createNewShiftMappingEntityProps);
+            this.telemetryClient.TrackTrace("Creating new shift mapping entity.", createNewShiftMappingEntityProps);
 
             return shiftMappingEntity;
         }
@@ -494,44 +550,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             }
 
             return kronosUsers;
-        }
-
-        /// <summary>
-        /// Gets the shifts for a given Kronos user id.
-        /// </summary>
-        /// <param name="kronosUserId">A Kronos user id.</param>
-        /// <param name="partitionKey">The partition key for the shift.</param>
-        /// <returns>The schedule response.</returns>
-        public async Task<App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.Response> GetShiftsForUser(string kronosUserId, string partitionKey)
-        {
-            App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.Response shiftsResponse = null;
-
-            this.utility.SetQuerySpan(Convert.ToBoolean(false, CultureInfo.InvariantCulture), out string shiftStartDate, out string shiftEndDate);
-            var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
-
-            // Check whether date range are in correct format.
-            var isCorrectDateRange = Utility.CheckDates(shiftStartDate, shiftEndDate);
-
-            if (allRequiredConfigurations != null && (bool)allRequiredConfigurations?.IsAllSetUpExists && isCorrectDateRange)
-            {
-                string queryStartDate = Utility.GetFirstDayInMonth(partitionKey);
-                string queryEndDate = Utility.GetLastDayInMonth(partitionKey);
-
-                var user = new List<ResponseHyperFindResult>()
-                        {
-                            new ResponseHyperFindResult { PersonNumber = kronosUserId },
-                        };
-
-                // Get shift response for a batch of users.
-                shiftsResponse = await this.upcomingShiftsActivity.ShowUpcomingShiftsInBatchAsync(
-                        new Uri(allRequiredConfigurations.WfmEndPoint),
-                        allRequiredConfigurations.KronosSession,
-                        DateTime.Now.ToString(queryStartDate, CultureInfo.InvariantCulture),
-                        DateTime.Now.ToString(queryEndDate, CultureInfo.InvariantCulture),
-                        user).ConfigureAwait(false);
-            }
-
-            return shiftsResponse;
         }
     }
 }

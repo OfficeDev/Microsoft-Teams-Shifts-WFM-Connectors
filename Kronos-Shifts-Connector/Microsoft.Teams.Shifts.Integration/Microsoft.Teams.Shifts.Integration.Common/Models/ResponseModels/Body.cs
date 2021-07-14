@@ -5,6 +5,7 @@
 namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels
 {
     using Newtonsoft.Json;
+    using System.Collections.Generic;
 
     /// <summary>
     /// This class models the body of the Integration Service API response.
@@ -22,5 +23,11 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels
         /// </summary>
         [JsonProperty("error")]
         public ResponseError Error { get; set; }
+
+        /// <summary>
+        /// Gets or sets the list of eligible shifts.
+        /// </summary>
+        [JsonProperty("data")]
+        public IEnumerable<string> Data { get; set; }
     }
 }
