@@ -128,7 +128,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             // Check whether date range are in correct format.
             var isCorrectDateRange = Utility.CheckDates(shiftStartDate, shiftEndDate);
 
-            if (allRequiredConfigurations != null && (bool)allRequiredConfigurations?.IsAllSetUpExists && isCorrectDateRange)
+            if ((bool)allRequiredConfigurations?.IsAllSetUpExists)
             {
                 string queryStartDate = Utility.GetFirstDayInMonth(partitionKey);
                 string queryEndDate = Utility.GetLastDayInMonth(partitionKey);
