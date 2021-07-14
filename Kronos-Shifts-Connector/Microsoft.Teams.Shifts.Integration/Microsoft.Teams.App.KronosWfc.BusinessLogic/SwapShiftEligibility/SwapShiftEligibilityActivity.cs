@@ -36,17 +36,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShiftEligibility
             this.apiHelper = apiHelper;
         }
 
-        /// <summary>
-        /// Sends the swap eligibility request.
-        /// </summary>
-        /// <param name="endPointUrl">The Kronos WFC endpoint URL.</param>
-        /// <param name="jSession">JSession.</param>
-        /// <param name="offeredStartTime">The start time for the requestor's shift.</param>
-        /// <param name="offeredEndTime">The end time for the requestor's shift.</param>
-        /// <param name="offeredShiftDate">The date for the requestor's shift.</param>
-        /// <param name="requestedShiftDate">The date time for the potential requested shift.</param>
-        /// <param name="employeeNumber">The employee number of the requestor.</param>
-        /// <returns>Response object.</returns>
+        /// <inheritdoc/>
         public async Task<Response> SendEligibilityRequestAsync(
             Uri endPointUrl,
             string jSession,
