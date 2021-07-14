@@ -127,6 +127,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             // Check whether date range are in correct format.
             var isCorrectDateRange = Utility.CheckDates(shiftStartDate, shiftEndDate);
+            if (!isCorrectDateRange)
+            {
+                throw new Exception($"{Resource.SyncShiftsFromKronos} - Query date was invalid.");
+            }
 
             if ((bool)allRequiredConfigurations?.IsAllSetUpExists)
             {
