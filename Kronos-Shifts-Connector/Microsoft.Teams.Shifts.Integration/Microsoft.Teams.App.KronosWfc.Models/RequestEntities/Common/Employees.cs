@@ -18,6 +18,11 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common
         [XmlElement]
         public List<PersonIdentity> PersonIdentity { get; set; }
 
+        /// <summary>
+        /// Creates an <see cref="Employees"/> object with a <see cref="List{T}"/> of <see cref="PersonIdentity.PersonIdentity"/>objects.
+        /// </summary>
+        /// <param name="kronosIds">The kronos ids of the users.</param>
+        /// <returns>A <see cref="Employees"/> object with a populated <see cref="List{T}"/> of <see cref="PersonIdentity.PersonIdentity"/> objects.</returns>
         public Employees Create(params string[] kronosIds)
         {
             this.PersonIdentity = new List<PersonIdentity>();

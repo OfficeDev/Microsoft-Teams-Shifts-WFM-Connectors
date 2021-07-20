@@ -180,10 +180,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     (DateTime)(shift.DraftShift?.EndDateTime ?? shift.SharedShift?.EndDateTime), mappedTeam.KronosTimeZone),
                 DisplayName = shift.DraftShift?.DisplayName ?? shift.SharedShift?.DisplayName ?? null,
             };
-            var monthPartitionKey = new Lazy<List<string>>(
-                () => Utility.GetMonthPartition(
-                    this.utility.ConvertToKronosDate(shiftDetails.StartDateTime),
-                    this.utility.ConvertToKronosDate(shiftDetails.EndDateTime)));
 
             var creationResponse = await this.upcomingShiftsActivity.CreateShift(
                 new Uri(allRequiredConfigurations.WfmEndPoint),
@@ -200,7 +196,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 return CreateBadResponse(shift.Id, error: "Shift was not created successfully in Kronos.");
             }
 
-            await this.CreateAndStoreShiftMapping(shift, user, mappedTeam, monthPartitionKey.Value).ConfigureAwait(false);
+            var monthPartitionKey = Utility.GetMonthPartition(
+                this.utility.ConvertToKronosDate(shiftDetails.StartDateTime),
+                this.utility.ConvertToKronosDate(shiftDetails.EndDateTime));
+
+            await this.CreateAndStoreShiftMapping(shift, user, mappedTeam, monthPartitionKey).ConfigureAwait(false);
 
             return CreateSuccessfulResponse(shift.Id);
         }
