@@ -1054,6 +1054,31 @@
             <param name="partitionKey">The partition key for the shift.</param>
             <returns>The schedule response.</returns>
         </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController.DeleteShiftFromKronos(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Shift,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.AllUserMappingEntity,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TeamToDepartmentJobMappingEntity)">
+            <summary>
+            Deletes the shift from Kronos and the database.
+            </summary>
+            <param name="shift">The shift to remove.</param>
+            <param name="user">The user the shift is for.</param>
+            <param name="mappedTeam">The team the user is in.</param>
+            <returns>A response for teams.</returns>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController.AddShiftToKronos(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Shift,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.AllUserMappingEntity,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TeamToDepartmentJobMappingEntity)">
+            <summary>
+            Adds the shift to Kronos and the database.
+            </summary>
+            <param name="shift">The shift to add.</param>
+            <param name="user">The user the shift is for.</param>
+            <param name="mappedTeam">The team the user is in.</param>
+            <returns>A response for teams.</returns>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController.DeleteShiftMapping(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Shift)">
+            <summary>
+            Removes a shift mapping entity.
+            </summary>
+            <param name="shift">A shift from Shifts.</param>
+            <returns>A task.</returns>
+        </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController.CreateAndStoreShiftMapping(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Shift,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.AllUserMappingEntity,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TeamToDepartmentJobMappingEntity,System.Collections.Generic.List{System.String})">
             <summary>
             Creates and stores a shift mapping entity.
@@ -1365,9 +1390,9 @@
             <param name="aadGroupId">The AAD Group Id for the Team.</param>
             <returns>An action result.</returns>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.ProcessShiftAcknowledgementAsync(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming.RequestModel,System.Collections.Generic.Dictionary{System.String,System.String},Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TeamToDepartmentJobMappingEntity)">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.ProcessShiftAsync(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming.RequestModel,System.Collections.Generic.Dictionary{System.String,System.String},Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TeamToDepartmentJobMappingEntity,System.Boolean)">
             <summary>
-            This method will create the necessary acknowledgement response whenever Shift entities are created, or updated.
+            This method will manage how Shift entities are created or updated.
             </summary>
             <param name="jsonModel">The decrypted JSON payload.</param>
             <param name="updateProps">The type of <see cref="T:System.Collections.Generic.Dictionary`2"/> that contains properties that are being logged to ApplicationInsights.</param>

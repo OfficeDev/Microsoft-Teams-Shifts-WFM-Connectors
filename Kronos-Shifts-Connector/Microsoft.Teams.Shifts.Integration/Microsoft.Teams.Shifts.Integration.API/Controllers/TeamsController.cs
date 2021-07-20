@@ -221,7 +221,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             // Check if payload is for shift.
             else if (jsonModel.Requests.Any(x => x.Url.Contains("/shifts/", StringComparison.InvariantCulture)))
             {
-                integrationResponse = await this.ProcessShiftAcknowledgementAsync(jsonModel, updateProps, mappedTeam).ConfigureAwait(false);
+                integrationResponse = await this.ProcessShiftAsync(jsonModel, updateProps, mappedTeam, isRequestFromCorrectIntegration).ConfigureAwait(false);
                 responseModelList.Add(integrationResponse);
             }
 
@@ -263,29 +263,46 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         }
 
         /// <summary>
-        /// This method will create the necessary acknowledgement response whenever Shift entities are created, or updated.
+        /// This method will manage how Shift entities are created, updated, and deleted.
         /// </summary>
         /// <param name="jsonModel">The decrypted JSON payload.</param>
         /// <param name="updateProps">The type of <see cref="Dictionary{TKey, TValue}"/> that contains properties that are being logged to ApplicationInsights.</param>
         /// <returns>A type of <see cref="ShiftsIntegResponse"/>.</returns>
-        private async Task<ShiftsIntegResponse> ProcessShiftAcknowledgementAsync(RequestModel jsonModel, Dictionary<string, string> updateProps, TeamToDepartmentJobMappingEntity mappedTeam)
+        private async Task<ShiftsIntegResponse> ProcessShiftAsync(RequestModel jsonModel, Dictionary<string, string> updateProps, TeamToDepartmentJobMappingEntity mappedTeam, bool isFromLogicApp)
         {
-            if (jsonModel.Requests.First(x => x.Url.Contains("/shifts/", StringComparison.InvariantCulture)).Body != null)
+            var requestBody = jsonModel.Requests.First(x => x.Url.Contains("/shifts/", StringComparison.InvariantCulture)).Body;
+            ShiftsIntegResponse response = null;
+
+            if (requestBody != null)
             {
-                var incomingShift = JsonConvert.DeserializeObject<Shift>(jsonModel.Requests.First(x => x.Url.Contains("/shifts/", StringComparison.InvariantCulture)).Body.ToString());
-
-                updateProps.Add("ShiftId", incomingShift.Id);
-                updateProps.Add("UserIdForShift", incomingShift.UserId);
-                updateProps.Add("SchedulingGroupId", incomingShift.SchedulingGroupId);
-
+                var shift = this.Get<Shift>(jsonModel, "/shifts/");
                 var user = await this.userMappingProvider.GetUserMappingEntityAsyncNew(
-                    incomingShift.UserId,
-                    incomingShift.SchedulingGroupId).ConfigureAwait(false);
+                    shift.UserId,
+                    shift.SchedulingGroupId).ConfigureAwait(false);
 
-                await this.shiftController.AddShiftToKronos(incomingShift, user, mappedTeam).ConfigureAwait(false);
+                if (isFromLogicApp)
+                {
+                    return GenerateResponse(shift.Id, HttpStatusCode.OK, null, null);
+                }
 
-                var integrationResponse = GenerateResponse(incomingShift.Id, HttpStatusCode.OK, null, null);
-                return integrationResponse;
+                try
+                {
+                    if (jsonModel.Requests.Any(c => c.Method == "POST"))
+                    {
+                        response = await this.shiftController.AddShiftToKronos(shift, user, mappedTeam).ConfigureAwait(false);
+                    }
+                    else if (jsonModel.Requests.Any(c => c.Method == "PUT"))
+                    {
+                        response = await this.shiftController.DeleteShiftFromKronos(shift, user, mappedTeam).ConfigureAwait(false);
+                    }
+                }
+                catch (Exception)
+                {
+                    this.telemetryClient.TrackTrace("Exception dealing with WFI call regarding shifts." + JsonConvert.SerializeObject(response));
+                    throw;
+                }
+
+                return response;
             }
             else
             {
@@ -294,13 +311,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                 // The outbound acknowledgement does not honor the null Etag, 502 Bad Gateway is thrown if so.
                 // Checking for the null eTag value, from the attributes in the payload and generate a non-null value in GenerateResponse method.
-                var integrationResponse = GenerateResponse(
+                return GenerateResponse(
                     nullBodyShiftId,
                     HttpStatusCode.OK,
                     null,
                     null);
-
-                return integrationResponse;
             }
         }
 

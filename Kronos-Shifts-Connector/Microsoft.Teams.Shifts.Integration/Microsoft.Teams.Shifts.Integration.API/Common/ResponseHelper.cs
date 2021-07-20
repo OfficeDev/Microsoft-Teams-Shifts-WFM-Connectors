@@ -4,8 +4,8 @@
 
 namespace Microsoft.Teams.Shifts.Integration.API.Common
 {
+    using System;
     using System.Collections.Generic;
-    using System.Net;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels;
 
     /// <summary>
@@ -29,7 +29,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
                 Body = new Body
                 {
                     Error = new ResponseError { Message = error },
-                    ETag = null,
+                    ETag = Guid.NewGuid().ToString(),
                 },
             };
         }
