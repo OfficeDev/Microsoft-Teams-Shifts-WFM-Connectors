@@ -16,7 +16,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
     using Microsoft.ApplicationInsights;
     using Microsoft.Extensions.Caching.Distributed;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.Logon;
-    using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.OpenShift.Batch;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests;
     using Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
