@@ -1,4 +1,4 @@
-﻿// <copyright file="UpcomingShiftsActivity.cs" company="Microsoft">
+// <copyright file="UpcomingShiftsActivity.cs" company="Microsoft">
 //  Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
@@ -14,9 +14,9 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
     using Microsoft.Teams.App.KronosWfc.Service;
     using static Microsoft.Teams.App.KronosWfc.BusinessLogic.Common.XmlHelper;
     using static Microsoft.Teams.App.KronosWfc.Common.ApiConstants;
-    using CreateRequest = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Shifts.ShiftRequest;
-    using CreateResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Common.Response;
-    using CreateScheduleRequest = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Shifts.Schedule;
+    using CRUDRequest = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Shifts.ShiftRequest;
+    using CRUDResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Common.Response;
+    using CRUDScheduleRequest = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Shifts.Schedule;
     using Response = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.Response;
     using ScheduleRequest = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Schedule;
 
@@ -40,15 +40,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
             this.apiHelper = apiHelper;
         }
 
-        /// <summary>
-        /// This method retrieves all the upcoming shifts.
-        /// </summary>
-        /// <param name="endPointUrl">The Kronos API endpoint.</param>
-        /// <param name="jSession">The Kronos "token".</param>
-        /// <param name="startDate">The query start date.</param>
-        /// <param name="endDate">The query end date.</param>
-        /// <param name="employees">The list of users to query.</param>
-        /// <returns>A unit of execution that contains the response.</returns>
+        /// <inheritdoc/>
         public async Task<Response> ShowUpcomingShiftsInBatchAsync(
             Uri endPointUrl,
             string jSession,
@@ -79,7 +71,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
         }
 
         /// <inheritdoc/>
-        public async Task<CreateResponse> CreateShift(
+        public async Task<CRUDResponse> CreateShift(
             Uri endpoint,
             string jSession,
             string shiftDate,
@@ -104,7 +96,34 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
                 SoapEnvClose,
                 jSession).ConfigureAwait(false);
 
-            return response.ProcessResponse<CreateResponse>(this.telemetryClient);
+            return response.ProcessResponse<CRUDResponse>(this.telemetryClient);
+        }
+
+        /// <inheritdoc/>
+        public async Task<CRUDResponse> DeleteShift(
+            Uri endpoint,
+            string jSession,
+            string shiftDate,
+            string jobPath,
+            string kronosId,
+            string startTime,
+            string endTime)
+        {
+            var deleteShiftRequest = this.DeleteShiftRequest(
+                shiftDate,
+                jobPath,
+                kronosId,
+                startTime,
+                endTime);
+
+            var response = await this.apiHelper.SendSoapPostRequestAsync(
+                endpoint,
+                SoapEnvOpen,
+                deleteShiftRequest,
+                SoapEnvClose,
+                jSession).ConfigureAwait(false);
+
+            return response.ProcessResponse<CRUDResponse>(this.telemetryClient);
         }
 
         private string CreateShiftRequest(
@@ -115,10 +134,10 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
             string startTime,
             string endTime)
         {
-            CreateRequest req = new CreateRequest
+            CRUDRequest req = new CRUDRequest
             {
                 Action = AddScheduleItems,
-                Schedule = new CreateScheduleRequest
+                Schedule = new CRUDScheduleRequest
                 {
                     Employees = new Employees().Create(kronosId),
                     OrgJobPath = jobPath,
@@ -131,6 +150,38 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
                             {
                                 Employee = new Employee().Create(kronosId),
                                 ShiftLabel = shiftLabel,
+                                StartDate = shiftDate,
+                                ShiftSegments = new ShiftSegments().Create(startTime, endTime, 1, 1, jobPath),
+                            },
+                        },
+                    },
+                },
+            };
+
+            return req.XmlSerialize();
+        }
+
+        private string DeleteShiftRequest(
+            string shiftDate,
+            string jobPath,
+            string kronosId,
+            string startTime,
+            string endTime)
+        {
+            CRUDRequest req = new CRUDRequest
+            {
+                Action = RemoveSpecifiedScheduleItems,
+                Schedule = new CRUDScheduleRequest
+                {
+                    Employees = new Employees().Create(kronosId),
+                    OrgJobPath = jobPath,
+                    QueryDateSpan = $"{shiftDate}-{shiftDate}",
+                    ScheduleItems = new ScheduleItems
+                    {
+                        ScheduleShift = new List<ScheduleShift>
+                        {
+                            new ScheduleShift
+                            {
                                 StartDate = shiftDate,
                                 ShiftSegments = new ShiftSegments().Create(startTime, endTime, 1, 1, jobPath),
                             },
