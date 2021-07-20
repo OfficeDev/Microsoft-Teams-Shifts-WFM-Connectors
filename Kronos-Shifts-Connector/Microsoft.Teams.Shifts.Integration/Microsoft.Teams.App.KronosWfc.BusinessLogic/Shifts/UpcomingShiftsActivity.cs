@@ -1,4 +1,4 @@
-// <copyright file="UpcomingShiftsActivity.cs" company="Microsoft">
+﻿// <copyright file="UpcomingShiftsActivity.cs" company="Microsoft">
 //  Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
@@ -6,19 +6,19 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights;
     using Microsoft.Teams.App.KronosWfc.Common;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common;
+    using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Shifts;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.HyperFind;
     using Microsoft.Teams.App.KronosWfc.Service;
     using static Microsoft.Teams.App.KronosWfc.BusinessLogic.Common.XmlHelper;
     using static Microsoft.Teams.App.KronosWfc.Common.ApiConstants;
-    using CRUDRequest = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Shifts.ShiftRequest;
     using CRUDResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Common.Response;
-    using CRUDScheduleRequest = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Shifts.Schedule;
+    using Request = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Shifts.ShiftRequest;
     using Response = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.Response;
-    using ScheduleRequest = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Schedule;
 
     /// <summary>
     /// Upcoming shifts activity class.
@@ -134,10 +134,10 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
             string startTime,
             string endTime)
         {
-            CRUDRequest req = new CRUDRequest
+            Request req = new Request
             {
                 Action = AddScheduleItems,
-                Schedule = new CRUDScheduleRequest
+                Schedule = new Schedule
                 {
                     Employees = new Employees().Create(kronosId),
                     OrgJobPath = jobPath,
@@ -168,10 +168,10 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
             string startTime,
             string endTime)
         {
-            CRUDRequest req = new CRUDRequest
+            Request req = new Request
             {
                 Action = RemoveSpecifiedScheduleItems,
-                Schedule = new CRUDScheduleRequest
+                Schedule = new Schedule
                 {
                     Employees = new Employees().Create(kronosId),
                     OrgJobPath = jobPath,
@@ -195,18 +195,15 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
 
         private string CreateUpcomingShiftsRequestEmployees(string startDate, string endDate, List<ResponseHyperFindResult> employees)
         {
-            ScheduleRequest.Request request = new ScheduleRequest.Request()
+            Request request = new Request()
             {
-                Action = ApiConstants.LoadAction,
-                Schedule = new ScheduleRequest.ScheduleReq()
+                Action = LoadAction,
+                Schedule = new Schedule()
                 {
-                    Employees = new List<ScheduleRequest.PersonIdentity>(),
+                    Employees = new Employees().Create(employees.Select(x => x.PersonNumber).ToArray()),
                     QueryDateSpan = $"{startDate} - {endDate}",
                 },
             };
-
-            var scheduledEmployees = employees.ConvertAll(x => new ScheduleRequest.PersonIdentity { PersonNumber = x.PersonNumber });
-            request.Schedule.Employees.AddRange(scheduledEmployees);
 
             return request.XmlSerialize();
         }
