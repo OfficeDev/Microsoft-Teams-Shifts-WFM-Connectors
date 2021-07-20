@@ -13,17 +13,26 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Shifts
     public class Schedule
     {
         /// <summary>
-        /// The Query Date Span for the request.
+        /// The date span to query for the request.
         /// </summary>
         [XmlAttribute]
         public string QueryDateSpan { get; set; }
 
+        /// <summary>
+        /// The job for the request.
+        /// </summary>
         [XmlAttribute]
         public string OrgJobPath { get; set; }
 
+        /// <summary>
+        /// The employees that the request concerns.
+        /// </summary>
         [XmlElement]
         public Employees Employees { get; set; }
 
+        /// <summary>
+        /// The specific schedule items containing information about the shift.
+        /// </summary>
         [XmlElement]
         public ScheduleItems ScheduleItems { get; set; }
     }
