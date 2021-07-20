@@ -6,14 +6,17 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Threading.Tasks;
-    using System.Xml.Linq;
     using Microsoft.ApplicationInsights;
     using Microsoft.Teams.App.KronosWfc.Common;
+    using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.HyperFind;
     using Microsoft.Teams.App.KronosWfc.Service;
     using static Microsoft.Teams.App.KronosWfc.BusinessLogic.Common.XmlHelper;
+    using static Microsoft.Teams.App.KronosWfc.Common.ApiConstants;
+    using CreateRequest = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Shifts.ShiftRequest;
+    using CreateResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Common.Response;
+    using CreateScheduleRequest = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Shifts.Schedule;
     using Response = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.Response;
     using ScheduleRequest = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Schedule;
 
@@ -65,14 +68,78 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
 
             var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
                 endPointUrl,
-                ApiConstants.SoapEnvOpen,
+                SoapEnvOpen,
                 xmlScheduleRequest,
-                ApiConstants.SoapEnvClose,
+                SoapEnvClose,
                 jSession).ConfigureAwait(false);
 
             var scheduleResponse = tupleResponse.ProcessResponse<Response>(this.telemetryClient);
             scheduleResponse.Jsession = tupleResponse.Item2;
             return scheduleResponse;
+        }
+
+        /// <inheritdoc/>
+        public async Task<CreateResponse> CreateShift(
+            Uri endpoint,
+            string jSession,
+            string shiftDate,
+            string jobPath,
+            string kronosId,
+            string shiftLabel,
+            string startTime,
+            string endTime)
+        {
+            var createShiftRequest = this.CreateShiftRequest(
+                shiftDate,
+                jobPath,
+                kronosId,
+                shiftLabel,
+                startTime,
+                endTime);
+
+            var response = await this.apiHelper.SendSoapPostRequestAsync(
+                endpoint,
+                SoapEnvOpen,
+                createShiftRequest,
+                SoapEnvClose,
+                jSession).ConfigureAwait(false);
+
+            return response.ProcessResponse<CreateResponse>(this.telemetryClient);
+        }
+
+        private string CreateShiftRequest(
+            string shiftDate,
+            string jobPath,
+            string kronosId,
+            string shiftLabel,
+            string startTime,
+            string endTime)
+        {
+            CreateRequest req = new CreateRequest
+            {
+                Action = AddScheduleItems,
+                Schedule = new CreateScheduleRequest
+                {
+                    Employees = new Employees().Create(kronosId),
+                    OrgJobPath = jobPath,
+                    QueryDateSpan = $"{shiftDate}-{shiftDate}",
+                    ScheduleItems = new ScheduleItems
+                    {
+                        ScheduleShift = new List<ScheduleShift>
+                        {
+                            new ScheduleShift
+                            {
+                                Employee = new Employee().Create(kronosId),
+                                ShiftLabel = shiftLabel,
+                                StartDate = shiftDate,
+                                ShiftSegments = new ShiftSegments().Create(startTime, endTime, 1, 1, jobPath),
+                            },
+                        },
+                    },
+                },
+            };
+
+            return req.XmlSerialize();
         }
 
         private string CreateUpcomingShiftsRequestEmployees(string startDate, string endDate, List<ResponseHyperFindResult> employees)

@@ -1,10 +1,11 @@
-﻿// <copyright file="ResponseHelper.cs" company="Microsoft">
+// <copyright file="ResponseHelper.cs" company="Microsoft">
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
 namespace Microsoft.Teams.Shifts.Integration.API.Common
 {
     using System.Collections.Generic;
+    using System.Net;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels;
 
     /// <summary>
@@ -13,7 +14,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
     public static class ResponseHelper
     {
         /// <summary>
-        /// Creates a Response for Shifts.
+        /// Creates a response for Shifts.
         /// </summary>
         /// <param name="id">The id for the response.</param>
         /// <param name="statusCode">The status code of the response.</param>
@@ -33,6 +34,29 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
             };
         }
 
+        /// <summary>
+        /// Creates a successful response for Shifts.
+        /// </summary>
+        /// <param name="id">The id for the response.</param>
+        /// <returns>A <see cref="ShiftsIntegResponse"/>.</returns>
+        public static ShiftsIntegResponse CreateSuccessfulResponse(string id)
+        {
+            return CreateResponse(id, 200);
+        }
+
+        /// <summary>
+        /// Creates a bad response for Shifts.
+        /// </summary>
+        /// <param name="id">The id for the response.</param>
+        /// <param name="statusCode">The status code of the response, defaults to 400.</param>
+        /// <param name="error">The error message for the response.</param>
+        /// <returns>A <see cref="ShiftsIntegResponse"/>.</returns>
+        public static ShiftsIntegResponse CreateBadResponse(string id, int statusCode = 400, string error = null)
+        {
+            return CreateResponse(id, statusCode, error);
+        }
+
+        /// <summary>
         /// <summary>
         /// Creates a Response for a swap shift eligibility request.
         /// </summary>

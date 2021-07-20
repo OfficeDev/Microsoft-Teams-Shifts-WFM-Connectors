@@ -22,8 +22,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.Teams.Shifts.Integration.API.Models.Request;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers;
+    using Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels;
     using Newtonsoft.Json;
+    using static Microsoft.Teams.App.KronosWfc.Common.ApiConstants;
+    using static Microsoft.Teams.Shifts.Integration.API.Common.ResponseHelper;
     using IntegrationApi = Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI;
+    using ShiftsShift = Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Shift;
 
     /// <summary>
     /// Shift controller.
@@ -95,8 +99,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 { "CallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
             };
 
-            var startDateTime = DateTime.SpecifyKind(shift.SharedShift.StartDateTime, DateTimeKind.Utc);
-            var endDateTime = DateTime.SpecifyKind(shift.SharedShift.EndDateTime, DateTimeKind.Utc);
+            var startDateTime = DateTime.SpecifyKind((DateTime)(shift.SharedShift?.StartDateTime ?? shift.DraftShift?.StartDateTime), DateTimeKind.Utc);
+            var endDateTime = DateTime.SpecifyKind((DateTime)(shift.SharedShift?.EndDateTime ?? shift.DraftShift?.EndDateTime), DateTimeKind.Utc);
 
             TeamsShiftMappingEntity shiftMappingEntity = new TeamsShiftMappingEntity
             {
@@ -152,6 +156,68 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             }
 
             return shiftsResponse;
+        }
+
+        public async Task<ShiftsIntegResponse> AddShiftToKronos(ShiftsShift shift, AllUserMappingEntity user, TeamToDepartmentJobMappingEntity mappedTeam)
+        {
+            if (user.ErrorIfNull(shift.Id, "User could not be found.", out var response))
+            {
+                return response;
+            }
+
+            var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
+
+            if (((bool)allRequiredConfigurations?.IsAllSetUpExists).ErrorIfNull(shift.Id, "App configuration incorrect.", out response))
+            {
+                return response;
+            }
+
+            var shiftDetails = new
+            {
+                StartDateTime = this.utility.UTCToKronosTimeZone(
+                    (DateTime)(shift.DraftShift?.StartDateTime ?? shift.SharedShift?.StartDateTime), mappedTeam.KronosTimeZone),
+                EndDateTime = this.utility.UTCToKronosTimeZone(
+                    (DateTime)(shift.DraftShift?.EndDateTime ?? shift.SharedShift?.EndDateTime), mappedTeam.KronosTimeZone),
+                DisplayName = shift.DraftShift?.DisplayName ?? shift.SharedShift?.DisplayName ?? null,
+            };
+            var monthPartitionKey = new Lazy<List<string>>(
+                () => Utility.GetMonthPartition(
+                    this.utility.ConvertToKronosDate(shiftDetails.StartDateTime),
+                    this.utility.ConvertToKronosDate(shiftDetails.EndDateTime)));
+
+            var creationResponse = await this.upcomingShiftsActivity.CreateShift(
+                new Uri(allRequiredConfigurations.WfmEndPoint),
+                allRequiredConfigurations.KronosSession,
+                this.utility.ConvertToKronosDate(shiftDetails.StartDateTime),
+                Utility.OrgJobPathKronosConversion(user.PartitionKey),
+                user.RowKey,
+                shiftDetails.DisplayName,
+                shiftDetails.StartDateTime.TimeOfDay.ToString(),
+                shiftDetails.EndDateTime.TimeOfDay.ToString()).ConfigureAwait(false);
+
+            if (creationResponse.Status != Success)
+            {
+                return CreateBadResponse(shift.Id, error: "Shift was not created successfully in Kronos.");
+            }
+
+            await this.CreateAndStoreShiftMapping(shift, user, mappedTeam, monthPartitionKey.Value).ConfigureAwait(false);
+
+            return CreateSuccessfulResponse(shift.Id);
+        }
+
+        /// <summary>
+        /// Creates and stores a shift mapping entity.
+        /// </summary>
+        /// <param name="shift">A shift from Shifts.</param>
+        /// <param name="user">A user mapping entity.</param>
+        /// <param name="mappedTeam">A team mapping entity.</param>
+        /// <param name="monthPartitionKey">The partition key for the shift.</param>
+        /// <returns>A task.</returns>
+        private async Task CreateAndStoreShiftMapping(ShiftsShift shift, AllUserMappingEntity user, TeamToDepartmentJobMappingEntity mappedTeam, List<string> monthPartitionKey)
+        {
+            var kronosUniqueId = this.utility.CreateUniqueId(shift, mappedTeam.KronosTimeZone);
+            var shiftMappingEntity = this.CreateNewShiftMappingEntity(shift, kronosUniqueId, user.RowKey);
+            await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(shiftMappingEntity, shift.Id, monthPartitionKey[0]).ConfigureAwait(false);
         }
 
         /// <summary>

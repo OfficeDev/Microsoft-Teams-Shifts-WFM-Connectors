@@ -221,8 +221,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             // Check if payload is for shift.
             else if (jsonModel.Requests.Any(x => x.Url.Contains("/shifts/", StringComparison.InvariantCulture)))
             {
-                // Acknowledge with status OK for shift as solution does not synchronize shifts into Kronos, Kronos being single source of truth for front line manager actions.
-                integrationResponse = ProcessShiftAcknowledgement(jsonModel, updateProps);
+                integrationResponse = await this.ProcessShiftAcknowledgementAsync(jsonModel, updateProps, mappedTeam).ConfigureAwait(false);
                 responseModelList.Add(integrationResponse);
             }
 
@@ -269,7 +268,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="jsonModel">The decrypted JSON payload.</param>
         /// <param name="updateProps">The type of <see cref="Dictionary{TKey, TValue}"/> that contains properties that are being logged to ApplicationInsights.</param>
         /// <returns>A type of <see cref="ShiftsIntegResponse"/>.</returns>
-        private static ShiftsIntegResponse ProcessShiftAcknowledgement(RequestModel jsonModel, Dictionary<string, string> updateProps)
+        private async Task<ShiftsIntegResponse> ProcessShiftAcknowledgementAsync(RequestModel jsonModel, Dictionary<string, string> updateProps, TeamToDepartmentJobMappingEntity mappedTeam)
         {
             if (jsonModel.Requests.First(x => x.Url.Contains("/shifts/", StringComparison.InvariantCulture)).Body != null)
             {
@@ -278,6 +277,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 updateProps.Add("ShiftId", incomingShift.Id);
                 updateProps.Add("UserIdForShift", incomingShift.UserId);
                 updateProps.Add("SchedulingGroupId", incomingShift.SchedulingGroupId);
+
+                var user = await this.userMappingProvider.GetUserMappingEntityAsyncNew(
+                    incomingShift.UserId,
+                    incomingShift.SchedulingGroupId).ConfigureAwait(false);
+
+                await this.shiftController.AddShiftToKronos(incomingShift, user, mappedTeam).ConfigureAwait(false);
 
                 var integrationResponse = GenerateResponse(incomingShift.Id, HttpStatusCode.OK, null, null);
                 return integrationResponse;

@@ -17,5 +17,16 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common
         /// </summary>
         [XmlElement]
         public List<PersonIdentity> PersonIdentity { get; set; }
+
+        public Employees Create(params string[] kronosIds)
+        {
+            this.PersonIdentity = new List<PersonIdentity>();
+            foreach (var id in kronosIds)
+            {
+                this.PersonIdentity.Add(new PersonIdentity { PersonNumber = id });
+            }
+
+            return this;
+        }
     }
 }
