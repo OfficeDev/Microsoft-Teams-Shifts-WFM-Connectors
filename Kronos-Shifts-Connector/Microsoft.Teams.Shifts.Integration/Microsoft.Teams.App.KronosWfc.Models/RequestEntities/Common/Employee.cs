@@ -4,6 +4,7 @@
 
 namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common
 {
+    using System.Collections.Generic;
     using System.Xml.Serialization;
 
     /// <summary>
@@ -16,5 +17,17 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common
         /// </summary>
         [XmlElement]
         public PersonIdentity PersonIdentity { get; set; }
+
+        /// <summary>
+        /// Creates a list of employees.
+        /// </summary>
+        /// <param name="id">The kronos id of the user.</param>
+        /// <returns>A <see cref="List{T}"/> of <see cref="Employee"/> objects.</returns>
+        public List<Employee> Create(string id)
+        {
+            this.PersonIdentity = new PersonIdentity { PersonNumber = id };
+
+            return new List<Employee> { this };
+        }
     }
 }

@@ -139,7 +139,7 @@ namespace Microsoft.Teams.Shifts.Integration.API
                 provider.GetRequiredService<TelemetryClient>(),
                 provider.GetRequiredService<IApiHelper>()));
 
-            services.AddSingleton<IUpcomingShiftsActivity, UpcomingShiftsActivity>((provider) => new UpcomingShiftsActivity(
+            services.AddSingleton<IShiftsActivity, ShiftsActivity>((provider) => new ShiftsActivity(
                 provider.GetRequiredService<TelemetryClient>(),
                 provider.GetRequiredService<IApiHelper>()));
 
@@ -201,7 +201,7 @@ namespace Microsoft.Teams.Shifts.Integration.API
 
             services.AddSingleton((provider) => new ShiftController(
                 provider.GetRequiredService<IUserMappingProvider>(),
-                provider.GetRequiredService<IUpcomingShiftsActivity>(),
+                provider.GetRequiredService<IShiftsActivity>(),
                 provider.GetRequiredService<TelemetryClient>(),
                 provider.GetRequiredService<Utility>(),
                 provider.GetRequiredService<IShiftMappingEntityProvider>(),
