@@ -27,6 +27,15 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
             }
         }
 
+        /// <summary>
+        /// Returns a response if a given object is null.
+        /// </summary>
+        /// <typeparam name="T">The type of the object.</typeparam>
+        /// <param name="potentialNullObject">The object.</param>
+        /// <param name="id">The id for the response.</param>
+        /// <param name="error">The error message for the response.</param>
+        /// <param name="response">The output of the response.</param>
+        /// <returns><see cref="bool"/> to denote whether it passed or failed.</returns>
         public static bool ErrorIfNull<T>(
             this T potentialNullObject,
             string id,
