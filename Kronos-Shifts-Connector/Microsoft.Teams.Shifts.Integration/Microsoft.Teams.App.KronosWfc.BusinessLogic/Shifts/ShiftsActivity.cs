@@ -24,17 +24,17 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
     /// Upcoming shifts activity class.
     /// </summary>
     [Serializable]
-    public class UpcomingShiftsActivity : IUpcomingShiftsActivity
+    public class ShiftsActivity : IShiftsActivity
     {
         private readonly TelemetryClient telemetryClient;
         private readonly IApiHelper apiHelper;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="UpcomingShiftsActivity"/> class.
+        /// Initializes a new instance of the <see cref="ShiftsActivity"/> class.
         /// </summary>
         /// <param name="telemetryClient">Having the telemetry capturing mechanism.</param>
         /// <param name="apiHelper">API helper to fetch tuple response by post soap requests.</param>
-        public UpcomingShiftsActivity(TelemetryClient telemetryClient, IApiHelper apiHelper)
+        public ShiftsActivity(TelemetryClient telemetryClient, IApiHelper apiHelper)
         {
             this.telemetryClient = telemetryClient;
             this.apiHelper = apiHelper;

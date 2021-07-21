@@ -15,7 +15,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
     /// <summary>
     /// Upcoming shift activity interface.
     /// </summary>
-    public interface IUpcomingShiftsActivity
+    public interface IShiftsActivity
     {
         /// <summary>
         /// Shows upcoming shifts.

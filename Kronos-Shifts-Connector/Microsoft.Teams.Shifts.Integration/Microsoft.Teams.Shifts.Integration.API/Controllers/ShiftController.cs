@@ -37,7 +37,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     public class ShiftController : ControllerBase
     {
         private readonly IUserMappingProvider userMappingProvider;
-        private readonly IUpcomingShiftsActivity upcomingShiftsActivity;
+        private readonly IShiftsActivity shiftsActivity;
         private readonly TelemetryClient telemetryClient;
         private readonly Utility utility;
         private readonly IShiftMappingEntityProvider shiftMappingEntityProvider;
@@ -60,7 +60,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="taskWrapper">Wrapper class instance for BackgroundTask.</param>
         public ShiftController(
             IUserMappingProvider userMappingProvider,
-            IUpcomingShiftsActivity upcomingShiftsActivity,
+            IShiftsActivity upcomingShiftsActivity,
             TelemetryClient telemetryClient,
             Utility utility,
             IShiftMappingEntityProvider shiftEntityMappingProvider,
@@ -70,7 +70,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             BackgroundTaskWrapper taskWrapper)
         {
             this.userMappingProvider = userMappingProvider;
-            this.upcomingShiftsActivity = upcomingShiftsActivity;
+            this.shiftsActivity = upcomingShiftsActivity;
             this.telemetryClient = telemetryClient;
             this.utility = utility;
             this.shiftMappingEntityProvider = shiftEntityMappingProvider;
@@ -147,7 +147,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         };
 
                 // Get shift response for a batch of users.
-                shiftsResponse = await this.upcomingShiftsActivity.ShowUpcomingShiftsInBatchAsync(
+                shiftsResponse = await this.shiftsActivity.ShowUpcomingShiftsInBatchAsync(
                         new Uri(allRequiredConfigurations.WfmEndPoint),
                         allRequiredConfigurations.KronosSession,
                         DateTime.Now.ToString(queryStartDate, CultureInfo.InvariantCulture),
@@ -181,7 +181,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 DisplayName = shift.DraftShift?.DisplayName ?? shift.SharedShift?.DisplayName ?? null,
             };
 
-            var creationResponse = await this.upcomingShiftsActivity.CreateShift(
+            var creationResponse = await this.shiftsActivity.CreateShift(
                 new Uri(allRequiredConfigurations.WfmEndPoint),
                 allRequiredConfigurations.KronosSession,
                 this.utility.ConvertToKronosDate(shiftDetails.StartDateTime),
@@ -285,7 +285,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                     queryEndDate).ConfigureAwait(false);
 
                                 // Get shift response for a batch of users.
-                                var shiftsResponse = await this.upcomingShiftsActivity.ShowUpcomingShiftsInBatchAsync(
+                                var shiftsResponse = await this.shiftsActivity.ShowUpcomingShiftsInBatchAsync(
                                         new Uri(allRequiredConfigurations.WfmEndPoint),
                                         allRequiredConfigurations.KronosSession,
                                         DateTime.Now.ToString(queryStartDate, CultureInfo.InvariantCulture),
