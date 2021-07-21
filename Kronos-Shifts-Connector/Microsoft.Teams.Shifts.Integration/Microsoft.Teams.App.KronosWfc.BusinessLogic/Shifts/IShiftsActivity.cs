@@ -38,7 +38,9 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
         /// </summary>
         /// <param name="endpoint">The endpoint for the request.</param>
         /// <param name="jSession">The Jsession token.</param>
-        /// <param name="shiftDate">The date of the shift.</param>
+        /// <param name="shiftStartDate">The start date of the shift.</param>
+        /// <param name="shiftEndDate">The end date of the shift.</param>
+        /// <param name="overADateBorder">Whether the shift spans over a date border.</param>
         /// <param name="jobPath">The job of the shift.</param>
         /// <param name="kronosId">The id of the employee.</param>
         /// <param name="shiftLabel">The label for the shift.</param>
@@ -48,19 +50,23 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
         Task<CRUDResponse> CreateShift(
             Uri endpoint,
             string jSession,
-            string shiftDate,
+            string shiftStartDate,
+            string shiftEndDate,
+            bool overADateBorder,
             string jobPath,
             string kronosId,
             string shiftLabel,
             string startTime,
-            string endTime); 
+            string endTime);
 
         /// <summary>
         /// Deletes a shift in Kronos.
         /// </summary>
         /// <param name="endpoint">The endpoint for the request.</param>
         /// <param name="jSession">The Jsession token.</param>
-        /// <param name="shiftDate">The date of the shift.</param>
+        /// <param name="shiftStartDate">The start date of the shift.</param>
+        /// <param name="shiftEndDate">The end date of the shift.</param>
+        /// <param name="overADateBorder">Whether the shift spans over a date border.</param>
         /// <param name="jobPath">The job of the shift.</param>
         /// <param name="kronosId">The id of the employee.</param>
         /// <param name="startTime">The start time of the shift.</param>
@@ -69,7 +75,9 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
         Task<CRUDResponse> DeleteShift(
             Uri endpoint,
             string jSession,
-            string shiftDate,
+            string shiftStartDate,
+            string shiftEndDate,
+            bool overADateBorder,
             string jobPath,
             string kronosId,
             string startTime,

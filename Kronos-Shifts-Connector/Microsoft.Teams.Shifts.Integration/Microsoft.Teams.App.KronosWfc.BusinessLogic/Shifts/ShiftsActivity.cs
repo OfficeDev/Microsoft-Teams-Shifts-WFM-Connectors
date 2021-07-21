@@ -14,6 +14,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Shifts;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.HyperFind;
     using Microsoft.Teams.App.KronosWfc.Service;
+    using static System.Globalization.CultureInfo;
     using static Microsoft.Teams.App.KronosWfc.BusinessLogic.Common.XmlHelper;
     using static Microsoft.Teams.App.KronosWfc.Common.ApiConstants;
     using CRUDResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Common.Response;
@@ -74,7 +75,9 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
         public async Task<CRUDResponse> CreateShift(
             Uri endpoint,
             string jSession,
-            string shiftDate,
+            string shiftStartDate,
+            string shiftEndDate,
+            bool overADateBorder,
             string jobPath,
             string kronosId,
             string shiftLabel,
@@ -82,7 +85,9 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
             string endTime)
         {
             var createShiftRequest = this.CreateShiftRequest(
-                shiftDate,
+                shiftStartDate,
+                shiftEndDate,
+                overADateBorder,
                 jobPath,
                 kronosId,
                 shiftLabel,
@@ -103,14 +108,18 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
         public async Task<CRUDResponse> DeleteShift(
             Uri endpoint,
             string jSession,
-            string shiftDate,
+            string shiftStartDate,
+            string shiftEndDate,
+            bool overADateBorder,
             string jobPath,
             string kronosId,
             string startTime,
             string endTime)
         {
             var deleteShiftRequest = this.DeleteShiftRequest(
-                shiftDate,
+                shiftStartDate,
+                shiftEndDate,
+                overADateBorder,
                 jobPath,
                 kronosId,
                 startTime,
@@ -127,13 +136,16 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
         }
 
         private string CreateShiftRequest(
-            string shiftDate,
+            string shiftStartDate,
+            string shiftEndDate,
+            bool overADateBorder,
             string jobPath,
             string kronosId,
             string shiftLabel,
             string startTime,
             string endTime)
         {
+            var secondDayNumber = overADateBorder ? 2 : 1;
             Request req = new Request
             {
                 Action = AddScheduleItems,
@@ -141,7 +153,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
                 {
                     Employees = new Employees().Create(kronosId),
                     OrgJobPath = jobPath,
-                    QueryDateSpan = $"{shiftDate}-{shiftDate}",
+                    QueryDateSpan = $"{shiftStartDate}-{shiftEndDate}",
                     ScheduleItems = new ScheduleItems
                     {
                         ScheduleShift = new List<ScheduleShift>
@@ -150,8 +162,8 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
                             {
                                 Employee = new Employee().Create(kronosId),
                                 ShiftLabel = shiftLabel,
-                                StartDate = shiftDate,
-                                ShiftSegments = new ShiftSegments().Create(startTime, endTime, 1, 1, jobPath),
+                                StartDate = shiftStartDate,
+                                ShiftSegments = new ShiftSegments().Create(startTime, endTime, 1, secondDayNumber, jobPath),
                             },
                         },
                     },
@@ -162,12 +174,15 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
         }
 
         private string DeleteShiftRequest(
-            string shiftDate,
+            string shiftStartDate,
+            string shiftEndDate,
+            bool overADateBorder,
             string jobPath,
             string kronosId,
             string startTime,
             string endTime)
         {
+            var secondDayNumber = overADateBorder ? 2 : 1;
             Request req = new Request
             {
                 Action = RemoveSpecifiedScheduleItems,
@@ -175,15 +190,15 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
                 {
                     Employees = new Employees().Create(kronosId),
                     OrgJobPath = jobPath,
-                    QueryDateSpan = $"{shiftDate}-{shiftDate}",
+                    QueryDateSpan = $"{shiftStartDate}-{shiftEndDate}",
                     ScheduleItems = new ScheduleItems
                     {
                         ScheduleShift = new List<ScheduleShift>
                         {
                             new ScheduleShift
                             {
-                                StartDate = shiftDate,
-                                ShiftSegments = new ShiftSegments().Create(startTime, endTime, 1, 1, jobPath),
+                                StartDate = shiftStartDate,
+                                ShiftSegments = new ShiftSegments().Create(startTime, endTime, 1, secondDayNumber, jobPath),
                             },
                         },
                     },
