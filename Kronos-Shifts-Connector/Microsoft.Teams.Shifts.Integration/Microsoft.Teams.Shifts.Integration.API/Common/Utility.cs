@@ -503,13 +503,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
             }
 
             var activities = shift.SharedShift?.Activities ?? shift.DraftShift?.Activities;
-            var startDateTime = (DateTime)(shift.SharedShift?.StartDateTime ?? shift.DraftShift?.StartDateTime);
-            var endDateTime = (DateTime)(shift.SharedShift?.EndDateTime ?? shift.DraftShift?.EndDateTime);
+            var shiftStartDateTime = (DateTime)(shift.SharedShift?.StartDateTime ?? shift.DraftShift?.StartDateTime);
+            var shiftEndDateTime = (DateTime)(shift.SharedShift?.EndDateTime ?? shift.DraftShift?.EndDateTime);
             var notes = shift.SharedShift?.Notes ?? shift.DraftShift?.Notes ?? string.Empty;
             var createUniqueIdProps = new Dictionary<string, string>()
             {
-                { "StartDateTimeStamp", startDateTime.ToString(CultureInfo.InvariantCulture) },
-                { "EndDateTimeStamp", endDateTime.ToString(CultureInfo.InvariantCulture) },
+                { "StartDateTimeStamp", shiftStartDateTime.ToString(CultureInfo.InvariantCulture) },
+                { "EndDateTimeStamp", shiftEndDateTime.ToString(CultureInfo.InvariantCulture) },
                 { "UserId", shift.UserId },
                 { "CallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
                 { "ExecutingAssembly", Assembly.GetExecutingAssembly().GetName().Name },
@@ -527,7 +527,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
             // From Kronos to Shifts sync, the notes are passed as an empty string.
             // Therefore, the notes are marked as empty while creating the unique ID from Shifts to Kronos.
             notes = string.Empty;
-            var stringToHash = $"{this.CalculateStartDateTime(startDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(endDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}{sb}{notes}{shift.UserId}";
+            var stringToHash = $"{this.CalculateStartDateTime(shiftStartDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(shiftEndDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}{sb}{notes}{shift.UserId}";
 
             this.telemetryClient.TrackTrace($"String to create hash - Shift (IntegrationAPI Model): {stringToHash}");
 
