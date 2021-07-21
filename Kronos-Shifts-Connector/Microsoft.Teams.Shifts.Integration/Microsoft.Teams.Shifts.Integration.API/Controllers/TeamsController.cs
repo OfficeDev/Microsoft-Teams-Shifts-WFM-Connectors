@@ -292,15 +292,18 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     {
                         response = await this.shiftController.AddShiftToKronos(shift, user, mappedTeam).ConfigureAwait(false);
                     }
-                    else if (jsonModel.Requests.Any(c => c.Method == "DELETE"))
-                    {
-                        // This looks like a bug with shifts sending a PUT for both edits and deletes, so this has been commented out.
-                        // response = await this.shiftController.DeleteShiftFromKronos(shift, user, mappedTeam).ConfigureAwait(false);
-                    }
                     else if (jsonModel.Requests.Any(c => c.Method == "PUT"))
                     {
-                        // This looks like a bug with shifts sending a PUT for both edits and deletes, so this has been commented out.
-                        // response = await this.shiftController.DeleteShiftFromKronos(shift, user, mappedTeam).ConfigureAwait(false);
+                        if (shift.DraftShift?.IsActive == false || shift.SharedShift?.IsActive == false)
+                        {
+                            // This looks like a bug with shifts sending a PUT for both edits and deletes, so it looks for the isActive flag instead.
+                            response = await this.shiftController.DeleteShiftFromKronos(shift, user, mappedTeam).ConfigureAwait(false);
+                        }
+                        else
+                        {
+                            // Edit goes here
+                            response = CreateSuccessfulResponse(shift.Id);
+                        }
                     }
                 }
                 catch (Exception)
