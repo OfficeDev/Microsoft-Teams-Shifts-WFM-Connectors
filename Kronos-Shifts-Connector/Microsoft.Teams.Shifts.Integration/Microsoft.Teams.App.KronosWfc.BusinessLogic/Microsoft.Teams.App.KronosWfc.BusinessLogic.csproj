@@ -205,8 +205,8 @@
     <Compile Include="SwapShift\SwapShiftActivity.cs" />
     <Compile Include="TimeOff\ITimeOffActivity.cs" />
     <Compile Include="TimeOff\TimeOffActivity.cs" />
-    <Compile Include="Shifts\IUpcomingShiftsActivity.cs" />
-    <Compile Include="Shifts\UpcomingShiftsActivity.cs" />
+    <Compile Include="Shifts\IShiftsActivity.cs" />
+    <Compile Include="Shifts\ShiftsActivity.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

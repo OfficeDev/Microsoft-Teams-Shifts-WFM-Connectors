@@ -189,6 +189,10 @@
     <Compile Include="RequestEntities\Comment.cs" />
     <Compile Include="RequestEntities\Comments.cs" />
     <Compile Include="RequestEntities\Common\Employee.cs" />
+    <Compile Include="RequestEntities\Common\ShiftSegments.cs" />
+    <Compile Include="RequestEntities\Common\ShiftSegment.cs" />
+    <Compile Include="RequestEntities\Common\ScheduleShift.cs" />
+    <Compile Include="RequestEntities\Common\ScheduleItems.cs" />
     <Compile Include="RequestEntities\Common\PersonIdentity.cs" />
     <Compile Include="RequestEntities\Common\RequestId.cs" />
     <Compile Include="RequestEntities\Common\RequestIds.cs" />
@@ -260,6 +264,8 @@
     <Compile Include="RequestEntities\ShiftsToKronos\SubmitRequest\RequestId.cs" />
     <Compile Include="RequestEntities\ShiftsToKronos\SubmitRequest\RequestIds.cs" />
     <Compile Include="RequestEntities\Common\EmployeeRequestMgmt.cs" />
+    <Compile Include="RequestEntities\Shifts\Schedule.cs" />
+    <Compile Include="RequestEntities\Shifts\ShiftRequest.cs" />
     <Compile Include="RequestEntities\SwapShiftEligibility\Request.cs" />
     <Compile Include="RequestEntities\SwapShiftEligibility\SwapShiftEmployees.cs" />
     <Compile Include="RequestEntities\SwapShift\GetDetailsRequest.cs" />
