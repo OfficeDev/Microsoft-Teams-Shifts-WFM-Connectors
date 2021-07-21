@@ -158,6 +158,63 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             return shiftsResponse;
         }
 
+        /// <summary>
+        /// Deletes the shift from Kronos and the database.
+        /// </summary>
+        /// <param name="shift">The shift to remove.</param>
+        /// <param name="user">The user the shift is for.</param>
+        /// <param name="mappedTeam">The team the user is in.</param>
+        /// <returns>A response for teams.</returns>
+        public async Task<ShiftsIntegResponse> DeleteShiftFromKronos(ShiftsShift shift, AllUserMappingEntity user, TeamToDepartmentJobMappingEntity mappedTeam)
+        {
+            if (user.ErrorIfNull(shift.Id, "User could not be found.", out var response))
+            {
+                return response;
+            }
+
+            var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
+
+            if (((bool)allRequiredConfigurations?.IsAllSetUpExists).ErrorIfNull(shift.Id, "App configuration incorrect.", out response))
+            {
+                return response;
+            }
+
+            var shiftDetails = new
+            {
+                KronosStartDateTime = this.utility.UTCToKronosTimeZone(
+                    (DateTime)(shift.DraftShift?.StartDateTime ?? shift.SharedShift?.StartDateTime), mappedTeam.KronosTimeZone),
+                KronosEndDateTime = this.utility.UTCToKronosTimeZone(
+                    (DateTime)(shift.DraftShift?.EndDateTime ?? shift.SharedShift?.EndDateTime), mappedTeam.KronosTimeZone),
+                DisplayName = shift.DraftShift?.DisplayName ?? shift.SharedShift?.DisplayName ?? null,
+            };
+
+            var deletionResponse = await this.shiftsActivity.DeleteShift(
+                new Uri(allRequiredConfigurations.WfmEndPoint),
+                allRequiredConfigurations.KronosSession,
+                this.utility.ConvertToKronosDate(shiftDetails.KronosStartDateTime),
+                this.utility.ConvertToKronosDate(shiftDetails.KronosEndDateTime),
+                shiftDetails.KronosEndDateTime.Day > shiftDetails.KronosStartDateTime.Day,
+                Utility.OrgJobPathKronosConversion(user.PartitionKey),
+                user.RowKey,
+                shiftDetails.KronosStartDateTime.TimeOfDay.ToString(),
+                shiftDetails.KronosEndDateTime.TimeOfDay.ToString()).ConfigureAwait(false);
+
+            if (deletionResponse.Status != Success)
+            {
+                return CreateBadResponse(shift.Id, error: "Shift was not successfully removed from Kronos.");
+            }
+
+            await this.DeleteShiftMapping(shift).ConfigureAwait(false);
+            return CreateSuccessfulResponse(shift.Id);
+        }
+
+        /// <summary>
+        /// Adds the shift to Kronos and the database.
+        /// </summary>
+        /// <param name="shift">The shift to add.</param>
+        /// <param name="user">The user the shift is for.</param>
+        /// <param name="mappedTeam">The team the user is in.</param>
+        /// <returns>A response for teams.</returns>
         public async Task<ShiftsIntegResponse> AddShiftToKronos(ShiftsShift shift, AllUserMappingEntity user, TeamToDepartmentJobMappingEntity mappedTeam)
         {
             if (user.ErrorIfNull(shift.Id, "User could not be found.", out var response))
@@ -185,6 +242,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 new Uri(allRequiredConfigurations.WfmEndPoint),
                 allRequiredConfigurations.KronosSession,
                 this.utility.ConvertToKronosDate(shiftDetails.KronosStartDateTime),
+                this.utility.ConvertToKronosDate(shiftDetails.KronosEndDateTime),
+                shiftDetails.KronosEndDateTime.Day > shiftDetails.KronosStartDateTime.Day,
                 Utility.OrgJobPathKronosConversion(user.PartitionKey),
                 user.RowKey,
                 shiftDetails.DisplayName,
@@ -203,6 +262,17 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             await this.CreateAndStoreShiftMapping(shift, user, mappedTeam, monthPartitionKey).ConfigureAwait(false);
 
             return CreateSuccessfulResponse(shift.Id);
+        }
+
+        /// <summary>
+        /// Removes a shift mapping entity.
+        /// </summary>
+        /// <param name="shift">A shift from Shifts.</param>
+        /// <returns>A task.</returns>
+        private async Task DeleteShiftMapping(ShiftsShift shift)
+        {
+            var shiftMappingEntity = await this.shiftMappingEntityProvider.GetShiftMappingEntityByRowKeyAsync(shift.Id).ConfigureAwait(false);
+            await this.shiftMappingEntityProvider.DeleteOrphanDataFromShiftMappingAsync(shiftMappingEntity).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -456,6 +526,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", configurationDetails.ShiftsAccessToken);
                 httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", configurationDetails.WFIId);
 
                 using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, "teams/" + userModelNotFoundList[i].ShiftTeamId + "/schedule/shifts")
                 {
@@ -511,6 +582,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", configurationDetails.ShiftsAccessToken);
                 httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", configurationDetails.WFIId);
 
                 if (user != null)
                 {

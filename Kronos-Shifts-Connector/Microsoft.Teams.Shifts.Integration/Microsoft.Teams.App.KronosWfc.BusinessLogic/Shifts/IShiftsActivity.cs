@@ -8,8 +8,8 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.HyperFind;
-    using CreateRequest = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Shifts.ShiftRequest;
-    using CreateResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Common.Response;
+    using CRUDRequest = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Shifts.ShiftRequest;
+    using CRUDResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Common.Response;
     using UpcomingShifts = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts;
 
     /// <summary>
@@ -38,20 +38,48 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
         /// </summary>
         /// <param name="endpoint">The endpoint for the request.</param>
         /// <param name="jSession">The Jsession token.</param>
-        /// <param name="shiftDate">The date of the shift.</param>
+        /// <param name="shiftStartDate">The start date of the shift.</param>
+        /// <param name="shiftEndDate">The end date of the shift.</param>
+        /// <param name="overADateBorder">Whether the shift spans over a date border.</param>
         /// <param name="jobPath">The job of the shift.</param>
         /// <param name="kronosId">The id of the employee.</param>
         /// <param name="shiftLabel">The label for the shift.</param>
         /// <param name="startTime">The start time of the shift.</param>
         /// <param name="endTime">The end time of the shift.</param>
         /// <returns>A task containing the response.</returns>
-        Task<CreateResponse> CreateShift(
+        Task<CRUDResponse> CreateShift(
             Uri endpoint,
             string jSession,
-            string shiftDate,
+            string shiftStartDate,
+            string shiftEndDate,
+            bool overADateBorder,
             string jobPath,
             string kronosId,
             string shiftLabel,
+            string startTime,
+            string endTime);
+
+        /// <summary>
+        /// Deletes a shift in Kronos.
+        /// </summary>
+        /// <param name="endpoint">The endpoint for the request.</param>
+        /// <param name="jSession">The Jsession token.</param>
+        /// <param name="shiftStartDate">The start date of the shift.</param>
+        /// <param name="shiftEndDate">The end date of the shift.</param>
+        /// <param name="overADateBorder">Whether the shift spans over a date border.</param>
+        /// <param name="jobPath">The job of the shift.</param>
+        /// <param name="kronosId">The id of the employee.</param>
+        /// <param name="startTime">The start time of the shift.</param>
+        /// <param name="endTime">The end time of the shift.</param>
+        /// <returns>A task containing the response.</returns>
+        Task<CRUDResponse> DeleteShift(
+            Uri endpoint,
+            string jSession,
+            string shiftStartDate,
+            string shiftEndDate,
+            bool overADateBorder,
+            string jobPath,
+            string kronosId,
             string startTime,
             string endTime);
     }

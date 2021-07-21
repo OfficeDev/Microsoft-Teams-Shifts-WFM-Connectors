@@ -234,6 +234,30 @@
             <param name="secretValue">secret value.</param>
             <returns>boolean result.</returns>
         </member>
+        <member name="T:Microsoft.Teams.Shifts.Integration.API.Common.ArgumentHelper">
+            <summary>
+            A helper class for any argument checks that are needed.
+            </summary>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.ArgumentHelper.ThrowIfNull``1(``0,System.String)">
+            <summary>
+            Throws an <see cref="T:System.ArgumentNullException"/> if the object is <see langword="null"/>.
+            </summary>
+            <typeparam name="T">The type of the object.</typeparam>
+            <param name="potentialNullObject">The object.</param>
+            <param name="name">The name of the object, for logging.</param>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.ArgumentHelper.ErrorIfNull``1(``0,System.String,System.String,Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels.ShiftsIntegResponse@)">
+            <summary>
+            Returns a response if a given object is null.
+            </summary>
+            <typeparam name="T">The type of the object.</typeparam>
+            <param name="potentialNullObject">The object.</param>
+            <param name="id">The id for the response.</param>
+            <param name="error">The error message for the response.</param>
+            <param name="response">The output of the response.</param>
+            <returns><see cref="T:System.Boolean"/> to denote whether it passed or failed.</returns>
+        </member>
         <member name="T:Microsoft.Teams.Shifts.Integration.API.Common.BackgroundService">
             <summary>
             BackgroundService class that inherits IHostedService and implements the methods related to background tasks.
@@ -442,23 +466,39 @@
             A helper class dealing with responses.
             </summary>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.ResponseHelper.CreateResponse(System.String,System.Int32,System.String)">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.ResponseHelper.CreateResponse(System.String,System.Int32,System.String,System.String)">
             <summary>
-            Creates a Response for Shifts.
+            Creates a response for Shifts.
             </summary>
             <param name="id">The id for the response.</param>
             <param name="statusCode">The status code of the response.</param>
             <param name="error">The error message for the response.</param>
             <returns>A <see cref="T:Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels.ShiftsIntegResponse"/>.</returns>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.ResponseHelper.CreateResponse(System.String,System.Int32,System.Collections.Generic.IEnumerable{System.String})">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.ResponseHelper.CreateSuccessfulResponse(System.String)">
             <summary>
-            Creates a Response for a swap shift eligibility request.
+            Creates a successful response for Shifts.
             </summary>
             <param name="id">The id for the response.</param>
-            <param name="statusCode">The status code of the response.</param>
-            <param name="shifts">The error message for the response.</param>
             <returns>A <see cref="T:Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels.ShiftsIntegResponse"/>.</returns>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.ResponseHelper.CreateBadResponse(System.String,System.Int32,System.String)">
+            <summary>
+            Creates a bad response for Shifts.
+            </summary>
+            <param name="id">The id for the response.</param>
+            <param name="statusCode">The status code of the response, defaults to 400.</param>
+            <param name="error">The error message for the response.</param>
+            <returns>A <see cref="T:Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels.ShiftsIntegResponse"/>.</returns>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:Microsoft.Teams.Shifts.Integration.API.Common.ResponseHelper.CreateResponse(System.String,System.Int32,System.Collections.Generic.IEnumerable{System.String})" -->
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.ResponseHelper.CreateMultipleBadResponses(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming.RequestModel,System.String)">
+            <summary>
+            Generate response to prevent actions.
+            </summary>
+            <param name="jsonModel">The request payload.</param>
+            <param name="errorMessage">Error message to send while preventing action.</param>
+            <returns>List of ShiftsIntegResponse.</returns>
         </member>
         <member name="T:Microsoft.Teams.Shifts.Integration.API.Common.UsersHelper">
             <summary>
@@ -1002,7 +1042,7 @@
             Shift controller.
             </summary>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController.#ctor(Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IUserMappingProvider,Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts.IUpcomingShiftsActivity,Microsoft.ApplicationInsights.TelemetryClient,Microsoft.Teams.Shifts.Integration.API.Common.Utility,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IShiftMappingEntityProvider,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.ITeamDepartmentMappingProvider,Microsoft.Teams.Shifts.Integration.API.Common.AppSettings,System.Net.Http.IHttpClientFactory,Microsoft.Teams.Shifts.Integration.API.Common.BackgroundTaskWrapper)">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController.#ctor(Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IUserMappingProvider,Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts.IShiftsActivity,Microsoft.ApplicationInsights.TelemetryClient,Microsoft.Teams.Shifts.Integration.API.Common.Utility,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.IShiftMappingEntityProvider,Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers.ITeamDepartmentMappingProvider,Microsoft.Teams.Shifts.Integration.API.Common.AppSettings,System.Net.Http.IHttpClientFactory,Microsoft.Teams.Shifts.Integration.API.Common.BackgroundTaskWrapper)">
             <summary>
             Initializes a new instance of the <see cref="T:Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController"/> class.
             </summary>
@@ -1032,6 +1072,41 @@
             <param name="kronosUserId">A Kronos user id.</param>
             <param name="partitionKey">The partition key for the shift.</param>
             <returns>The schedule response.</returns>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController.DeleteShiftFromKronos(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Shift,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.AllUserMappingEntity,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TeamToDepartmentJobMappingEntity)">
+            <summary>
+            Deletes the shift from Kronos and the database.
+            </summary>
+            <param name="shift">The shift to remove.</param>
+            <param name="user">The user the shift is for.</param>
+            <param name="mappedTeam">The team the user is in.</param>
+            <returns>A response for teams.</returns>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController.AddShiftToKronos(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Shift,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.AllUserMappingEntity,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TeamToDepartmentJobMappingEntity)">
+            <summary>
+            Adds the shift to Kronos and the database.
+            </summary>
+            <param name="shift">The shift to add.</param>
+            <param name="user">The user the shift is for.</param>
+            <param name="mappedTeam">The team the user is in.</param>
+            <returns>A response for teams.</returns>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController.DeleteShiftMapping(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Shift)">
+            <summary>
+            Removes a shift mapping entity.
+            </summary>
+            <param name="shift">A shift from Shifts.</param>
+            <returns>A task.</returns>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController.CreateAndStoreShiftMapping(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Shift,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.AllUserMappingEntity,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TeamToDepartmentJobMappingEntity,System.Collections.Generic.List{System.String})">
+            <summary>
+            Creates and stores a shift mapping entity.
+            </summary>
+            <param name="shift">A shift from Shifts.</param>
+            <param name="user">A user mapping entity.</param>
+            <param name="mappedTeam">A team mapping entity.</param>
+            <param name="monthPartitionKey">The partition key for the shift.</param>
+            <returns>A task.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController.ProcessShiftsAsync(System.String)">
             <summary>
@@ -1334,9 +1409,9 @@
             <param name="aadGroupId">The AAD Group Id for the Team.</param>
             <returns>An action result.</returns>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.ProcessShiftAcknowledgement(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming.RequestModel,System.Collections.Generic.Dictionary{System.String,System.String})">
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.ProcessShiftAsync(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming.RequestModel,System.Collections.Generic.Dictionary{System.String,System.String},Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TeamToDepartmentJobMappingEntity,System.Boolean)">
             <summary>
-            This method will create the necessary acknowledgement response whenever Shift entities are created, or updated.
+            This method will manage how Shift entities are created, updated, and deleted.
             </summary>
             <param name="jsonModel">The decrypted JSON payload.</param>
             <param name="updateProps">The type of <see cref="T:System.Collections.Generic.Dictionary`2"/> that contains properties that are being logged to ApplicationInsights.</param>
@@ -1350,22 +1425,6 @@
             <param name="updateProps">The type of <see cref="T:System.Collections.Generic.Dictionary`2"/> which contains various properties to log to ApplicationInsights.</param>
             <returns>A type of <see cref="T:Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels.ShiftsIntegResponse"/>.</returns>
         </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.GenerateResponse(System.String,System.Net.HttpStatusCode,System.String,Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels.ResponseError)">
-            <summary>
-            Generates the response for each outbound request.
-            </summary>
-            <param name="itemId">Id for response.</param>
-            <param name="statusCode">HttpStatusCode for the request been processed.</param>
-            <param name="eTag">Etag based on response.</param>
-            <param name="error">Forward error to Shifts if any.</param>
-            <returns>ShiftsIntegResponse.</returns>
-        </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.GenerateNewGuid">
-            <summary>
-            Generates the Guid for outbound call response.
-            </summary>
-            <returns>Returns newly generated GUID string.</returns>
-        </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.DecryptEncryptedRequestFromShiftsAsync(System.Byte[],Microsoft.AspNetCore.Http.HttpRequest)">
             <summary>
             This method will properly decrypt the encrypted payload that is being received from Shifts.
@@ -1373,14 +1432,6 @@
             <param name="secretKeyBytes">The sharedSecret from Shifts casted into a byte array.</param>
             <param name="request">The incoming request from Shifts UI that contains an encrypted payload.</param>
             <returns>A unit of execution which contains the RequestModel.</returns>
-        </member>
-        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.GenerateResponseToPreventAction(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming.RequestModel,System.String)">
-            <summary>
-            Generate response to prevent actions.
-            </summary>
-            <param name="jsonModel">The request payload.</param>
-            <param name="errorMessage">Error message to send while preventing action.</param>
-            <returns>List of ShiftsIntegResponse.</returns>
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.TeamsController.ProcessOpenShiftRequest(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming.RequestModel,System.Collections.Generic.Dictionary{System.String,System.String},System.String,System.Boolean,System.String)">
             <summary>

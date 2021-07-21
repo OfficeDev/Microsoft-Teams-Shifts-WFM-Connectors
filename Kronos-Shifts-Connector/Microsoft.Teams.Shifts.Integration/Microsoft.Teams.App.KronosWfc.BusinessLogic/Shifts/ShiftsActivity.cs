@@ -6,19 +6,20 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights;
     using Microsoft.Teams.App.KronosWfc.Common;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common;
+    using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Shifts;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.HyperFind;
     using Microsoft.Teams.App.KronosWfc.Service;
+    using static System.Globalization.CultureInfo;
     using static Microsoft.Teams.App.KronosWfc.BusinessLogic.Common.XmlHelper;
     using static Microsoft.Teams.App.KronosWfc.Common.ApiConstants;
-    using CreateRequest = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Shifts.ShiftRequest;
-    using CreateResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Common.Response;
-    using CreateScheduleRequest = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Shifts.Schedule;
+    using CRUDResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Common.Response;
+    using Request = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Shifts.ShiftRequest;
     using Response = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.Response;
-    using ScheduleRequest = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Schedule;
 
     /// <summary>
     /// Upcoming shifts activity class.
@@ -40,15 +41,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
             this.apiHelper = apiHelper;
         }
 
-        /// <summary>
-        /// This method retrieves all the upcoming shifts.
-        /// </summary>
-        /// <param name="endPointUrl">The Kronos API endpoint.</param>
-        /// <param name="jSession">The Kronos "token".</param>
-        /// <param name="startDate">The query start date.</param>
-        /// <param name="endDate">The query end date.</param>
-        /// <param name="employees">The list of users to query.</param>
-        /// <returns>A unit of execution that contains the response.</returns>
+        /// <inheritdoc/>
         public async Task<Response> ShowUpcomingShiftsInBatchAsync(
             Uri endPointUrl,
             string jSession,
@@ -79,10 +72,12 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
         }
 
         /// <inheritdoc/>
-        public async Task<CreateResponse> CreateShift(
+        public async Task<CRUDResponse> CreateShift(
             Uri endpoint,
             string jSession,
-            string shiftDate,
+            string shiftStartDate,
+            string shiftEndDate,
+            bool overADateBorder,
             string jobPath,
             string kronosId,
             string shiftLabel,
@@ -90,7 +85,9 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
             string endTime)
         {
             var createShiftRequest = this.CreateShiftRequest(
-                shiftDate,
+                shiftStartDate,
+                shiftEndDate,
+                overADateBorder,
                 jobPath,
                 kronosId,
                 shiftLabel,
@@ -104,25 +101,59 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
                 SoapEnvClose,
                 jSession).ConfigureAwait(false);
 
-            return response.ProcessResponse<CreateResponse>(this.telemetryClient);
+            return response.ProcessResponse<CRUDResponse>(this.telemetryClient);
+        }
+
+        /// <inheritdoc/>
+        public async Task<CRUDResponse> DeleteShift(
+            Uri endpoint,
+            string jSession,
+            string shiftStartDate,
+            string shiftEndDate,
+            bool overADateBorder,
+            string jobPath,
+            string kronosId,
+            string startTime,
+            string endTime)
+        {
+            var deleteShiftRequest = this.DeleteShiftRequest(
+                shiftStartDate,
+                shiftEndDate,
+                overADateBorder,
+                jobPath,
+                kronosId,
+                startTime,
+                endTime);
+
+            var response = await this.apiHelper.SendSoapPostRequestAsync(
+                endpoint,
+                SoapEnvOpen,
+                deleteShiftRequest,
+                SoapEnvClose,
+                jSession).ConfigureAwait(false);
+
+            return response.ProcessResponse<CRUDResponse>(this.telemetryClient);
         }
 
         private string CreateShiftRequest(
-            string shiftDate,
+            string shiftStartDate,
+            string shiftEndDate,
+            bool overADateBorder,
             string jobPath,
             string kronosId,
             string shiftLabel,
             string startTime,
             string endTime)
         {
-            CreateRequest req = new CreateRequest
+            var secondDayNumber = overADateBorder ? 2 : 1;
+            Request req = new Request
             {
                 Action = AddScheduleItems,
-                Schedule = new CreateScheduleRequest
+                Schedule = new Schedule
                 {
                     Employees = new Employees().Create(kronosId),
                     OrgJobPath = jobPath,
-                    QueryDateSpan = $"{shiftDate}-{shiftDate}",
+                    QueryDateSpan = $"{shiftStartDate}-{shiftEndDate}",
                     ScheduleItems = new ScheduleItems
                     {
                         ScheduleShift = new List<ScheduleShift>
@@ -131,8 +162,43 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
                             {
                                 Employee = new Employee().Create(kronosId),
                                 ShiftLabel = shiftLabel,
-                                StartDate = shiftDate,
-                                ShiftSegments = new ShiftSegments().Create(startTime, endTime, 1, 1, jobPath),
+                                StartDate = shiftStartDate,
+                                ShiftSegments = new ShiftSegments().Create(startTime, endTime, 1, secondDayNumber, jobPath),
+                            },
+                        },
+                    },
+                },
+            };
+
+            return req.XmlSerialize();
+        }
+
+        private string DeleteShiftRequest(
+            string shiftStartDate,
+            string shiftEndDate,
+            bool overADateBorder,
+            string jobPath,
+            string kronosId,
+            string startTime,
+            string endTime)
+        {
+            var secondDayNumber = overADateBorder ? 2 : 1;
+            Request req = new Request
+            {
+                Action = RemoveSpecifiedScheduleItems,
+                Schedule = new Schedule
+                {
+                    Employees = new Employees().Create(kronosId),
+                    OrgJobPath = jobPath,
+                    QueryDateSpan = $"{shiftStartDate}-{shiftEndDate}",
+                    ScheduleItems = new ScheduleItems
+                    {
+                        ScheduleShift = new List<ScheduleShift>
+                        {
+                            new ScheduleShift
+                            {
+                                StartDate = shiftStartDate,
+                                ShiftSegments = new ShiftSegments().Create(startTime, endTime, 1, secondDayNumber, jobPath),
                             },
                         },
                     },
@@ -144,18 +210,15 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
 
         private string CreateUpcomingShiftsRequestEmployees(string startDate, string endDate, List<ResponseHyperFindResult> employees)
         {
-            ScheduleRequest.Request request = new ScheduleRequest.Request()
+            Request request = new Request()
             {
-                Action = ApiConstants.LoadAction,
-                Schedule = new ScheduleRequest.ScheduleReq()
+                Action = LoadAction,
+                Schedule = new Schedule()
                 {
-                    Employees = new List<ScheduleRequest.PersonIdentity>(),
+                    Employees = new Employees().Create(employees.Select(x => x.PersonNumber).ToArray()),
                     QueryDateSpan = $"{startDate} - {endDate}",
                 },
             };
-
-            var scheduledEmployees = employees.ConvertAll(x => new ScheduleRequest.PersonIdentity { PersonNumber = x.PersonNumber });
-            request.Schedule.Employees.AddRange(scheduledEmployees);
 
             return request.XmlSerialize();
         }
