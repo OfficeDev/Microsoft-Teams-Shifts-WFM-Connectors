@@ -421,15 +421,6 @@ namespace Microsoft.Teams.Shifts.Integration.API {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The open shift from MS Graph - {0} is not found..
-        /// </summary>
-        public static string OpenShiftNotFoundMessage {
-            get {
-                return ResourceManager.GetString("OpenShiftNotFoundMessage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Approved.
         /// </summary>
         public static string OpenShiftRequestApprovalMessage {
@@ -489,6 +480,15 @@ namespace Microsoft.Teams.Shifts.Integration.API {
         public static string PreventManageActionFromShifts {
             get {
                 return ResourceManager.GetString("PreventManageActionFromShifts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ProcessCreateOpenShiftRequestFromTeamsAsync.
+        /// </summary>
+        public static string ProcessCreateOpenShiftRequestFromTeamsAsync {
+            get {
+                return ResourceManager.GetString("ProcessCreateOpenShiftRequestFromTeamsAsync", resourceCulture);
             }
         }
         
@@ -633,15 +633,6 @@ namespace Microsoft.Teams.Shifts.Integration.API {
         public static string ShiftsNotFoundtoSwap {
             get {
                 return ResourceManager.GetString("ShiftsNotFoundtoSwap", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to SubmitOpenShiftRequestToKronosAsync.
-        /// </summary>
-        public static string SubmitOpenShiftRequestToKronosAsync {
-            get {
-                return ResourceManager.GetString("SubmitOpenShiftRequestToKronosAsync", resourceCulture);
             }
         }
         

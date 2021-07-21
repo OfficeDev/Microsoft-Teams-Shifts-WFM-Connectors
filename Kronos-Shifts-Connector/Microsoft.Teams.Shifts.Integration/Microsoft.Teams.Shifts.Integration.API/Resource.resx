@@ -240,8 +240,8 @@
   <data name="SyncTimeOffRequestsFromShiftsToKronos" xml:space="preserve">
     <value>SyncTimeOffRequestsFromShiftsToKronos</value>
   </data>
-  <data name="SubmitOpenShiftRequestToKronosAsync" xml:space="preserve">
-    <value>SubmitOpenShiftRequestToKronosAsync</value>
+  <data name="ProcessCreateOpenShiftRequestFromTeamsAsync" xml:space="preserve">
+    <value>ProcessCreateOpenShiftRequestFromTeamsAsync</value>
   </data>
   <data name="SyncApprovedOrDeclinedOpenShiftRequestsAsync" xml:space="preserve">
     <value>SyncApprovedOrDeclinedOpenShiftRequestsAsync</value>
@@ -334,10 +334,6 @@
   </data>
   <data name="OpenShiftNotFoundCode" xml:space="preserve">
     <value>OpenShiftNotFound</value>
-  </data>
-  <data name="OpenShiftNotFoundMessage" xml:space="preserve">
-    <value>The open shift from MS Graph - {0} is not found.</value>
-    <comment>The {0} placeholder is for the Open Shift ID.</comment>
   </data>
   <data name="SetUpNotDoneCode" xml:space="preserve">
     <value>SetUpNotDone</value>

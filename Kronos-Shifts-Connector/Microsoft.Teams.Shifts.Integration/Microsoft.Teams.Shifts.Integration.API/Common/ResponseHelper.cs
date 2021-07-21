@@ -4,6 +4,7 @@
 
 namespace Microsoft.Teams.Shifts.Integration.API.Common
 {
+    using System;
     using System.Collections.Generic;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels;
 
@@ -17,9 +18,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// </summary>
         /// <param name="id">The id for the response.</param>
         /// <param name="statusCode">The status code of the response.</param>
+        /// <param name="code">The error code that the user will see.</param>
+        /// <param name="eTag">The eTag.</param>
         /// <param name="error">The error message for the response.</param>
         /// <returns>A <see cref="ShiftsIntegResponse"/>.</returns>
-        public static ShiftsIntegResponse CreateResponse(string id, int statusCode, string error = null)
+        public static ShiftsIntegResponse CreateResponse(string id, int statusCode, string code, string error = null)
         {
             return new ShiftsIntegResponse
             {
@@ -27,8 +30,31 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
                 Status = statusCode,
                 Body = new Body
                 {
-                    Error = new ResponseError { Message = error },
-                    ETag = null,
+                    Error = new ResponseError { Code = code, Message = error },
+                    ETag = responseEtag,
+                },
+            };
+        }
+
+        /// <summary>
+        /// Creates a Response for Shifts.
+        /// </summary>
+        /// <param name="id">The id for the response.</param>
+        /// <param name="statusCode">The status code of the response.</param>
+        /// <param name="eTag">The eTag.</param>
+        /// <returns>A <see cref="ShiftsIntegResponse"/>.</returns>
+        public static ShiftsIntegResponse CreateSuccessResponse(string id, int statusCode, string eTag = null)
+        {
+            var responseEtag = string.IsNullOrEmpty(eTag) ? Guid.NewGuid().ToString() : eTag;
+
+            return new ShiftsIntegResponse
+            {
+                Id = id,
+                Status = statusCode,
+                Body = new Body
+                {
+                    Error = null,
+                    ETag = responseEtag,
                 },
             };
         }
