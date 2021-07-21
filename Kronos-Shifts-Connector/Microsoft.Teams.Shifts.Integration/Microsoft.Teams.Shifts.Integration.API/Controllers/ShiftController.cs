@@ -181,9 +181,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             var shiftDetails = new
             {
-                StartDateTime = this.utility.UTCToKronosTimeZone(
+                KronosStartDateTime = this.utility.UTCToKronosTimeZone(
                     (DateTime)(shift.DraftShift?.StartDateTime ?? shift.SharedShift?.StartDateTime), mappedTeam.KronosTimeZone),
-                EndDateTime = this.utility.UTCToKronosTimeZone(
+                KronosEndDateTime = this.utility.UTCToKronosTimeZone(
                     (DateTime)(shift.DraftShift?.EndDateTime ?? shift.SharedShift?.EndDateTime), mappedTeam.KronosTimeZone),
                 DisplayName = shift.DraftShift?.DisplayName ?? shift.SharedShift?.DisplayName ?? null,
             };
@@ -191,11 +191,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var deletionResponse = await this.shiftsActivity.DeleteShift(
                 new Uri(allRequiredConfigurations.WfmEndPoint),
                 allRequiredConfigurations.KronosSession,
-                this.utility.ConvertToKronosDate(shiftDetails.StartDateTime),
+                this.utility.ConvertToKronosDate(shiftDetails.KronosStartDateTime),
                 Utility.OrgJobPathKronosConversion(user.PartitionKey),
                 user.RowKey,
-                shiftDetails.StartDateTime.TimeOfDay.ToString(),
-                shiftDetails.EndDateTime.TimeOfDay.ToString()).ConfigureAwait(false);
+                shiftDetails.KronosStartDateTime.TimeOfDay.ToString(),
+                shiftDetails.KronosEndDateTime.TimeOfDay.ToString()).ConfigureAwait(false);
 
             if (deletionResponse.Status != Success)
             {
@@ -578,6 +578,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", configurationDetails.ShiftsAccessToken);
                 httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", configurationDetails.WFIId);
 
                 if (user != null)
                 {
