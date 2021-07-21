@@ -188,7 +188,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 DisplayName = shift.DraftShift?.DisplayName ?? shift.SharedShift?.DisplayName ?? null,
             };
 
-            var deletionResponse = await this.upcomingShiftsActivity.DeleteShift(
+            var deletionResponse = await this.shiftsActivity.DeleteShift(
                 new Uri(allRequiredConfigurations.WfmEndPoint),
                 allRequiredConfigurations.KronosSession,
                 this.utility.ConvertToKronosDate(shiftDetails.StartDateTime),
