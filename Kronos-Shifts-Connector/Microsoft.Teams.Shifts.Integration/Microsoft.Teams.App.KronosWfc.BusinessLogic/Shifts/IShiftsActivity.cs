@@ -7,6 +7,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.HyperFind;
     using CRUDRequest = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Shifts.ShiftRequest;
     using CRUDResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Common.Response;

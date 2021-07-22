@@ -491,7 +491,15 @@
             <param name="error">The error message for the response.</param>
             <returns>A <see cref="T:Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels.ShiftsIntegResponse"/>.</returns>
         </member>
-        <!-- Badly formed XML comment ignored for member "M:Microsoft.Teams.Shifts.Integration.API.Common.ResponseHelper.CreateResponse(System.String,System.Int32,System.Collections.Generic.IEnumerable{System.String})" -->
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.ResponseHelper.CreateResponse(System.String,System.Int32,System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Creates a Response for a swap shift eligibility request.
+            </summary>
+            <param name="id">The id for the response.</param>
+            <param name="statusCode">The status code of the response.</param>
+            <param name="shifts">The error message for the response.</param>
+            <returns>A <see cref="T:Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels.ShiftsIntegResponse"/>.</returns>
+        </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Common.ResponseHelper.CreateMultipleBadResponses(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming.RequestModel,System.String)">
             <summary>
             Generate response to prevent actions.
@@ -1087,6 +1095,15 @@
             Adds the shift to Kronos and the database.
             </summary>
             <param name="shift">The shift to add.</param>
+            <param name="user">The user the shift is for.</param>
+            <param name="mappedTeam">The team the user is in.</param>
+            <returns>A response for teams.</returns>
+        </member>
+        <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController.EditShiftInKronos(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Shift,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.AllUserMappingEntity,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TeamToDepartmentJobMappingEntity)">
+            <summary>
+            Removes the old shift and adds the new shift to Kronos and the database.
+            </summary>
+            <param name="shiftToAdd">The shift to edit.</param>
             <param name="user">The user the shift is for.</param>
             <param name="mappedTeam">The team the user is in.</param>
             <returns>A response for teams.</returns>

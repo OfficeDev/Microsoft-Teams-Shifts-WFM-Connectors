@@ -58,7 +58,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         }
 
         /// <summary>
-        /// <summary>
         /// Creates a Response for a swap shift eligibility request.
         /// </summary>
         /// <param name="id">The id for the response.</param>
