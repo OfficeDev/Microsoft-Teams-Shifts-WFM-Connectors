@@ -502,20 +502,20 @@ namespace Microsoft.Teams.Shifts.Integration.API {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to ProcessOpenShiftRequestsAsync.
+        /// </summary>
+        public static string ProcessOpenShiftRequestsAsync {
+            get {
+                return ResourceManager.GetString("ProcessOpenShiftRequestsAsync", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ProcessOpenShiftsAsync.
         /// </summary>
         public static string ProcessOpenShiftsAsync {
             get {
                 return ResourceManager.GetString("ProcessOpenShiftsAsync", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to ProcessOpenShiftsRequests.
-        /// </summary>
-        public static string ProcessOpenShiftsRequests {
-            get {
-                return ResourceManager.GetString("ProcessOpenShiftsRequests", resourceCulture);
             }
         }
         

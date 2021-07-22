@@ -273,8 +273,8 @@
   <data name="MonthPartitionKeyStatus" xml:space="preserve">
     <value>MonthPartitionKeyStatus</value>
   </data>
-  <data name="ProcessOpenShiftsRequests" xml:space="preserve">
-    <value>ProcessOpenShiftsRequests</value>
+  <data name="ProcessOpenShiftRequestsAsync" xml:space="preserve">
+    <value>ProcessOpenShiftRequestsAsync</value>
     <comment>The method to be able to process the open shift requests regardless if they have been approved or declined</comment>
   </data>
   <data name="EntityNotFoundWithRowKey" xml:space="preserve">

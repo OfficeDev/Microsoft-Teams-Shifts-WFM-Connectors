@@ -19,14 +19,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// </summary>
         /// <param name="id">The id for the response.</param>
         /// <param name="statusCode">The status code of the response.</param>
-        /// <param name="code">The error code that the user will see.</param>
-        /// <param name="eTag">The eTag.</param>
         /// <param name="error">The error message for the response.</param>
+        /// <param name="eTag">The eTag.</param>
         /// <returns>A <see cref="ShiftsIntegResponse"/>.</returns>
-        public static ShiftsIntegResponse CreateResponse(string id, int statusCode, string error = null, string eTag  = null)
+        public static ShiftsIntegResponse CreateResponse(string id, int statusCode, string error = null, string eTag = null)
         {
-            var responseEtag = string.IsNullOrEmpty(eTag) ? Guid.NewGuid().ToString() : eTag;
-
             return new ShiftsIntegResponse
             {
                 Id = id,
@@ -61,7 +58,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
             return CreateResponse(id, statusCode, error);
         }
 
-        /// <summary>
         /// <summary>
         /// Creates a Response for a swap shift eligibility request.
         /// </summary>
