@@ -8,7 +8,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using System.Collections.Generic;
     using System.Globalization;
     using System.Linq;
-    using System.Net;
     using System.Net.Http;
     using System.Net.Http.Headers;
     using System.Reflection;
@@ -30,14 +29,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.RequestModels;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels;
     using Newtonsoft.Json;
+    using CommonShiftSegment = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common.ShiftSegment;
+    using CommonShiftSegments = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common.ShiftSegments;
     using OpenShiftRequest = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.OpenShiftRequest;
-    using OpenShiftResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.OpenShift;
 
     /// <summary>
     /// Open Shift Requests controller.
     /// </summary>
     [Route("api/OpenShiftRequests")]
-    [ApiController]
     [Authorize(Policy = "AppID")]
     public class OpenShiftRequestController : Controller
     {
@@ -144,7 +143,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             telemetryProps.Add("WorkforceIntegrationId", allRequiredConfigurations.WFIId);
 
             var userMappingRecord = await this.GetMappedUserDetailsAsync(allRequiredConfigurations.WFIId, request?.SenderUserId, teamId).ConfigureAwait(false);
-            if (string.IsNullOrEmpty(userMappingRecord.Error))
+            if (!string.IsNullOrEmpty(userMappingRecord.Error))
             {
                 this.telemetryClient.TrackTrace($"{Resource.ProcessCreateOpenShiftRequestFromTeamsAsync} - {Resource.UserMappingNotFound}");
 
@@ -211,7 +210,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     var openShiftEntityWithKronosUniqueId = await this.openShiftMappingEntityProvider.GetOpenShiftMappingEntitiesAsync(request.OpenShiftId).ConfigureAwait(false);
 
                     // Insert the submitted open shift request into Azure table storage.
-                    var openShiftRequestMappingEntity = CreateOpenShiftRequestMapping(request, userMappingRecord?.KronosPersonNumber, kronosRequestId, openShiftEntityWithKronosUniqueId.FirstOrDefault());
+                    var openShiftRequestMappingEntity = this.CreateOpenShiftRequestMapping(request, userMappingRecord?.KronosPersonNumber, kronosRequestId, openShiftEntityWithKronosUniqueId.FirstOrDefault());
 
                     telemetryProps.Add("KronosRequestId", kronosRequestId);
                     telemetryProps.Add("KronosRequestStatus", submitOpenShiftRequestResponse.EmployeeRequestMgmt?.RequestItems?.EmployeeGlobalOpenShiftRequestItem?.StatusName);
@@ -377,7 +376,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// </summary>
         /// <param name="isRequestFromLogicApp">The value indicating whether or not the request is coming from logic app.</param>
         /// <returns>A unit of execution.</returns>
-        public async Task ProcessOpenShiftsRequestsAsync(string isRequestFromLogicApp)
+        public async Task ProcessOpenShiftRequestsAsync(string isRequestFromLogicApp)
         {
             this.telemetryClient.TrackTrace($"{Resource.ProcessOpenShiftRequestsAsync} start at: {DateTime.Now.ToString("o", CultureInfo.InvariantCulture)}");
 
@@ -706,33 +705,35 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="graphOpenShift">The open shift to attempt to request for.</param>
         /// <param name="orgJobPath">The Kronos Org Job Path.</param>
         /// <param name="kronosTimeZoneInfo">The Kronos Time Zone Information.</param>
-        /// <returns>A list of <see cref="ShiftSegment"/>.</returns>
-        private List<OpenShiftResponse.ShiftSegment> BuildKronosOpenShiftSegments(GraphOpenShift graphOpenShift, string orgJobPath, TimeZoneInfo kronosTimeZoneInfo)
+        /// <returns> <see cref="CommonShiftSegments"/>.</returns>
+        private CommonShiftSegments BuildKronosOpenShiftSegments(GraphOpenShift graphOpenShift, string orgJobPath, TimeZoneInfo kronosTimeZoneInfo)
         {
             this.telemetryClient.TrackTrace($"BuildKronosOpenShiftSegments for the Org Job Path: {orgJobPath}, TeamsOpenShiftId = {graphOpenShift.Id}");
 
-            var shiftSegmentList = new List<OpenShiftResponse.ShiftSegment>();
-
+            var segments = new List<CommonShiftSegment>();
             var kronosOrgJob = Utility.OrgJobPathKronosConversion(orgJobPath);
+
+            var spansMultipleDays = graphOpenShift.SharedOpenShift.EndDateTime.Day > graphOpenShift.SharedOpenShift.StartDateTime.Day;
+            var endDayNumber = spansMultipleDays ? 2 : 1;
 
             foreach (var item in graphOpenShift.SharedOpenShift.Activities)
             {
                 // OrgJobPath represent a job in Kronos and so we do not want to give an orgJobPath value
                 // for any 'BREAK' activites in Teams
-                var segmentToAdd = new OpenShiftResponse.ShiftSegment
+                var segmentToAdd = new CommonShiftSegment
                 {
                     OrgJobPath = item.DisplayName == "BREAK" ? null : kronosOrgJob,
-                    EndDayNumber = "1",
-                    StartDayNumber = "1",
+                    EndDayNumber = endDayNumber,
+                    StartDayNumber = 1,
                     StartTime = TimeZoneInfo.ConvertTime(item.StartDateTime, kronosTimeZoneInfo).ToString("hh:mm tt", CultureInfo.InvariantCulture),
                     EndTime = TimeZoneInfo.ConvertTime(item.EndDateTime, kronosTimeZoneInfo).ToString("hh:mm tt", CultureInfo.InvariantCulture),
                     SegmentTypeName = item.DisplayName,
                 };
 
-                shiftSegmentList.Add(segmentToAdd);
+                segments.Add(segmentToAdd);
             }
 
-            return shiftSegmentList;
+            return new CommonShiftSegments { ShiftSegment = segments, };
         }
 
         /// <summary>

@@ -25,7 +25,7 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Schedule
         /// Gets or sets the ShiftSegments.
         /// </summary>
 #pragma warning disable CA2227 // Collection properties should be read only
-        public List<ShiftSegment> ShiftSegments { get; set; }
+        public Common.ShiftSegments ShiftSegments { get; set; }
 #pragma warning restore CA2227 // Collection properties should be read only
 
         /// <summary>
@@ -33,6 +33,12 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Schedule
         /// </summary>
         [XmlAttribute]
         public string LockedFlag { get; set; }
+
+        /// <summary>
+        /// Gets or sets the ShiftLabel.
+        /// </summary>
+        [XmlAttribute("Shiftlabel")]
+        public string ShiftLabel { get; set; }
 
         /// <summary>
         /// Gets or sets the StartDate.

@@ -33,12 +33,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     /// This is the teams controller that is being used here.
     /// </summary>
     [Route("/v1/teams")]
-    [ApiController]
     public class TeamsController : Controller
     {
         private readonly AppSettings appSettings;
         private readonly TelemetryClient telemetryClient;
         private readonly IConfigurationProvider configurationProvider;
+        private readonly OpenShiftController openShiftController;
         private readonly OpenShiftRequestController openShiftRequestController;
         private readonly SwapShiftController swapShiftController;
         private readonly ShiftController shiftController;
@@ -60,6 +60,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="appSettings">Configuration DI.</param>
         /// <param name="telemetryClient">ApplicationInsights DI.</param>
         /// <param name="configurationProvider">ConfigurationProvider DI.</param>
+        /// <param name="openShiftController">OpenShiftController DI.</param>
         /// <param name="openShiftRequestController">OpenShiftRequestController DI.</param>
         /// <param name="swapShiftController">SwapShiftController DI.</param>
         /// <param name="shiftController">ShiftController DI.</param>
@@ -78,6 +79,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             AppSettings appSettings,
             TelemetryClient telemetryClient,
             IConfigurationProvider configurationProvider,
+            OpenShiftController openShiftController,
             OpenShiftRequestController openShiftRequestController,
             SwapShiftController swapShiftController,
             ShiftController shiftController,
@@ -96,6 +98,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             this.appSettings = appSettings;
             this.telemetryClient = telemetryClient;
             this.configurationProvider = configurationProvider;
+            this.openShiftController = openShiftController;
             this.openShiftRequestController = openShiftRequestController;
             this.swapShiftController = swapShiftController;
             this.shiftController = shiftController;
@@ -214,8 +217,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             // Check if payload is for open shift.
             else if (jsonModel.Requests.Any(x => x.Url.Contains("/openshifts/", StringComparison.InvariantCulture)))
             {
-                // Acknowledge with status OK for open shift as solution does not synchronize open shifts into Kronos, Kronos being single source of truth for front line manager actions.
-                integrationResponse = ProcessOpenShiftAcknowledgement(jsonModel, updateProps);
+                integrationResponse = await this.ProcessOpenShiftAsync(jsonModel, updateProps, mappedTeam, isRequestFromCorrectIntegration).ConfigureAwait(false);
                 responseModelList.Add(integrationResponse);
             }
 
@@ -317,6 +319,65 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             else
             {
                 var nullBodyShiftId = jsonModel.Requests.First(x => x.Url.Contains("/shifts/", StringComparison.InvariantCulture)).Id;
+                updateProps.Add("NullBodyShiftId", nullBodyShiftId);
+
+                // The outbound acknowledgement does not honor the null Etag, 502 Bad Gateway is thrown if so.
+                // Checking for the null eTag value, from the attributes in the payload and generate a non-null value in GenerateResponse method.
+                return CreateSuccessfulResponse(nullBodyShiftId);
+            }
+        }
+
+        /// <summary>
+        /// Handle requests to create, edit, and delete open shifts.
+        /// </summary>
+        /// <param name="jsonModel">The decrypted JSON payload.</param>
+        /// <param name="updateProps">The type of <see cref="Dictionary{TKey, TValue}"/> that contains properties that are being logged to ApplicationInsights.</param>
+        /// <returns>A type of <see cref="ShiftsIntegResponse"/>.</returns>
+        private async Task<ShiftsIntegResponse> ProcessOpenShiftAsync(RequestModel jsonModel, Dictionary<string, string> updateProps, TeamToDepartmentJobMappingEntity mappedTeam, bool isFromLogicApp)
+        {
+            var requestBody = jsonModel.Requests.First(x => x.Url.Contains("/openshifts/", StringComparison.InvariantCulture)).Body;
+            ShiftsIntegResponse response = null;
+
+            if (requestBody != null)
+            {
+                var openShift = ControllerHelper.Get<OpenShiftIS>(jsonModel, "/openshifts/");
+
+                if (isFromLogicApp)
+                {
+                    return CreateSuccessfulResponse(openShift.Id);
+                }
+
+                try
+                {
+                    if (jsonModel.Requests.Any(c => c.Method == "POST"))
+                    {
+                        response = await this.openShiftController.CreateOpenShiftFromTeamsAsync(openShift, mappedTeam).ConfigureAwait(false);
+                    }
+                    else if (jsonModel.Requests.Any(c => c.Method == "PUT"))
+                    {
+                        if (openShift.DraftOpenShift?.IsActive == false || openShift.SharedOpenShift?.IsActive == false)
+                        {
+                            // This looks like a bug with shifts sending a PUT for both edits and deletes, so it looks for the isActive flag instead.
+                            //response = await this.openShiftController.DeleteShiftFromKronos(openShift, mappedTeam).ConfigureAwait(false);
+                        }
+                        else
+                        {
+                            // Edit goes here
+                            response = CreateSuccessfulResponse(openShift.Id);
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    this.telemetryClient.TrackTrace("Exception dealing with WFI call regarding open shifts." + JsonConvert.SerializeObject(response));
+                    throw;
+                }
+
+                return response;
+            }
+            else
+            {
+                var nullBodyShiftId = jsonModel.Requests.First(x => x.Url.Contains("/openshifts/", StringComparison.InvariantCulture)).Id;
                 updateProps.Add("NullBodyShiftId", nullBodyShiftId);
 
                 // The outbound acknowledgement does not honor the null Etag, 502 Bad Gateway is thrown if so.
@@ -698,62 +759,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             responseModelList.Add(CreateSuccessfulResponse(swapShiftRequest.Id));
 
             this.telemetryClient.TrackTrace($"Finished approving SwapShiftRequest {swapShiftRequest.Id}");
-        }
-
-        /// <summary>
-        /// Gets the temporary shift.
-        /// Creates a new shift using all of the temporary shift's data besides the RowKey.
-        /// Deletes the temporary shift.
-        /// </summary>
-        /// <param name="openShiftRequest">An open shift request.</param>
-        /// <param name="shift">A shift.</param>
-        /// <param name="kronosTimeZone">The Kronos time zone.</param>
-        /// <param name="responseModelList">The list of responses.</param>
-        private async Task CreateShiftFromTempShift(
-            OpenShiftRequestIS openShiftRequest,
-            Shift shift,
-            string kronosTimeZone,
-            List<ShiftsIntegResponse> responseModelList)
-        {
-            this.telemetryClient.TrackTrace($"Started dealing with OpenShiftRequest {openShiftRequest.Id}");
-
-            // Step 1 - Get the temp shift record first by table scan against RowKey.
-            var tempShiftRowKey = $"SHFT_PENDING_{openShiftRequest.Id}";
-            var tempShiftEntity = await this.shiftMappingEntityProvider.GetShiftMappingEntityByRowKeyAsync(tempShiftRowKey).ConfigureAwait(false);
-
-            // We need to check if the tempShift is not null because in the Open Shift Request controller, the tempShift was created
-            // as part of the Graph API call to approve the Open Shift Request.
-            if (tempShiftEntity != null)
-            {
-                var startDateTime = DateTime.SpecifyKind(shift.SharedShift.StartDateTime, DateTimeKind.Utc);
-
-                // Step 2 - Form the new shift record.
-                var shiftToInsert = new TeamsShiftMappingEntity()
-                {
-                    RowKey = shift.Id,
-                    KronosPersonNumber = tempShiftEntity.KronosPersonNumber,
-                    KronosUniqueId = tempShiftEntity.KronosUniqueId,
-                    PartitionKey = tempShiftEntity.PartitionKey,
-                    AadUserId = tempShiftEntity.AadUserId,
-                    ShiftStartDate = startDateTime,
-                };
-
-                // Step 3 - Save the new shift record.
-                await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(shiftToInsert, shiftToInsert.RowKey, shiftToInsert.PartitionKey).ConfigureAwait(false);
-
-                // Step 4 - Delete the temp shift record.
-                await this.shiftMappingEntityProvider.DeleteOrphanDataFromShiftMappingAsync(tempShiftEntity).ConfigureAwait(false);
-
-                // Adding response for create new shift.
-                responseModelList.Add(CreateSuccessfulResponse(shift.Id));
-            }
-            else
-            {
-                // We are logging to ApplicationInsights that the tempShift entity could not be found.
-                this.telemetryClient.TrackTrace(string.Format(CultureInfo.InvariantCulture, Resource.EntityNotFoundWithRowKey, tempShiftRowKey));
-            }
-
-            this.telemetryClient.TrackTrace($"Finished dealing with OpenShiftRequest {openShiftRequest.Id}");
         }
 
         /// <summary>

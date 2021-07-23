@@ -22,14 +22,15 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.RequestModels.OpenShift;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers;
+    using Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels;
     using Newtonsoft.Json;
+    using SetupDetails = Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.SetupDetails;
 
     /// <summary>
     /// Open Shift controller.
     /// </summary>
     [Authorize(Policy = "AppID")]
     [Route("api/OpenShifts")]
-    [ApiController]
     public class OpenShiftController : ControllerBase
     {
         private readonly AppSettings appSettings;
@@ -79,6 +80,56 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             this.httpClientFactory = httpClientFactory;
             this.openShiftRequestMappingEntityProvider = openShiftRequestMappingEntityProvider;
             this.taskWrapper = taskWrapper;
+        }
+
+        /// <summary>
+        /// Creates an open shift in Kronos.
+        /// </summary>
+        /// <param name="openShift">The open shift entity to create in Kronos.</param>
+        /// <param name="team">The team the open shift belongs to.</param>
+        /// <returns>A response to return to teams.</returns>
+        public async Task<ShiftsIntegResponse> CreateOpenShiftFromTeamsAsync(Models.IntegrationAPI.OpenShiftIS openShift, TeamToDepartmentJobMappingEntity team)
+        {
+            var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
+
+            if ((allRequiredConfigurations?.IsAllSetUpExists).ErrorIfNull(openShift.Id, "App configuration incorrect.", out var response))
+            {
+                return response;
+            }
+
+            var possibleTeams = await this.teamDepartmentMappingProvider.GetMappedTeamDetailsBySchedulingGroupAsync(team.TeamId, openShift.SchedulingGroupId).ConfigureAwait(false);
+            var openShiftOrgJobPath = possibleTeams.FirstOrDefault().RowKey;
+
+            var openShiftDetails = new
+            {
+                KronosStartDateTime = this.utility.UTCToKronosTimeZone((DateTime)(openShift.DraftOpenShift?.StartDateTime ?? openShift.SharedOpenShift?.StartDateTime), team.KronosTimeZone),
+                KronosEndDateTime = this.utility.UTCToKronosTimeZone((DateTime)(openShift.DraftOpenShift?.EndDateTime ?? openShift.SharedOpenShift?.EndDateTime), team.KronosTimeZone),
+                DisplayName = openShift.DraftOpenShift?.DisplayName ?? openShift.SharedOpenShift?.DisplayName ?? null,
+            };
+
+            var creationResponse = await this.openShiftActivity.CreateOpenShiftAsync(
+                new Uri(allRequiredConfigurations.WfmEndPoint),
+                allRequiredConfigurations.KronosSession,
+                this.utility.ConvertToKronosDate(openShiftDetails.KronosStartDateTime),
+                this.utility.ConvertToKronosDate(openShiftDetails.KronosEndDateTime),
+                openShiftDetails.KronosEndDateTime.Day > openShiftDetails.KronosStartDateTime.Day,
+                Utility.OrgJobPathKronosConversion(openShiftOrgJobPath),
+                openShiftDetails.DisplayName,
+                openShiftDetails.KronosStartDateTime.TimeOfDay.ToString(),
+                openShiftDetails.KronosEndDateTime.TimeOfDay.ToString()).ConfigureAwait(false);
+
+            if (creationResponse.Status != ApiConstants.Success)
+            {
+                return ResponseHelper.CreateBadResponse(openShift.Id, error: "Open shift was not created successfully in Kronos.");
+            }
+
+            var monthPartitionKey = Utility.GetMonthPartition(
+                this.utility.ConvertToKronosDate(openShiftDetails.KronosStartDateTime),
+                this.utility.ConvertToKronosDate(openShiftDetails.KronosEndDateTime));
+
+            await this.CreateAndStoreOpenShiftMapping(openShift, team, monthPartitionKey.FirstOrDefault(), openShiftOrgJobPath).ConfigureAwait(false);
+
+            return ResponseHelper.CreateSuccessfulResponse(openShift.Id);
         }
 
         /// <summary>
@@ -283,13 +334,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 if (lookUpData.Except(lookUpEntriesFoundList).Any())
                                 {
                                     this.telemetryClient.TrackTrace($"OpenShiftController - The lookUpEntriesFoundList has {lookUpEntriesFoundList.Count} items which could be deleted");
-                                    await this.DeleteOrphanDataOpenShiftsEntityMappingAsync(allRequiredConfigurations.ShiftsAccessToken, lookUpEntriesFoundList, lookUpData, mappedOrgJobEntity).ConfigureAwait(false);
+                                    await this.DeleteOrphanDataOpenShiftsEntityMappingAsync(allRequiredConfigurations, lookUpEntriesFoundList, lookUpData, mappedOrgJobEntity).ConfigureAwait(false);
                                 }
 
                                 if (openShiftsNotFoundList.Count > 0)
                                 {
                                     this.telemetryClient.TrackTrace($"OpenShiftController - The openShiftsNotFoundList has {openShiftsNotFoundList.Count} items which could be added.");
-                                    await this.CreateEntryOpenShiftsEntityMappingAsync(allRequiredConfigurations.ShiftsAccessToken, openShiftsNotFoundList, monthPartitionKey, mappedOrgJobEntity).ConfigureAwait(false);
+                                    await this.CreateEntryOpenShiftsEntityMappingAsync(allRequiredConfigurations, openShiftsNotFoundList, monthPartitionKey, mappedOrgJobEntity).ConfigureAwait(false);
                                 }
                             }
                             else
@@ -309,13 +360,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// Method that creates the Open Shift Entity Mapping, posts to Graph, and saves the data in Azure
         /// table storage upon successful creation in Graph.
         /// </summary>
-        /// <param name="accessToken">The Graph access token.</param>
+        /// <param name="allRequiredConfiguration">The required configuration details.</param>
         /// <param name="openShiftNotFound">The open shift to post to Graph.</param>
         /// <param name="monthPartitionKey">The monthwise partition key.</param>
         /// <param name="mappedTeam">The mapped team.</param>
         /// <returns>A unit of execution.</returns>
         private async Task CreateEntryOpenShiftsEntityMappingAsync(
-            string accessToken,
+            SetupDetails allRequiredConfiguration,
             List<OpenShiftRequestModel> openShiftNotFound,
             string monthPartitionKey,
             TeamToDepartmentJobMappingEntity mappedTeam)
@@ -335,7 +386,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                 var requestString = JsonConvert.SerializeObject(item);
                 var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfiguration.ShiftsAccessToken);
+                httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", allRequiredConfiguration.WFIId);
+
                 using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, "teams/" + mappedTeam.TeamId + "/schedule/openShifts")
                 {
                     Content = new StringContent(requestString, Encoding.UTF8, "application/json"),
@@ -376,13 +429,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <summary>
         /// Method that will delete an orphaned open shift entity.
         /// </summary>
-        /// <param name="accessToken">The MS Graph Access token.</param>
+        /// <param name="allRequiredConfiguration">The required configuration details.</param>
         /// <param name="lookUpDataFoundList">The found open shifts.</param>
         /// <param name="lookUpData">All of the look up (reference data).</param>
         /// <param name="mappedTeam">The list of mapped teams.</param>
         /// <returns>A unit of execution.</returns>
         private async Task DeleteOrphanDataOpenShiftsEntityMappingAsync(
-            string accessToken,
+            SetupDetails allRequiredConfiguration,
             List<AllOpenShiftMappingEntity> lookUpDataFoundList,
             List<AllOpenShiftMappingEntity> lookUpData,
             TeamToDepartmentJobMappingEntity mappedTeam)
@@ -402,7 +455,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 {
                     this.telemetryClient.TrackTrace($"{item.TeamsOpenShiftId} is not in the Open Shift Request mapping table - deletion can be done.");
                     var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfiguration.ShiftsAccessToken);
+                    httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", allRequiredConfiguration.WFIId);
+
                     using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Delete, "teams/" + mappedTeam.TeamId + "/schedule/openShifts/" + item.TeamsOpenShiftId))
                     {
                         var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
@@ -485,13 +540,39 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         }
 
         /// <summary>
+        /// Creates and stores a open shift mapping entity.
+        /// </summary>
+        /// <param name="openShift">An open shift from Shifts.</param>
+        /// <param name="mappedTeam">A team mapping entity.</param>
+        /// <param name="monthPartitionKey">The partition key for the shift.</param>
+        /// <param name="openShiftOrgJobPath">The org job path of the open shift.</param>
+        /// <returns>A task.</returns>
+        private async Task CreateAndStoreOpenShiftMapping(Models.IntegrationAPI.OpenShiftIS openShift, TeamToDepartmentJobMappingEntity mappedTeam, string monthPartitionKey, string openShiftOrgJobPath)
+        {
+            var kronosUniqueId = this.utility.CreateUniqueId(openShift, mappedTeam.KronosTimeZone, openShiftOrgJobPath);
+
+            var startDateTime = DateTime.SpecifyKind(openShift.SharedOpenShift.StartDateTime, DateTimeKind.Utc);
+
+            AllOpenShiftMappingEntity openShiftMappingEntity = new AllOpenShiftMappingEntity
+            {
+                PartitionKey = monthPartitionKey,
+                RowKey = kronosUniqueId,
+                TeamsOpenShiftId = openShift.Id,
+                KronosSlots = Constants.KronosOpenShiftsSlotCount,
+                OrgJobPath = openShiftOrgJobPath,
+                OpenShiftStartDate = startDateTime,
+            };
+
+            await this.openShiftMappingEntityProvider.SaveOrUpdateOpenShiftMappingEntityAsync(openShiftMappingEntity).ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Method that will create a new Open Shift Entity Mapping that conforms to the newest schema.
         /// </summary>
         /// <param name="responseModel">The OpenShift response from MS Graph.</param>
         /// <param name="uniqueId">The Kronos Unique Id.</param>
         /// <param name="monthPartitionKey">The monthwise partition key.</param>
         /// <param name="orgJobPath">The Kronos Org Job Path.</param>
-        /// <param name="kronosTimeZone">The time zone to use when converting the UTC times to Kronos times.</param>
         /// <returns>The new AllOpenShiftMappingEntity which conforms to schema.</returns>
         private AllOpenShiftMappingEntity CreateNewOpenShiftMappingEntity(
             Models.Response.OpenShifts.GraphOpenShift responseModel,

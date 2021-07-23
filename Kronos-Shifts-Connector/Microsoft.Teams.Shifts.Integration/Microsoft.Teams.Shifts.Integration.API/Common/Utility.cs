@@ -490,6 +490,67 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         }
 
         /// <summary>
+        /// This method creates the expected shift hash using the open shift details.
+        /// </summary>
+        /// <param name="openShift">The open shift from Graph.</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting the times.</param>
+        /// <param name="orgJobPath">The org job path of the open shift.</param>
+        /// <returns>A string that represents the expected hash of the new shift that is to be created.</returns>
+        public string CreateUniqueId(OpenShiftIS openShift, string kronosTimeZone, string orgJobPath)
+        {
+            if (openShift is null)
+            {
+                throw new ArgumentNullException(nameof(openShift));
+            }
+
+            var createUniqueIdProps = new Dictionary<string, string>()
+            {
+                { "StartDateTimeStamp", openShift.SharedOpenShift.StartDateTime.ToString(CultureInfo.InvariantCulture) },
+                { "EndDateTimeStamp", openShift.SharedOpenShift.EndDateTime.ToString(CultureInfo.InvariantCulture) },
+                { "CallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
+            };
+
+            var sb = new StringBuilder();
+
+            foreach (var item in openShift.SharedOpenShift.Activities)
+            {
+                sb.Append(item.DisplayName);
+                sb.Append(this.CalculateEndDateTime(item.EndDateTime, kronosTimeZone));
+                sb.Append(this.CalculateStartDateTime(item.StartDateTime, kronosTimeZone));
+            }
+
+            var stringToHash = $"{this.CalculateStartDateTime(openShift.SharedOpenShift.StartDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(openShift.SharedOpenShift.EndDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}{sb}{openShift.SharedOpenShift.Notes}{orgJobPath}";
+
+            this.telemetryClient.TrackTrace($"String to create hash - OpenShift: {stringToHash}");
+
+            // Utilizing the MD5 hash
+            using (MD5CryptoServiceProvider md5 = new MD5CryptoServiceProvider())
+            {
+                // Compute the hash from the stringToHash text.
+                md5.ComputeHash(Encoding.UTF8.GetBytes(stringToHash));
+
+                // Have the hash result in the byte array
+                byte[] hashResult = md5.Hash;
+
+                // Having the actual Hash.
+                StringBuilder strBuilder = new StringBuilder();
+                for (int i = 0; i < hashResult.Length; i++)
+                {
+                    // Changing the result into 2 hexadecimal digits for each byte in the byte array.
+                    strBuilder.Append(hashResult[i].ToString("x2", CultureInfo.InvariantCulture));
+                }
+
+                var outputHashResult = strBuilder.ToString();
+
+                createUniqueIdProps.Add("CreateUniqueId-ExpectedShiftHash", outputHashResult);
+
+                this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, createUniqueIdProps);
+
+                return outputHashResult;
+            }
+        }
+
+        /// <summary>
         /// This method generates the Kronos Unique Id for the Shift Entity.
         /// </summary>
         /// <param name="shift">The shift entity that is coming from the response.</param>

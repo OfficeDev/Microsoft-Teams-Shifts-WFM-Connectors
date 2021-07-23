@@ -60,7 +60,7 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift.OpenShi
         /// Gets or sets the open shift segments from the activities.
         /// </summary>
 #pragma warning disable CA2227 // Collection properties should be read only
-        public List<App.KronosWfc.Models.ResponseEntities.OpenShift.ShiftSegment> OpenShiftSegments { get; set; }
+        public Common.ShiftSegments OpenShiftSegments { get; set; }
 #pragma warning restore CA2227 // Collection properties should be read only
     }
 }

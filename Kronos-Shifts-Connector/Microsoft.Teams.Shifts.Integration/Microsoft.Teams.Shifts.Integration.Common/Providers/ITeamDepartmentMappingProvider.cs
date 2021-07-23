@@ -36,6 +36,14 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         Task<List<TeamToDepartmentJobMappingEntity>> GetMappedTeamDetailsAsync(string teamId);
 
         /// <summary>
+        /// Query for teams that match the given team id and scheduling group id.
+        /// </summary>
+        /// <param name="teamId">The team to query for.</param>
+        /// <param name="schedulingGroupId">The scheduling group to schedule for.</param>
+        /// <returns>A list of the mapped teams.</returns>
+        Task<List<TeamToDepartmentJobMappingEntity>> GetMappedTeamDetailsBySchedulingGroupAsync(string teamId, string schedulingGroupId);
+
+        /// <summary>
         /// This method definition will be getting all of the team to department mappings
         /// that have OrgJobPaths.
         /// </summary>

@@ -36,7 +36,8 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift.OpenShi
         /// </summary>
         [XmlElement]
 #pragma warning disable CA2227 // Collection properties should be read only
-        public ShiftSegments ShiftSegments { get; set; }
+        public Common.ShiftSegments ShiftSegments { get; set; }
+
 #pragma warning restore CA2227 // Collection properties should be read only
     }
 }
