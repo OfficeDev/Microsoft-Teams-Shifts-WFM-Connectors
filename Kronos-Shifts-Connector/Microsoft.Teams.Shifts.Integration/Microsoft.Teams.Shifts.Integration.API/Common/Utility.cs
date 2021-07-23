@@ -505,7 +505,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
 
             var sb = new StringBuilder();
 
-            var activities = openShift.DraftOpenShift.Activities ?? openShift.SharedOpenShift.Activities;
+            var activities = openShift.DraftOpenShift?.Activities ?? openShift.SharedOpenShift?.Activities;
             var startDateTime = (DateTime)(openShift.DraftOpenShift?.StartDateTime ?? openShift.SharedOpenShift?.StartDateTime);
             var endDateTime = (DateTime)(openShift.DraftOpenShift?.EndDateTime ?? openShift.SharedOpenShift?.EndDateTime);
 
