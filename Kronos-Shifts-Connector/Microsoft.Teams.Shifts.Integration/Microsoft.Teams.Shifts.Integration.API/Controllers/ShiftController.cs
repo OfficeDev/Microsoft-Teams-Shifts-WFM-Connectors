@@ -17,6 +17,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts;
+    using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.HyperFind;
     using Microsoft.Teams.Shifts.Integration.API.Common;
     using Microsoft.Teams.Shifts.Integration.API.Models.Request;
@@ -99,8 +100,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 { "CallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
             };
 
-            var startDateTime = DateTime.SpecifyKind((DateTime)(shift.SharedShift?.StartDateTime ?? shift.DraftShift?.StartDateTime), DateTimeKind.Utc);
-            var endDateTime = DateTime.SpecifyKind((DateTime)(shift.SharedShift?.EndDateTime ?? shift.DraftShift?.EndDateTime), DateTimeKind.Utc);
+            var startDateTime = DateTime.SpecifyKind((DateTime)(shift.DraftShift?.StartDateTime ?? shift.SharedShift?.StartDateTime), DateTimeKind.Utc);
+            var endDateTime = DateTime.SpecifyKind((DateTime)(shift.DraftShift?.EndDateTime ?? shift.SharedShift?.EndDateTime), DateTimeKind.Utc);
 
             TeamsShiftMappingEntity shiftMappingEntity = new TeamsShiftMappingEntity
             {
@@ -179,25 +180,18 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 return response;
             }
 
-            var shiftDetails = new
-            {
-                KronosStartDateTime = this.utility.UTCToKronosTimeZone(
-                    (DateTime)(shift.DraftShift?.StartDateTime ?? shift.SharedShift?.StartDateTime), mappedTeam.KronosTimeZone),
-                KronosEndDateTime = this.utility.UTCToKronosTimeZone(
-                    (DateTime)(shift.DraftShift?.EndDateTime ?? shift.SharedShift?.EndDateTime), mappedTeam.KronosTimeZone),
-                DisplayName = shift.DraftShift?.DisplayName ?? shift.SharedShift?.DisplayName ?? null,
-            };
+            var (kronosStartDateTime, kronosEndDateTime, _) = this.GetConvertedShiftDetails(shift, mappedTeam);
 
             var deletionResponse = await this.shiftsActivity.DeleteShift(
                 new Uri(allRequiredConfigurations.WfmEndPoint),
                 allRequiredConfigurations.KronosSession,
-                this.utility.ConvertToKronosDate(shiftDetails.KronosStartDateTime),
-                this.utility.ConvertToKronosDate(shiftDetails.KronosEndDateTime),
-                shiftDetails.KronosEndDateTime.Day > shiftDetails.KronosStartDateTime.Day,
+                this.utility.ConvertToKronosDate(kronosStartDateTime),
+                this.utility.ConvertToKronosDate(kronosEndDateTime),
+                kronosEndDateTime.Day > kronosStartDateTime.Day,
                 Utility.OrgJobPathKronosConversion(user.PartitionKey),
                 user.RowKey,
-                shiftDetails.KronosStartDateTime.TimeOfDay.ToString(),
-                shiftDetails.KronosEndDateTime.TimeOfDay.ToString()).ConfigureAwait(false);
+                kronosStartDateTime.TimeOfDay.ToString(),
+                kronosEndDateTime.TimeOfDay.ToString()).ConfigureAwait(false);
 
             if (deletionResponse.Status != Success)
             {
@@ -229,26 +223,19 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 return response;
             }
 
-            var shiftDetails = new
-            {
-                KronosStartDateTime = this.utility.UTCToKronosTimeZone(
-                    (DateTime)(shift.DraftShift?.StartDateTime ?? shift.SharedShift?.StartDateTime), mappedTeam.KronosTimeZone),
-                KronosEndDateTime = this.utility.UTCToKronosTimeZone(
-                    (DateTime)(shift.DraftShift?.EndDateTime ?? shift.SharedShift?.EndDateTime), mappedTeam.KronosTimeZone),
-                DisplayName = shift.DraftShift?.DisplayName ?? shift.SharedShift?.DisplayName ?? null,
-            };
+            var (kronosStartDateTime, kronosEndDateTime, displayName) = this.GetConvertedShiftDetails(shift, mappedTeam);
 
             var creationResponse = await this.shiftsActivity.CreateShift(
                 new Uri(allRequiredConfigurations.WfmEndPoint),
                 allRequiredConfigurations.KronosSession,
-                this.utility.ConvertToKronosDate(shiftDetails.KronosStartDateTime),
-                this.utility.ConvertToKronosDate(shiftDetails.KronosEndDateTime),
-                shiftDetails.KronosEndDateTime.Day > shiftDetails.KronosStartDateTime.Day,
+                this.utility.ConvertToKronosDate(kronosStartDateTime),
+                this.utility.ConvertToKronosDate(kronosEndDateTime),
+                kronosEndDateTime.Day > kronosStartDateTime.Day,
                 Utility.OrgJobPathKronosConversion(user.PartitionKey),
                 user.RowKey,
-                shiftDetails.DisplayName,
-                shiftDetails.KronosStartDateTime.TimeOfDay.ToString(),
-                shiftDetails.KronosEndDateTime.TimeOfDay.ToString()).ConfigureAwait(false);
+                displayName,
+                kronosStartDateTime.TimeOfDay.ToString(),
+                kronosEndDateTime.TimeOfDay.ToString()).ConfigureAwait(false);
 
             if (creationResponse.Status != Success)
             {
@@ -256,12 +243,58 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             }
 
             var monthPartitionKey = Utility.GetMonthPartition(
-                this.utility.ConvertToKronosDate(shiftDetails.KronosStartDateTime),
-                this.utility.ConvertToKronosDate(shiftDetails.KronosEndDateTime));
+                this.utility.ConvertToKronosDate(kronosStartDateTime),
+                this.utility.ConvertToKronosDate(kronosEndDateTime));
 
             await this.CreateAndStoreShiftMapping(shift, user, mappedTeam, monthPartitionKey).ConfigureAwait(false);
 
             return CreateSuccessfulResponse(shift.Id);
+        }
+
+        /// <summary>
+        /// Removes the old shift and adds the new edited shift to Kronos and the database.
+        /// </summary>
+        /// <param name="editedShift">The shift to edit.</param>
+        /// <param name="user">The user the shift is for.</param>
+        /// <param name="mappedTeam">The team the user is in.</param>
+        /// <returns>A response for teams.</returns>
+        public async Task<ShiftsIntegResponse> EditShiftInKronos(ShiftsShift editedShift, AllUserMappingEntity user, TeamToDepartmentJobMappingEntity mappedTeam)
+        {
+            // When deleting you only want to use the shiftID and create a delete request using the info from the table.
+            // Add should work as intended for this.
+            ShiftsIntegResponse response;
+            try
+            {
+                var shiftToDeleteMapping = await this.shiftMappingEntityProvider.GetShiftMappingEntityByRowKeyAsync(editedShift.Id).ConfigureAwait(false);
+                var shiftToDelete = new ShiftsShift()
+                {
+                    Id = shiftToDeleteMapping.RowKey,
+                    UserId = shiftToDeleteMapping.KronosPersonNumber,
+                    DraftShift = new IntegrationApi.DraftShift()
+                    {
+                        StartDateTime = shiftToDeleteMapping.ShiftStartDate,
+                        EndDateTime = shiftToDeleteMapping.ShiftEndDate,
+                    },
+                };
+
+                response = await this.DeleteShiftFromKronos(shiftToDelete, user, mappedTeam).ConfigureAwait(false);
+                if (response.Status != 200)
+                {
+                    return response;
+                }
+
+                response = await this.AddShiftToKronos(editedShift, user, mappedTeam).ConfigureAwait(false);
+                if (response.Status != 200)
+                {
+                    return response;
+                }
+            }
+            catch (Exception)
+            {
+                return CreateBadResponse(editedShift.Id, error: "This shift was not edited correctly.");
+            }
+
+            return response;
         }
 
         /// <summary>
@@ -688,6 +721,16 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             }
 
             return kronosUsers;
+        }
+
+        private (DateTime KronosStartDateTime, DateTime KronosEndDateTime, string DisplayName) GetConvertedShiftDetails(ShiftsShift shift, TeamToDepartmentJobMappingEntity mappedTeam)
+        {
+            return (
+                KronosStartDateTime: this.utility.UTCToKronosTimeZone(
+                    (DateTime)(shift.DraftShift?.StartDateTime ?? shift.SharedShift?.StartDateTime), mappedTeam.KronosTimeZone),
+                KronosEndDateTime: this.utility.UTCToKronosTimeZone(
+                    (DateTime)(shift.DraftShift?.EndDateTime ?? shift.SharedShift?.EndDateTime), mappedTeam.KronosTimeZone),
+                DisplayName: shift.DraftShift?.DisplayName ?? shift.SharedShift?.DisplayName);
         }
     }
 }

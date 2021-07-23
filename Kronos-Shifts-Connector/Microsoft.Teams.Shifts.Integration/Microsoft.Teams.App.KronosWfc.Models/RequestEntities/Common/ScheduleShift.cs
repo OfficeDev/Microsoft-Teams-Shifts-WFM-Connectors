@@ -35,5 +35,11 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common
         /// </summary>
         [XmlElement]
         public ShiftSegments ShiftSegments { get; set; }
+
+        /// <summary>
+        /// Denotes whether the shift label should be serialised if it is null.
+        /// </summary>
+        [XmlIgnore]
+        public bool ShiftLabelSpecified;
     }
 }
