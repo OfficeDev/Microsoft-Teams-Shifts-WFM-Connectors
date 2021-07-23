@@ -24,9 +24,7 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Schedule
         /// <summary>
         /// Gets or sets the ShiftSegments.
         /// </summary>
-#pragma warning disable CA2227 // Collection properties should be read only
         public Common.ShiftSegments ShiftSegments { get; set; }
-#pragma warning restore CA2227 // Collection properties should be read only
 
         /// <summary>
         /// Gets or sets the LockedFlag.

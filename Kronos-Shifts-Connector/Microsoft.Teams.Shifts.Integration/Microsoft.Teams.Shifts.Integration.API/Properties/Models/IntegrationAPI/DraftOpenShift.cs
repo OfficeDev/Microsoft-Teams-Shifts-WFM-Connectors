@@ -37,7 +37,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI
         [JsonProperty("activities")]
 #pragma warning disable CA2227 // Collection properties should be read only
         public List<Activity> Activities { get; set; }
-
 #pragma warning restore CA2227 // Collection properties should be read only
 
         /// <summary>

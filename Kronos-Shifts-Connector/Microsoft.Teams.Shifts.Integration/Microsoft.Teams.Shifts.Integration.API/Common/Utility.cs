@@ -503,25 +503,20 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
                 throw new ArgumentNullException(nameof(openShift));
             }
 
-            var createUniqueIdProps = new Dictionary<string, string>()
-            {
-                { "StartDateTimeStamp", openShift.SharedOpenShift.StartDateTime.ToString(CultureInfo.InvariantCulture) },
-                { "EndDateTimeStamp", openShift.SharedOpenShift.EndDateTime.ToString(CultureInfo.InvariantCulture) },
-                { "CallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
-            };
-
             var sb = new StringBuilder();
 
-            foreach (var item in openShift.SharedOpenShift.Activities)
+            var activities = openShift.DraftOpenShift.Activities ?? openShift.SharedOpenShift.Activities;
+            var startDateTime = (DateTime)(openShift.DraftOpenShift?.StartDateTime ?? openShift.SharedOpenShift?.StartDateTime);
+            var endDateTime = (DateTime)(openShift.DraftOpenShift?.EndDateTime ?? openShift.SharedOpenShift?.EndDateTime);
+
+            foreach (var item in activities)
             {
                 sb.Append(item.DisplayName);
                 sb.Append(this.CalculateEndDateTime(item.EndDateTime, kronosTimeZone));
                 sb.Append(this.CalculateStartDateTime(item.StartDateTime, kronosTimeZone));
             }
 
-            var stringToHash = $"{this.CalculateStartDateTime(openShift.SharedOpenShift.StartDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(openShift.SharedOpenShift.EndDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}{sb}{openShift.SharedOpenShift.Notes}{orgJobPath}";
-
-            this.telemetryClient.TrackTrace($"String to create hash - OpenShift: {stringToHash}");
+            var stringToHash = $"{this.CalculateStartDateTime(startDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(endDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}{sb}{orgJobPath}";
 
             // Utilizing the MD5 hash
             using (MD5CryptoServiceProvider md5 = new MD5CryptoServiceProvider())
@@ -541,10 +536,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
                 }
 
                 var outputHashResult = strBuilder.ToString();
-
-                createUniqueIdProps.Add("CreateUniqueId-ExpectedShiftHash", outputHashResult);
-
-                this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, createUniqueIdProps);
 
                 return outputHashResult;
             }
