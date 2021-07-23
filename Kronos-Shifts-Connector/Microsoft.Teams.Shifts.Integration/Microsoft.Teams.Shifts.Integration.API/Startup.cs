@@ -287,6 +287,7 @@ namespace Microsoft.Teams.Shifts.Integration.API
             services.AddSingleton((provider) => new OpenShiftRequestController(
                 provider.GetRequiredService<AppSettings>(),
                 provider.GetRequiredService<TelemetryClient>(),
+                provider.GetRequiredService<ShiftController>(),
                 provider.GetRequiredService<IOpenShiftActivity>(),
                 provider.GetRequiredService<IUserMappingProvider>(),
                 provider.GetRequiredService<ITeamDepartmentMappingProvider>(),

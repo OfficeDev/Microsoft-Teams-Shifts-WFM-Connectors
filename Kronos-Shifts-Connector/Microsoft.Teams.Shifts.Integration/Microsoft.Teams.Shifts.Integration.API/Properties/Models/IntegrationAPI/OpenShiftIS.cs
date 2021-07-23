@@ -19,6 +19,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI
         public SharedOpenShift SharedOpenShift { get; set; }
 
         /// <summary>
+        /// Gets or sets the draftOpenShift.
+        /// </summary>
+        [JsonProperty("draftOpenShift")]
+        public DraftOpenShift DraftOpenShift { get; set; }
+
+        /// <summary>
         /// Gets or sets the schedulingGroupId.
         /// </summary>
         [JsonProperty("schedulingGroupId")]

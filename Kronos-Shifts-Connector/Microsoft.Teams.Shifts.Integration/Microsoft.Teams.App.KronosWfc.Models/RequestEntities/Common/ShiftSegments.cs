@@ -12,7 +12,6 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common
     /// </summary>
     public class ShiftSegments
     {
-        
         /// <summary>
         /// Gets or sets the OrgJobPath.
         /// </summary>

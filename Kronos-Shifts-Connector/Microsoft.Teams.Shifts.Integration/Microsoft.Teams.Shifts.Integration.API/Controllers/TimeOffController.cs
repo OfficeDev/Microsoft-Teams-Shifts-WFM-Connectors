@@ -37,7 +37,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     /// </summary>
     [Route("api/TimeOff")]
     [Authorize(Policy = "AppID")]
-    [ApiController]
     public class TimeOffController : Controller
     {
         private readonly AppSettings appSettings;

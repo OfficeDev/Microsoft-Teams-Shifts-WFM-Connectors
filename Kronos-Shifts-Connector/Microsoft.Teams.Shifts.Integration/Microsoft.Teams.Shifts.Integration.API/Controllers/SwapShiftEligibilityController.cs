@@ -27,7 +27,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     /// </summary>
     [Authorize(Policy = "AppID")]
     [Route("api/[controller]")]
-    [ApiController]
     public class SwapShiftEligibilityController : Controller
     {
         private readonly AppSettings appSettings;

@@ -21,7 +21,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     /// </summary>
     [Route("api/Users")]
     [Authorize(Policy = "AppID")]
-    [ApiController]
     public class UserController : Controller
     {
         private readonly AppSettings appSettings;

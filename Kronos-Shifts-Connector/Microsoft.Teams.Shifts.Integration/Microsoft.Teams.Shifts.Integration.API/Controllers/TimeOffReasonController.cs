@@ -30,7 +30,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     /// </summary>
     [Authorize(Policy = "AppID")]
     [Route("/api/TimeOffReason")]
-    [ApiController]
     public class TimeOffReasonController : ControllerBase
     {
         private readonly TelemetryClient telemetryClient;
