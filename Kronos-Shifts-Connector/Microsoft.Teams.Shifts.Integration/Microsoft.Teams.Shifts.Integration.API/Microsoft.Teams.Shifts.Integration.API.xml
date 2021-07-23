@@ -1101,9 +1101,9 @@
         </member>
         <member name="M:Microsoft.Teams.Shifts.Integration.API.Controllers.ShiftController.EditShiftInKronos(Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Shift,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.AllUserMappingEntity,Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.TeamToDepartmentJobMappingEntity)">
             <summary>
-            Removes the old shift and adds the new shift to Kronos and the database.
+            Removes the old shift and adds the new edited shift to Kronos and the database.
             </summary>
-            <param name="shiftToAdd">The shift to edit.</param>
+            <param name="editedShift">The shift to edit.</param>
             <param name="user">The user the shift is for.</param>
             <param name="mappedTeam">The team the user is in.</param>
             <returns>A response for teams.</returns>

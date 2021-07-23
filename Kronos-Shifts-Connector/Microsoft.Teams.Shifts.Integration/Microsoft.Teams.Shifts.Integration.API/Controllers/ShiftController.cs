@@ -252,21 +252,20 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         }
 
         /// <summary>
-        /// Removes the old shift and adds the new shift to Kronos and the database.
+        /// Removes the old shift and adds the new edited shift to Kronos and the database.
         /// </summary>
-        /// <param name="shiftToAdd">The shift to edit.</param>
+        /// <param name="editedShift">The shift to edit.</param>
         /// <param name="user">The user the shift is for.</param>
         /// <param name="mappedTeam">The team the user is in.</param>
         /// <returns>A response for teams.</returns>
-        public async Task<ShiftsIntegResponse> EditShiftInKronos(ShiftsShift shiftToAdd, AllUserMappingEntity user, TeamToDepartmentJobMappingEntity mappedTeam)
+        public async Task<ShiftsIntegResponse> EditShiftInKronos(ShiftsShift editedShift, AllUserMappingEntity user, TeamToDepartmentJobMappingEntity mappedTeam)
         {
             // When deleting you only want to use the shiftID and create a delete request using the info from the table.
             // Add should work as intended for this.
             ShiftsIntegResponse response;
-
             try
             {
-                var shiftToDeleteMapping = await this.shiftMappingEntityProvider.GetShiftMappingEntityByRowKeyAsync(shiftToAdd.Id).ConfigureAwait(false);
+                var shiftToDeleteMapping = await this.shiftMappingEntityProvider.GetShiftMappingEntityByRowKeyAsync(editedShift.Id).ConfigureAwait(false);
                 var shiftToDelete = new ShiftsShift()
                 {
                     Id = shiftToDeleteMapping.RowKey,
@@ -284,15 +283,15 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     return response;
                 }
 
-                response = await this.AddShiftToKronos(shiftToAdd, user, mappedTeam).ConfigureAwait(false);
+                response = await this.AddShiftToKronos(editedShift, user, mappedTeam).ConfigureAwait(false);
                 if (response.Status != 200)
                 {
                     return response;
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                return CreateSuccessfulResponse(shiftToAdd.Id);
+                return CreateBadResponse(editedShift.Id, error: "This shift was not edited correctly.");
             }
 
             return response;
