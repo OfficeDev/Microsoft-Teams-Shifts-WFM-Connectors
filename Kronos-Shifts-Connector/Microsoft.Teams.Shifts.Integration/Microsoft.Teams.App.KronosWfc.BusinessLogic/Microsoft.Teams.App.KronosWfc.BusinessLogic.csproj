@@ -240,6 +240,10 @@
       <Project>{eeee133b-08d5-4f99-901e-47ccd9e683bd}</Project>
       <Name>Microsoft.Teams.App.KronosWfc.Service</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Microsoft.Teams.Shifts.Integration.Common\Microsoft.Teams.Shifts.Integration.BusinessLogic.csproj">
+      <Project>{CD5E9375-3DC5-4134-A8A0-5B9CFF5BE9F7}</Project>
+      <Name>Microsoft.Teams.Shifts.Integration.BusinessLogic</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
