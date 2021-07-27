@@ -298,15 +298,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     {
                         if (shift.DraftShift?.IsActive == false || shift.SharedShift?.IsActive == false)
                         {
-                            // This looks like an issue with shifts sending a PUT for both edits and deletes, so it looks for the isActive flag instead.
-                            // This is currently disabled since there is a problem with the Kronos endpoint that prevents it from working as intended.
-                            // response = await this.shiftController.DeleteShiftFromKronos(shift, user, mappedTeam).ConfigureAwait(false);
+                            // Manager deleted a shift.
+                            response = await this.shiftController.DeleteShiftFromKronos(shift, user, mappedTeam).ConfigureAwait(false);
                             return CreateSuccessfulResponse(shift.Id);
                         }
                         else
                         {
-                            // This is currently disabled since there is a problem with the Kronos endpoint that prevents it from working as intended.
-                            // response = await this.shiftController.EditShiftInKronos(shift, user, mappedTeam).ConfigureAwait(false);
+                            // Manager edited a shift.
+                            response = await this.shiftController.EditShiftInKronos(shift, user, mappedTeam).ConfigureAwait(false);
                             return CreateSuccessfulResponse(shift.Id);
                         }
                     }

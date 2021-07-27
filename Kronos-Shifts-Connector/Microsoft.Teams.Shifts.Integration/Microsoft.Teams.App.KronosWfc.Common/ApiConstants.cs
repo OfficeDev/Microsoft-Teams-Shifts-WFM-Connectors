@@ -255,6 +255,11 @@ namespace Microsoft.Teams.App.KronosWfc.Common
         public const string AddScheduleItems = "AddScheduleItems";
 
         /// <summary>
+        /// Defines the action for editing schedule items.
+        /// </summary>
+        public const string EditScheduleItems = "EditScheduleItems";
+
+        /// <summary>
         /// Defines the action for deleting schedule items.
         /// </summary>
         public const string RemoveSpecifiedScheduleItems = "RemoveSpecifiedScheduleItems";
