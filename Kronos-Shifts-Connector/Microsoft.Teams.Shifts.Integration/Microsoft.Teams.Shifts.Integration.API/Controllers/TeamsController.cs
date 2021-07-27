@@ -389,34 +389,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         }
 
         /// <summary>
-        /// This method will generate the necessary response for acknowledging the open shift being created or changed.
-        /// </summary>
-        /// <param name="jsonModel">The decrypted JSON payload.</param>
-        /// <param name="updateProps">The type of <see cref="Dictionary{TKey, TValue}"/> which contains various properties to log to ApplicationInsights.</param>
-        /// <returns>A type of <see cref="ShiftsIntegResponse"/>.</returns>
-        private static ShiftsIntegResponse ProcessOpenShiftAcknowledgement(RequestModel jsonModel, Dictionary<string, string> updateProps)
-        {
-            ShiftsIntegResponse integrationResponse;
-            if (jsonModel.Requests.First(x => x.Url.Contains("/openshifts/", StringComparison.InvariantCulture)).Body != null)
-            {
-                var incomingOpenShift = JsonConvert.DeserializeObject<OpenShiftIS>(jsonModel.Requests.First().Body.ToString());
-
-                updateProps.Add("OpenShiftId", incomingOpenShift.Id);
-                updateProps.Add("SchedulingGroupId", incomingOpenShift.SchedulingGroupId);
-
-                integrationResponse = CreateSuccessfulResponse(incomingOpenShift.Id);
-            }
-            else
-            {
-                var nullBodyIncomingOpenShiftId = jsonModel.Requests.First(x => x.Url.Contains("/openshifts/", StringComparison.InvariantCulture)).Id;
-                updateProps.Add("NullBodyOpenShiftId", nullBodyIncomingOpenShiftId);
-                integrationResponse = CreateSuccessfulResponse(nullBodyIncomingOpenShiftId);
-            }
-
-            return integrationResponse;
-        }
-
-        /// <summary>
         /// This method will properly decrypt the encrypted payload that is being received from Shifts.
         /// </summary>
         /// <param name="secretKeyBytes">The sharedSecret from Shifts casted into a byte array.</param>
