@@ -186,8 +186,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var deletionResponse = await this.shiftsActivity.DeleteShift(
                 new Uri(allRequiredConfigurations.WfmEndPoint),
                 allRequiredConfigurations.KronosSession,
-                this.utility.ConvertToKronosDate(kronosStartDateTime),
-                this.utility.ConvertToKronosDate(kronosEndDateTime),
+                this.utility.FormatDateForKronos(kronosStartDateTime),
+                this.utility.FormatDateForKronos(kronosEndDateTime),
                 kronosEndDateTime.Day > kronosStartDateTime.Day,
                 Utility.OrgJobPathKronosConversion(user.PartitionKey),
                 user.RowKey,
@@ -229,8 +229,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var creationResponse = await this.shiftsActivity.CreateShift(
                 new Uri(allRequiredConfigurations.WfmEndPoint),
                 allRequiredConfigurations.KronosSession,
-                this.utility.ConvertToKronosDate(kronosStartDateTime),
-                this.utility.ConvertToKronosDate(kronosEndDateTime),
+                this.utility.FormatDateForKronos(kronosStartDateTime),
+                this.utility.FormatDateForKronos(kronosEndDateTime),
                 kronosEndDateTime.Day > kronosStartDateTime.Day,
                 Utility.OrgJobPathKronosConversion(user.PartitionKey),
                 user.RowKey,
@@ -242,7 +242,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 return CreateBadResponse(shift.Id, error: "Shift was not created successfully in Kronos.");
             }
 
-            var monthPartitionKey = Utility.GetMonthPartition(this.utility.ConvertToKronosDate(kronosStartDateTime), this.utility.ConvertToKronosDate(kronosEndDateTime));
+            var monthPartitionKey = Utility.GetMonthPartition(this.utility.FormatDateForKronos(kronosStartDateTime), this.utility.FormatDateForKronos(kronosEndDateTime));
 
             await this.CreateAndStoreShiftMapping(shift, user, mappedTeam, monthPartitionKey).ConfigureAwait(false);
 
@@ -265,9 +265,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 return response;
             }
 
-            // We need to give all other shifts the employee works that day so retrieve them from DB.
+            // We need to get all other shifts the employee works that day.
             var (kronosStartDateTime, kronosEndDateTime) = this.GetConvertedShiftDetails(editedShift, mappedTeam);
-            var monthPartitionKey = Utility.GetMonthPartition(this.utility.ConvertToKronosDate(kronosStartDateTime), this.utility.ConvertToKronosDate(kronosEndDateTime));
+            var monthPartitionKey = Utility.GetMonthPartition(this.utility.FormatDateForKronos(kronosStartDateTime), this.utility.FormatDateForKronos(kronosEndDateTime));
 
             var usersShifts = await this.shiftMappingEntityProvider.GetAllUsersShiftsByPartitionKeyAsync(monthPartitionKey.First(), user.ShiftUserAadObjectId).ConfigureAwait(false);
 
@@ -280,16 +280,16 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var additionalShifts = this.ProcessSameDayShifts(shiftsOnSameDay, mappedTeam, user);
 
             var editResponse = await this.shiftsActivity.EditShift(
-            new Uri(allRequiredConfigurations.WfmEndPoint),
-            allRequiredConfigurations.KronosSession,
-            this.utility.ConvertToKronosDate(kronosStartDateTime),
-            this.utility.ConvertToKronosDate(kronosEndDateTime),
-            kronosEndDateTime.Day > kronosStartDateTime.Day,
-            Utility.OrgJobPathKronosConversion(user.PartitionKey),
-            user.RowKey,
-            kronosStartDateTime.TimeOfDay.ToString(),
-            kronosEndDateTime.TimeOfDay.ToString(),
-            additionalShifts).ConfigureAwait(false);
+                new Uri(allRequiredConfigurations.WfmEndPoint),
+                allRequiredConfigurations.KronosSession,
+                this.utility.FormatDateForKronos(kronosStartDateTime),
+                this.utility.FormatDateForKronos(kronosEndDateTime),
+                kronosEndDateTime.Day > kronosStartDateTime.Day,
+                Utility.OrgJobPathKronosConversion(user.PartitionKey),
+                user.RowKey,
+                kronosStartDateTime.TimeOfDay.ToString(),
+                kronosEndDateTime.TimeOfDay.ToString(),
+                additionalShifts).ConfigureAwait(false);
 
             if (editResponse.Status != Success)
             {
@@ -758,7 +758,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                 var additionalShift = new ScheduleShift
                 {
-                    StartDate = this.utility.ConvertToKronosDate(additionalShiftStartDate),
+                    StartDate = this.utility.FormatDateForKronos(additionalShiftStartDate),
                     ShiftSegments = new ShiftSegments().Create(
                         additionalShiftStartDate.TimeOfDay.ToString(),
                         additionalShiftEndDate.TimeOfDay.ToString(),

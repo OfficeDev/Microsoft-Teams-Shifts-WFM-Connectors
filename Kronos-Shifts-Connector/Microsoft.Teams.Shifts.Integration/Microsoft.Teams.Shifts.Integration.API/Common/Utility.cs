@@ -1083,7 +1083,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// <param name="date">A <see cref="DateTime"/>.</param>
         /// <returns>A string representation of the date for a kronos call.</returns>
         [SuppressMessage("Globalization", "CA1305:Specify IFormatProvider", Justification = "This format is needed for kronos calls.")]
-        public string ConvertToKronosDate(DateTime date) => date.ToString(this.appSettings.KronosQueryDateSpanFormat);
+        public string FormatDateForKronos(DateTime date) => date.ToString(this.appSettings.KronosQueryDateSpanFormat);
 
         /// <summary>
         /// Method to retrieve the necessary details from AppSettings.

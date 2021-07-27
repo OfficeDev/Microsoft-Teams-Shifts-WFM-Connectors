@@ -110,8 +110,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var creationResponse = await this.openShiftActivity.CreateOpenShiftAsync(
                 new Uri(allRequiredConfigurations.WfmEndPoint),
                 allRequiredConfigurations.KronosSession,
-                this.utility.ConvertToKronosDate(openShiftDetails.KronosStartDateTime),
-                this.utility.ConvertToKronosDate(openShiftDetails.KronosEndDateTime),
+                this.utility.FormatDateForKronos(openShiftDetails.KronosStartDateTime),
+                this.utility.FormatDateForKronos(openShiftDetails.KronosEndDateTime),
                 openShiftDetails.KronosEndDateTime.Day > openShiftDetails.KronosStartDateTime.Day,
                 Utility.OrgJobPathKronosConversion(openShiftOrgJobPath),
                 openShiftDetails.DisplayName,
@@ -124,8 +124,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             }
 
             var monthPartitionKey = Utility.GetMonthPartition(
-                this.utility.ConvertToKronosDate(openShiftDetails.KronosStartDateTime),
-                this.utility.ConvertToKronosDate(openShiftDetails.KronosEndDateTime));
+                this.utility.FormatDateForKronos(openShiftDetails.KronosStartDateTime),
+                this.utility.FormatDateForKronos(openShiftDetails.KronosEndDateTime));
 
             await this.CreateAndStoreOpenShiftMapping(openShift, team, monthPartitionKey.FirstOrDefault(), openShiftOrgJobPath).ConfigureAwait(false);
 
