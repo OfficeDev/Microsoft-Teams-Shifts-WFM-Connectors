@@ -47,11 +47,9 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// Method that would be able to return based on the PartitionKey, hash, and Shift "ID".
         /// </summary>
         /// <param name="monthPartition">The month partition.</param>
-        /// <param name="rowKey">The Row Key for the shift entity mapping.</param>
-        /// <returns>A unit of execution that contains TeamsShiftMapping.</returns>
-        Task<TeamsShiftMappingEntity> GetShiftEntityAsync(
-            string monthPartition,
-            string rowKey);
+        /// <param name="aadUserId">The Row Key for the shift entity mapping.</param>
+        /// <returns>List of TeamsShiftMapping.</returns>
+        Task<List<TeamsShiftMappingEntity>> GetAllUsersShiftsByPartitionKeyAsync(string monthPartition, string aadUserId);
 
         /// <summary>
         /// Method that retrieves a temporary shift.

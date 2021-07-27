@@ -14,9 +14,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Shifts;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.HyperFind;
     using Microsoft.Teams.App.KronosWfc.Service;
-    using static System.Globalization.CultureInfo;
     using static Microsoft.Teams.App.KronosWfc.BusinessLogic.Common.XmlHelper;
-    using static Microsoft.Teams.App.KronosWfc.Common.ApiConstants;
     using CRUDResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Common.Response;
     using Request = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Shifts.ShiftRequest;
     using Response = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.Response;
@@ -61,9 +59,9 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
 
             var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
                 endPointUrl,
-                SoapEnvOpen,
+                ApiConstants.SoapEnvOpen,
                 xmlScheduleRequest,
-                SoapEnvClose,
+                ApiConstants.SoapEnvClose,
                 jSession).ConfigureAwait(false);
 
             var scheduleResponse = tupleResponse.ProcessResponse<Response>(this.telemetryClient);
@@ -80,25 +78,41 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
             bool overADateBorder,
             string jobPath,
             string kronosId,
-            string shiftLabel,
             string startTime,
             string endTime)
         {
-            var createShiftRequest = this.CreateShiftRequest(
-                shiftStartDate,
-                shiftEndDate,
-                overADateBorder,
-                jobPath,
-                kronosId,
-                shiftLabel,
-                startTime,
-                endTime);
+            var createShiftRequest = this.CreateShiftRequest(shiftStartDate, shiftEndDate, overADateBorder, jobPath, kronosId, startTime, endTime);
 
             var response = await this.apiHelper.SendSoapPostRequestAsync(
                 endpoint,
-                SoapEnvOpen,
+                ApiConstants.SoapEnvOpen,
                 createShiftRequest,
-                SoapEnvClose,
+                ApiConstants.SoapEnvClose,
+                jSession).ConfigureAwait(false);
+
+            return response.ProcessResponse<CRUDResponse>(this.telemetryClient);
+        }
+
+        /// <inheritdoc/>
+        public async Task<CRUDResponse> EditShift(
+            Uri endpoint,
+            string jSession,
+            string shiftStartDate,
+            string shiftEndDate,
+            bool overADateBorder,
+            string jobPath,
+            string kronosId,
+            string startTime,
+            string endTime,
+            List<ScheduleShift> shiftsOnSameDay)
+        {
+            var createShiftRequest = this.CreateEditRequest(shiftStartDate, shiftEndDate, overADateBorder, jobPath, kronosId, startTime, endTime, shiftsOnSameDay);
+
+            var response = await this.apiHelper.SendSoapPostRequestAsync(
+                endpoint,
+                ApiConstants.SoapEnvOpen,
+                createShiftRequest,
+                ApiConstants.SoapEnvClose,
                 jSession).ConfigureAwait(false);
 
             return response.ProcessResponse<CRUDResponse>(this.telemetryClient);
@@ -116,20 +130,13 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
             string startTime,
             string endTime)
         {
-            var deleteShiftRequest = this.DeleteShiftRequest(
-                shiftStartDate,
-                shiftEndDate,
-                overADateBorder,
-                jobPath,
-                kronosId,
-                startTime,
-                endTime);
+            var deleteShiftRequest = this.DeleteShiftRequest(shiftStartDate, shiftEndDate, overADateBorder, jobPath, kronosId, startTime, endTime);
 
             var response = await this.apiHelper.SendSoapPostRequestAsync(
                 endpoint,
-                SoapEnvOpen,
+                ApiConstants.SoapEnvOpen,
                 deleteShiftRequest,
-                SoapEnvClose,
+                ApiConstants.SoapEnvClose,
                 jSession).ConfigureAwait(false);
 
             return response.ProcessResponse<CRUDResponse>(this.telemetryClient);
@@ -141,18 +148,16 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
             bool overADateBorder,
             string jobPath,
             string kronosId,
-            string shiftLabel,
             string startTime,
             string endTime)
         {
             var secondDayNumber = overADateBorder ? 2 : 1;
             Request req = new Request
             {
-                Action = AddScheduleItems,
+                Action = ApiConstants.AddScheduleItems,
                 Schedule = new Schedule
                 {
                     Employees = new Employees().Create(kronosId),
-                    OrgJobPath = jobPath,
                     QueryDateSpan = $"{shiftStartDate}-{shiftEndDate}",
                     ScheduleItems = new ScheduleItems
                     {
@@ -160,8 +165,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
                         {
                             new ScheduleShift
                             {
-                                Employee = new Employee().Create(kronosId),
-                                ShiftLabel = shiftLabel,
                                 StartDate = shiftStartDate,
                                 ShiftSegments = new ShiftSegments().Create(startTime, endTime, 1, secondDayNumber, jobPath),
                             },
@@ -169,6 +172,44 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
                     },
                 },
             };
+
+            return req.XmlSerialize();
+        }
+
+        private string CreateEditRequest(
+            string shiftStartDate,
+            string shiftEndDate,
+            bool overADateBorder,
+            string jobPath,
+            string kronosId,
+            string startTime,
+            string endTime,
+            List<ScheduleShift> shiftsOnSameDay)
+        {
+            var secondDayNumber = overADateBorder ? 2 : 1;
+            Request req = new Request
+            {
+                Action = ApiConstants.EditScheduleItems,
+                Schedule = new Schedule
+                {
+                    Employees = new Employees().Create(kronosId),
+                    QueryDateSpan = $"{shiftStartDate}-{shiftEndDate}",
+                    ScheduleItems = new ScheduleItems
+                    {
+                        ScheduleShift = new List<ScheduleShift>
+                        {
+                            new ScheduleShift
+                            {
+                                StartDate = shiftStartDate,
+                                ShiftSegments = new ShiftSegments().Create(startTime, endTime, 1, secondDayNumber, jobPath),
+                            },
+                        },
+                    },
+                },
+            };
+
+            // Add any additional shifts
+            req.Schedule.ScheduleItems.ScheduleShift.AddRange(shiftsOnSameDay);
 
             return req.XmlSerialize();
         }
@@ -185,11 +226,10 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
             var secondDayNumber = overADateBorder ? 2 : 1;
             Request req = new Request
             {
-                Action = RemoveSpecifiedScheduleItems,
+                Action = ApiConstants.RemoveSpecifiedScheduleItems,
                 Schedule = new Schedule
                 {
                     Employees = new Employees().Create(kronosId),
-                    OrgJobPath = jobPath,
                     QueryDateSpan = $"{shiftStartDate}-{shiftEndDate}",
                     ScheduleItems = new ScheduleItems
                     {
@@ -212,7 +252,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
         {
             Request request = new Request()
             {
-                Action = LoadAction,
+                Action = ApiConstants.LoadAction,
                 Schedule = new Schedule()
                 {
                     Employees = new Employees().Create(employees.Select(x => x.PersonNumber).ToArray()),

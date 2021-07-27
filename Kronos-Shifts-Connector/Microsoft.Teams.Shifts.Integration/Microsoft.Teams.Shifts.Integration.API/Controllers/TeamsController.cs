@@ -298,15 +298,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     {
                         if (shift.DraftShift?.IsActive == false || shift.SharedShift?.IsActive == false)
                         {
-                            // This looks like an issue with shifts sending a PUT for both edits and deletes, so it looks for the isActive flag instead.
-                            // This is currently disabled since there is a problem with the Kronos endpoint that prevents it from working as intended.
-                            // response = await this.shiftController.DeleteShiftFromKronos(shift, user, mappedTeam).ConfigureAwait(false);
+                            // Manager deleted a shift.
+                            response = await this.shiftController.DeleteShiftFromKronos(shift, user, mappedTeam).ConfigureAwait(false);
                             return CreateSuccessfulResponse(shift.Id);
                         }
                         else
                         {
-                            // This is currently disabled since there is a problem with the Kronos endpoint that prevents it from working as intended.
-                            // response = await this.shiftController.EditShiftInKronos(shift, user, mappedTeam).ConfigureAwait(false);
+                            // Manager edited a shift.
+                            response = await this.shiftController.EditShiftInKronos(shift, user, mappedTeam).ConfigureAwait(false);
                             return CreateSuccessfulResponse(shift.Id);
                         }
                     }
@@ -387,34 +386,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 // Checking for the null eTag value, from the attributes in the payload and generate a non-null value in GenerateResponse method.
                 return CreateSuccessfulResponse(nullBodyShiftId);
             }
-        }
-
-        /// <summary>
-        /// This method will generate the necessary response for acknowledging the open shift being created or changed.
-        /// </summary>
-        /// <param name="jsonModel">The decrypted JSON payload.</param>
-        /// <param name="updateProps">The type of <see cref="Dictionary{TKey, TValue}"/> which contains various properties to log to ApplicationInsights.</param>
-        /// <returns>A type of <see cref="ShiftsIntegResponse"/>.</returns>
-        private static ShiftsIntegResponse ProcessOpenShiftAcknowledgement(RequestModel jsonModel, Dictionary<string, string> updateProps)
-        {
-            ShiftsIntegResponse integrationResponse;
-            if (jsonModel.Requests.First(x => x.Url.Contains("/openshifts/", StringComparison.InvariantCulture)).Body != null)
-            {
-                var incomingOpenShift = JsonConvert.DeserializeObject<OpenShiftIS>(jsonModel.Requests.First().Body.ToString());
-
-                updateProps.Add("OpenShiftId", incomingOpenShift.Id);
-                updateProps.Add("SchedulingGroupId", incomingOpenShift.SchedulingGroupId);
-
-                integrationResponse = CreateSuccessfulResponse(incomingOpenShift.Id);
-            }
-            else
-            {
-                var nullBodyIncomingOpenShiftId = jsonModel.Requests.First(x => x.Url.Contains("/openshifts/", StringComparison.InvariantCulture)).Id;
-                updateProps.Add("NullBodyOpenShiftId", nullBodyIncomingOpenShiftId);
-                integrationResponse = CreateSuccessfulResponse(nullBodyIncomingOpenShiftId);
-            }
-
-            return integrationResponse;
         }
 
         /// <summary>
