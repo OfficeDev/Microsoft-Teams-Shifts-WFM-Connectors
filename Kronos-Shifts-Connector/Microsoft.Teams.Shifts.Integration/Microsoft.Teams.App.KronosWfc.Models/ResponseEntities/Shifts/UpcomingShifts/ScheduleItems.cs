@@ -4,6 +4,7 @@
 
 namespace Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts
 {
+    using System.Collections.Generic;
     using System.Xml.Serialization;
 
     /// <summary>
@@ -15,9 +16,10 @@ namespace Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingS
         /// Gets or sets the scheduleShift.
         /// </summary>
         [XmlElement("ScheduleShift", typeof(ScheduleShift))]
-#pragma warning disable CA1819 // Properties should not return arrays
-        public ScheduleShift[] ScheduleShift { get; set; }
-#pragma warning restore CA1819 // Properties should not return arrays
+#pragma warning disable CA2227 // Collection properties should be read only
+        public List<ScheduleShift> ScheduleShifts { get; set; }
+
+#pragma warning restore CA2227 // Collection properties should be read only
 
         /// <summary>
         /// Gets or sets the schedulePayCodeEdit.
@@ -25,6 +27,7 @@ namespace Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingS
         [XmlElement("SchedulePayCodeEdit", typeof(SchedulePayCodeEdit))]
 #pragma warning disable CA1819 // Properties should not return arrays
         public SchedulePayCodeEdit[] SchedulePayCodeEdit { get; set; }
+
 #pragma warning restore CA1819 // Properties should not return arrays
     }
 }

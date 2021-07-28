@@ -29,6 +29,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using static Microsoft.Teams.Shifts.Integration.API.Common.ResponseHelper;
     using IntegrationApi = Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI;
     using ShiftsShift = Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Shift;
+    using UpcomingShiftsResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts;
 
     /// <summary>
     /// Shift controller.
@@ -395,7 +396,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                         DateTime.Now.ToString(queryEndDate, CultureInfo.InvariantCulture),
                                         processBatchUsersQueueInBatch.ToList()).ConfigureAwait(false);
 
-                                if (shiftsResponse?.Schedule?.ScheduleItems?.ScheduleShift is null)
+                                // Kronos api returns any shifts that occur in the date span provided.
+                                // We want only the entities that started within the query date span.
+                                var shifts = this.RemoveShiftsWithWrongStartDate(shiftsResponse?.Schedule?.ScheduleItems?.ScheduleShifts, queryStartDate, queryEndDate);
+
+                                if (shifts.Count == 0)
                                 {
                                     continue;
                                 }
@@ -414,7 +419,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                     userModelNotFoundList,
                                     lookUpData,
                                     processKronosUsersQueueInBatch,
-                                    shiftsResponse,
+                                    shifts,
                                     monthPartitionKey).ConfigureAwait(false);
                             }
                         }
@@ -439,7 +444,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="userModelNotFoundList">The list of users that have not been found.</param>
         /// <param name="lookUpData">The look up data from the Shift Entity Mapping table.</param>
         /// <param name="processKronosUsersQueueInBatch">The Kronos users in the queue.</param>
-        /// <param name="shiftsResponse">The Shifts Response from MS Graph.</param>
+        /// <param name="shifts">The Shifts Response from MS Graph.</param>
         /// <param name="monthPartitionKey">The monthwise partition.</param>
         /// <returns>A unit of execution.</returns>
         private async Task ProcessShiftEntitiesBatchAsync(
@@ -450,7 +455,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             List<UserDetailsModel> userModelNotFoundList,
             List<TeamsShiftMappingEntity> lookUpData,
             IEnumerable<UserDetailsModel> processKronosUsersQueueInBatch,
-            App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.Response shiftsResponse,
+            List<UpcomingShiftsResponse.ScheduleShift> shifts,
             string monthPartitionKey)
         {
             this.telemetryClient.TrackTrace($"ShiftController - ProcessShiftEntitiesBatchAsync started at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
@@ -462,7 +467,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             foreach (var user in processKronosUsersQueueInBatch)
             {
                 // This foreach loop will process the shift(s) that belong to each user.
-                foreach (var kronosShift in shiftsResponse?.Schedule?.ScheduleItems?.ScheduleShift)
+                foreach (var kronosShift in shifts)
                 {
                     if (user.KronosPersonNumber == kronosShift.Employee.FirstOrDefault().PersonNumber)
                     {
@@ -535,6 +540,32 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             await this.CreateEntryShiftsEntityMappingAsync(configurationDetails, userModelNotFoundList, shiftsNotFoundList, monthPartitionKey).ConfigureAwait(false);
 
             this.telemetryClient.TrackTrace($"ShiftController - ProcessShiftEntitiesBatchAsync ended at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
+        }
+
+        /// <summary>
+        /// Remove any shifts that do not start before the provided end date.
+        /// </summary>
+        /// <param name="shifts">The shifts to filter.</param>
+        /// <param name="queryStartDate">The date the shifts must start after.</param>
+        /// <param name="queryEndDate">The date the shifts must start before.</param>
+        /// <returns>A list of filtered shifts.</returns>
+        private List<UpcomingShiftsResponse.ScheduleShift> RemoveShiftsWithWrongStartDate(List<UpcomingShiftsResponse.ScheduleShift> shifts, string queryStartDate, string queryEndDate)
+        {
+            var filteredShifts = new List<UpcomingShiftsResponse.ScheduleShift>();
+            var batchStartDate = DateTime.Parse(queryStartDate, CultureInfo.InvariantCulture);
+            var batchEndDate = DateTime.Parse(queryEndDate, CultureInfo.InvariantCulture);
+
+            foreach (var shift in shifts)
+            {
+                var shiftStartDate = DateTime.Parse(shift.StartDate, CultureInfo.InvariantCulture);
+
+                if (shiftStartDate.Date >= batchStartDate.Date && shiftStartDate.Date <= batchEndDate.Date)
+                {
+                    filteredShifts.Add(shift);
+                }
+            }
+
+            return filteredShifts;
         }
 
         /// <summary>

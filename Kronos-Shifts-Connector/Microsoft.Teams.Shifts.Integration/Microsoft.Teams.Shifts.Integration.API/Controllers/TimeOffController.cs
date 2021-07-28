@@ -28,9 +28,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers;
     using Newtonsoft.Json;
-    using LastModifiedBy = Microsoft.Teams.Shifts.Integration.API.Models.Response.TimeOffRequest.LastModifiedBy;
     using TimeOffReq = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests;
-    using User = Microsoft.Teams.Shifts.Integration.API.Models.Response.TimeOffRequest.User;
 
     /// <summary>
     /// Time off controller.
@@ -168,12 +166,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 queryStartDate,
                                 queryEndDate).ConfigureAwait(false);
 
-                            if (timeOffDetails?.RequestMgmt?.RequestItems?.GlobalTimeOffRequestItem is null)
+                            // Kronos api returns any time off entities that occur in the date span provided.
+                            // We want only the entities that started within the query date span.
+                            var timeOff = this.RemoveTimeOffWithWrongStartDate(timeOffDetails?.RequestMgmt?.RequestItems?.GlobalTimeOffRequestItem, queryStartDate, queryEndDate);
+
+                            if (timeOff.Count == 0)
                             {
                                 continue;
                             }
-
-                            var timeOffResponseDetails = timeOffDetails?.RequestMgmt?.RequestItems?.GlobalTimeOffRequestItem;
 
                             var timeOffLookUpEntriesFoundList = new List<TimeOffMappingEntity>();
                             var timeOffNotFoundList = new List<GlobalTimeOffRequestItem>();
@@ -193,7 +193,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 kronosPayCodeList,
                                 processKronosUsersQueueInBatch,
                                 lookUpData,
-                                timeOffResponseDetails,
+                                timeOff,
                                 timeOffReasons,
                                 graphClient,
                                 monthPartitionKey,
@@ -572,6 +572,32 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 monthPartitionKey).ConfigureAwait(false);
 
             this.telemetryClient.TrackTrace($"ProcessTimeOffEntitiesBatchAsync ended for {monthPartitionKey}.");
+        }
+
+        /// <summary>
+        /// Remove any time off entities that do not start before the provided end date.
+        /// </summary>
+        /// <param name="timeOffEntities">The time off to filter.</param>
+        /// <param name="queryStartDate">The date the time off must start after.</param>
+        /// <param name="queryEndDate">The date the time off entities must start before.</param>
+        /// <returns>A list of filtered time off.</returns>
+        private List<GlobalTimeOffRequestItem> RemoveTimeOffWithWrongStartDate(List<GlobalTimeOffRequestItem> timeOffEntities, string queryStartDate, string queryEndDate)
+        {
+            var filteredTimeOff = new List<GlobalTimeOffRequestItem>();
+            var batchStartDate = DateTime.Parse(queryStartDate, CultureInfo.InvariantCulture);
+            var batchEndDate = DateTime.Parse(queryEndDate, CultureInfo.InvariantCulture);
+
+            foreach (var timeOff in timeOffEntities)
+            {
+                var timeOffStartDate = DateTime.Parse(timeOff.TimeOffPeriods.TimeOffPeriod.StartDate, CultureInfo.InvariantCulture);
+
+                if (timeOffStartDate.Date >= batchStartDate.Date && timeOffStartDate.Date <= batchEndDate.Date)
+                {
+                    filteredTimeOff.Add(timeOff);
+                }
+            }
+
+            return filteredTimeOff;
         }
 
         /// <summary>
