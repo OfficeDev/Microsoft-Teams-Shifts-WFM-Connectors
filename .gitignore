@@ -336,3 +336,4 @@ ASALocalRun/
 /Kronos-Shifts-Connector/api/.vscode
 Kronos-Shifts-Connector/Microsoft.Teams.Shifts.Integration/Microsoft.Teams.Shifts.Integration.API/Properties/ServiceDependencies/kwfcteamsdev-api - Web Deploy/profile.arm.json
 Kronos-Shifts-Connector/Microsoft.Teams.Shifts.Integration/Microsoft.Teams.Shifts.Integration.Configuration/Properties/ServiceDependencies/kwfcteamsdev-config - Web Deploy/profile.arm.json
+Kronos-Shifts-Connector/Microsoft.Teams.Shifts.Integration/Microsoft.Teams.Shifts.Integration.API/Microsoft.Teams.Shifts.Integration.API.xml
