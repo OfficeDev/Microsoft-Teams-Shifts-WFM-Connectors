@@ -1128,10 +1128,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                     // confirm new shifts exists on kronos
                     var requestedShiftKronos = requestingUserShifts
-                        .Schedule.ScheduleItems.ScheduleShift
+                        .Schedule.ScheduleItems.ScheduleShifts
                         .FirstOrDefault(x => x.Employee.FirstOrDefault().PersonNumber == kronosRequestingUserId && x.StartDate == requestorShiftDate);
                     var requestorsShiftKronos = requestedUserShifts
-                        .Schedule.ScheduleItems.ScheduleShift
+                        .Schedule.ScheduleItems.ScheduleShifts
                         .FirstOrDefault(x => x.Employee.FirstOrDefault().PersonNumber == kronosRequestedUserId && x.StartDate == requestedShiftDate);
 
                     if (requestedShiftKronos != null && requestorsShiftKronos != null)
