@@ -6,6 +6,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Linq;
     using Microsoft.Teams.App.KronosWfc.Common;
     using Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Incoming;
@@ -72,6 +73,34 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             // Filter all the system declined requests.
             return openShiftRequests.Where(c => c.Body?["state"].Value<string>() == ApiConstants.Declined
                 && c.Body["assignedTo"].Value<string>() == ApiConstants.System).ToList();
+        }
+
+        /// <summary>
+        /// Filters a list of entities, ensuring that the entity starts within the provided
+        /// query date range.
+        /// </summary>
+        /// <param name="entities">The entities to filter.</param>
+        /// <param name="queryStartDate">The date the entity must start after.</param>
+        /// <param name="queryEndDate">The date the entity must start before.</param>
+        /// <returns>A list of filtered entities.</returns>
+        public static List<T> FilterEntitiesByQueryDateSpan<T>(List<T> entities, string queryStartDate, string queryEndDate)
+        {
+            var filteredEntities = new List<T>();
+            var querystartDateTime = DateTime.Parse(queryStartDate, CultureInfo.InvariantCulture);
+            var queryEndDateTime = DateTime.Parse(queryEndDate, CultureInfo.InvariantCulture);
+
+            foreach (var entity in entities)
+            {
+                dynamic obj = entity;
+                var entityStartDate = DateTime.Parse(obj.StartDate, CultureInfo.InvariantCulture);
+
+                if (entityStartDate.Date >= querystartDateTime.Date && entityStartDate.Date <= queryEndDateTime.Date)
+                {
+                    filteredEntities.Add(entity);
+                }
+            }
+
+            return filteredEntities;
         }
     }
 }

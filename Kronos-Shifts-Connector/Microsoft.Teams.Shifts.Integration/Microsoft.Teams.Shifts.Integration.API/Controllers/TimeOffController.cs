@@ -28,9 +28,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers;
     using Newtonsoft.Json;
-    using LastModifiedBy = Microsoft.Teams.Shifts.Integration.API.Models.Response.TimeOffRequest.LastModifiedBy;
     using TimeOffReq = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests;
-    using User = Microsoft.Teams.Shifts.Integration.API.Models.Response.TimeOffRequest.User;
 
     /// <summary>
     /// Time off controller.
@@ -173,32 +171,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 continue;
                             }
 
-                            var timeOffResponseDetails = timeOffDetails?.RequestMgmt?.RequestItems?.GlobalTimeOffRequestItem;
-
-                            var timeOffLookUpEntriesFoundList = new List<TimeOffMappingEntity>();
-                            var timeOffNotFoundList = new List<GlobalTimeOffRequestItem>();
-
-                            var userModelList = new List<UserDetailsModel>();
-                            var userModelNotFoundList = new List<UserDetailsModel>();
-                            var kronosPayCodeList = new List<PayCodeToTimeOffReasonsMappingEntity>();
-                            var timeOffRequestsPayCodeList = new List<PayCodeToTimeOffReasonsMappingEntity>();
-                            var globalTimeOffRequestDetails = new List<GlobalTimeOffRequestItem>();
-
                             await this.ProcessTimeOffEntitiesBatchAsync(
                                 allRequiredConfigurations,
-                                timeOffLookUpEntriesFoundList,
-                                timeOffNotFoundList,
-                                userModelList,
-                                userModelNotFoundList,
-                                kronosPayCodeList,
                                 processKronosUsersQueueInBatch,
                                 lookUpData,
-                                timeOffResponseDetails,
+                                timeOffDetails?.RequestMgmt?.RequestItems?.GlobalTimeOffRequestItem,
                                 timeOffReasons,
                                 graphClient,
-                                monthPartitionKey,
-                                timeOffRequestsPayCodeList,
-                                globalTimeOffRequestDetails).ConfigureAwait(false);
+                                monthPartitionKey).ConfigureAwait(false);
                         }
                     }
                 }
@@ -418,41 +398,35 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// This method processes all of the time offs in a batch manner.
         /// </summary>
         /// <param name="configurationDetails">The configuration details.</param>
-        /// <param name="timeOffLookUpEntriesFoundList">The look up Time Off entries that are not found.</param>
-        /// <param name="timeOffNotFoundList">The list of time offs that are not found.</param>
-        /// <param name="userModelList">The list of users.</param>
-        /// <param name="userModelNotFoundList">The list of users that are not found.</param>
-        /// <param name="kronosPayCodeList">The Kronos pay code list.</param>
         /// <param name="processKronosUsersQueueInBatch">The users in batch.</param>
         /// <param name="lookUpData">The look up data.</param>
         /// <param name="timeOffResponseDetails">The time off response details.</param>
         /// <param name="timeOffReasons">The time off reasons.</param>
         /// <param name="graphClient">The MS Graph Service client.</param>
         /// <param name="monthPartitionKey">The montwise partition key.</param>
-        /// <param name="timeOffRequestsPayCodeList">The list of time off request pay codes.</param>
-        /// <param name="globalTimeOffRequestDetails">The time off request details.</param>
         /// <returns>A unit of execution.</returns>
         private async Task ProcessTimeOffEntitiesBatchAsync(
             SetupDetails configurationDetails,
-            List<TimeOffMappingEntity> timeOffLookUpEntriesFoundList,
-            List<GlobalTimeOffRequestItem> timeOffNotFoundList,
-            List<UserDetailsModel> userModelList,
-            List<UserDetailsModel> userModelNotFoundList,
-            List<PayCodeToTimeOffReasonsMappingEntity> kronosPayCodeList,
             IEnumerable<UserDetailsModel> processKronosUsersQueueInBatch,
             List<TimeOffMappingEntity> lookUpData,
             List<GlobalTimeOffRequestItem> timeOffResponseDetails,
             List<PayCodeToTimeOffReasonsMappingEntity> timeOffReasons,
             GraphServiceClient graphClient,
-            string monthPartitionKey,
-            List<PayCodeToTimeOffReasonsMappingEntity> timeOffRequestsPayCodeList,
-            List<GlobalTimeOffRequestItem> globalTimeOffRequestDetails)
+            string monthPartitionKey)
         {
             this.telemetryClient.TrackTrace($"ProcessTimeOffEntitiesBatchAsync start at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
 
-            foreach (var item in processKronosUsersQueueInBatch)
+            var timeOffLookUpEntriesFoundList = new List<TimeOffMappingEntity>();
+            var timeOffNotFoundList = new List<GlobalTimeOffRequestItem>();
+            var userModelList = new List<UserDetailsModel>();
+            var userModelNotFoundList = new List<UserDetailsModel>();
+            var kronosPayCodeList = new List<PayCodeToTimeOffReasonsMappingEntity>();
+            var timeOffRequestsPayCodeList = new List<PayCodeToTimeOffReasonsMappingEntity>();
+            var globalTimeOffRequestDetails = new List<GlobalTimeOffRequestItem>();
+
+            foreach (var user in processKronosUsersQueueInBatch)
             {
-                foreach (var timeOffRequestItem in timeOffResponseDetails.Where(x => x.Employee.PersonIdentity.PersonNumber == item.KronosPersonNumber))
+                foreach (var timeOffRequestItem in timeOffResponseDetails.Where(x => x.Employee.PersonIdentity.PersonNumber == user.KronosPersonNumber))
                 {
                     if (timeOffRequestItem.StatusName.Equals(ApiConstants.ApprovedStatus, StringComparison.Ordinal))
                     {
@@ -462,13 +436,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         {
                             // Getting a TimeOffReasonId object based on the TimeOff paycode from Kronos and the team ID in Shifts.
                             var timeOffReasonId = timeOffReasons.
-                                Where(t => t.RowKey == timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName && t.PartitionKey == item.ShiftTeamId).FirstOrDefault();
+                                Where(t => t.RowKey == timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName && t.PartitionKey == user.ShiftTeamId).FirstOrDefault();
                             this.telemetryClient.TrackTrace($"ProcessTimeOffEntitiesBatchAsync PaycodeName : {timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName} ");
                             this.telemetryClient.TrackTrace($"ProcessTimeOffEntitiesBatchAsync ReqId : {timeOffRequestItem.Id} ");
                             if (timeOffReasonId != null)
                             {
                                 timeOffNotFoundList.Add(timeOffRequestItem);
-                                userModelNotFoundList.Add(item);
+                                userModelNotFoundList.Add(user);
                                 kronosPayCodeList.Add(timeOffReasonId);
                             }
                             else
@@ -490,14 +464,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             {
                                 // Getting a TimeOffReasonId object based on the TimeOff paycode from Kronos and the team ID in Shifts.
                                 var timeOffReasonId = timeOffReasons.
-                                    Where(t => t.RowKey == timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName && t.PartitionKey == item.ShiftTeamId).FirstOrDefault();
+                                    Where(t => t.RowKey == timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName && t.PartitionKey == user.ShiftTeamId).FirstOrDefault();
 
                                 // Kronos API does not return all the PayCodes present in Kronos UI. For such cases TimeOffReason mapping
                                 // will be null and that TimeOffs will not be synced.
                                 if (timeOffReasonId != null)
                                 {
                                     timeOffLookUpEntriesFoundList.Add(kronosUniqueIdExists.FirstOrDefault());
-                                    userModelList.Add(item);
+                                    userModelList.Add(user);
                                     timeOffRequestsPayCodeList.Add(timeOffReasonId);
                                     globalTimeOffRequestDetails.Add(timeOffRequestItem);
                                 }
@@ -515,14 +489,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             {
                                 // Getting a TimeOffReasonId object based on the TimeOff paycode from Kronos and the team ID in Shifts.
                                 var timeOffReasonId = timeOffReasons.
-                                    Where(t => t.RowKey == timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName && t.PartitionKey == item.ShiftTeamId).FirstOrDefault();
+                                    Where(t => t.RowKey == timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName && t.PartitionKey == user.ShiftTeamId).FirstOrDefault();
 
                                 // Kronos API does not return all the PayCodes present in Kronos UI. For such cases TimeOffReason mapping
                                 // will be null and that TimeOffs will not be synced.
                                 if (timeOffReasonId != null)
                                 {
                                     timeOffNotFoundList.Add(timeOffRequestItem);
-                                    userModelNotFoundList.Add(item);
+                                    userModelNotFoundList.Add(user);
                                     kronosPayCodeList.Add(timeOffReasonId);
                                 }
                                 else
@@ -538,12 +512,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         || timeOffRequestItem.StatusName.Equals(ApiConstants.Retract, StringComparison.Ordinal))
                     {
                         var reqDetails = lookUpData.Where(c => c.KronosRequestId == timeOffRequestItem.Id).FirstOrDefault();
-                        var timeOffReasonIdtoUpdate = timeOffReasons.Where(t => t.RowKey == timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName && t.PartitionKey == item.ShiftTeamId).FirstOrDefault();
+                        var timeOffReasonIdtoUpdate = timeOffReasons.Where(t => t.RowKey == timeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName && t.PartitionKey == user.ShiftTeamId).FirstOrDefault();
                         if (reqDetails != null && timeOffReasonIdtoUpdate != null && reqDetails.KronosStatus == ApiConstants.Submitted)
                         {
                             await this.DeclineTimeOffRequestAsync(
                                     timeOffRequestItem,
-                                    item,
+                                    user,
                                     reqDetails.ShiftsRequestId,
                                     configurationDetails,
                                     monthPartitionKey).ConfigureAwait(false);

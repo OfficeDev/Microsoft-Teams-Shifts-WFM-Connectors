@@ -24,6 +24,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels;
     using Newtonsoft.Json;
+    using OpenShiftBatch = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.OpenShift.Batch;
     using SetupDetails = Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.SetupDetails;
 
     /// <summary>
@@ -245,25 +246,26 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 foreach (var openShiftSchedule in openShiftsResponse?.Schedules.Where(x => x.OrgJobPath == orgJob))
                                 {
                                     this.telemetryClient.TrackTrace($"OpenShiftController - Processing the Open Shift schedule for: {openShiftSchedule.OrgJobPath}, and date range: {openShiftSchedule.QueryDateSpan}");
-                                    var scheduleShiftCount = (int)openShiftSchedule.ScheduleItems?.ScheduleShifts?.Count;
 
-                                    if (scheduleShiftCount > 0)
+                                    // Kronos api returns any open shifts that occur in the date span provided.
+                                    // We want only the entities that started within the query date span.
+                                    var openShifts = ControllerHelper.FilterEntitiesByQueryDateSpan(openShiftSchedule.ScheduleItems?.ScheduleShifts, queryStartDate, queryEndDate);
+
+                                    if (openShifts.Count > 0)
                                     {
                                         if (mappedOrgJobEntity != null)
                                         {
                                             this.telemetryClient.TrackTrace($"OpenShiftController - Processing Open Shifts for the mapped team: {mappedOrgJobEntity.ShiftsTeamName}");
 
                                             // This foreach builds the Open Shift object to push to Shifts via Graph API.
-                                            foreach (var scheduleShift in openShiftSchedule?.ScheduleItems?.ScheduleShifts)
+                                            foreach (var openShift in openShifts)
                                             {
-                                                var shiftSegmentCount = scheduleShift.ShiftSegments;
-
-                                                this.telemetryClient.TrackTrace($"OpenShiftController - Processing {scheduleShift.StartDate} with {shiftSegmentCount} segments.");
+                                                this.telemetryClient.TrackTrace($"OpenShiftController - Processing {openShift.StartDate} with {openShift.ShiftSegments.ShiftSegment.Count} segments.");
 
                                                 var openShiftActivity = new List<Activity>();
 
                                                 // This foreach loop will build the OpenShift activities.
-                                                foreach (var segment in scheduleShift.ShiftSegments.ShiftSegment)
+                                                foreach (var segment in openShift.ShiftSegments.ShiftSegment)
                                                 {
                                                     openShiftActivity.Add(new Activity
                                                     {
@@ -282,7 +284,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                                     {
                                                         DisplayName = string.Empty,
                                                         OpenSlotCount = Constants.ShiftsOpenSlotCount,
-                                                        Notes = this.utility.GetOpenShiftNotes(scheduleShift),
+                                                        Notes = this.utility.GetOpenShiftNotes(openShift),
                                                         StartDateTime = openShiftActivity.First().StartDateTime,
                                                         EndDateTime = openShiftActivity.Last().EndDateTime,
                                                         Theme = this.appSettings.OpenShiftTheme,
@@ -326,7 +328,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                     }
                                     else
                                     {
-                                        this.telemetryClient.TrackTrace($"ScheduleShiftCount - {scheduleShiftCount} for {openShiftSchedule.OrgJobPath}");
+                                        this.telemetryClient.TrackTrace($"ScheduleShiftCount - {openShifts.Count} for {openShiftSchedule.OrgJobPath}");
                                         continue;
                                     }
                                 }
@@ -509,7 +511,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="startDate">The start date.</param>
         /// <param name="endDate">The end date.</param>
         /// <returns>A unit of execution that contains the Kronos response model.</returns>
-        private async Task<App.KronosWfc.Models.ResponseEntities.OpenShift.Batch.Response> GetOpenShiftResultsByOrgJobPathInBatchAsync(
+        private async Task<OpenShiftBatch.Response> GetOpenShiftResultsByOrgJobPathInBatchAsync(
             string workforceIntegrationId,
             string kronosEndpoint,
             string jSession,
@@ -528,7 +530,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             var openShiftQueryDateSpan = $"{startDate}-{endDate}";
 
-            var openShiftRequests = await this.openShiftActivity.GetOpenShiftDetailsInBatchAsync(
+            var openShifts = await this.openShiftActivity.GetOpenShiftDetailsInBatchAsync(
                 new Uri(kronosEndpoint),
                 jSession,
                 orgJobPathsList,
@@ -536,7 +538,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             this.telemetryClient.TrackTrace($"OpenShiftController - GetOpenShiftResultsByOrgJobPathInBatchAsync ended at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
 
-            return openShiftRequests;
+            return openShifts;
         }
 
         /// <summary>
