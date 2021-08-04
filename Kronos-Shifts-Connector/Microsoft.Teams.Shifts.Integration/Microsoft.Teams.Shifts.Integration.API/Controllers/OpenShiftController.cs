@@ -249,7 +249,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                                     // Kronos api returns any open shifts that occur in the date span provided.
                                     // We want only the entities that started within the query date span.
-                                    var openShifts = this.RemoveOpenShiftsWithWrongStartDate(openShiftSchedule.ScheduleItems?.ScheduleShifts, queryStartDate, queryEndDate);
+                                    var openShifts = ControllerHelper.FilterEntitiesByQueryDateSpan(openShiftSchedule.ScheduleItems?.ScheduleShifts, queryStartDate, queryEndDate);
 
                                     if (openShifts.Count > 0)
                                     {
@@ -260,9 +260,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                             // This foreach builds the Open Shift object to push to Shifts via Graph API.
                                             foreach (var openShift in openShifts)
                                             {
-                                                var shiftSegmentCount = openShift.ShiftSegments;
-
-                                                this.telemetryClient.TrackTrace($"OpenShiftController - Processing {openShift.StartDate} with {shiftSegmentCount} segments.");
+                                                this.telemetryClient.TrackTrace($"OpenShiftController - Processing {openShift.StartDate} with {openShift.ShiftSegments.ShiftSegment.Count} segments.");
 
                                                 var openShiftActivity = new List<Activity>();
 
@@ -501,32 +499,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             }
 
             this.telemetryClient.TrackTrace($"DeleteOrphanDataOpenShiftsEntityMappingAsync ended at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
-        }
-
-        /// <summary>
-        /// Remove any open shifts that do not start before the provided end date.
-        /// </summary>
-        /// <param name="openShifts">The open shifts to filter.</param>
-        /// <param name="queryStartDate">The date the open shifts must start after.</param>
-        /// <param name="queryEndDate">The date the open shifts must start before.</param>
-        /// <returns>A list of filtered open shifts.</returns>
-        private List<OpenShiftBatch.ScheduleShift> RemoveOpenShiftsWithWrongStartDate(List<OpenShiftBatch.ScheduleShift> openShifts, string queryStartDate, string queryEndDate)
-        {
-            var filteredOpenShifts = new List<OpenShiftBatch.ScheduleShift>();
-            var batchStartDate = DateTime.Parse(queryStartDate, CultureInfo.InvariantCulture);
-            var batchEndDate = DateTime.Parse(queryEndDate, CultureInfo.InvariantCulture);
-
-            foreach (var openShift in openShifts)
-            {
-                var openShiftStartDate = DateTime.Parse(openShift.StartDate, CultureInfo.InvariantCulture);
-
-                if (openShiftStartDate.Date >= batchStartDate.Date && openShiftStartDate.Date <= batchEndDate.Date)
-                {
-                    filteredOpenShifts.Add(openShift);
-                }
-            }
-
-            return filteredOpenShifts;
         }
 
         /// <summary>

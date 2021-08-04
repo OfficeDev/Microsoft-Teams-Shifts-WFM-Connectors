@@ -403,7 +403,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                                 // Kronos api returns any shifts that occur in the date span provided.
                                 // We want only the entities that started within the query date span.
-                                var shifts = this.RemoveShiftsWithWrongStartDate(shiftsResponse?.Schedule?.ScheduleItems?.ScheduleShifts, queryStartDate, queryEndDate);
+                                var shifts = ControllerHelper.FilterEntitiesByQueryDateSpan(shiftsResponse?.Schedule?.ScheduleItems?.ScheduleShifts, queryStartDate, queryEndDate);
 
                                 if (shifts.Count == 0)
                                 {
@@ -545,32 +545,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             await this.CreateEntryShiftsEntityMappingAsync(configurationDetails, userModelNotFoundList, shiftsNotFoundList, monthPartitionKey).ConfigureAwait(false);
 
             this.telemetryClient.TrackTrace($"ShiftController - ProcessShiftEntitiesBatchAsync ended at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
-        }
-
-        /// <summary>
-        /// Remove any shifts that do not start before the provided end date.
-        /// </summary>
-        /// <param name="shifts">The shifts to filter.</param>
-        /// <param name="queryStartDate">The date the shifts must start after.</param>
-        /// <param name="queryEndDate">The date the shifts must start before.</param>
-        /// <returns>A list of filtered shifts.</returns>
-        private List<UpcomingShiftsResponse.ScheduleShift> RemoveShiftsWithWrongStartDate(List<UpcomingShiftsResponse.ScheduleShift> shifts, string queryStartDate, string queryEndDate)
-        {
-            var filteredShifts = new List<UpcomingShiftsResponse.ScheduleShift>();
-            var batchStartDate = DateTime.Parse(queryStartDate, CultureInfo.InvariantCulture);
-            var batchEndDate = DateTime.Parse(queryEndDate, CultureInfo.InvariantCulture);
-
-            foreach (var shift in shifts)
-            {
-                var shiftStartDate = DateTime.Parse(shift.StartDate, CultureInfo.InvariantCulture);
-
-                if (shiftStartDate.Date >= batchStartDate.Date && shiftStartDate.Date <= batchEndDate.Date)
-                {
-                    filteredShifts.Add(shift);
-                }
-            }
-
-            return filteredShifts;
         }
 
         /// <summary>
