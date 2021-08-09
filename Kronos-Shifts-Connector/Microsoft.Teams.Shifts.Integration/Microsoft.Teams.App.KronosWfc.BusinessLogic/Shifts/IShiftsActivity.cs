@@ -63,13 +63,13 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
         /// </summary>
         /// <param name="endpoint">The endpoint for the request.</param>
         /// <param name="jSession">The Jsession token.</param>
-        /// <param name="shiftStartDate">The start date of the shift.</param>
-        /// <param name="shiftEndDate">The end date of the shift.</param>
+        /// <param name="replacementShiftStartDate">The start date of the shift.</param>
+        /// <param name="replacementShiftEndDate">The end date of the shift.</param>
         /// <param name="overADateBorder">Whether the shift spans over a date border.</param>
         /// <param name="jobPath">The job of the shift.</param>
         /// <param name="kronosId">The id of the employee.</param>
-        /// <param name="startTime">The start time of the shift.</param>
-        /// <param name="endTime">The end time of the shift.</param>
+        /// <param name="replacementShiftStartTime">The start time of the shift.</param>
+        /// <param name="replacementShiftEndTime">The end time of the shift.</param>
         /// <param name="shiftToReplaceStartDate">The start date of the shift we want to replace.</param>
         /// <param name="shiftToReplaceEndDate">The end date of the shift we want to replace.</param>
         /// <param name="shiftToReplaceStartTime">The start time of the shift we want to replace.</param>
@@ -78,13 +78,13 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
         Task<CRUDResponse> EditShift(
             Uri endpoint,
             string jSession,
-            string shiftStartDate,
-            string shiftEndDate,
+            string replacementShiftStartDate,
+            string replacementShiftEndDate,
             bool overADateBorder,
             string jobPath,
             string kronosId,
-            string startTime,
-            string endTime,
+            string replacementShiftStartTime,
+            string replacementShiftEndTime,
             string shiftToReplaceStartDate,
             string shiftToReplaceEndDate,
             string shiftToReplaceStartTime,
