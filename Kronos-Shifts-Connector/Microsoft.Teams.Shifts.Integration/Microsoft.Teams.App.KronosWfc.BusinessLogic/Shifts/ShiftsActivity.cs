@@ -6,6 +6,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Linq;
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights;
@@ -14,6 +15,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Shifts;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.HyperFind;
     using Microsoft.Teams.App.KronosWfc.Service;
+    using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
     using static Microsoft.Teams.App.KronosWfc.BusinessLogic.Common.XmlHelper;
     using CRUDResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Common.Response;
     using Request = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Shifts.ShiftRequest;
@@ -97,16 +99,30 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
         public async Task<CRUDResponse> EditShift(
             Uri endpoint,
             string jSession,
-            string shiftStartDate,
-            string shiftEndDate,
+            string replacementShiftStartDate,
+            string replacementShiftEndDate,
             bool overADateBorder,
             string jobPath,
             string kronosId,
-            string startTime,
-            string endTime,
-            List<ScheduleShift> shiftsOnSameDay)
+            string replacementShiftStartTime,
+            string replacementShiftEndTime,
+            string shiftToReplaceStartDate,
+            string shiftToReplaceEndDate,
+            string shiftToReplaceStartTime,
+            string shiftToReplaceEndTime)
         {
-            var createShiftRequest = this.CreateEditRequest(shiftStartDate, shiftEndDate, overADateBorder, jobPath, kronosId, startTime, endTime, shiftsOnSameDay);
+            var createShiftRequest = this.CreateEditRequest(
+                replacementShiftStartDate,
+                replacementShiftEndDate,
+                overADateBorder,
+                jobPath,
+                kronosId,
+                replacementShiftStartTime,
+                replacementShiftEndTime,
+                shiftToReplaceStartDate,
+                shiftToReplaceEndDate,
+                shiftToReplaceStartTime,
+                shiftToReplaceEndTime);
 
             var response = await this.apiHelper.SendSoapPostRequestAsync(
                 endpoint,
@@ -184,16 +200,23 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
             string kronosId,
             string startTime,
             string endTime,
-            List<ScheduleShift> shiftsOnSameDay)
+            string shiftToReplaceStartDate,
+            string shiftToReplaceEndDate,
+            string shiftToReplaceStartTime,
+            string shiftToReplaceEndTime)
         {
+            // Ensure the query date range spans both the old shift and the shift to replace with
+            var queryDateSpanStart = DateTime.Parse(shiftStartDate, CultureInfo.InvariantCulture) <= DateTime.Parse(shiftToReplaceStartDate, CultureInfo.InvariantCulture) ? shiftStartDate : shiftToReplaceStartDate;
+            var queryDateSpanEnd = DateTime.Parse(shiftEndDate, CultureInfo.InvariantCulture) >= DateTime.Parse(shiftToReplaceEndDate, CultureInfo.InvariantCulture) ? shiftEndDate : shiftToReplaceEndDate;
+
             var secondDayNumber = overADateBorder ? 2 : 1;
             Request req = new Request
             {
-                Action = ApiConstants.EditScheduleItems,
+                Action = ApiConstants.ReplaceShift,
                 Schedule = new Schedule
                 {
                     Employees = new Employees().Create(kronosId),
-                    QueryDateSpan = $"{shiftStartDate}-{shiftEndDate}",
+                    QueryDateSpan = $"{queryDateSpanStart}-{queryDateSpanEnd}",
                     ScheduleItems = new ScheduleItems
                     {
                         ScheduleShift = new List<ScheduleShift>
@@ -201,15 +224,16 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
                             new ScheduleShift
                             {
                                 StartDate = shiftStartDate,
+                                ReplaceStartDate = shiftToReplaceStartDate,
+                                ReplaceEndDate = shiftToReplaceEndDate,
+                                ReplaceStartTime = shiftToReplaceStartTime,
+                                ReplaceEndTime = shiftToReplaceEndTime,
                                 ShiftSegments = new ShiftSegments().Create(startTime, endTime, 1, secondDayNumber, jobPath),
                             },
                         },
                     },
                 },
             };
-
-            // Add any additional shifts
-            req.Schedule.ScheduleItems.ScheduleShift.AddRange(shiftsOnSameDay);
 
             return req.XmlSerialize();
         }

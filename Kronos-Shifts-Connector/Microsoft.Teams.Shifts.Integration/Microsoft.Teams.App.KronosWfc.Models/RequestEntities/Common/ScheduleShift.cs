@@ -19,6 +19,30 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common
         public string StartDate { get; set; }
 
         /// <summary>
+        /// Gets or sets the start date of the shift we want to replace.
+        /// </summary>
+        [XmlAttribute]
+        public string ReplaceStartDate { get; set; }
+
+        /// <summary>
+        /// Gets or sets the end date of the shift we want to replace.
+        /// </summary>
+        [XmlAttribute]
+        public string ReplaceEndDate { get; set; }
+
+        /// <summary>
+        /// Gets or sets the start time of the shift we want to replace.
+        /// </summary>
+        [XmlAttribute]
+        public string ReplaceStartTime { get; set; }
+
+        /// <summary>
+        /// Gets or sets the end time of the shift we want to replace.
+        /// </summary>
+        [XmlAttribute]
+        public string ReplaceEndTime { get; set; }
+
+        /// <summary>
         /// Gets or sets the ShiftLabel.
         /// </summary>
         [XmlAttribute("Shiftlabel")]

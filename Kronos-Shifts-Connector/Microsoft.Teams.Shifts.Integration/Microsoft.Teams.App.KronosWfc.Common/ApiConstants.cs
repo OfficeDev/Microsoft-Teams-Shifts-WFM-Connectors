@@ -263,5 +263,10 @@ namespace Microsoft.Teams.App.KronosWfc.Common
         /// Defines the action for deleting schedule items.
         /// </summary>
         public const string RemoveSpecifiedScheduleItems = "RemoveSpecifiedScheduleItems";
+
+        /// <summary>
+        /// Defines the action for replacing a shift.
+        /// </summary>
+        public const string ReplaceShift = "ReplaceShift";
     }
 }

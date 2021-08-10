@@ -270,15 +270,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var (kronosStartDateTime, kronosEndDateTime) = this.GetConvertedShiftDetails(editedShift, mappedTeam);
             var monthPartitionKey = Utility.GetMonthPartition(this.utility.FormatDateForKronos(kronosStartDateTime), this.utility.FormatDateForKronos(kronosEndDateTime));
 
-            var usersShifts = await this.shiftMappingEntityProvider.GetAllUsersShiftsByPartitionKeyAsync(monthPartitionKey.First(), user.ShiftUserAadObjectId).ConfigureAwait(false);
-
-            // Take draft whenever possible as this is the most recent change,
-            // ensure we filter out the edited shift from the additional shifts list
-            var editedShiftStartDate = editedShift.DraftShift?.StartDateTime.Date ?? editedShift.SharedShift?.StartDateTime.Date;
-            var shiftsOnSameDay = usersShifts.Where(x => x.ShiftStartDate.Date == editedShiftStartDate && x.RowKey != editedShift.Id).ToList();
-
-            // Create scheduled shift object for each shift that starts on the same day as the edited shift
-            var additionalShifts = this.ProcessSameDayShifts(shiftsOnSameDay, mappedTeam, user);
+            var shiftToReplace = await this.shiftMappingEntityProvider.GetShiftMappingEntityByRowKeyAsync(editedShift.Id).ConfigureAwait(false);
+            var shiftToReplaceStartDateTime = this.utility.UTCToKronosTimeZone(shiftToReplace.ShiftStartDate, mappedTeam.KronosTimeZone);
+            var shiftToReplaceEndDateTime = this.utility.UTCToKronosTimeZone(shiftToReplace.ShiftEndDate, mappedTeam.KronosTimeZone);
 
             var editResponse = await this.shiftsActivity.EditShift(
                 new Uri(allRequiredConfigurations.WfmEndPoint),
@@ -290,7 +284,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 user.RowKey,
                 kronosStartDateTime.TimeOfDay.ToString(),
                 kronosEndDateTime.TimeOfDay.ToString(),
-                additionalShifts).ConfigureAwait(false);
+                this.utility.FormatDateForKronos(shiftToReplaceStartDateTime),
+                this.utility.FormatDateForKronos(shiftToReplaceEndDateTime),
+                shiftToReplaceStartDateTime.TimeOfDay.ToString(),
+                shiftToReplaceEndDateTime.TimeOfDay.ToString()).ConfigureAwait(false);
 
             if (editResponse.Status != Success)
             {
@@ -740,42 +737,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     (DateTime)(shift.DraftShift?.StartDateTime ?? shift.SharedShift?.StartDateTime), mappedTeam.KronosTimeZone),
                 KronosEndDateTime: this.utility.UTCToKronosTimeZone(
                     (DateTime)(shift.DraftShift?.EndDateTime ?? shift.SharedShift?.EndDateTime), mappedTeam.KronosTimeZone));
-        }
-
-        /// <summary>
-        /// Create a schedule shift entity for each shift that starts on the same day
-        /// as the edited shift.
-        /// </summary>
-        /// <param name="shiftsOnSameDay">The list of shifts that start on the same day.</param>
-        /// <param name="mappedTeam">The team the shifts are scheduled in.</param>
-        /// <param name="user">The user the shifts are assigned to.</param>
-        /// <returns>A list of schedule shift.</returns>
-        private List<ScheduleShift> ProcessSameDayShifts(List<TeamsShiftMappingEntity> shiftsOnSameDay, TeamToDepartmentJobMappingEntity mappedTeam, AllUserMappingEntity user)
-        {
-            var additionalShifts = new List<ScheduleShift>();
-
-            foreach (var shift in shiftsOnSameDay)
-            {
-                var additionalShiftStartDate = this.utility.UTCToKronosTimeZone(shift.ShiftStartDate, mappedTeam.KronosTimeZone);
-                var additionalShiftEndDate = this.utility.UTCToKronosTimeZone(shift.ShiftEndDate, mappedTeam.KronosTimeZone);
-
-                var secondDayNumber = additionalShiftEndDate.Day > additionalShiftStartDate.Day ? 2 : 1;
-
-                var additionalShift = new ScheduleShift
-                {
-                    StartDate = this.utility.FormatDateForKronos(additionalShiftStartDate),
-                    ShiftSegments = new ShiftSegments().Create(
-                        additionalShiftStartDate.TimeOfDay.ToString(),
-                        additionalShiftEndDate.TimeOfDay.ToString(),
-                        1,
-                        secondDayNumber,
-                        Utility.OrgJobPathKronosConversion(user.PartitionKey)),
-                };
-
-                additionalShifts.Add(additionalShift);
-            }
-
-            return additionalShifts;
         }
     }
 }
