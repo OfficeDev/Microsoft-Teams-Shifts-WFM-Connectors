@@ -191,6 +191,16 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// </summary>
         public string KronosQueryDateSpanFormat => this.configuration["KronosQueryDateSpanFormat"];
 
+        /// <summary>
+        /// Gets the manager time off request comment text value.
+        /// </summary>
+        public string ManagerTimeOffRequestCommentText => this.configuration["ManagerTimeOffRequestCommentText"];
+
+        /// <summary>
+        /// Gets the sender time off request comment text value.
+        /// </summary>
+        public string SenderTimeOffRequestCommentText => this.configuration["SenderTimeOffRequestCommentText"];
+
         // **************************************CONFIGURATION PROJECT*********************************************
 
         /// <summary>

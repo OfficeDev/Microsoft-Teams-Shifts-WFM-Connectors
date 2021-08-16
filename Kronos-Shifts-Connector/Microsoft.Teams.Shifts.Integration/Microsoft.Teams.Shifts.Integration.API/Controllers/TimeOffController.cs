@@ -17,7 +17,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Graph;
-    using Microsoft.Teams.App.KronosWfc.BusinessLogic.ShiftsToKronos.CreateTimeOff;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff;
     using Microsoft.Teams.App.KronosWfc.Common;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.HyperFind;
@@ -44,7 +43,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private readonly TelemetryClient telemetryClient;
         private readonly IUserMappingProvider userMappingProvider;
         private readonly ITimeOffActivity timeOffActivity;
-        private readonly ICreateTimeOffActivity createTimeOffActivity;
         private readonly ITimeOffReasonProvider timeOffReasonProvider;
         private readonly IAzureTableStorageHelper azureTableStorageHelper;
         private readonly ITimeOffMappingEntityProvider timeOffMappingEntityProvider;
@@ -60,7 +58,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="telemetryClient">ApplicationInsights DI.</param>
         /// <param name="userMappingProvider">The User Mapping Provider DI.</param>
         /// <param name="timeOffActivity">Time Off Activity DI.</param>
-        /// <param name="createTimeOffActivity">Create time off activity DI.</param>
         /// <param name="timeOffReasonProvider">Time Off Reason Provider DI.</param>
         /// <param name="azureTableStorageHelper">Azure Storage Helper DI.</param>
         /// <param name="timeOffMappingEntityProvider">Time Off Mapping Provider DI.</param>
@@ -73,7 +70,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             TelemetryClient telemetryClient,
             IUserMappingProvider userMappingProvider,
             ITimeOffActivity timeOffActivity,
-            ICreateTimeOffActivity createTimeOffActivity,
             ITimeOffReasonProvider timeOffReasonProvider,
             IAzureTableStorageHelper azureTableStorageHelper,
             ITimeOffMappingEntityProvider timeOffMappingEntityProvider,
@@ -86,7 +82,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             this.telemetryClient = telemetryClient;
             this.userMappingProvider = userMappingProvider;
             this.timeOffActivity = timeOffActivity;
-            this.createTimeOffActivity = createTimeOffActivity;
             this.timeOffReasonProvider = timeOffReasonProvider;
             this.azureTableStorageHelper = azureTableStorageHelper;
             this.timeOffMappingEntityProvider = timeOffMappingEntityProvider ?? throw new ArgumentNullException(nameof(timeOffMappingEntityProvider));
@@ -248,13 +243,15 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var timeOffReqQueryDateSpan = $"{queryStartDate}-{queryEndDate}";
 
             // Create the Kronos Time Off Request.
-            var timeOffResponse = await this.createTimeOffActivity.CreateTimeOffRequestAsync(
+            var timeOffResponse = await this.timeOffActivity.CreateTimeOffRequestAsync(
                 allRequiredConfigurations.KronosSession,
                 localStartDateTime,
                 localEndDateTime,
                 timeOffReqQueryDateSpan,
                 user.KronosPersonNumber,
                 timeOffReason.RowKey,
+                timeOffEntity.SenderMessage,
+                this.appSettings.SenderTimeOffRequestCommentText,
                 new Uri(allRequiredConfigurations.WfmEndPoint)).ConfigureAwait(false);
 
             if (!string.IsNullOrWhiteSpace(timeOffResponse?.Error?.Message))
@@ -263,7 +260,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 return false;
             }
 
-            var submitTimeOffResponse = await this.createTimeOffActivity.SubmitTimeOffRequestAsync(
+            var submitTimeOffResponse = await this.timeOffActivity.SubmitTimeOffRequestAsync(
                     allRequiredConfigurations.KronosSession,
                     user.KronosPersonNumber,
                     timeOffResponse?.EmployeeRequestMgm?.RequestItem?.GlobalTimeOffRequestItms?.FirstOrDefault()?.Id,
