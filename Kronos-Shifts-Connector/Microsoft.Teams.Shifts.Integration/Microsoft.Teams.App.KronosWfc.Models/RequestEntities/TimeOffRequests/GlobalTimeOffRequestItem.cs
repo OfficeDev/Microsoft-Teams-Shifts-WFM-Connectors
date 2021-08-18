@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
-namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.ShiftsToKronos.AddRequest
+namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.TimeOffRequests
 {
     using System.Xml.Serialization;
     using Microsoft.Teams.App.KronosWfc.Models.CommonEntities;
@@ -13,6 +13,12 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.ShiftsToKronos.Ad
     /// </summary>
     public class GlobalTimeOffRequestItem
     {
+        /// <summary>
+        /// Gets or sets the time off request id.
+        /// </summary>
+        [XmlElement("Id")]
+        public string Id { get; set; }
+
         /// <summary>
         /// Gets or sets the Time Off perirods.
         /// </summary>
