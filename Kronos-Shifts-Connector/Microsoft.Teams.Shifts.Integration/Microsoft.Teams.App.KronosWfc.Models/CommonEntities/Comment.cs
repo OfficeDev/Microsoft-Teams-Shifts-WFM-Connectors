@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
-namespace Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests
+namespace Microsoft.Teams.App.KronosWfc.Models.CommonEntities
 {
     using System.Xml.Serialization;
 

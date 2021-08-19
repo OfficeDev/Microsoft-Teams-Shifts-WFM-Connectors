@@ -5,7 +5,7 @@
 namespace Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.FetchApproval
 {
     using System.Xml.Serialization;
-    using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.TimeOffRequests;
+    using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.SwapShift.FetchApprovals.SwapShiftData;
 
     /// <summary>
     /// Employee request management for swap shift request.
@@ -27,7 +27,7 @@ namespace Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.FetchApproval
         /// <summary>
         /// Gets or sets requestitems for swap shift.
         /// </summary>
-        [XmlElement(ElementName ="RequestItems")]
+        [XmlElement(ElementName = "RequestItems")]
         public RequestItems RequestItems { get; set; }
     }
 }

@@ -5,6 +5,7 @@
 namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.TimeOffRequests
 {
     using System.Xml.Serialization;
+    using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common;
 
     /// <summary>
     /// This class models the RequestMgmt.
@@ -29,6 +30,12 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.TimeOffRequests
         /// </summary>
         [XmlAttribute(AttributeName = "RequestFor")]
         public string RequestFor { get; set; }
+
+        /// <summary>
+        /// Gets or sets the RequestItems.
+        /// </summary>
+        [XmlElement("RequestItems")]
+        public RequestItems RequestItems { get; set; }
 
         /// <summary>
         /// Gets or sets the StatusName.
