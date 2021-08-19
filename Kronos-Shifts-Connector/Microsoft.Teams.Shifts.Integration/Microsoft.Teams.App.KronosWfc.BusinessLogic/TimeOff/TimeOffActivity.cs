@@ -218,41 +218,36 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
         /// <param name="startDateTime">The start date/time stamp for the time off request.</param>
         /// <param name="endDateTime">The end date/time stamp for the time off request.</param>
         /// <param name="reason">The time off reason from Shifts.</param>
-        /// <returns>A string that represents the duration period.</returns>
-        private static List<TimeOffPeriod> CalculateTimeOffPeriod(DateTimeOffset startDateTime, DateTimeOffset endDateTime, string reason)
+        /// <returns>Returns the time off period for the request.</returns>
+        private static TimeOffPeriod CalculateTimeOffPeriod(DateTimeOffset startDateTime, DateTimeOffset endDateTime, string reason)
         {
             string duration;
-            var timeOffPeriod = new List<TimeOffPeriod>();
             var length = (endDateTime - startDateTime).TotalHours;
             DateTimeOffset modifiedEndDateTimeForKronos = endDateTime.AddDays(-1);
             if (length % 24 == 0 || length > 24)
             {
                 duration = ApiConstants.FullDayDuration;
-                timeOffPeriod.Add(
-                    new TimeOffPeriod()
-                    {
-                        Duration = duration,
-                        EndDate = modifiedEndDateTimeForKronos.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
-                        PayCodeName = reason,
-                        StartDate = startDateTime.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
-                    });
+                return new TimeOffPeriod()
+                {
+                    Duration = duration,
+                    EndDate = modifiedEndDateTimeForKronos.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
+                    PayCodeName = reason,
+                    StartDate = startDateTime.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
+                };
             }
             else
             {
                 duration = ApiConstants.HoursDuration;
-                timeOffPeriod.Add(
-                    new TimeOffPeriod()
-                    {
-                        Duration = duration,
-                        EndDate = endDateTime.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
-                        PayCodeName = reason,
-                        StartDate = startDateTime.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
-                        StartTime = startDateTime.ToString("hh:mm tt", CultureInfo.InvariantCulture),
-                        Length = Convert.ToString(length, CultureInfo.InvariantCulture),
-                    });
+                return new TimeOffPeriod()
+                {
+                    Duration = duration,
+                    EndDate = endDateTime.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
+                    PayCodeName = reason,
+                    StartDate = startDateTime.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
+                    StartTime = startDateTime.ToString("hh:mm tt", CultureInfo.InvariantCulture),
+                    Length = Convert.ToString(length, CultureInfo.InvariantCulture),
+                };
             }
-
-            return timeOffPeriod;
         }
 
         /// <summary>
@@ -331,7 +326,10 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
         /// <returns>Add time of request.</returns>
         private string CreateAddTimeOffRequest(DateTimeOffset startDateTime, DateTimeOffset endDateTime, string queryDateSpan, string personNumber, string reason, Comments comments)
         {
-            var timeOffPeriods = CalculateTimeOffPeriod(startDateTime, endDateTime, reason);
+            // Kronos API expects a collection of periods so first calculate the actual period
+            // before adding it to a list.
+            var timeOffPeriod = CalculateTimeOffPeriod(startDateTime, endDateTime, reason);
+            var timeOffPeriods = new List<TimeOffPeriod>() { timeOffPeriod };
 
             TimeOffAddRequest.Request rq = new TimeOffAddRequest.Request()
             {
@@ -479,7 +477,10 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
             string reason,
             Comments comments)
         {
-            var timeOffPeriods = CalculateTimeOffPeriod(startDateTime, endDateTime, reason);
+            // Kronos API expects a collection of periods so first calculate the actual period
+            // before adding it to a list.
+            var timeOffPeriod = CalculateTimeOffPeriod(startDateTime, endDateTime, reason);
+            var timeOffPeriods = new List<TimeOffPeriod>() { timeOffPeriod };
 
             var request =
                 new TimeOffRequest.Request

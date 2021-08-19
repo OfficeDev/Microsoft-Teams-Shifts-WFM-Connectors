@@ -62,7 +62,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
         /// <param name="senderMessage">The sender notes of the time off request.</param>
         /// <param name="senderCommentText">The Kronos comment text value to assign to the notes.</param>
         /// <param name="endPointUrl">Endpoint url for Kronos.</param>
-        /// <returns>Time of add response.</returns>
+        /// <returns>Time off add response.</returns>
         Task<Models.ResponseEntities.ShiftsToKronos.TimeOffRequests.Response> CreateTimeOffRequestAsync(
             string jSession,
             DateTimeOffset startDateTime,
@@ -75,14 +75,15 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
             Uri endPointUrl);
 
         /// <summary>
-        /// Submit time of request which is in draft.
+        /// Submits a time off request which is in draft. The create time off request method creates an entity
+        /// in draft mode - this method is thenc alled to make it visible to the manager in kronos.
         /// </summary>
         /// <param name="jSession">jSession object.</param>
         /// <param name="personNumber">Person number.</param>
         /// <param name="reqId">RequestId of the time off request.</param>
         /// <param name="queryDateSpan">Query date span.</param>
         /// <param name="endPointUrl">Endpoint url for Kronos.</param>
-        /// <returns>Time of submit response.</returns>
+        /// <returns>Time off submit response.</returns>
         Task<Models.ResponseEntities.ShiftsToKronos.TimeOffRequests.SubmitResponse.Response> SubmitTimeOffRequestAsync(
             string jSession,
             string personNumber,
