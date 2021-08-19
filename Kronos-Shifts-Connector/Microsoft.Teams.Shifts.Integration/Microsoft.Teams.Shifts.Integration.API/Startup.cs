@@ -27,7 +27,6 @@ namespace Microsoft.Teams.Shifts.Integration.API
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.PayCodes;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts;
-    using Microsoft.Teams.App.KronosWfc.BusinessLogic.ShiftsToKronos.CreateTimeOff;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff;
     using Microsoft.Teams.App.KronosWfc.Service;
@@ -226,10 +225,6 @@ namespace Microsoft.Teams.Shifts.Integration.API
                 provider.GetRequiredService<TelemetryClient>(),
                 appSettings.StorageConnectionString));
 
-            services.AddScoped<ITimeOffActivity, TimeOffActivity>((provider) => new TimeOffActivity(
-                provider.GetRequiredService<TelemetryClient>(),
-                provider.GetRequiredService<IApiHelper>()));
-
             services.AddSingleton<BusinessLogic.Providers.IConfigurationProvider>((provider) =>
                 new BusinessLogic.Providers.ConfigurationProvider(
                     appSettings.StorageConnectionString,
@@ -240,10 +235,6 @@ namespace Microsoft.Teams.Shifts.Integration.API
                 appSettings.StorageConnectionString));
 
             services.AddSingleton<IOpenShiftActivity, OpenShiftActivity>((provider) => new OpenShiftActivity(
-                provider.GetRequiredService<TelemetryClient>(),
-                provider.GetRequiredService<IApiHelper>()));
-
-            services.AddSingleton<ICreateTimeOffActivity, CreateTimeOffActivity>((provider) => new CreateTimeOffActivity(
                 provider.GetRequiredService<TelemetryClient>(),
                 provider.GetRequiredService<IApiHelper>()));
 
@@ -296,7 +287,6 @@ namespace Microsoft.Teams.Shifts.Integration.API
                 provider.GetRequiredService<TelemetryClient>(),
                 provider.GetRequiredService<IUserMappingProvider>(),
                 provider.GetRequiredService<ITimeOffActivity>(),
-                provider.GetRequiredService<ICreateTimeOffActivity>(),
                 provider.GetRequiredService<ITimeOffReasonProvider>(),
                 provider.GetRequiredService<IAzureTableStorageHelper>(),
                 provider.GetRequiredService<ITimeOffMappingEntityProvider>(),

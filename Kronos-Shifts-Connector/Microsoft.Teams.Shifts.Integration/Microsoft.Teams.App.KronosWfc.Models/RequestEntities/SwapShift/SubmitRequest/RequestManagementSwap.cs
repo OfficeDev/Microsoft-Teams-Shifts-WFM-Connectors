@@ -4,13 +4,15 @@
 
 namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities
 {
+    using System.Collections.Generic;
     using System.Xml.Serialization;
-    using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift.SubmitRequest;
+    using Microsoft.Teams.App.KronosWfc.Models.CommonEntities;
 
     /// <summary>
     /// Employee request for swapshift.
     /// </summary>
 #pragma warning disable CA1052 // Static holder types should be Static or NotInheritable
+
     public class RequestManagementSwap
 #pragma warning restore CA1052 // Static holder types should be Static or NotInheritable
     {
@@ -39,6 +41,7 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities
         /// This models the RequsestMgmt.
         /// </summary>
 #pragma warning disable CA1034 // Nested types should not be visible
+
         public class RequestMgmt
 #pragma warning restore CA1034 // Nested types should not be visible
         {
@@ -71,6 +74,7 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities
         /// This models the RequestStatusChanges.
         /// </summary>
 #pragma warning disable CA1034 // Nested types should not be visible
+
         public class RequestStatusChanges
 #pragma warning restore CA1034 // Nested types should not be visible
         {
@@ -80,6 +84,7 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities
             [XmlElement("RequestStatusChange")]
 #pragma warning disable CA1819 // Properties should not return arrays
             public RequestStatusChange[] RequestStatusChange { get; set; }
+
 #pragma warning restore CA1819 // Properties should not return arrays
         }
 
@@ -87,6 +92,7 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities
         /// This class models the RequestStatusChange.
         /// </summary>
 #pragma warning disable CA1034 // Nested types should not be visible
+
         public class RequestStatusChange
 #pragma warning restore CA1034 // Nested types should not be visible
         {
@@ -106,13 +112,14 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities
             /// Gets or sets Swap Shift Request comments.
             /// </summary>
             [XmlElement("Comments")]
-            public Comments Comments { get; set; }
+            public List<Comment> Comments { get; set; }
         }
 
         /// <summary>
         /// This class models the Employee.
         /// </summary>
 #pragma warning disable CA1034 // Nested types should not be visible
+
         public class Employee
 #pragma warning restore CA1034 // Nested types should not be visible
         {
@@ -127,6 +134,7 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities
         /// This class models the PersonIdentity.
         /// </summary>
 #pragma warning disable CA1034 // Nested types should not be visible
+
         public class PersonIdentity
 #pragma warning restore CA1034 // Nested types should not be visible
         {
@@ -141,6 +149,7 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities
         /// This class models the RequestIds.
         /// </summary>
 #pragma warning disable CA1034 // Nested types should not be visible
+
         public class RequestIds
 #pragma warning restore CA1034 // Nested types should not be visible
         {
@@ -150,6 +159,7 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities
             [XmlElement("RequestId")]
 #pragma warning disable CA1819 // Properties should not return arrays
             public RequestId[] RequestId { get; set; }
+
 #pragma warning restore CA1819 // Properties should not return arrays
         }
 
@@ -157,6 +167,7 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities
         /// This class models the RequestId.
         /// </summary>
 #pragma warning disable CA1034 // Nested types should not be visible
+
         public class RequestId
 #pragma warning restore CA1034 // Nested types should not be visible
         {

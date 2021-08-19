@@ -1041,7 +1041,15 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     this.telemetryClient.TrackTrace($"Process denial of {timeOffRequest.Id}", updateProps);
 
                     // Deny in Kronos, Update mapping for Teams.
-                    success = await this.timeOffController.ApproveOrDenyTimeOffRequestInKronos(kronosReqId, kronosUserId, timeOffRequestMapping, approved).ConfigureAwait(false);
+                    success = await this.timeOffController.ApproveOrDenyTimeOffRequestInKronos(
+                            kronosReqId,
+                            kronosUserId,
+                            timeOffRequest,
+                            timeOffRequestMapping,
+                            timeOffRequest.ManagerActionMessage,
+                            approved,
+                            kronosTimeZone).ConfigureAwait(false);
+
                     if (!success)
                     {
                         this.telemetryClient.TrackTrace($"Process failure to deny time off request: {timeOffRequest.Id}", updateProps);
@@ -1059,7 +1067,15 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 this.telemetryClient.TrackTrace($"Process approval of {timeOffRequest.Id}", updateProps);
 
                 // approve in kronos
-                success = await this.timeOffController.ApproveOrDenyTimeOffRequestInKronos(kronosReqId, kronosUserId, timeOffRequestMapping, approved).ConfigureAwait(false);
+                success = await this.timeOffController.ApproveOrDenyTimeOffRequestInKronos(
+                        kronosReqId,
+                        kronosUserId,
+                        timeOffRequest,
+                        timeOffRequestMapping,
+                        timeOffRequest.ManagerActionMessage,
+                        approved,
+                        kronosTimeZone).ConfigureAwait(false);
+
                 updateProps.Add("SuccessfullyApprovedInKronos", $"{success}");
 
                 if (!success)

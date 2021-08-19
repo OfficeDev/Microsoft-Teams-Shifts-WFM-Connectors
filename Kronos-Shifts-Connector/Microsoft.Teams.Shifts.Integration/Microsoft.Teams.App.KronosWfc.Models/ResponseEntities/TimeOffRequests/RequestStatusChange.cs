@@ -4,7 +4,9 @@
 
 namespace Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests
 {
+    using System.Collections.Generic;
     using System.Xml.Serialization;
+    using Microsoft.Teams.App.KronosWfc.Models.CommonEntities;
 
     /// <summary>
     /// This class models the RequestStatusChange.
@@ -22,7 +24,7 @@ namespace Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests
         /// Gets or sets the Comments.
         /// </summary>
         [XmlElement(ElementName = "Comments")]
-        public Comments Comments { get; set; }
+        public List<Comment> Comments { get; set; }
 
         /// <summary>
         /// Gets or sets the ToStatusName.
