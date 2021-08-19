@@ -253,6 +253,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         public string SyncToNextDays => this.configuration["SyncToNextDays"];
 
         /// <summary>
+        /// Gets the number of days in the future to sync swap shift eligiblity for.
+        /// </summary>
+        public string FutureSwapEligibilityDays => this.configuration["FutureSwapEligibilityDays"];
+
+        /// <summary>
         /// Gets the configuration for the polling delay in the sync functionality.
         /// </summary>
         public string SyncDelayForPolling => this.configuration["SyncDelayForPolling"];

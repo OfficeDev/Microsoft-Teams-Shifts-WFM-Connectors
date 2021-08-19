@@ -197,6 +197,8 @@
     <Compile Include="PayCode\IPayCodeActivity.cs" />
     <Compile Include="PayCode\PayCodeActivity.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SwapShiftEligibility\ISwapShiftEligibilityActivity.cs" />
+    <Compile Include="SwapShiftEligibility\SwapShiftEligibilityActivity.cs" />
     <Compile Include="SwapShift\ISwapShiftActivity.cs" />
     <Compile Include="SwapShift\SwapShiftActivity.cs" />
     <Compile Include="TimeOff\ITimeOffActivity.cs" />

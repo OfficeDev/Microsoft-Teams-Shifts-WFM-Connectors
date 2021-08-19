@@ -255,6 +255,8 @@
     <Compile Include="RequestEntities\ShiftsToKronos\SubmitRequest\RequestId.cs" />
     <Compile Include="RequestEntities\ShiftsToKronos\SubmitRequest\RequestIds.cs" />
     <Compile Include="RequestEntities\Common\EmployeeRequestMgmt.cs" />
+    <Compile Include="RequestEntities\SwapShiftEligibility\Request.cs" />
+    <Compile Include="RequestEntities\SwapShiftEligibility\SwapShiftEmployees.cs" />
     <Compile Include="RequestEntities\SwapShift\GetDetailsRequest.cs" />
     <Compile Include="RequestEntities\SwapShift\RetractRequest.cs" />
     <Compile Include="RequestEntities\SwapShift\SubmitRequest\EmployeeRequestMgmt.cs" />
@@ -344,6 +346,7 @@
     <Compile Include="ResponseEntities\ShiftsToKronos\TimeOffRequests\SubmitResponse\Response.cs" />
     <Compile Include="ResponseEntities\ShiftsToKronos\TimeOffRequests\TimeOffPeriod.cs" />
     <Compile Include="ResponseEntities\ShiftsToKronos\TimeOffRequests\TimeOffPeriods.cs" />
+    <Compile Include="ResponseEntities\SwapShiftEligibility\Response.cs" />
     <Compile Include="ResponseEntities\SwapShift\FetchSwapShift\EmployeeRequestMgmt.cs" />
     <Compile Include="ResponseEntities\SwapShift\FetchSwapShift\Response.cs" />
     <Compile Include="ResponseEntities\SwapShift\FetchSwapShift\RequestItems.cs" />

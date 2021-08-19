@@ -28,6 +28,7 @@ namespace Microsoft.Teams.Shifts.Integration.API
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.PayCodes;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift;
+    using Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShiftEligibility;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff;
     using Microsoft.Teams.App.KronosWfc.Service;
     using Microsoft.Teams.Shifts.Integration.API.Common;
@@ -176,12 +177,16 @@ namespace Microsoft.Teams.Shifts.Integration.API
                 provider.GetRequiredService<BackgroundTaskWrapper>()));
 
             services.AddSingleton<IPayCodeActivity, PayCodeActivity>((provider) => new PayCodeActivity(
-             provider.GetRequiredService<TelemetryClient>(),
-             provider.GetRequiredService<IApiHelper>()));
+                provider.GetRequiredService<TelemetryClient>(),
+                provider.GetRequiredService<IApiHelper>()));
 
             services.AddSingleton<ITimeOffReasonProvider, TimeOffReasonProvider>((provider) => new TimeOffReasonProvider(
-                 appSettings.StorageConnectionString,
-                 provider.GetRequiredService<TelemetryClient>()));
+                appSettings.StorageConnectionString,
+                provider.GetRequiredService<TelemetryClient>()));
+
+            services.AddSingleton<ISwapShiftEligibilityActivity, SwapShiftEligibilityActivity>((provider) => new SwapShiftEligibilityActivity(
+                provider.GetRequiredService<TelemetryClient>(),
+                provider.GetRequiredService<IApiHelper>()));
 
             services.AddSingleton((provider) => new TimeOffReasonController(
                 provider.GetRequiredService<TelemetryClient>(),
@@ -301,6 +306,14 @@ namespace Microsoft.Teams.Shifts.Integration.API
                 provider.GetRequiredService<IUserMappingProvider>(),
                 provider.GetRequiredService<IHyperFindActivity>(),
                 provider.GetRequiredService<Utility>()));
+
+            services.AddSingleton((provider) => new SwapShiftEligibilityController(
+                provider.GetRequiredService<AppSettings>(),
+                provider.GetRequiredService<TelemetryClient>(),
+                provider.GetRequiredService<ISwapShiftEligibilityActivity>(),
+                provider.GetRequiredService<Utility>(),
+                provider.GetRequiredService<IHttpClientFactory>(),
+                provider.GetRequiredService<IShiftMappingEntityProvider>()));
 
             services.AddSingleton<BackgroundTaskWrapper>();
             services.AddHostedService<Common.BackgroundService>();
