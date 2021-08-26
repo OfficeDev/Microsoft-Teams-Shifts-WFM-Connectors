@@ -54,6 +54,7 @@ To begin with, you will need to ensure following perequisites:
 * Kronos WFC endpoint
 * SuperUser Name
 * SuperUser password  
+* You will also need to be aware of the Kronos session timeout value as we use this when caching the session token  
 Review and ensure users, org levels and jobs are properly setup in Kronos system
 
 2. Microsoft Teams Shifts App - Access to Teams Deployment with Shifts App
@@ -68,6 +69,21 @@ Review and ensure AAD users, Teams, and Scheduling Groups are properly setup in 
 * Azure Blob storage
 * Azure Key Value
 * Application Insights
+
+#### Configuration to Enable Syncing of Notes
+Kronos requires a **Comment Text** value to be assigned to any comments or notes. This requires you to firstly configure each comment text before adding the chosen values in to the connector appSettings - this will be done when we deploy using the ARM template.
+
+The following settings you must configure are:
+   - **SenderTimeOffRequestCommentText** - Used for syncing time off request notes added by the requestor.
+   - **ManagerTimeOffRequestCommentText** - Used for syncing time off request notes added by the manager. (Please note we do not currently support manager TOR note syncing, however plan to in the near future).
+
+1. First Log in to Kronos as an admin and navigate to the Comments section under Setup -> CommonSetup.
+![Comment Setup Screen](images/figure53.png)
+
+2. Now click the **New** button to configure a new comment type. Add the value you want the comment text to be - this can be whatever you like. Next set a code number - again this is up to you. Finally ensure that you select the correct categories for the comment you are setting up and hit **Save**.
+![Adding a New Comment Screen](images/figure54.png)
+
+3. Repeat this for all of the comment types listed above.
 
 ### Register Azure AD Application
 This integration app uses [Microsoft Graph APIs](https://developer.microsoft.com/en-us/graph) to access users (FLWs & FLMs) and teams and their schedules from Microsoft Teams Shifts App. To use Microsoft Graph to read and write resources on behalf of a user, this integration app needs to be registered in Azure AD by following steps below.  This is required to use Microsoft identity platform endpoint for authentication and authorization with Microsoft Graph.
@@ -153,7 +169,11 @@ Here are the following requirements to correctly deploy the **Shifts-Kronos Inte
 |processNumberOfOrgJobsInBatch|When syncing the open shift entities between Kronos and Shifts App, the transfer is done based on the org job paths in a batch manner. The default value is 50 and can be changed at the time of deployment|
 |syncFromPreviousDays|The number of days in the past for subsequent syncs between Kronos and Shifts App|
 |syncToNextDays|The number of days in the future for subsequent syncs between Kronos and Shifts App|
+|futureSwapEligibilityDays|The number of days in the future to query when checking swap shift eligibility|
 |correctDateSpanForOutboundCalls|The number of days in the past and future when it comes to having outbound calls for the Open Shift and Swap Shift Requests|
+|numberOfOrgJobPathSectionsForActivityName|This is the number of org job path sections you want to appear as a Teams shift activity name (this is only used when syncing a shift transfer). <br /> Example: ./Contoso/UK/Stores/London/Checkout/Checkout Operator <br /> - A value of 2 would lead to shift transfer activites having a title of: _Checkout - Checkout Operator_ <br /> - A value of 1 would lead to shift transfer activites having a title of: _Checkout Operator_|
+|managerTimeOffRequestCommentText|Used for syncing time off request notes added by the manager. (Please note we do not currently support manager TOR note syncing, however plan to in the near future)|
+|senderTimeOffRequestCommentText|Used for syncing time off request notes added by the requestor|
 |kronosUserName|The Kronos WFC SuperUser name|
 |kronosPassword|The Kronos WFC SuperUser password|
 |gitRepoUrl|The public GitHub repository URL|
@@ -517,28 +537,6 @@ In the current version of the connector, it is necessary to make the following C
     	3. **TOR** (for Time Off Requests)
 3. When submitting shift swap requests the connector uses a specific comment type which must be created in Kronos with the name **Other reason**
 
-#### Configuration to Enable Syncing of Notes
-Kronos requires a **Comment Text** value to be assigned to any comments or notes. This requires you to firstly configure each comment text before adding the chosen values in to the connector appSettings.
-
-The following settings you must configure are:
-   - **SenderTimeOffRequestCommentText** - Used for syncing time off request notes added by the requestor.
-   - **ManagerTimeOffRequestCommentText** - Used for syncing time off request notes added by the manager. (Please note we do not currently support manager TOR note syncing, however plan to in the near future).
-
-1. First Log in to Kronos as an admin and navigate to the Comments section under Setup -> CommonSetup.
-![Comment Setup Screen](images/figure53.png)
-
-2. Now click the **New** button to configure a new comment type. Add the value you want the comment text to be - this can be whatever you like. Next set a code number - again this is up to you. Finally ensure that you select the correct categories for the comment you are setting up and hit **Save**.
-![Adding a New Comment Screen](images/figure54.png)
-
-3. Repeat this for all of the comment types listed above.
-
-4. Finally you need to add each of the **CommentText** values you created to the connector app settings. Please go to your Azure resource group and select the integration api app service (not config app service).
-
-5. Next on the left hand side under Setting, select **Configuration**.
-
-6. You now want to add the **Comment Text** values you just created in Kronos for each of the settings listed above. You can do this by clicking edit and changing the value.
-
-7. Once you have added all of the values remember to click save at the top of the page.
 ### Step 5: Perform first time sync
 
 Click on the Done button in Team to Department Mapping screen, which will initiate following workflows:  
