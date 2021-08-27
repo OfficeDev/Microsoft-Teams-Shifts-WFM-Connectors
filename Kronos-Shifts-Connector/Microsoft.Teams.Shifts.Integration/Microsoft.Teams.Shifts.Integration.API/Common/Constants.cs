@@ -55,11 +55,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         public const string WFISupports = "Shift, SwapRequest, OpenShift, OpenShiftRequest, TimeOffRequest";
 
         /// <summary>
-        /// Kronos session  cache timeout.
-        /// </summary>
-        public const int KronosCacheTimeOut = 30;
-
-        /// <summary>
         /// Number of open slots from Kronos.
         /// </summary>
         public const string KronosOpenShiftsSlotCount = "1";
