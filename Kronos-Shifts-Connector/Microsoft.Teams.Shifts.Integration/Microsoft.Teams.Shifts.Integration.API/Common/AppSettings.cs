@@ -192,6 +192,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         public string KronosQueryDateSpanFormat => this.configuration["KronosQueryDateSpanFormat"];
 
         /// <summary>
+        /// Gets the number of org job path section sto use as the activity display name.
+        /// </summary>
+        public string NumberOfOrgJobPathSectionsForActivityName => this.configuration["NumberOfOrgJobPathSectionsForActivityName"];
+
+        /// <summary>
         /// Gets the manager time off request comment text value.
         /// </summary>
         public string ManagerTimeOffRequestCommentText => this.configuration["ManagerTimeOffRequestCommentText"];

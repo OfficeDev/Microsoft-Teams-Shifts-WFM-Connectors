@@ -1,820 +1,864 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-    "contentVersion": "1.0.0.0",
-    "parameters": {
-        "baseResourceName": {
-            "type": "string",
-            "minLength": 1,
-            "metadata": {
-                "description": "The base name to use for the resources that will be provisioned."
-            }
-        },
-        "aadAppClientId": {
-            "type": "string",
-            "minLength": 36,
-            "maxLength": 36,
-            "metadata": {
-                "description": "The Microsoft Application ID for the Shifts-Kronos Integration instance, e.g., 123e4567-e89b-12d3-a456-426655440000."
-            }
-        },
-        "aadAppClientSecret": {
-            "type": "securestring",
-            "minLength": 1,
-            "metadata": {
-                "description": "The Microsoft Application Password for the Shifts-Kronos Integration."
-            }
-        },
-        "managedAadAppObjectId": {
-            "type": "string",
-            "minLength": 1,
-            "metadata": {
-                "description": "The Microsoft Application Object ID for the Shifts-Kronos Integration."
-            }
-        },
-        "teamsTenantId": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 36,
-            "metadata": {
-                "description": "The Microsoft Teams Tenant ID."
-            }
-        },
-        "firstTimeSyncStartDate": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 10,
-            "defaultValue": "[utcNow('d')]",
-            "metadata": {
-                "description": "The start date for the sync of all data from Kronos and should be written in the MM/DD/YYYY format."
-            }
-        },
-        "firstTimeSyncEndDate": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 10,
-            "defaultValue": "[utcNow('d')]",
-            "metadata": {
-                "description": "The start date for the sync of all data from Kronos and should be written in the MM/DD/YYYY format."
-            }
-        },
-        "location": {
-            "type": "string",
-            "defaultValue": "[resourceGroup().location]",
-            "metadata": {
-                "description": "Location for all resources"
-            }
-        },
-        "storageAccountType": {
-            "type": "string",
-            "defaultValue": "Standard_LRS",
-            "allowedValues": [
-                "Standard_LRS",
-                "Standard_GRS",
-                "Standard_ZRS",
-                "Premium_LRS"
-            ],
-            "metadata": {
-                "description": "Storage Account type"
-            }
-        },
-        "sku": {
-            "type": "string",
-            "allowedValues": [
-                "Basic",
-                "Standard",
-                "Premium"
-            ],
-            "defaultValue": "Standard",
-            "metadata": {
-                "description": "The pricing tier for the hosting plan."
-            }
-        },
-        "planSize": {
-            "type": "string",
-            "allowedValues": [
-                "1",
-                "2",
-                "3"
-            ],
-            "defaultValue": "1",
-            "metadata": {
-                "description": "The size of the hosting plan (small, medium, or large)."
-            }
-        },
-        "processNumberOfUsersInBatch": {
-            "type": "int",
-            "defaultValue": 100,
-            "metadata": {
-                "description": "The number of users to process in a batch manner when syncing the Shifts from Kronos to Shifts."
-            }
-        },
-        "processNumberOfOrgJobsInBatch": {
-            "type": "int",
-            "defaultValue": 50,
-            "metadata": {
-                "description": "The number of Kronos Org Job Paths to process in a batch manner when syncing the Open Shifts from Kronos to Shifts."
-            }
-        },
-        "syncFromPreviousDays": {
-            "type": "int",
-            "defaultValue": 7,
-            "metadata": {
-                "description": "The number of days in the past to sync the data for the first time from Kronos to Shifts."
-            }
-        },
-        "syncToNextDays": {
-            "type": "int",
-            "defaultValue": 7,
-            "metadata": {
-                "description": "The number of days in the future to sync the data for the first time from Kronos to Shifts."
-            }
-        },
-        "correctDateSpanForOutboundCalls": {
-            "type": "int",
-            "defaultValue": 100,
-            "metadata": {
-                "description": "This value will be able to accommodate for any requests that FLWs make for Swap Shift Requests, or Open Shift Requests in the Shifts UI."
-            }
-        },
-        "kronosUserName": {
-            "type": "string",
-            "metadata": {
-                "description": "Please enter the Kronos WFC SuperUser name here."
-            }
-        },
-        "kronosPassword": {
-            "type": "securestring",
-            "metadata": {
-                "description": "Please enter the Kronos WFC SuperUser password here."
-            }
-        },
-        "gitRepoUrl": {
-            "type": "string",
-            "defaultValue": "https://github.com/OfficeDev/Microsoft-Teams-Shifts-WFM-Connectors"
-        },
-        "gitBranch": {
-            "type": "string",
-            "defaultValue": "master"
-        }
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "baseResourceName": {
+      "type": "string",
+      "minLength": 1,
+      "metadata": {
+        "description": "The base name to use for the resources that will be provisioned."
+      }
     },
-    "variables": {
-        "authority": "https://login.microsoftonline.com/common",
-        "storageAccountName": "[uniquestring(concat(resourceGroup().id, parameters('baseResourceName')))]",
-        "hostingPlanName": "[concat('shiftsKronos', uniqueString(resourceGroup().id))]",
-        "configAppName": "[concat(parameters('baseResourceName'), '-config')]",
-        "configAppUrl": "[concat('https://', variables('configAppName'), '.azurewebsites.net')]",
-        "configAppInsightsName": "[concat(parameters('baseResourceName'), '-config')]",
-        "apiAppName": "[concat(parameters('baseResourceName'), '-api')]",
-        "apiAppUrl": "[concat('https://', variables('apiAppName'), '.azurewebsites.net')]",
-        "apiAppInsightsName": "[concat(parameters('baseResourceName'), '-api')]",
-        "sharedSkus": [
-            "Free",
-            "Shared"
-        ],
-        "isSharedPlan": "[contains(variables('sharedSkus'), parameters('sku'))]",
-        "skuFamily": "[if(equals(parameters('sku'), 'Shared'), 'D', take(parameters('sku'), 1))]",
-        "keyVaultName": "[concat(parameters('baseResourceName'), '-azureKV')]",
-        "logicAppName": "[concat(parameters('baseResourceName'), '-logicApp')]",
-        "redisCacheName": "[concat(parameters('baseResourceName'), '-redis')]",
-        "CallbackPath": "/signin-oidc",
-        "SignedOutCallbackPath ": "/signout-callback-oidc",
-        "ResponseType": "code id_token",
-        "GraphApiUrlConfig": "https://graph.microsoft.com/beta/",
-        "TemplatesContainerName": "templates",
-        "KronosUserDetailsQuery": "All Home",
-        "KronosShiftUserMappingTemplateName": "KronosShiftUserMappingTemplate.xlsx",
-        "KronosShiftTeamDeptMappingTemplateName": "KronosShiftTeamDeptMappingTemplate.xlsx",
-        "ExcelContentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "kronosQueryDateSpanFormat": "MM/dd/yyyy",
-        "logicAppAudience": "[parameters('aadAppClientId')]",
-        "logicAppAuthenticationType": "ActiveDirectoryOAuth",
-        "keyVaultUrl": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/')]"
+    "aadAppClientId": {
+      "type": "string",
+      "minLength": 36,
+      "maxLength": 36,
+      "metadata": {
+        "description": "The Microsoft Application ID for the Shifts-Kronos Integration instance, e.g., 123e4567-e89b-12d3-a456-426655440000."
+      }
     },
-    "resources": [
-        {
-            "type": "Microsoft.Cache/Redis",
-            "apiVersion": "2017-10-01",
-            "name": "[variables('redisCacheName')]",
-            "location": "[parameters('location')]",
-            "comments": "This Redis cache is used for caching the Graph API token.",
-            "properties": {
-                "sku": {
-                    "name": "Standard",
-                    "family": "C",
-                    "capacity": 1
-                },
-                "enableNonSslPort": false,
-                "redisConfiguration": {
-                    "maxclients": "1000",
-                    "maxmemory-reserved": "50",
-                    "maxfragmentationmemory-reserved": "50",
-                    "maxmemory-delta": "50"
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts",
-            "name": "[variables('storageAccountName')]",
-            "location": "[parameters('location')]",
-            "comments": "This storage account is used for storing mapping information, map entities between Kronos and Shifts, and store the templates blob.",
-            "apiVersion": "2018-02-01",
-            "sku": {
-                "name": "[parameters('storageAccountType')]"
-            },
-            "kind": "StorageV2",
-            "properties": {
-            },
-            "resources": [
-                {
-                    "name": "[concat('default/', variables('TemplatesContainerName'))]",
-                    "type": "blobServices/containers",
-                    "apiVersion": "2018-07-01",
-                    "dependsOn": [
-                        "[variables('storageAccountName')]"
-                    ]
-                }
-            ]
-        },
-        {
-            "type": "Microsoft.Web/serverfarms",
-            "apiVersion": "2016-09-01",
-            "name": "[variables('hostingPlanName')]",
-            "location": "[parameters('location')]",
-            "comments": "This hosting plan is used for hosting the Configuration Web app and the Integration Service API.",
-            "properties": {
-                "name": "[variables('hostingPlanName')]",
-                "hostingEnvironment": "",
-                "numberOfWorkers": 1
-            },
-            "sku": {
-                "name": "[if(variables('isSharedPlan'), concat(variables('skuFamily'),'1'), concat(variables('skuFamily'),parameters('planSize')))]",
-                "tier": "[parameters('sku')]",
-                "size": "[concat(variables('skuFamily'), parameters('planSize'))]",
-                "family": "[variables('skuFamily')]",
-                "capacity": 0
-            }
-        },
-        {
-            "type": "Microsoft.Insights/components",
-            "name": "[variables('configAppInsightsName')]",
-            "apiVersion": "2015-05-01",
-            "location": "[parameters('location')]",
-            "comments": "This ApplicationInsights resource tracks telemetry for the Configuration Web app.",
-            "kind": "",
-            "properties": {
-                "Application_Type": "web"
-            }
-        },
-        {
-            "type": "Microsoft.Insights/components",
-            "name": "[variables('apiAppInsightsName')]",
-            "apiVersion": "2015-05-01",
-            "location": "[parameters('location')]",
-            "comments": "This ApplicationInsights resource tracks telemetry for the Integration Service API.",
-            "kind": "",
-            "properties": {
-                "Application_Type": "web"
-            }
-        },
-        {
-            "type": "Microsoft.Web/sites",
-            "apiVersion": "2016-08-01",
-            "name": "[variables('configAppName')]",
-            "location": "[parameters('location')]",
-            "comments": "This Web App is the Configuration Web App.",
-            "kind": "app",
-            "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
-                "[resourceId('Microsoft.Insights/components/', variables('configAppInsightsName'))]",
-                "[resourceId('Microsoft.Cache/Redis', variables('redisCacheName'))]",
-                "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]"
-            ],
-            "identity": {
-                "type": "SystemAssigned"
-            },
-            "properties": {
-                "name": "[variables('configAppName')]",
-                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
-                "enabled": true,
-                "reserved": false,
-                "clientAffinityEnabled": true,
-                "clientCertEnabled": false,
-                "hostNamesDisabled": false,
-                "containerSize": 0,
-                "dailyMemoryTimeQuota": 0,
-                "httpsOnly": true,
-                "siteConfig": {
-                    "alwaysOn": true,
-                    "appSettings": [
-                        {
-                            "name": "DEPLOYMENT_SCRIPT",
-                            "value": "Kronos-Shifts-Connector/deploy.config.cmd"
-                        },
-                        {
-                            "name": "ASPNETCORE_DETAILEDERRORS",
-                            "value": true
-                        },
-                        {
-                            "name": "TenantId",
-                            "value": "[parameters('teamsTenantId')]"
-                        },
-                        {
-                            "name": "ClientId",
-                            "value": "[parameters('aadAppClientId')]"
-                        },
-                        {
-                            "name": "Authority",
-                            "value": "[variables('authority')]"
-                        },
-                        {
-                            "name": "CallbackPath",
-                            "value": "[variables('CallbackPath')]"
-                        },
-                        {
-                            "name": "SignedOutCallbackPath",
-                            "value": "[variables('SignedOutCallbackPath ')]"
-                        },
-                        {
-                            "name": "ClientSecret",
-                            "value": "ClientSecret"
-                        },
-                        {
-                            "name": "ResponseType",
-                            "value": "[variables('ResponseType')]"
-                        },
-                        {
-                            "name": "GraphApiUrl",
-                            "value": "[variables('GraphApiUrlConfig')]"
-                        },
-                        {
-                            "name": "StorageConnectionString",
-                            "value": "StorageConnectionString"
-                        },
-                        {
-                            "name": "RedisCacheConfiguration",
-                            "value": "RedisCacheConfiguration"
-                        },
-                        {
-                            "name": "RedisCacheInstanceName",
-                            "value": "[variables('redisCacheName')]"
-                        },
-                        {
-                            "name": "IntegrationApiUrl",
-                            "value": "[variables('apiAppUrl')]"
-                        },
-                        {
-                            "name": "BaseAddressFirstTimeSync",
-                            "value": "[concat(variables('apiAppUrl'), '/')]"
-                        },
-                        {
-                            "name": "KronosUserDetailsQuery",
-                            "value": "[variables('KronosUserDetailsQuery')]"
-                        },
-                        {
-                            "name": "TemplatesContainerName",
-                            "value": "[variables('TemplatesContainerName')]"
-                        },
-                        {
-                            "name": "KronosShiftUserMappingTemplateName",
-                            "value": "[variables('KronosShiftUserMappingTemplateName')]"
-                        },
-                        {
-                            "name": "KronosShiftTeamDeptMappingTemplateName",
-                            "value": "[variables('KronosShiftTeamDeptMappingTemplateName')]"
-                        },
-                        {
-                            "name": "ExcelContentType",
-                            "value": "[variables('ExcelContentType')]"
-                        },
-                        {
-                            "name": "WfmSuperUsername",
-                            "value": "WorkforceSuperUserName"
-                        },
-                        {
-                            "name": "WfmSuperUserPassword",
-                            "value": "WorkforceSuperUserPassword"
-                        },
-                        {
-                            "name": "KeyVault",
-                            "value": "[variables('keyVaultUrl')]"
-                        },
-                        {
-                            "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
-                            "value": "[reference(resourceId('Microsoft.Insights/components/', variables('configAppInsightsName')), '2015-05-01').InstrumentationKey]"
-                        },
-                        {
-                            "name": "principalId",
-                            "value": "[parameters('managedAadAppObjectId')]"
-                        }
-                    ]
-                }
-            },
-            "resources": [
-                {
-                    "apiVersion": "2020-12-01",
-                    "name": "web",
-                    "type": "sourcecontrols",
-                    "dependsOn": [
-                        "[concat('Microsoft.Web/sites/', variables('configAppName'))]"
-                    ],
-                    "properties": {
-                        "RepoUrl": "[parameters('gitRepoUrl')]",
-                        "branch": "[parameters('gitBranch')]",
-                        "IsManualIntegration": true
-                    }
-                }
-            ]
-        },
-        {
-            "type": "Microsoft.Web/sites",
-            "apiVersion": "2016-08-01",
-            "name": "[variables('apiAppName')]",
-            "location": "[parameters('location')]",
-            "comments": "This Web app is for the Integration Service API.",
-            "kind": "app",
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
-                "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
-                "[resourceId('Microsoft.Insights/components/', variables('apiAppInsightsName'))]",
-                "[resourceId('Microsoft.Cache/Redis', variables('redisCacheName'))]"
-            ],
-            "identity": {
-                "type": "SystemAssigned"
-            },
-            "properties": {
-                "name": "[variables('apiAppName')]",
-                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
-                "enabled": true,
-                "reserved": false,
-                "clientAffinityEnabled": true,
-                "clientCertEnabled": false,
-                "hostNamesDisabled": false,
-                "containerSize": 0,
-                "dailyMemoryTimeQuota": 0,
-                "httpsOnly": true,
-                "siteConfig": {
-                    "alwaysOn": true,
-                    "appSettings": [
-                        {
-                            "name": "DEPLOYMENT_SCRIPT",
-                            "value": "Kronos-Shifts-Connector/deploy.api.cmd"
-                        },
-                        {
-                            "name": "ASPNETCORE_DETAILEDERRORS",
-                            "value": true
-                        },
-                        {
-                            "name": "GraphApiUrl",
-                            "value": "https://graph.microsoft.com"
-                        },
-                        {
-                            "name": "GraphBetaApiUrl",
-                            "value": "https://graph.microsoft.com/beta/"
-                        },
-                        {
-                            "name": "ShiftStartDate",
-                            "value": "[parameters('firstTimeSyncStartDate')]"
-                        },
-                        {
-                            "name": "ShiftEndDate",
-                            "value": "[parameters('firstTimeSyncEndDate')]"
-                        },
-                        {
-                            "name": "ShiftTheme",
-                            "value": "blue"
-                        },
-                        {
-                            "name": "OpenShiftTheme",
-                            "value": "green"
-                        },
-                        {
-                            "name": "Instance",
-                            "value": "https://login.microsoftonline.com/"
-                        },
-                        {
-                            "name": "TenantId",
-                            "value": "[parameters('teamsTenantId')]"
-                        },
-                        {
-                            "name": "KeyVault",
-                            "value": "[variables('keyVaultUrl')]"
-                        },
-                        {
-                            "name": "ProcessNumberOfUsersInBatch",
-                            "value": "[parameters('processNumberOfUsersInBatch')]"
-                        },
-                        {
-                            "name": "ProcessNumberOfOrgJobsInBatch",
-                            "value": "[parameters('processNumberOfOrgJobsInBatch')]"
-                        },
-                        {
-                            "name": "ShiftEntityMapping",
-                            "value": "ShiftEntityMapping"
-                        },
-                        {
-                            "name": "SwapShiftEntityMapping",
-                            "value": "SwapShiftEntityMapping"
-                        },
-                        {
-                            "name": "TeamDepartmentMapping",
-                            "value": "TeamToDepartmentWithJobMapping"
-                        },
-                        {
-                            "name": "UserToUserMapping",
-                            "value": "UserToUserMapping"
-                        },
-                        {
-                            "name": "WfmSuperUsername",
-                            "value": "WorkforceSuperUserName"
-                        },
-                        {
-                            "name": "WfmSuperUserPassword",
-                            "value": "WorkforceSuperUserPassword"
-                        },
-                        {
-                            "name": "ClientSecret",
-                            "value": "ClientSecret"
-                        },
-                        {
-                            "name": "StorageConnectionString",
-                            "value": "StorageConnectionString"
-                        },
-                        {
-                            "name": "RedisCacheConfiguration",
-                            "value": "RedisCacheConfiguration"
-                        },
-                        {
-                            "name": "RedisCacheInstanceName",
-                            "value": "[variables('redisCacheName')]"
-                        },
-                        {
-                            "name": "SyncFromPreviousDays",
-                            "value": "[parameters('syncFromPreviousDays')]"
-                        },
-                        {
-                            "name": "SyncToNextDays",
-                            "value": "[parameters('syncToNextDays')]"
-                        },
-                        {
-                            "name": "SyncDelayForPolling",
-                            "value": 0
-                        },
-                        {
-                            "name": "KronosQueryDateSpanFormat",
-                            "value": "[variables('kronosQueryDateSpanFormat')]"
-                        },
-                        {
-                            "name": "BaseAddressFirstTimeSync",
-                            "value": "[variables('apiAppUrl')]"
-                        },
-                        {
-                            "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
-                            "value": "[reference(resourceId('Microsoft.Insights/components/', variables('apiAppInsightsName')), '2015-05-01').InstrumentationKey]"
-                        },
-                        {
-                            "name": "principalId",
-                            "value": "[parameters('managedAadAppObjectId')]"
-                        },
-                        {
-                            "name": "CorrectedDateSpanForOutboundCalls",
-                            "value": "[parameters('correctDateSpanForOutboundCalls')]"
-                        },
-                        {
-                            "name": "ClientId",
-                            "value": "[parameters('aadAppClientId')]"
-                        }
-                    ]
-                }
-            },
-            "resources": [
-                {
-                    "apiVersion": "2020-12-01",
-                    "name": "web",
-                    "type": "sourcecontrols",
-                    "dependsOn": [
-                        "[concat('Microsoft.Web/sites/', variables('apiAppName'))]"
-                    ],
-                    "properties": {
-                        "RepoUrl": "[parameters('gitRepoUrl')]",
-                        "branch": "[parameters('gitBranch')]",
-                        "IsManualIntegration": true
-                    }
-                }
-            ]
-        },
-        {
-            "type": "Microsoft.KeyVault/vaults",
-            "apiVersion": "2018-02-14",
-            "name": "[variables('keyVaultName')]",
-            "location": "[parameters('location')]",
-            "comments": "This Azure KeyVault will store the necessary information like the Kronos credentials, etc.",
-            "dependsOn": [
-                "[concat('Microsoft.Web/sites/', variables('apiAppName'))]",
-                "[concat('Microsoft.Web/sites/', variables('configAppName'))]"
-            ],
-            "tags": {
-                "displayName": "KeyVault"
-            },
-            "properties": {
-                "enabledForDeployment": "false",
-                "enabledForTemplateDeployment": "false",
-                "enabledForDiskEncryption": "false",
-                "tenantId": "[subscription().tenantId]",
-                "accessPolicies": [
-                    {
-                        "objectId": "[reference(concat('Microsoft.Web/sites/', variables('apiAppName')), '2018-02-01', 'Full').identity.principalId]",
-                        "tenantId": "[subscription().tenantId]",
-                        "permissions": {
-                            "secrets": [
-                                "get"
-                            ]
-                        }
-                    },
-                    {
-                        "objectId": "[reference(concat('Microsoft.Web/sites/', variables('configAppName')), '2018-02-01', 'Full').identity.principalId]",
-                        "tenantId": "[subscription().tenantId]",
-                        "permissions": {
-                            "secrets": [
-                                "get", "delete", "set"
-                            ]
-                        }
-                    }
-                ],
-                "sku": {
-                    "name": "Standard",
-                    "family": "A"
-                },
-                "networkAcls": {
-                    "value": {
-                        "defaultAction": "Allow",
-                        "bypass": "AzureServices"
-                    }
-                }
-            }
-        },
-        {
-            "type": "Microsoft.KeyVault/vaults/secrets",
-            "apiVersion": "2016-10-01",
-            "name": "[concat(variables('keyVaultName'), '/ClientId')]",
-            "comments": "This secret is for the ClientID, or the Azure AD Application ID.",
-            "dependsOn": [
-                "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
-            ],
-            "properties": {
-                "attributes": {
-                    "enabled": true
-                },
-                "value": "[parameters('aadAppClientId')]"
-            }
-        },
-        {
-            "type": "Microsoft.KeyVault/vaults/secrets",
-            "apiVersion": "2016-10-01",
-            "name": "[concat(variables('keyVaultName'), '/ClientSecret')]",
-            "comments": "This secret is for the ClientSecret which is for the Azure AD Application Registration.",
-            "dependsOn": [
-                "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
-            ],
-            "properties": {
-                "attributes": {
-                    "enabled": true
-                },
-                "value": "[parameters('aadAppClientSecret')]"
-            }
-        },
-        {
-            "type": "Microsoft.KeyVault/vaults/secrets",
-            "apiVersion": "2016-10-01",
-            "name": "[concat(variables('keyVaultName'), '/RedisCacheConfiguration')]",
-            "comments": "This secret is for the Redis Cache configuration.",
-            "dependsOn": [
-                "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
-            ],
-            "properties": {
-                "attributes": {
-                    "enabled": true
-                },
-                "value": "[concat(variables('redisCacheName'),'.redis.cache.windows.net,abortConnect=false,ssl=true,password=', listKeys(resourceId('Microsoft.Cache/Redis', variables('redisCacheName')), '2015-08-01').primaryKey)]"
-            }
-        },
-        {
-            "type": "Microsoft.KeyVault/vaults/secrets",
-            "apiVersion": "2016-10-01",
-            "name": "[concat(variables('keyVaultName'), '/StorageConnectionString')]",
-            "comments": "This secret is the Azure Table storage connection string.",
-            "dependsOn": [
-                "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
-            ],
-            "properties": {
-                "attributes": {
-                    "enabled": true
-                },
-                "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')),'2015-05-01-preview').key1)]"
-            }
-        },
-        {
-            "type": "Microsoft.KeyVault/vaults/secrets",
-            "apiVersion": "2016-10-01",
-            "name": "[concat(variables('keyVaultName'), '/TenantId')]",
-            "comments": "This secret is the Tenant ID of the Teams instance.",
-            "dependsOn": [
-                "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
-            ],
-            "properties": {
-                "attributes": {
-                    "enabled": true
-                },
-                "value": "[parameters('teamsTenantId')]"
-            }
-        },
-        {
-            "type": "Microsoft.KeyVault/vaults/secrets",
-            "apiVersion": "2016-10-01",
-            "name": "[concat(variables('keyVaultName'), '/WorkforceSuperUserName')]",
-            "comments": "This secret is the Kronos WFC Superuser name.",
-            "dependsOn": [
-                "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
-            ],
-            "properties": {
-                "attributes": {
-                    "enabled": true
-                },
-                "value": "[parameters('kronosUserName')]"
-            }
-        },
-        {
-            "type": "Microsoft.KeyVault/vaults/secrets",
-            "apiVersion": "2016-10-01",
-            "name": "[concat(variables('keyVaultName'), '/WorkforceSuperUserPassword')]",
-            "comments": "This secret is the Kronos WFC Superuser password.",
-            "dependsOn": [
-                "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
-            ],
-            "properties": {
-                "attributes": {
-                    "enabled": true
-                },
-                "value": "[parameters('kronosPassword')]"
-            }
-        },
-        {
-            "name": "[variables('logicAppName')]",
-            "type": "Microsoft.Logic/workflows",
-            "apiVersion": "2016-06-01",
-            "location": "[parameters('location')]",
-            "comments": "This resource defines the Azure Logic app to periodically sync data between Kronos WFC and Shifts.",
-            "tags": {
-            },
-            "scale": null,
-            "properties": {
-                "state": "Enabled",
-                "definition": {
-                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
-                    "contentVersion": "1.0.0.0",
-                    "parameters": {
-                    },
-                    "actions": {
-                        "Data_Sync": {
-                            "inputs": {
-                                "authentication": {
-                                    "audience": "[variables('logicAppAudience')]",
-                                    "clientId": "[parameters('aadAppClientId')]",
-                                    "secret": "[parameters('aadAppClientSecret')]",
-                                    "tenant": "[parameters('teamsTenantId')]",
-                                    "type": "[variables('logicAppAuthenticationType')]"
-                                },
-                                "method": "GET",
-                                "uri": "[concat(variables('apiAppUrl'), '/api/SyncKronosToShifts/StartSync/true')]"
-                            },
-                            "runAfter": {
-                            },
-                            "type": "Http"
-                        }
-                    }
-                }
-            }
-        }
-    ],
-    "outputs": {
-        "outStorageAccntName": {
-            "type": "string",
-            "value": "[variables('storageAccountName')]"
-        },
-        "outApiUrl": {
-            "type": "string",
-            "value": "[variables('apiAppUrl')]"
-        },
-        "outConfigUrl": {
-            "type": "string",
-            "value": "[variables('configAppUrl')]"
-        },
-        "outHostingTenantId": {
-            "type": "string",
-            "value": "[subscription().tenantId]"
-        },
-        "outTeamsTenantId": {
-            "type": "string",
-            "value": "[parameters('teamsTenantId')]"
-        }
+    "aadAppClientSecret": {
+      "type": "securestring",
+      "minLength": 1,
+      "metadata": {
+        "description": "The Microsoft Application Password for the Shifts-Kronos Integration."
+      }
+    },
+    "managedAadAppObjectId": {
+      "type": "string",
+      "minLength": 1,
+      "metadata": {
+        "description": "The Microsoft Application Object ID for the Shifts-Kronos Integration."
+      }
+    },
+    "teamsTenantId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 36,
+      "metadata": {
+        "description": "The Microsoft Teams Tenant ID."
+      }
+    },
+    "firstTimeSyncStartDate": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 10,
+      "defaultValue": "[utcNow('d')]",
+      "metadata": {
+        "description": "The start date for the sync of all data from Kronos and should be written in the MM/DD/YYYY format."
+      }
+    },
+    "firstTimeSyncEndDate": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 10,
+      "defaultValue": "[utcNow('d')]",
+      "metadata": {
+        "description": "The start date for the sync of all data from Kronos and should be written in the MM/DD/YYYY format."
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Location for all resources"
+      }
+    },
+    "storageAccountType": {
+      "type": "string",
+      "defaultValue": "Standard_LRS",
+      "allowedValues": [
+        "Standard_LRS",
+        "Standard_GRS",
+        "Standard_ZRS",
+        "Premium_LRS"
+      ],
+      "metadata": {
+        "description": "Storage Account type"
+      }
+    },
+    "sku": {
+      "type": "string",
+      "allowedValues": [
+        "Basic",
+        "Standard",
+        "Premium"
+      ],
+      "defaultValue": "Standard",
+      "metadata": {
+        "description": "The pricing tier for the hosting plan."
+      }
+    },
+    "planSize": {
+      "type": "string",
+      "allowedValues": [
+        "1",
+        "2",
+        "3"
+      ],
+      "defaultValue": "1",
+      "metadata": {
+        "description": "The size of the hosting plan (small, medium, or large)."
+      }
+    },
+    "processNumberOfUsersInBatch": {
+      "type": "int",
+      "defaultValue": 100,
+      "metadata": {
+        "description": "The number of users to process in a batch manner when syncing the Shifts from Kronos to Shifts."
+      }
+    },
+    "processNumberOfOrgJobsInBatch": {
+      "type": "int",
+      "defaultValue": 50,
+      "metadata": {
+        "description": "The number of Kronos Org Job Paths to process in a batch manner when syncing the Open Shifts from Kronos to Shifts."
+      }
+    },
+    "syncFromPreviousDays": {
+      "type": "int",
+      "defaultValue": 7,
+      "metadata": {
+        "description": "The number of days in the past to sync the data for the first time from Kronos to Shifts."
+      }
+    },
+    "syncToNextDays": {
+      "type": "int",
+      "defaultValue": 7,
+      "metadata": {
+        "description": "The number of days in the future to sync the data for the first time from Kronos to Shifts."
+      }
+    },
+    "futureSwapEligibilityDays": {
+      "type": "int",
+      "defaultValue": 7,
+      "metadata": {
+        "description": "The number of days in the future to query when checking swap shift eligibility."
+      }
+    },
+    "correctDateSpanForOutboundCalls": {
+      "type": "int",
+      "defaultValue": 100,
+      "metadata": {
+        "description": "This value will be able to accommodate for any requests that FLWs make for Swap Shift Requests, or Open Shift Requests in the Shifts UI."
+      }
+    },
+    "numberOfOrgJobPathSectionsForActivityName": {
+      "type": "int",
+      "defaultValue": 1,
+      "metadata": {
+        "description": "This is the number of org job path sections you want to appear as a Teams shift activity name (this is only used when syncing a shift transfer)."
+      }
+    },
+    "managerTimeOffRequestCommentText": {
+      "type": "string",
+      "metadata": {
+        "description": "This is the Kronos 'comment text' value to assign to manager time off request notes. This will need to be configured in Kronos beforehand."
+      }
+    },
+    "senderTimeOffRequestCommentText": {
+      "type": "string",
+      "metadata": {
+        "description": "This is the Kronos 'comment text' value to assign to sender time off request notes. This will need to be configured in Kronos beforehand."
+      }
+    },
+    "kronosUserName": {
+      "type": "string",
+      "metadata": {
+        "description": "Please enter the Kronos WFC SuperUser name here."
+      }
+    },
+    "kronosPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Please enter the Kronos WFC SuperUser password here."
+      }
+    },
+    "gitRepoUrl": {
+      "type": "string",
+      "defaultValue": "https://github.com/OfficeDev/Microsoft-Teams-Shifts-WFM-Connectors"
+    },
+    "gitBranch": {
+      "type": "string",
+      "defaultValue": "master"
     }
+  },
+  "variables": {
+    "authority": "https://login.microsoftonline.com/common",
+    "storageAccountName": "[uniquestring(concat(resourceGroup().id, parameters('baseResourceName')))]",
+    "hostingPlanName": "[concat('shiftsKronos', uniqueString(resourceGroup().id))]",
+    "configAppName": "[concat(parameters('baseResourceName'), '-config')]",
+    "configAppUrl": "[concat('https://', variables('configAppName'), '.azurewebsites.net')]",
+    "configAppInsightsName": "[concat(parameters('baseResourceName'), '-config')]",
+    "apiAppName": "[concat(parameters('baseResourceName'), '-api')]",
+    "apiAppUrl": "[concat('https://', variables('apiAppName'), '.azurewebsites.net')]",
+    "apiAppInsightsName": "[concat(parameters('baseResourceName'), '-api')]",
+    "sharedSkus": [
+      "Free",
+      "Shared"
+    ],
+    "isSharedPlan": "[contains(variables('sharedSkus'), parameters('sku'))]",
+    "skuFamily": "[if(equals(parameters('sku'), 'Shared'), 'D', take(parameters('sku'), 1))]",
+    "keyVaultName": "[concat(parameters('baseResourceName'), '-azureKV')]",
+    "logicAppName": "[concat(parameters('baseResourceName'), '-logicApp')]",
+    "redisCacheName": "[concat(parameters('baseResourceName'), '-redis')]",
+    "CallbackPath": "/signin-oidc",
+    "SignedOutCallbackPath ": "/signout-callback-oidc",
+    "ResponseType": "code id_token",
+    "GraphApiUrlConfig": "https://graph.microsoft.com/beta/",
+    "TemplatesContainerName": "templates",
+    "KronosUserDetailsQuery": "All Home",
+    "KronosShiftUserMappingTemplateName": "KronosShiftUserMappingTemplate.xlsx",
+    "KronosShiftTeamDeptMappingTemplateName": "KronosShiftTeamDeptMappingTemplate.xlsx",
+    "ExcelContentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "kronosQueryDateSpanFormat": "MM/dd/yyyy",
+    "logicAppAudience": "[parameters('aadAppClientId')]",
+    "logicAppAuthenticationType": "ActiveDirectoryOAuth",
+    "keyVaultUrl": "[concat('https://', variables('keyVaultName'), '.vault.azure.net/')]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Cache/Redis",
+      "apiVersion": "2017-10-01",
+      "name": "[variables('redisCacheName')]",
+      "location": "[parameters('location')]",
+      "comments": "This Redis cache is used for caching the Graph API token.",
+      "properties": {
+        "sku": {
+          "name": "Standard",
+          "family": "C",
+          "capacity": 1
+        },
+        "enableNonSslPort": false,
+        "redisConfiguration": {
+          "maxclients": "1000",
+          "maxmemory-reserved": "50",
+          "maxfragmentationmemory-reserved": "50",
+          "maxmemory-delta": "50"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[variables('storageAccountName')]",
+      "location": "[parameters('location')]",
+      "comments": "This storage account is used for storing mapping information, map entities between Kronos and Shifts, and store the templates blob.",
+      "apiVersion": "2018-02-01",
+      "sku": {
+        "name": "[parameters('storageAccountType')]"
+      },
+      "kind": "StorageV2",
+      "properties": {
+      },
+      "resources": [
+        {
+          "name": "[concat('default/', variables('TemplatesContainerName'))]",
+          "type": "blobServices/containers",
+          "apiVersion": "2018-07-01",
+          "dependsOn": [
+            "[variables('storageAccountName')]"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2016-09-01",
+      "name": "[variables('hostingPlanName')]",
+      "location": "[parameters('location')]",
+      "comments": "This hosting plan is used for hosting the Configuration Web app and the Integration Service API.",
+      "properties": {
+        "name": "[variables('hostingPlanName')]",
+        "hostingEnvironment": "",
+        "numberOfWorkers": 1
+      },
+      "sku": {
+        "name": "[if(variables('isSharedPlan'), concat(variables('skuFamily'),'1'), concat(variables('skuFamily'),parameters('planSize')))]",
+        "tier": "[parameters('sku')]",
+        "size": "[concat(variables('skuFamily'), parameters('planSize'))]",
+        "family": "[variables('skuFamily')]",
+        "capacity": 0
+      }
+    },
+    {
+      "type": "Microsoft.Insights/components",
+      "name": "[variables('configAppInsightsName')]",
+      "apiVersion": "2015-05-01",
+      "location": "[parameters('location')]",
+      "comments": "This ApplicationInsights resource tracks telemetry for the Configuration Web app.",
+      "kind": "",
+      "properties": {
+        "Application_Type": "web"
+      }
+    },
+    {
+      "type": "Microsoft.Insights/components",
+      "name": "[variables('apiAppInsightsName')]",
+      "apiVersion": "2015-05-01",
+      "location": "[parameters('location')]",
+      "comments": "This ApplicationInsights resource tracks telemetry for the Integration Service API.",
+      "kind": "",
+      "properties": {
+        "Application_Type": "web"
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2016-08-01",
+      "name": "[variables('configAppName')]",
+      "location": "[parameters('location')]",
+      "comments": "This Web App is the Configuration Web App.",
+      "kind": "app",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
+        "[resourceId('Microsoft.Insights/components/', variables('configAppInsightsName'))]",
+        "[resourceId('Microsoft.Cache/Redis', variables('redisCacheName'))]",
+        "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]"
+      ],
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "name": "[variables('configAppName')]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+        "enabled": true,
+        "reserved": false,
+        "clientAffinityEnabled": true,
+        "clientCertEnabled": false,
+        "hostNamesDisabled": false,
+        "containerSize": 0,
+        "dailyMemoryTimeQuota": 0,
+        "httpsOnly": true,
+        "siteConfig": {
+          "alwaysOn": true,
+          "appSettings": [
+            {
+              "name": "DEPLOYMENT_SCRIPT",
+              "value": "Kronos-Shifts-Connector/deploy.config.cmd"
+            },
+            {
+              "name": "ASPNETCORE_DETAILEDERRORS",
+              "value": true
+            },
+            {
+              "name": "TenantId",
+              "value": "[parameters('teamsTenantId')]"
+            },
+            {
+              "name": "ClientId",
+              "value": "[parameters('aadAppClientId')]"
+            },
+            {
+              "name": "Authority",
+              "value": "[variables('authority')]"
+            },
+            {
+              "name": "CallbackPath",
+              "value": "[variables('CallbackPath')]"
+            },
+            {
+              "name": "SignedOutCallbackPath",
+              "value": "[variables('SignedOutCallbackPath ')]"
+            },
+            {
+              "name": "ClientSecret",
+              "value": "ClientSecret"
+            },
+            {
+              "name": "ResponseType",
+              "value": "[variables('ResponseType')]"
+            },
+            {
+              "name": "GraphApiUrl",
+              "value": "[variables('GraphApiUrlConfig')]"
+            },
+            {
+              "name": "StorageConnectionString",
+              "value": "StorageConnectionString"
+            },
+            {
+              "name": "RedisCacheConfiguration",
+              "value": "RedisCacheConfiguration"
+            },
+            {
+              "name": "RedisCacheInstanceName",
+              "value": "[variables('redisCacheName')]"
+            },
+            {
+              "name": "IntegrationApiUrl",
+              "value": "[variables('apiAppUrl')]"
+            },
+            {
+              "name": "BaseAddressFirstTimeSync",
+              "value": "[concat(variables('apiAppUrl'), '/')]"
+            },
+            {
+              "name": "KronosUserDetailsQuery",
+              "value": "[variables('KronosUserDetailsQuery')]"
+            },
+            {
+              "name": "TemplatesContainerName",
+              "value": "[variables('TemplatesContainerName')]"
+            },
+            {
+              "name": "KronosShiftUserMappingTemplateName",
+              "value": "[variables('KronosShiftUserMappingTemplateName')]"
+            },
+            {
+              "name": "KronosShiftTeamDeptMappingTemplateName",
+              "value": "[variables('KronosShiftTeamDeptMappingTemplateName')]"
+            },
+            {
+              "name": "ExcelContentType",
+              "value": "[variables('ExcelContentType')]"
+            },
+            {
+              "name": "WfmSuperUsername",
+              "value": "WorkforceSuperUserName"
+            },
+            {
+              "name": "WfmSuperUserPassword",
+              "value": "WorkforceSuperUserPassword"
+            },
+            {
+              "name": "KeyVault",
+              "value": "[variables('keyVaultUrl')]"
+            },
+            {
+              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "value": "[reference(resourceId('Microsoft.Insights/components/', variables('configAppInsightsName')), '2015-05-01').InstrumentationKey]"
+            },
+            {
+              "name": "principalId",
+              "value": "[parameters('managedAadAppObjectId')]"
+            }
+          ]
+        }
+      },
+      "resources": [
+        {
+          "apiVersion": "2020-12-01",
+          "name": "web",
+          "type": "sourcecontrols",
+          "dependsOn": [
+            "[concat('Microsoft.Web/sites/', variables('configAppName'))]"
+          ],
+          "properties": {
+            "RepoUrl": "[parameters('gitRepoUrl')]",
+            "branch": "[parameters('gitBranch')]",
+            "IsManualIntegration": true
+          }
+        }
+      ]
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2016-08-01",
+      "name": "[variables('apiAppName')]",
+      "location": "[parameters('location')]",
+      "comments": "This Web app is for the Integration Service API.",
+      "kind": "app",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
+        "[resourceId('Microsoft.Insights/components/', variables('apiAppInsightsName'))]",
+        "[resourceId('Microsoft.Cache/Redis', variables('redisCacheName'))]"
+      ],
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "name": "[variables('apiAppName')]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('hostingPlanName'))]",
+        "enabled": true,
+        "reserved": false,
+        "clientAffinityEnabled": true,
+        "clientCertEnabled": false,
+        "hostNamesDisabled": false,
+        "containerSize": 0,
+        "dailyMemoryTimeQuota": 0,
+        "httpsOnly": true,
+        "siteConfig": {
+          "alwaysOn": true,
+          "appSettings": [
+            {
+              "name": "DEPLOYMENT_SCRIPT",
+              "value": "Kronos-Shifts-Connector/deploy.api.cmd"
+            },
+            {
+              "name": "ASPNETCORE_DETAILEDERRORS",
+              "value": true
+            },
+            {
+              "name": "GraphApiUrl",
+              "value": "https://graph.microsoft.com"
+            },
+            {
+              "name": "GraphBetaApiUrl",
+              "value": "https://graph.microsoft.com/beta/"
+            },
+            {
+              "name": "ShiftStartDate",
+              "value": "[parameters('firstTimeSyncStartDate')]"
+            },
+            {
+              "name": "ShiftEndDate",
+              "value": "[parameters('firstTimeSyncEndDate')]"
+            },
+            {
+              "name": "ShiftTheme",
+              "value": "blue"
+            },
+            {
+              "name": "OpenShiftTheme",
+              "value": "green"
+            },
+            {
+              "name": "Instance",
+              "value": "https://login.microsoftonline.com/"
+            },
+            {
+              "name": "TenantId",
+              "value": "[parameters('teamsTenantId')]"
+            },
+            {
+              "name": "KeyVault",
+              "value": "[variables('keyVaultUrl')]"
+            },
+            {
+              "name": "ProcessNumberOfUsersInBatch",
+              "value": "[parameters('processNumberOfUsersInBatch')]"
+            },
+            {
+              "name": "ProcessNumberOfOrgJobsInBatch",
+              "value": "[parameters('processNumberOfOrgJobsInBatch')]"
+            },
+            {
+              "name": "ShiftEntityMapping",
+              "value": "ShiftEntityMapping"
+            },
+            {
+              "name": "SwapShiftEntityMapping",
+              "value": "SwapShiftEntityMapping"
+            },
+            {
+              "name": "TeamDepartmentMapping",
+              "value": "TeamToDepartmentWithJobMapping"
+            },
+            {
+              "name": "UserToUserMapping",
+              "value": "UserToUserMapping"
+            },
+            {
+              "name": "WfmSuperUsername",
+              "value": "WorkforceSuperUserName"
+            },
+            {
+              "name": "WfmSuperUserPassword",
+              "value": "WorkforceSuperUserPassword"
+            },
+            {
+              "name": "ClientSecret",
+              "value": "ClientSecret"
+            },
+            {
+              "name": "StorageConnectionString",
+              "value": "StorageConnectionString"
+            },
+            {
+              "name": "RedisCacheConfiguration",
+              "value": "RedisCacheConfiguration"
+            },
+            {
+              "name": "RedisCacheInstanceName",
+              "value": "[variables('redisCacheName')]"
+            },
+            {
+              "name": "SyncFromPreviousDays",
+              "value": "[parameters('syncFromPreviousDays')]"
+            },
+            {
+              "name": "SyncToNextDays",
+              "value": "[parameters('syncToNextDays')]"
+            },
+            {
+              "name": "FutureSwapEligibilityDays",
+              "value": "[parameters('futureSwapEligibilityDays')]"
+            },
+            {
+              "name": "SyncDelayForPolling",
+              "value": 0
+            },
+            {
+              "name": "KronosQueryDateSpanFormat",
+              "value": "[variables('kronosQueryDateSpanFormat')]"
+            },
+            {
+              "name": "NumberOfOrgJobPathSectionsForActivityName",
+              "value": "[parameters('numberOfOrgJobPathSectionsForActivityName')]"
+            },
+            {
+              "name": "ManagerTimeOffRequestCommentText",
+              "value": "[parameters('managerTimeOffRequestCommentText')]"
+            },
+            {
+              "name": "SenderTimeOffRequestCommentText",
+              "value": "[parameters('senderTimeOffRequestCommentText')]"
+            },
+            {
+              "name": "BaseAddressFirstTimeSync",
+              "value": "[variables('apiAppUrl')]"
+            },
+            {
+              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "value": "[reference(resourceId('Microsoft.Insights/components/', variables('apiAppInsightsName')), '2015-05-01').InstrumentationKey]"
+            },
+            {
+              "name": "principalId",
+              "value": "[parameters('managedAadAppObjectId')]"
+            },
+            {
+              "name": "CorrectedDateSpanForOutboundCalls",
+              "value": "[parameters('correctDateSpanForOutboundCalls')]"
+            },
+            {
+              "name": "ClientId",
+              "value": "[parameters('aadAppClientId')]"
+            }
+          ]
+        }
+      },
+      "resources": [
+        {
+          "apiVersion": "2020-12-01",
+          "name": "web",
+          "type": "sourcecontrols",
+          "dependsOn": [
+            "[concat('Microsoft.Web/sites/', variables('apiAppName'))]"
+          ],
+          "properties": {
+            "RepoUrl": "[parameters('gitRepoUrl')]",
+            "branch": "[parameters('gitBranch')]",
+            "IsManualIntegration": true
+          }
+        }
+      ]
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "apiVersion": "2018-02-14",
+      "name": "[variables('keyVaultName')]",
+      "location": "[parameters('location')]",
+      "comments": "This Azure KeyVault will store the necessary information like the Kronos credentials, etc.",
+      "dependsOn": [
+        "[concat('Microsoft.Web/sites/', variables('apiAppName'))]",
+        "[concat('Microsoft.Web/sites/', variables('configAppName'))]"
+      ],
+      "tags": {
+        "displayName": "KeyVault"
+      },
+      "properties": {
+        "enabledForDeployment": "false",
+        "enabledForTemplateDeployment": "false",
+        "enabledForDiskEncryption": "false",
+        "tenantId": "[subscription().tenantId]",
+        "accessPolicies": [
+          {
+            "objectId": "[reference(concat('Microsoft.Web/sites/', variables('apiAppName')), '2018-02-01', 'Full').identity.principalId]",
+            "tenantId": "[subscription().tenantId]",
+            "permissions": {
+              "secrets": [
+                "get"
+              ]
+            }
+          },
+          {
+            "objectId": "[reference(concat('Microsoft.Web/sites/', variables('configAppName')), '2018-02-01', 'Full').identity.principalId]",
+            "tenantId": "[subscription().tenantId]",
+            "permissions": {
+              "secrets": [
+                "get",
+                "delete",
+                "set"
+              ]
+            }
+          }
+        ],
+        "sku": {
+          "name": "Standard",
+          "family": "A"
+        },
+        "networkAcls": {
+          "value": {
+            "defaultAction": "Allow",
+            "bypass": "AzureServices"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2016-10-01",
+      "name": "[concat(variables('keyVaultName'), '/ClientId')]",
+      "comments": "This secret is for the ClientID, or the Azure AD Application ID.",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ],
+      "properties": {
+        "attributes": {
+          "enabled": true
+        },
+        "value": "[parameters('aadAppClientId')]"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2016-10-01",
+      "name": "[concat(variables('keyVaultName'), '/ClientSecret')]",
+      "comments": "This secret is for the ClientSecret which is for the Azure AD Application Registration.",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ],
+      "properties": {
+        "attributes": {
+          "enabled": true
+        },
+        "value": "[parameters('aadAppClientSecret')]"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2016-10-01",
+      "name": "[concat(variables('keyVaultName'), '/RedisCacheConfiguration')]",
+      "comments": "This secret is for the Redis Cache configuration.",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ],
+      "properties": {
+        "attributes": {
+          "enabled": true
+        },
+        "value": "[concat(variables('redisCacheName'),'.redis.cache.windows.net,abortConnect=false,ssl=true,password=', listKeys(resourceId('Microsoft.Cache/Redis', variables('redisCacheName')), '2015-08-01').primaryKey)]"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2016-10-01",
+      "name": "[concat(variables('keyVaultName'), '/StorageConnectionString')]",
+      "comments": "This secret is the Azure Table storage connection string.",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ],
+      "properties": {
+        "attributes": {
+          "enabled": true
+        },
+        "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')),'2015-05-01-preview').key1)]"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2016-10-01",
+      "name": "[concat(variables('keyVaultName'), '/TenantId')]",
+      "comments": "This secret is the Tenant ID of the Teams instance.",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ],
+      "properties": {
+        "attributes": {
+          "enabled": true
+        },
+        "value": "[parameters('teamsTenantId')]"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2016-10-01",
+      "name": "[concat(variables('keyVaultName'), '/WorkforceSuperUserName')]",
+      "comments": "This secret is the Kronos WFC Superuser name.",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ],
+      "properties": {
+        "attributes": {
+          "enabled": true
+        },
+        "value": "[parameters('kronosUserName')]"
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/secrets",
+      "apiVersion": "2016-10-01",
+      "name": "[concat(variables('keyVaultName'), '/WorkforceSuperUserPassword')]",
+      "comments": "This secret is the Kronos WFC Superuser password.",
+      "dependsOn": [
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ],
+      "properties": {
+        "attributes": {
+          "enabled": true
+        },
+        "value": "[parameters('kronosPassword')]"
+      }
+    },
+    {
+      "name": "[variables('logicAppName')]",
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2016-06-01",
+      "location": "[parameters('location')]",
+      "comments": "This resource defines the Azure Logic app to periodically sync data between Kronos WFC and Shifts.",
+      "tags": {
+      },
+      "scale": null,
+      "properties": {
+        "state": "Enabled",
+        "definition": {
+          "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+          },
+          "actions": {
+            "Data_Sync": {
+              "inputs": {
+                "authentication": {
+                  "audience": "[variables('logicAppAudience')]",
+                  "clientId": "[parameters('aadAppClientId')]",
+                  "secret": "[parameters('aadAppClientSecret')]",
+                  "tenant": "[parameters('teamsTenantId')]",
+                  "type": "[variables('logicAppAuthenticationType')]"
+                },
+                "method": "GET",
+                "uri": "[concat(variables('apiAppUrl'), '/api/SyncKronosToShifts/StartSync/true')]"
+              },
+              "runAfter": {
+              },
+              "type": "Http"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "outStorageAccntName": {
+      "type": "string",
+      "value": "[variables('storageAccountName')]"
+    },
+    "outApiUrl": {
+      "type": "string",
+      "value": "[variables('apiAppUrl')]"
+    },
+    "outConfigUrl": {
+      "type": "string",
+      "value": "[variables('configAppUrl')]"
+    },
+    "outHostingTenantId": {
+      "type": "string",
+      "value": "[subscription().tenantId]"
+    },
+    "outTeamsTenantId": {
+      "type": "string",
+      "value": "[parameters('teamsTenantId')]"
+    }
+  }
 }

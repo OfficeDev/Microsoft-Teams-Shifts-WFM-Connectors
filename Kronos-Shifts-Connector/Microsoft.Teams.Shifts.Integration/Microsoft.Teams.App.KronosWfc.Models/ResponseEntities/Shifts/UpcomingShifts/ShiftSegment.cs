@@ -18,6 +18,12 @@ namespace Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingS
         public string SegmentTypeName { get; set; }
 
         /// <summary>
+        /// Gets or sets the OrgJobPath.
+        /// </summary>
+        [XmlAttribute]
+        public string OrgJobPath { get; set; }
+
+        /// <summary>
         /// Gets or sets the StartDate.
         /// </summary>
         [XmlAttribute]
