@@ -362,7 +362,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                     // Number of elements to take from the split org job path array.
                     var numberOfOrgJobPathSections = int.Parse(this.appSettings.NumberOfOrgJobPathSectionsForActivityName, CultureInfo.InvariantCulture);
-                    var orgJobPathSections = new List<string>();
+
+                    // Ensure that the max number of sections is less than or equal to total number of sections.
+                    numberOfOrgJobPathSections = numberOfOrgJobPathSections <= splitOrgJobPath.Length ? numberOfOrgJobPathSections : splitOrgJobPath.Length;
+
+                    var orgJobPathSections = new List<string>(numberOfOrgJobPathSections);
 
                     for (int i = splitOrgJobPath.Length - numberOfOrgJobPathSections; i < splitOrgJobPath.Length; i++)
                     {
@@ -370,6 +374,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     }
 
                     activityDisplayName = string.Join("-", orgJobPathSections);
+
+                    // Teams UI has a character limit of 50 so if we exceed this we want to trim the string down
+                    // and prepend an elipses to indicate we have trimmed.
+                    if (activityDisplayName.Length > 50)
+                    {
+                        var trimmedDisplayName = activityDisplayName.Substring(activityDisplayName.Length - 47);
+                        activityDisplayName = trimmedDisplayName.Insert(0, "...");
+                    }
                 }
 
                 shiftActivity.Add(new ShiftActivity

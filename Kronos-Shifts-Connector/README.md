@@ -78,10 +78,10 @@ The following settings you must configure are:
    - **ManagerTimeOffRequestCommentText** - Used for syncing time off request notes added by the manager. (Please note we do not currently support manager TOR note syncing, however plan to in the near future).
 
 1. First Log in to Kronos as an admin and navigate to the Comments section under Setup -> CommonSetup.
-![Comment Setup Screen](images/figure53.png)
+![Comment Setup Screen](images/figure53.PNG)
 
 2. Now click the **New** button to configure a new comment type. Add the value you want the comment text to be - this can be whatever you like. Next set a code number - again this is up to you. Finally ensure that you select the correct categories for the comment you are setting up and hit **Save**.
-![Adding a New Comment Screen](images/figure54.png)
+![Adding a New Comment Screen](images/figure54.PNG)
 
 3. Repeat this for all of the comment types listed above.
 
