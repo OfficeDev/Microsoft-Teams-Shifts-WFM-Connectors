@@ -12,7 +12,7 @@ You will need to do the following to get this feature to work:
 
 - A new configuration setting has been added that needs to be given a value - **FutureSwapEligibilityDays**, this is the number of days in the future the connector will query for eligible shifts to swap. (Be advised that the greater the number of the days the bigger the impact on performance).
 
-- You will also need to ensure that your workforce integration has swap request eligibility enabled. You can do this easily in the graph explorer with this request: 
+- You will also need to ensure that your workforce integration has swap request eligibility enabled. This is done automatically with newly created workforce integrations. If you have an existing workforce integration you can patch this in using the graph explorer with this request: 
 
   ```
   PATCH https://graph.microsoft.com/beta/teamwork/workforceIntegrations/{workforceIntegrationId}

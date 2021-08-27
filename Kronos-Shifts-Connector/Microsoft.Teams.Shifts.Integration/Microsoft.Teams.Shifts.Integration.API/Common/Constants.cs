@@ -55,6 +55,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         public const string WFISupports = "Shift, SwapRequest, OpenShift, OpenShiftRequest, TimeOffRequest";
 
         /// <summary>
+        /// Workforce integration supported eligibility filtering entities.
+        /// </summary>
+        public const string WFISupportedEligibilityFiltering = "SwapRequest";
+
+        /// <summary>
         /// Number of open slots from Kronos.
         /// </summary>
         public const string KronosOpenShiftsSlotCount = "1";
