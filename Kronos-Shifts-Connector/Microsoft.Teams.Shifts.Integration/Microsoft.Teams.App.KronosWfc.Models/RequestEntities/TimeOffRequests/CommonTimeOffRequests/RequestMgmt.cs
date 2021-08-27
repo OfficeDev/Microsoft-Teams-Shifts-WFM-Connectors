@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
-namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.TimeOffRequests
+namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.TimeOffRequests.CommonTimeOffRequests
 {
     using System.Xml.Serialization;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common;
@@ -10,7 +10,6 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.TimeOffRequests
     /// <summary>
     /// This class models the RequestMgmt.
     /// </summary>
-    [XmlRoot(ElementName = "RequestMgmt")]
     public class RequestMgmt
     {
         /// <summary>
@@ -26,21 +25,9 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.TimeOffRequests
         public string QueryDateSpan { get; set; }
 
         /// <summary>
-        /// Gets or sets the RequestFor.
+        /// Gets or sets the RequestIds.
         /// </summary>
-        [XmlAttribute(AttributeName = "RequestFor")]
-        public string RequestFor { get; set; }
-
-        /// <summary>
-        /// Gets or sets the RequestItems.
-        /// </summary>
-        [XmlElement("RequestItems")]
-        public RequestItems RequestItems { get; set; }
-
-        /// <summary>
-        /// Gets or sets the StatusName.
-        /// </summary>
-        [XmlAttribute(AttributeName = "StatusName")]
-        public string StatusName { get; set; }
+        [XmlElement("RequestIds")]
+        public RequestIds RequestIds { get; set; }
     }
 }

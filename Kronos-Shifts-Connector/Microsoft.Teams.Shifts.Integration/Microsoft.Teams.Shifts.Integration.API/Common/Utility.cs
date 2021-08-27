@@ -6,6 +6,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Globalization;
     using System.Linq;
     using System.Reflection;
@@ -849,20 +850,20 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// <param name="shift">The Shift model.</param>
         /// <param name="userMappingEntity">Details of user from User Mapping Entity table.</param>
         /// <param name="kronosUniqueId">Kronos Unique Id corresponds to the shift.</param>
-        /// <param name="kronosTimeZone">The time zone to use when converting from UTC to Kronos time.</param>
         /// <returns>Mapping Entity associated with Team and Shift.</returns>
         public TeamsShiftMappingEntity CreateShiftMappingEntity(
            Models.IntegrationAPI.Shift shift,
            AllUserMappingEntity userMappingEntity,
-           string kronosUniqueId,
-           string kronosTimeZone)
+           string kronosUniqueId)
         {
+            var startDateTime = DateTime.SpecifyKind(shift.SharedShift.StartDateTime, DateTimeKind.Utc);
+
             return new TeamsShiftMappingEntity
             {
                 AadUserId = shift?.UserId,
                 KronosUniqueId = kronosUniqueId,
                 KronosPersonNumber = userMappingEntity?.RowKey,
-                ShiftStartDate = this.UTCToKronosTimeZone(shift.SharedShift.StartDateTime, kronosTimeZone),
+                ShiftStartDate = startDateTime,
             };
         }
 
@@ -877,16 +878,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
             loginKronosResult = JsonConvert.DeserializeObject<Logon.Response>(
             await this.cache.GetStringAsync(Common.Constants.KronosLoginCacheKey).ConfigureAwait(false) ?? string.Empty);
 
-            if (loginKronosResult == null && string.IsNullOrEmpty(loginKronosResult?.Jsession))
+            if (loginKronosResult == null || string.IsNullOrEmpty(loginKronosResult?.Jsession))
             {
                 var configurationEntity = (await this.configurationProvider.GetConfigurationsAsync().ConfigureAwait(false)).FirstOrDefault();
 
-                var loginKronos = this.logonActivity.LogonAsync(
+                loginKronosResult = await this.logonActivity.LogonAsync(
                  this.appSettings.WfmSuperUsername,
                  this.appSettings.WfmSuperUserPassword,
-                 new Uri(configurationEntity?.WfmApiEndpoint));
-
-                loginKronosResult = await loginKronos.ConfigureAwait(false);
+                 new Uri(configurationEntity?.WfmApiEndpoint)).ConfigureAwait(false);
 
                 if (loginKronosResult is null)
                 {
@@ -898,7 +897,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
                     JsonConvert.SerializeObject(loginKronosResult),
                     new DistributedCacheEntryOptions
                     {
-                        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(Constants.KronosCacheTimeOut),
+                        AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(double.Parse(this.appSettings.AuthTokenCacheLifetimeInSeconds, CultureInfo.InvariantCulture)),
                     }).ConfigureAwait(false);
             }
 
@@ -1020,6 +1019,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
                 endDate = this.appSettings.ShiftEndDate;
             }
         }
+
+        /// <summary>
+        /// Converts a given datetime into correct format for Kronos calls.
+        /// </summary>
+        /// <param name="date">A <see cref="DateTime"/>.</param>
+        /// <returns>A string representation of the date for a kronos call.</returns>
+        [SuppressMessage("Globalization", "CA1305:Specify IFormatProvider", Justification = "This format is needed for kronos calls.")]
+        public string ConvertToKronosDate(DateTime date) => date.ToString(this.appSettings.KronosQueryDateSpanFormat);
 
         /// <summary>
         /// Method to retrieve the necessary details from AppSettings.

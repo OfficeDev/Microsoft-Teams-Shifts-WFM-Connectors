@@ -5,7 +5,7 @@
 namespace Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.FetchApproval
 {
     using System.Xml.Serialization;
-    using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift.SubmitRequest;
+    using Microsoft.Teams.App.KronosWfc.Models.CommonEntities;
 
     /// <summary>
     /// This class models the RequestStatusChange.

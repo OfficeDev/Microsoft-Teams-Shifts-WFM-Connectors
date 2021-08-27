@@ -191,6 +191,26 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// </summary>
         public string KronosQueryDateSpanFormat => this.configuration["KronosQueryDateSpanFormat"];
 
+        /// <summary>
+        /// Gets the number of seconds to set the time to live when caching a kronos session token.
+        /// </summary>
+        public string AuthTokenCacheLifetimeInSeconds => this.configuration["AuthTokenCacheLifetimeInSeconds"];
+
+        /// <summary>
+        /// Gets the number of org job path section sto use as the activity display name.
+        /// </summary>
+        public string NumberOfOrgJobPathSectionsForActivityName => this.configuration["NumberOfOrgJobPathSectionsForActivityName"];
+
+        /// <summary>
+        /// Gets the manager time off request comment text value.
+        /// </summary>
+        public string ManagerTimeOffRequestCommentText => this.configuration["ManagerTimeOffRequestCommentText"];
+
+        /// <summary>
+        /// Gets the sender time off request comment text value.
+        /// </summary>
+        public string SenderTimeOffRequestCommentText => this.configuration["SenderTimeOffRequestCommentText"];
+
         // **************************************CONFIGURATION PROJECT*********************************************
 
         /// <summary>
@@ -241,6 +261,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// Gets OrgJobPath.
         /// </summary>public string OrgJobPath => this.configuration["OrgJobPath"];
         public string SyncToNextDays => this.configuration["SyncToNextDays"];
+
+        /// <summary>
+        /// Gets the number of days in the future to sync swap shift eligiblity for.
+        /// </summary>
+        public string FutureSwapEligibilityDays => this.configuration["FutureSwapEligibilityDays"];
 
         /// <summary>
         /// Gets the configuration for the polling delay in the sync functionality.

@@ -4,7 +4,9 @@
 
 namespace Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests
 {
+    using System.Collections.Generic;
     using System.Xml.Serialization;
+    using Microsoft.Teams.App.KronosWfc.Models.CommonEntities;
 
     /// <summary>
     /// This class models the GlobalTimeOffRequestItem.
