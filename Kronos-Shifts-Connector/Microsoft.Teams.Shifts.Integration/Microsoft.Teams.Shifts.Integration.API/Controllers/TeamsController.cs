@@ -1410,7 +1410,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 {
                     responseModelList.Add(GenerateResponse(openShiftRequest.Id, HttpStatusCode.OK, null, null));
                     var shift = this.Get<Shift>(jsonModel, "/shifts/", approved);
-                    var shiftsTemp = await this.shiftController.GetShiftsForUser(kronosUserId, openShiftRequestMapping.PartitionKey).ConfigureAwait(false);
+
+                    var queryStartDate = shift.SharedShift.StartDateTime.ToString("M/dd/yyyy", CultureInfo.InvariantCulture);
+                    var queryEndDate = shift.SharedShift.EndDateTime.ToString("M/dd/yyyy", CultureInfo.InvariantCulture);
+
+                    var shiftsTemp = await this.shiftController.GetShiftsForUser(kronosUserId, queryStartDate, queryEndDate).ConfigureAwait(false);
                     var date = this.utility.UTCToKronosTimeZone(shift.SharedShift.StartDateTime, kronosTimeZone).ToString("d", CultureInfo.InvariantCulture);
 
                     // confirm new shift exists on kronos
@@ -1515,8 +1519,20 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     await this.shiftMappingEntityProvider.DeleteOrphanDataFromShiftMappingAsync(offeredShiftMap).ConfigureAwait(false);
                     await this.shiftMappingEntityProvider.DeleteOrphanDataFromShiftMappingAsync(requestedShiftMap).ConfigureAwait(false);
 
-                    var requestingUserShifts = await this.shiftController.GetShiftsForUser(kronosRequestingUserId, swapShiftRequestMapping.PartitionKey).ConfigureAwait(false);
-                    var requestedUserShifts = await this.shiftController.GetShiftsForUser(kronosRequestedUserId, swapShiftRequestMapping.PartitionKey).ConfigureAwait(false);
+                    var queryStartDate = offeredShiftMap.ShiftStartDate <= requestedShiftMap.ShiftStartDate ? offeredShiftMap.ShiftStartDate : requestedShiftMap.ShiftStartDate;
+                    var queryEndDate = offeredShiftMap.ShiftEndDate >= requestedShiftMap.ShiftEndDate ? offeredShiftMap.ShiftEndDate : requestedShiftMap.ShiftEndDate;
+                    var monthPartition = Utility.GetMonthPartition(queryStartDate.ToString("M/dd/yyyy", CultureInfo.InvariantCulture), queryEndDate.ToString("M/dd/yyyy", CultureInfo.InvariantCulture));
+
+                    var requestingUserShifts = await this.shiftController.GetShiftsForUser(
+                        kronosRequestingUserId,
+                        queryStartDate.ToString("M/dd/yyyy", CultureInfo.InvariantCulture),
+                        queryEndDate.ToString("M/dd/yyyy", CultureInfo.InvariantCulture)).ConfigureAwait(false);
+
+                    var requestedUserShifts = await this.shiftController.GetShiftsForUser(
+                        kronosRequestedUserId,
+                        queryStartDate.ToString("M/dd/yyyy", CultureInfo.InvariantCulture),
+                        queryEndDate.ToString("M/dd/yyyy", CultureInfo.InvariantCulture)).ConfigureAwait(false);
+
                     var requestorShiftDate = this.utility.UTCToKronosTimeZone(requestorShift.SharedShift.StartDateTime, kronosTimeZone).ToString("d", CultureInfo.InvariantCulture);
                     var requestedShiftDate = this.utility.UTCToKronosTimeZone(requestedShift.SharedShift.StartDateTime, kronosTimeZone).ToString("d", CultureInfo.InvariantCulture);
 

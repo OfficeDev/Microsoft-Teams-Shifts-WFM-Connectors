@@ -117,9 +117,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// Gets the shifts for a given Kronos user id.
         /// </summary>
         /// <param name="kronosUserId">A Kronos user id.</param>
-        /// <param name="partitionKey">The partition key for the shift.</param>
+        /// <param name="queryStartDate">The query start date.</param>
+        /// <param name="queryEndDate">The query end date.</param>
         /// <returns>The schedule response.</returns>
-        public async Task<App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.Response> GetShiftsForUser(string kronosUserId, string partitionKey)
+        public async Task<App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.Response> GetShiftsForUser(string kronosUserId, string queryStartDate, string queryEndDate)
         {
             App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.Response shiftsResponse = null;
 
@@ -135,9 +136,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             if ((bool)allRequiredConfigurations?.IsAllSetUpExists)
             {
-                string queryStartDate = Utility.GetFirstDayInMonth(partitionKey);
-                string queryEndDate = Utility.GetLastDayInMonth(partitionKey);
-
                 var user = new List<ResponseHyperFindResult>()
                         {
                             new ResponseHyperFindResult { PersonNumber = kronosUserId },
@@ -147,8 +145,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 shiftsResponse = await this.upcomingShiftsActivity.ShowUpcomingShiftsInBatchAsync(
                         new Uri(allRequiredConfigurations.WfmEndPoint),
                         allRequiredConfigurations.KronosSession,
-                        DateTime.Now.ToString(queryStartDate, CultureInfo.InvariantCulture),
-                        DateTime.Now.ToString(queryEndDate, CultureInfo.InvariantCulture),
+                        queryStartDate,
+                        queryEndDate,
                         user).ConfigureAwait(false);
             }
 

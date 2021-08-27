@@ -112,7 +112,7 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities
             /// Gets or sets Swap Shift Request comments.
             /// </summary>
             [XmlElement("Comments")]
-            public List<Comment> Comments { get; set; }
+            public Comments Comments { get; set; }
         }
 
         /// <summary>

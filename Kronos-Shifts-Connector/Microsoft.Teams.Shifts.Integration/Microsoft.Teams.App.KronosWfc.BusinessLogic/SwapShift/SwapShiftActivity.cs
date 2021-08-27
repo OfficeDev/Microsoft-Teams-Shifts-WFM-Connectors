@@ -394,9 +394,11 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
             {
                 new RequestManagementSwap.RequestStatusChange
                 {
-                    Comments = comment == null ? null : new List<Comment>
+                    Comments = comment == null ? null : new Comments
                     {
-                        new Comment
+                        Comment = new List<Comment>
+                        {
+                            new Comment
                             {
                                 CommentText = ApiConstants.SwapShiftComment,
                                 Notes = new Notes
@@ -409,6 +411,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
                                     },
                                 },
                             },
+                        },
                     },
                     RequestId = reqId,
                     ToStatusName = ApiConstants.Offered,
@@ -511,9 +514,11 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
             {
                 new RequestManagementSwap.RequestStatusChange
                 {
-                    Comments = comment == null ? null : new List<Comment>
+                    Comments = comment == null ? null : new Comments
                     {
-                        new Comment
+                        Comment = new List<Comment>
+                        {
+                            new Comment
                             {
                                 CommentText = ApiConstants.SwapShiftComment,
                                 Notes = new Notes
@@ -524,6 +529,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
                                     },
                                 },
                             },
+                        },
                     },
                     RequestId = reqId,
                     ToStatusName = status,
