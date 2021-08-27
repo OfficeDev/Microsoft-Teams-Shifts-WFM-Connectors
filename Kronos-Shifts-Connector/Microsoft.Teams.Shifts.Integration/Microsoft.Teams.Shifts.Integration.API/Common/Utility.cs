@@ -878,16 +878,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
             loginKronosResult = JsonConvert.DeserializeObject<Logon.Response>(
             await this.cache.GetStringAsync(Common.Constants.KronosLoginCacheKey).ConfigureAwait(false) ?? string.Empty);
 
-            if (loginKronosResult == null && string.IsNullOrEmpty(loginKronosResult?.Jsession))
+            if (loginKronosResult == null || string.IsNullOrEmpty(loginKronosResult?.Jsession))
             {
                 var configurationEntity = (await this.configurationProvider.GetConfigurationsAsync().ConfigureAwait(false)).FirstOrDefault();
 
-                var loginKronos = this.logonActivity.LogonAsync(
+                loginKronosResult = await this.logonActivity.LogonAsync(
                  this.appSettings.WfmSuperUsername,
                  this.appSettings.WfmSuperUserPassword,
-                 new Uri(configurationEntity?.WfmApiEndpoint));
-
-                loginKronosResult = await loginKronos.ConfigureAwait(false);
+                 new Uri(configurationEntity?.WfmApiEndpoint)).ConfigureAwait(false);
 
                 if (loginKronosResult is null)
                 {
@@ -899,7 +897,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
                     JsonConvert.SerializeObject(loginKronosResult),
                     new DistributedCacheEntryOptions
                     {
-                        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(Constants.KronosCacheTimeOut),
+                        AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(double.Parse(this.appSettings.AuthTokenCacheLifetimeInSeconds, CultureInfo.InvariantCulture)),
                     }).ConfigureAwait(false);
             }
 

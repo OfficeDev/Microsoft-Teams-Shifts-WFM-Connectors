@@ -176,6 +176,7 @@ Here are the following requirements to correctly deploy the **Shifts-Kronos Inte
 |senderTimeOffRequestCommentText|Used for syncing time off request notes added by the requestor|
 |kronosUserName|The Kronos WFC SuperUser name|
 |kronosPassword|The Kronos WFC SuperUser password|
+|authTokenCacheLifetimeInSeconds|The number of seconds to set the time to live when caching the Kronos session auth token. You should set this to less than or equal to you **global.webserver.session.timeout**. <br/>To find this value please login to Kronos as an admin and navigate to Setup -> System Configuration -> System Settings. <br/>Select **Global Values** and find the value assigned to global.webserver.session.timeout|
 |gitRepoUrl|The public GitHub repository URL|
 |gitBranch|The specific branch from which the code can be deployed. The recommended value is master, however, at the time of deployment this value can be changed|
 
