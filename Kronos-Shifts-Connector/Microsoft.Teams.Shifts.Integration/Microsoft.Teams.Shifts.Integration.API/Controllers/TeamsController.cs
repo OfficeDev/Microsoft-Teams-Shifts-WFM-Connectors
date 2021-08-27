@@ -1521,7 +1521,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                     var queryStartDate = offeredShiftMap.ShiftStartDate <= requestedShiftMap.ShiftStartDate ? offeredShiftMap.ShiftStartDate : requestedShiftMap.ShiftStartDate;
                     var queryEndDate = offeredShiftMap.ShiftEndDate >= requestedShiftMap.ShiftEndDate ? offeredShiftMap.ShiftEndDate : requestedShiftMap.ShiftEndDate;
-                    var monthPartition = Utility.GetMonthPartition(queryStartDate.ToString("M/dd/yyyy", CultureInfo.InvariantCulture), queryEndDate.ToString("M/dd/yyyy", CultureInfo.InvariantCulture));
 
                     var requestingUserShifts = await this.shiftController.GetShiftsForUser(
                         kronosRequestingUserId,
