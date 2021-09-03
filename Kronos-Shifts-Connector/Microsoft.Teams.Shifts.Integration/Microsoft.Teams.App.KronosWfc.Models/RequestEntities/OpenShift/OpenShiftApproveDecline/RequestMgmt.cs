@@ -28,5 +28,11 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift.Approve
         /// </summary>
         [XmlElement("RequestFor")]
         public string RequestFor { get; set; }
+
+        /// <summary>
+        /// Gets or sets the RequestIds.
+        /// </summary>
+        [XmlElement("RequestIds")]
+        public RequestIds RequestIds { get; set; }
     }
 }

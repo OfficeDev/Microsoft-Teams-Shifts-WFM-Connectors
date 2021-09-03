@@ -31,5 +31,10 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Models
         /// Gets or Sets the shift start date.
         /// </summary>
         public DateTime ShiftStartDate { get; set; }
+
+        /// <summary>
+        /// Gets or Sets the shift start date.
+        /// </summary>
+        public DateTime ShiftEndDate { get; set; }
     }
 }

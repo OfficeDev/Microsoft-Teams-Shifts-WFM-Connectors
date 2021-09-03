@@ -22,7 +22,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         private const string ConfigurationTableName = "PayCodeToTimeOffReasonsMapping";
         private readonly Lazy<Task> initializeTask;
         private readonly TelemetryClient telemetryClient;
-        private CloudTable configurationCloudTable;
+        private CloudTable timeOffReasonsCloudTable;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TimeOffReasonProvider"/> class.
@@ -59,7 +59,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
 
             do
             {
-                var queryResults = await this.configurationCloudTable.ExecuteQuerySegmentedAsync(query, continuationToken).ConfigureAwait(false);
+                var queryResults = await this.timeOffReasonsCloudTable.ExecuteQuerySegmentedAsync(query, continuationToken).ConfigureAwait(false);
                 continuationToken = queryResults.ContinuationToken;
                 results.AddRange(queryResults.Results);
             }
@@ -93,9 +93,79 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
 
                 TableContinuationToken token = null;
 
-                var resultSegment = await this.configurationCloudTable.ExecuteQuerySegmentedAsync(query, token).ConfigureAwait(false);
+                var resultSegment = await this.timeOffReasonsCloudTable.ExecuteQuerySegmentedAsync(query, token).ConfigureAwait(false);
                 token = resultSegment.ContinuationToken;
                 return resultSegment.Results.Select(c => new KeyValuePair<string, string>(c.TimeOffReasonId, c.RowKey)).ToDictionary(c => c.Key, p => p.Value);
+            }
+            catch (Exception ex)
+            {
+                this.telemetryClient.TrackException(ex);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Get mapping for given reason.
+        /// </summary>
+        /// <param name="reason">The reason you are looking for.</param>
+        /// <returns>The mapping for the reason.</returns>
+        public async Task<PayCodeToTimeOffReasonsMappingEntity> FetchReasonAsync(string reason)
+        {
+            try
+            {
+                await this.EnsureInitializedAsync().ConfigureAwait(false);
+                TableQuery<PayCodeToTimeOffReasonsMappingEntity> query =
+                    new TableQuery<PayCodeToTimeOffReasonsMappingEntity>()
+                        .Where(TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, reason));
+
+                TableContinuationToken token = null;
+
+                var resultSegment = await this.timeOffReasonsCloudTable.ExecuteQuerySegmentedAsync(query, token).ConfigureAwait(false);
+                token = resultSegment.ContinuationToken;
+                return resultSegment.Results.FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                this.telemetryClient.TrackException(ex);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Delete all mappings except for ones with a given name.
+        /// </summary>
+        /// <param name="reasonsToRemove">The reasons name for the mappings you want to remove.</param>
+        public async Task DeleteSpecificReasons(params string[] reasonsToRemove)
+        {
+            try
+            {
+                await this.EnsureInitializedAsync().ConfigureAwait(false);
+                var query = new TableQuery<PayCodeToTimeOffReasonsMappingEntity>();
+
+                TableContinuationToken token = null;
+                var resultSegment = await this.timeOffReasonsCloudTable.ExecuteQuerySegmentedAsync(query, token).ConfigureAwait(false);
+                token = resultSegment.ContinuationToken;
+
+                // Create the batch operation.
+                TableBatchOperation batchDeleteOperation = new TableBatchOperation();
+
+                foreach (var reason in resultSegment.Results)
+                {
+                    if (reasonsToRemove.Contains(reason.RowKey))
+                    {
+                        this.telemetryClient.TrackTrace($"Adding {reason.RowKey} to delete operation.");
+                        batchDeleteOperation.Delete(reason);
+                    }
+                }
+
+                if (batchDeleteOperation.Count == 0)
+                {
+                    this.telemetryClient.TrackTrace("There are no time off reasons to be deleted.");
+                    return;
+                }
+
+                // Execute the batch operation.
+                await this.timeOffReasonsCloudTable.ExecuteBatchAsync(batchDeleteOperation).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -111,11 +181,11 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// <returns>A unit of execution.</returns>
         private async Task InitializeAsync(string connectionString)
         {
-            this.telemetryClient.TrackTrace($"{MethodBase.GetCurrentMethod().Name}");
+            this.telemetryClient.TrackTrace("Ensuring azure table for time off reasons exists.");
             CloudStorageAccount storageAccount = CloudStorageAccount.Parse(connectionString);
             CloudTableClient cloudTableClient = storageAccount.CreateCloudTableClient();
-            this.configurationCloudTable = cloudTableClient.GetTableReference(ConfigurationTableName);
-            await this.configurationCloudTable.CreateIfNotExistsAsync().ConfigureAwait(false);
+            this.timeOffReasonsCloudTable = cloudTableClient.GetTableReference(ConfigurationTableName);
+            await this.timeOffReasonsCloudTable.CreateIfNotExistsAsync().ConfigureAwait(false);
         }
 
         /// <summary>
@@ -124,7 +194,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// <returns>A unit of execution.</returns>
         private async Task EnsureInitializedAsync()
         {
-            this.telemetryClient.TrackTrace($"{MethodBase.GetCurrentMethod().Name}");
+            this.telemetryClient.TrackTrace("Ensuring necessary entities exist for time off reasons.");
             await this.initializeTask.Value.ConfigureAwait(false);
         }
     }

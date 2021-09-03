@@ -5,6 +5,8 @@
 namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.ShiftsToKronos.AddRequest
 {
     using System.Xml.Serialization;
+    using Microsoft.Teams.App.KronosWfc.Models.CommonEntities;
+    using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common;
 
     /// <summary>
     /// This class models the Time off request details.

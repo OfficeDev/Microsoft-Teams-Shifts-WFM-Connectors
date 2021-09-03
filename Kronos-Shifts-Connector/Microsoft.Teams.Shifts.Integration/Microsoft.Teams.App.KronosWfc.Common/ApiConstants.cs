@@ -95,6 +95,26 @@ namespace Microsoft.Teams.App.KronosWfc.Common
         public const string AddRequests = "AddRequests";
 
         /// <summary>
+        /// Defines the Action to approve requests.
+        /// </summary>
+        public const string ApproveRequests = "ApproveRequests";
+
+        /// <summary>
+        /// Defines the Action to deny requests.
+        /// </summary>
+        public const string RefuseRequests = "RefuseRequests";
+
+        /// <summary>
+        /// Defines the Action to retract requests.
+        /// </summary>
+        public const string RetractRequests = "RetractRequests";
+
+        /// <summary>
+        /// Defines the Action to update a request.
+        /// </summary>
+        public const string Update = "Update";
+
+        /// <summary>
         /// Defines the pending status when migrating the data from Kronos to Shifts.
         /// </summary>
         public const string Pending = "pending";
@@ -228,5 +248,10 @@ namespace Microsoft.Teams.App.KronosWfc.Common
         /// Error message when Kronos login is failed.
         /// </summary>
         public const string KronosFailedLogin = "Unable to login to Kronos. Please check credentials and try again.";
+
+        /// <summary>
+        /// Defines the action for loading eligible employees.
+        /// </summary>
+        public const string LoadEligibleEmployees = "LoadEligibleEmployees";
     }
 }

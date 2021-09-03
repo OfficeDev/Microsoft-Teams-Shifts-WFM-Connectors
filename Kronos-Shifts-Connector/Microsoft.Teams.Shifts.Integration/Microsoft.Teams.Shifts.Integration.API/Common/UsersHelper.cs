@@ -26,7 +26,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
             Dictionary<string, TeamToDepartmentJobMappingEntity> teamMappingEntities = new Dictionary<string, TeamToDepartmentJobMappingEntity>();
             List<UserDetailsModel> kronosUsers = new List<UserDetailsModel>();
 
-            List<AllUserMappingEntity> mappedUsersResult = await userMappingProvider.GetAllMappedUserDetailsAsync().ConfigureAwait(false);
+            List<AllUserMappingEntity> mappedUsersResult = await userMappingProvider.GetAllActiveMappedUserDetailsAsync().ConfigureAwait(false);
 
             foreach (var element in mappedUsersResult)
             {
@@ -62,6 +62,39 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
             }
 
             return kronosUsers;
+        }
+
+        /// <summary>
+        /// Get a single mapped user, combining user and teams department mapping data.
+        /// </summary>
+        /// <param name="workForceIntegrationId">The workforce integration to get the users for.</param>
+        /// <param name="userId">The Teams id of the user to retrieve.</param>
+        /// <param name="teamsId">The aadGroup Id.</param>
+        /// <param name="userMappingProvider">The user mapping provider.</param>
+        /// <param name="teamDepartmentMappingProvider">The team department mapping provider.</param>
+        /// <param name="telemetryClient">The telemetry client for logging.</param>
+        /// <returns>The full list of users.</returns>
+        internal static async Task<UserDetailsModel> GetMappedUserDetailsAsync(string workForceIntegrationId, string userId, string teamsId, IUserMappingProvider userMappingProvider, ITeamDepartmentMappingProvider teamDepartmentMappingProvider, TelemetryClient telemetryClient)
+        {
+            var mappedUserResult = await userMappingProvider.GetUserMappingEntityAsyncNew(userId, teamsId).ConfigureAwait(false);
+
+            var teamMappingEntity = await teamDepartmentMappingProvider.GetTeamMappingForOrgJobPathAsync(workForceIntegrationId, mappedUserResult.PartitionKey).ConfigureAwait(false);
+            if (teamMappingEntity == null)
+            {
+                telemetryClient.TrackTrace($"Team {mappedUserResult.PartitionKey} not mapped.");
+                return null;
+            }
+
+            return new UserDetailsModel
+            {
+                KronosPersonNumber = mappedUserResult.RowKey,
+                ShiftUserId = mappedUserResult.ShiftUserAadObjectId,
+                ShiftTeamId = teamMappingEntity.TeamId,
+                ShiftScheduleGroupId = teamMappingEntity.TeamsScheduleGroupId,
+                OrgJobPath = mappedUserResult.PartitionKey,
+                ShiftUserDisplayName = mappedUserResult.ShiftUserDisplayName,
+                KronosTimeZone = teamMappingEntity.KronosTimeZone,
+            };
         }
     }
 }

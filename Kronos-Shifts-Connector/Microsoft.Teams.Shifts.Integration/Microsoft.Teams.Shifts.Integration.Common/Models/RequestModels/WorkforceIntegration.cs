@@ -42,12 +42,19 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.RequestModels
         [JsonProperty("url")]
 #pragma warning disable CA1056 // Uri properties should not be strings
         public string Url { get; set; }
+
 #pragma warning restore CA1056 // Uri properties should not be strings
 
         /// <summary>
         /// Gets or sets the functionalities supported for the outbound sync (from Shifts to the WFM provider).
         /// </summary>
-        [JsonProperty("supports")]
-        public string Supports { get; set; }
+        [JsonProperty("supportedEntities")]
+        public string SupportedEntities { get; set; }
+
+        /// <summary>
+        /// Gets or sets the eligibility functionalities supported for the outbound sync (from Shifts to the WFM provider).
+        /// </summary>
+        [JsonProperty("eligibilityFilteringEnabledEntities")]
+        public string EligibilityFilteringEnabledEntities { get; set; }
     }
 }

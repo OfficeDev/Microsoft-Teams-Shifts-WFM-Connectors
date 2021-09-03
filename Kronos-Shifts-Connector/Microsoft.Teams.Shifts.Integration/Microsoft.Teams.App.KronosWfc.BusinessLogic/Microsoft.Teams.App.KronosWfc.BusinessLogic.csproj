@@ -183,6 +183,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\XmlHelper.cs" />
     <Compile Include="HyperFindLoadAll\HyperFindLoadAllActivity.cs" />
     <Compile Include="HyperFindLoadAll\IHyperFindLoadAllActivity.cs" />
     <Compile Include="JobAssignment\IJobAssignmentActivity.cs" />
@@ -196,8 +197,8 @@
     <Compile Include="PayCode\IPayCodeActivity.cs" />
     <Compile Include="PayCode\PayCodeActivity.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ShiftsToKronos\CreateTimeOff\CreateTimeOffActivity.cs" />
-    <Compile Include="ShiftsToKronos\CreateTimeOff\ICreateTimeOffActivity.cs" />
+    <Compile Include="SwapShiftEligibility\ISwapShiftEligibilityActivity.cs" />
+    <Compile Include="SwapShiftEligibility\SwapShiftEligibilityActivity.cs" />
     <Compile Include="SwapShift\ISwapShiftActivity.cs" />
     <Compile Include="SwapShift\SwapShiftActivity.cs" />
     <Compile Include="TimeOff\ITimeOffActivity.cs" />

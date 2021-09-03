@@ -17,6 +17,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift;
+    using Microsoft.Teams.App.KronosWfc.Common;
     using Microsoft.Teams.Shifts.Integration.API.Common;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.RequestModels.OpenShift;
@@ -81,7 +82,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         }
 
         /// <summary>
-        /// Get the list of time off details from Kronos and push it to Shifts.
+        /// Get the list of open shift entities from Kronos and pushes to Shifts.
         /// </summary>
         /// <param name="isRequestFromLogicApp">Checks if request is coming from logic app or portal.</param>
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
@@ -89,230 +90,216 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         {
             this.telemetryClient.TrackTrace($"{Resource.ProcessOpenShiftsAsync} started at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)} for isRequestFromLogicApp:  {isRequestFromLogicApp}");
 
+            // Adding the telemetry properties.
+            var telemetryProps = new Dictionary<string, string>()
+                {
+                    { "MethodName", Resource.ProcessOpenShiftsAsync },
+                    { "CallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
+                };
+
             if (isRequestFromLogicApp == null)
             {
                 throw new ArgumentNullException(nameof(isRequestFromLogicApp));
             }
 
             var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
+
+            if (allRequiredConfigurations?.IsAllSetUpExists == false)
+            {
+                throw new Exception($"{Resource.SyncOpenShiftsFromKronos} - {Resource.SetUpNotDoneMessage} - Some configuration settings were missing.");
+            }
+
             this.utility.SetQuerySpan(Convert.ToBoolean(isRequestFromLogicApp, CultureInfo.InvariantCulture), out var openShiftStartDate, out var openShiftEndDate);
 
             // Check whether date range are in correct format.
-            var isCorrectDateRange = Utility.CheckDates(openShiftStartDate, openShiftEndDate);
-
-            if (allRequiredConfigurations != null && (bool)allRequiredConfigurations?.IsAllSetUpExists && isCorrectDateRange)
+            if (!Utility.CheckDates(openShiftStartDate, openShiftEndDate))
             {
-                var monthPartitions = Utility.GetMonthPartition(openShiftStartDate, openShiftEndDate);
+                throw new Exception($"{Resource.SyncOpenShiftsFromKronos} - Query date was invalid.");
+            }
 
-                // Adding the telemetry properties.
-                var telemetryProps = new Dictionary<string, string>()
+            var monthPartitions = Utility.GetMonthPartition(openShiftStartDate, openShiftEndDate);
+
+            if (monthPartitions?.Count > 0)
+            {
+                telemetryProps.Add("MonthPartitionsStatus", "There are no month partitions found!");
+            }
+
+            var orgJobBatchSize = int.Parse(this.appSettings.ProcessNumberOfOrgJobsInBatch, CultureInfo.InvariantCulture);
+            var orgJobPaths = await this.teamDepartmentMappingProvider.GetAllOrgJobPathsAsync().ConfigureAwait(false);
+            var mappedTeams = await this.teamDepartmentMappingProvider.GetMappedTeamToDeptsWithJobPathsAsync().ConfigureAwait(false);
+            int orgJobPathIterations = Utility.GetIterablesCount(orgJobBatchSize, orgJobPaths.Count);
+
+            // The monthPartitions is a list of strings which are formatted as: MM_YYYY to allow processing in batches
+            foreach (var monthPartitionKey in monthPartitions)
+            {
+                if (monthPartitionKey == null)
                 {
-                    { "MethodName", Resource.ProcessOpenShiftsAsync },
-                    { "CallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
-                };
+                    this.telemetryClient.TrackTrace($"{Resource.MonthPartitionKeyStatus} - MonthPartitionKey cannot be found please check the data.");
+                    this.telemetryClient.TrackTrace(Resource.SyncOpenShiftsFromKronos, telemetryProps);
+                    continue;
+                }
 
-                var processNumberOfOrgJobsInBatch = this.appSettings.ProcessNumberOfOrgJobsInBatch;
-                var orgJobPaths = await this.teamDepartmentMappingProvider.GetAllOrgJobPathsAsync().ConfigureAwait(false);
-                var mappedTeams = await this.teamDepartmentMappingProvider.GetMappedTeamToDeptsWithJobPathsAsync().ConfigureAwait(false);
-                var orgJobsCount = orgJobPaths.Count;
-                int orgJobPathIterations = Utility.GetIterablesCount(Convert.ToInt32(processNumberOfOrgJobsInBatch, CultureInfo.InvariantCulture), orgJobsCount);
+                this.telemetryClient.TrackTrace($"Processing data for the month partition: {monthPartitionKey} at {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
 
-                if (monthPartitions?.Count > 0)
+                Utility.GetNextDateSpan(
+                    monthPartitionKey,
+                    monthPartitions.FirstOrDefault(),
+                    monthPartitions.LastOrDefault(),
+                    openShiftStartDate,
+                    openShiftEndDate,
+                    out string queryStartDate,
+                    out string queryEndDate);
+
+                var orgJobPathList = new List<string>(orgJobPaths);
+
+                // This for loop will iterate over the batched Org Job Paths.
+                for (int iteration = 0; iteration < orgJobPathIterations; iteration++)
                 {
-                    // The monthPartitions is a list of strings which are formatted as: MM_YYYY where
-                    // MM represents the integer representation of the month, and YYYY is the integer
-                    // representation of the year. (i.e. December 2019 = 12_2019) - the month partitions
-                    // are used when the data synced from Kronos is over a wide duration.
-                    foreach (var monthPartitionKey in monthPartitions)
+                    this.telemetryClient.TrackTrace($"OpenShiftController - Processing on iteration number: {iteration}");
+
+                    var orgJobsInBatch = orgJobPathList?.Skip(orgJobBatchSize * iteration).Take(orgJobBatchSize);
+
+                    // Get the response for a batch of org job paths.
+                    var openShiftsResponse = await this.GetOpenShiftResultsByOrgJobPathInBatchAsync(
+                        allRequiredConfigurations.WFIId,
+                        allRequiredConfigurations.WfmEndPoint,
+                        allRequiredConfigurations.KronosSession,
+                        orgJobsInBatch.ToList(),
+                        queryStartDate,
+                        queryEndDate).ConfigureAwait(false);
+
+                    if (openShiftsResponse != null)
                     {
-                        if (monthPartitionKey != null)
+                        foreach (var orgJob in orgJobsInBatch)
                         {
-                            this.telemetryClient.TrackTrace($"Processing data for the month partition: {monthPartitionKey} at {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
+                            this.telemetryClient.TrackTrace($"OpenShiftController - Processing the org job path: {orgJob}");
 
-                            Utility.GetNextDateSpan(
+                            // Open Shift models for Create/Update operation
+                            var lookUpEntriesFoundList = new List<AllOpenShiftMappingEntity>();
+                            var openShiftsNotFoundList = new List<OpenShiftRequestModel>();
+
+                            var formattedOrgJob = Utility.OrgJobPathDBConversion(orgJob);
+                            var mappedOrgJobEntity = mappedTeams?.FirstOrDefault(x => x.PartitionKey == allRequiredConfigurations.WFIId && x.RowKey == formattedOrgJob);
+
+                            // Retrieve lookUpData for the open shift entity.
+                            var lookUpData = await this.openShiftMappingEntityProvider.GetAllOpenShiftMappingEntitiesInBatch(
                                 monthPartitionKey,
-                                monthPartitions.FirstOrDefault(),
-                                monthPartitions.LastOrDefault(),
-                                openShiftStartDate,
-                                openShiftEndDate,
-                                out string queryStartDate,
-                                out string queryEndDate);
+                                formattedOrgJob,
+                                queryStartDate,
+                                queryEndDate).ConfigureAwait(false);
 
-                            // Add to queue
-                            var processKronosOrgJobsQueue = new Queue<string>(orgJobPaths);
-
-                            // This for loop will iterate over the number of batches of Org Job Paths.
-                            for (int batchedOpenShiftCount = 0; batchedOpenShiftCount < orgJobPathIterations; batchedOpenShiftCount++)
+                            if (lookUpData != null)
                             {
-                                this.telemetryClient.TrackTrace($"OpenShiftController - Processing on iteration number: {batchedOpenShiftCount}");
-
-                                var processKronosOrgJobsQueueInBatch = processKronosOrgJobsQueue?.Skip(Convert.ToInt32(processNumberOfOrgJobsInBatch, CultureInfo.InvariantCulture) * batchedOpenShiftCount).Take(Convert.ToInt32(processNumberOfOrgJobsInBatch, CultureInfo.InvariantCulture));
-
-                                // Get the response for a batch of org job paths.
-                                var openShiftsResponse = await this.GetOpenShiftResultsByOrgJobPathInBatchAsync(
-                                    allRequiredConfigurations.WFIId,
-                                    allRequiredConfigurations.WfmEndPoint,
-                                    allRequiredConfigurations.KronosSession,
-                                    processKronosOrgJobsQueueInBatch.ToList(),
-                                    queryStartDate,
-                                    queryEndDate).ConfigureAwait(false);
-
-                                var openShiftDisplayName = string.Empty;
-                                var openShiftNotes = string.Empty;
-                                var openShiftTheme = this.appSettings.OpenShiftTheme;
-
-                                if (openShiftsResponse != null)
+                                // This foreach loop will process the openShiftSchedule item(s) that belong to a specific Kronos Org Job Path.
+                                foreach (var openShiftSchedule in openShiftsResponse?.Schedules.Where(x => x.OrgJobPath == orgJob))
                                 {
-                                    // This foreach loop will iterate through a list of orgJobPaths.
-                                    // Each orgJobPath in Kronos corresponds to a Scheduling Group
-                                    // in Shifts.
-                                    foreach (var orgJob in processKronosOrgJobsQueueInBatch)
+                                    this.telemetryClient.TrackTrace($"OpenShiftController - Processing the Open Shift schedule for: {openShiftSchedule.OrgJobPath}, and date range: {openShiftSchedule.QueryDateSpan}");
+                                    var scheduleShiftCount = (int)openShiftSchedule.ScheduleItems?.ScheduleShifts?.Count;
+
+                                    if (scheduleShiftCount > 0)
                                     {
-                                        this.telemetryClient.TrackTrace($"OpenShiftController - Processing the org job path: {orgJob}");
-
-                                        // Open Shift models for Create/Update operation
-                                        var lookUpEntriesFoundList = new List<AllOpenShiftMappingEntity>();
-                                        var openShiftsNotFoundList = new List<OpenShiftRequestModel>();
-
-                                        var mappedTeam = mappedTeams?.FirstOrDefault(x => x.PartitionKey == allRequiredConfigurations.WFIId &&
-                                        x.RowKey == Utility.OrgJobPathDBConversion(orgJob));
-
-                                        // Retrieve lookUpData for the open shift entity.
-                                        var lookUpData = await this.openShiftMappingEntityProvider.GetAllOpenShiftMappingEntitiesInBatch(
-                                            monthPartitionKey,
-                                            mappedTeam?.TeamsScheduleGroupId,
-                                            queryStartDate,
-                                            queryEndDate).ConfigureAwait(false);
-
-                                        if (lookUpData != null)
+                                        if (mappedOrgJobEntity != null)
                                         {
-                                            // This foreach loop will process the openShiftSchedule item(s) that belong to a specific Kronos Org Job Path.
-                                            foreach (var openShiftSchedule in openShiftsResponse?.Schedules.Where(x => x.OrgJobPath == orgJob))
+                                            this.telemetryClient.TrackTrace($"OpenShiftController - Processing Open Shifts for the mapped team: {mappedOrgJobEntity.ShiftsTeamName}");
+
+                                            // This foreach builds the Open Shift object to push to Shifts via Graph API.
+                                            foreach (var scheduleShift in openShiftSchedule?.ScheduleItems?.ScheduleShifts)
                                             {
-                                                this.telemetryClient.TrackTrace($"OpenShiftController - Processing the Open Shift schedule for: {openShiftSchedule.OrgJobPath}, and date range: {openShiftSchedule.QueryDateSpan}");
-                                                var scheduleShiftCount = (int)openShiftSchedule.ScheduleItems?.ScheduleShifts?.Count;
+                                                var shiftSegmentCount = scheduleShift.ShiftSegments;
 
-                                                if (scheduleShiftCount > 0)
+                                                this.telemetryClient.TrackTrace($"OpenShiftController - Processing {scheduleShift.StartDate} with {shiftSegmentCount} segments.");
+
+                                                var openShiftActivity = new List<Activity>();
+
+                                                // This foreach loop will build the OpenShift activities.
+                                                foreach (var segment in scheduleShift.ShiftSegments.ShiftSegment)
                                                 {
-                                                    if (mappedTeam != null)
+                                                    openShiftActivity.Add(new Activity
                                                     {
-                                                        this.telemetryClient.TrackTrace($"OpenShiftController - Processing Open Shifts for the mapped team: {mappedTeam.ShiftsTeamName}");
+                                                        IsPaid = true,
+                                                        StartDateTime = this.utility.CalculateStartDateTime(segment, mappedOrgJobEntity.KronosTimeZone),
+                                                        EndDateTime = this.utility.CalculateEndDateTime(segment, mappedOrgJobEntity.KronosTimeZone),
+                                                        Code = string.Empty,
+                                                        DisplayName = segment.SegmentTypeName,
+                                                    });
+                                                }
 
-                                                        // This foreach builds the Open Shift object to push to Shifts via Graph API.
-                                                        foreach (var scheduleShift in openShiftSchedule?.ScheduleItems?.ScheduleShifts)
-                                                        {
-                                                            var shiftSegmentCount = scheduleShift.ShiftSegments;
-
-                                                            this.telemetryClient.TrackTrace($"OpenShiftController - Processing {scheduleShift.StartDate} with {shiftSegmentCount} segments.");
-
-                                                            var openShiftActivity = new List<Activity>();
-
-                                                            // This foreach loop will build the OpenShift activities.
-                                                            foreach (var segment in scheduleShift.ShiftSegments.ShiftSegment)
-                                                            {
-                                                                openShiftActivity.Add(new Activity
-                                                                {
-                                                                    IsPaid = true,
-                                                                    StartDateTime = this.utility.CalculateStartDateTime(segment, mappedTeam.KronosTimeZone),
-                                                                    EndDateTime = this.utility.CalculateEndDateTime(segment, mappedTeam.KronosTimeZone),
-                                                                    Code = string.Empty,
-                                                                    DisplayName = segment.SegmentTypeName,
-                                                                });
-                                                            }
-
-                                                            var shift = new OpenShiftRequestModel()
-                                                            {
-                                                                SchedulingGroupId = mappedTeam.TeamsScheduleGroupId,
-                                                                SharedOpenShift = new OpenShiftItem
-                                                                {
-                                                                    DisplayName = string.Empty,
-                                                                    OpenSlotCount = Constants.ShiftsOpenSlotCount,
-                                                                    Notes = this.utility.GetOpenShiftNotes(scheduleShift),
-                                                                    StartDateTime = openShiftActivity.First().StartDateTime,
-                                                                    EndDateTime = openShiftActivity.Last().EndDateTime,
-                                                                    Theme = openShiftTheme,
-                                                                    Activities = openShiftActivity,
-                                                                },
-                                                            };
-
-                                                            // Generates the uniqueId for the OpenShift.
-                                                            shift.KronosUniqueId = this.utility.CreateUniqueId(shift, shift.SchedulingGroupId, mappedTeam.KronosTimeZone);
-
-                                                            // Logging the output of the KronosHash creation.
-                                                            this.telemetryClient.TrackTrace("OpenShiftController-KronosHash: " + shift.KronosUniqueId);
-
-                                                            if (lookUpData.Count == 0)
-                                                            {
-                                                                this.telemetryClient.TrackTrace($"OpenShiftController - Adding {shift.KronosUniqueId} to the openShiftsNotFoundList as the lookUpData count = 0");
-                                                                openShiftsNotFoundList.Add(shift);
-                                                            }
-                                                            else
-                                                            {
-                                                                var kronosUniqueIdExists = lookUpData.Where(c => c.RowKey == shift.KronosUniqueId);
-
-                                                                if ((kronosUniqueIdExists != default(List<AllOpenShiftMappingEntity>)) && kronosUniqueIdExists.Any())
-                                                                {
-                                                                    this.telemetryClient.TrackTrace($"OpenShiftController - Adding {kronosUniqueIdExists.FirstOrDefault().RowKey} to the lookUpEntriesFoundList as there is data in the lookUpData list.");
-                                                                    lookUpEntriesFoundList.Add(kronosUniqueIdExists.FirstOrDefault());
-                                                                }
-                                                                else
-                                                                {
-                                                                    this.telemetryClient.TrackTrace($"OpenShiftController - Adding {shift.KronosUniqueId} to the openShiftsNotFoundList.");
-                                                                    openShiftsNotFoundList.Add(shift);
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                    else
+                                                var shift = new OpenShiftRequestModel()
+                                                {
+                                                    SchedulingGroupId = mappedOrgJobEntity.TeamsScheduleGroupId,
+                                                    SharedOpenShift = new OpenShiftItem
                                                     {
-                                                        this.telemetryClient.TrackTrace($"{Resource.SyncOpenShiftsFromKronos} - There is no mappedTeam found with WFI ID: {allRequiredConfigurations.WFIId}");
-                                                        continue;
-                                                    }
+                                                        DisplayName = string.Empty,
+                                                        OpenSlotCount = Constants.ShiftsOpenSlotCount,
+                                                        Notes = this.utility.GetOpenShiftNotes(scheduleShift),
+                                                        StartDateTime = openShiftActivity.First().StartDateTime,
+                                                        EndDateTime = openShiftActivity.Last().EndDateTime,
+                                                        Theme = this.appSettings.OpenShiftTheme,
+                                                        Activities = openShiftActivity,
+                                                    },
+                                                };
+
+                                                // Generates the uniqueId for the OpenShift.
+                                                shift.KronosUniqueId = this.utility.CreateUniqueId(shift, mappedOrgJobEntity);
+
+                                                // Logging the output of the KronosHash creation.
+                                                this.telemetryClient.TrackTrace("OpenShiftController-KronosHash: " + shift.KronosUniqueId);
+
+                                                if (lookUpData.Count == 0)
+                                                {
+                                                    this.telemetryClient.TrackTrace($"OpenShiftController - Adding {shift.KronosUniqueId} to the openShiftsNotFoundList as the lookUpData count = 0");
+                                                    openShiftsNotFoundList.Add(shift);
                                                 }
                                                 else
                                                 {
-                                                    this.telemetryClient.TrackTrace($"ScheduleShiftCount - {scheduleShiftCount} for {openShiftSchedule.OrgJobPath}");
-                                                    continue;
+                                                    var kronosUniqueIdExists = lookUpData.Where(c => c.RowKey == shift.KronosUniqueId);
+
+                                                    if ((kronosUniqueIdExists != default(List<AllOpenShiftMappingEntity>)) && kronosUniqueIdExists.Any())
+                                                    {
+                                                        this.telemetryClient.TrackTrace($"OpenShiftController - Adding {kronosUniqueIdExists.FirstOrDefault().RowKey} to the lookUpEntriesFoundList as there is data in the lookUpData list.");
+                                                        lookUpEntriesFoundList.Add(kronosUniqueIdExists.FirstOrDefault());
+                                                    }
+                                                    else
+                                                    {
+                                                        this.telemetryClient.TrackTrace($"OpenShiftController - Adding {shift.KronosUniqueId} to the openShiftsNotFoundList.");
+                                                        openShiftsNotFoundList.Add(shift);
+                                                    }
                                                 }
-                                            }
-
-                                            if (lookUpData.Except(lookUpEntriesFoundList).Any())
-                                            {
-                                                this.telemetryClient.TrackTrace($"OpenShiftController - The lookUpEntriesFoundList has {lookUpEntriesFoundList.Count} items which could be deleted");
-                                                await this.DeleteOrphanDataOpenShiftsEntityMappingAsync(allRequiredConfigurations.ShiftsAccessToken, lookUpEntriesFoundList, lookUpData, mappedTeam).ConfigureAwait(false);
-                                            }
-
-                                            if (openShiftsNotFoundList.Count > 0)
-                                            {
-                                                this.telemetryClient.TrackTrace($"OpenShiftController - The openShiftsNotFoundList has {openShiftsNotFoundList.Count} items which could be added.");
-                                                await this.CreateEntryOpenShiftsEntityMappingAsync(allRequiredConfigurations.ShiftsAccessToken, openShiftsNotFoundList, monthPartitionKey, mappedTeam).ConfigureAwait(false);
                                             }
                                         }
                                         else
                                         {
-                                            this.telemetryClient.TrackTrace($"{Resource.SyncOpenShiftsFromKronos} - There is no lookup data present with the schedulingGroupId: " + mappedTeam?.TeamsScheduleGroupId);
+                                            this.telemetryClient.TrackTrace($"{Resource.SyncOpenShiftsFromKronos} - There is no mappedTeam found with WFI ID: {allRequiredConfigurations.WFIId}");
                                             continue;
                                         }
                                     }
+                                    else
+                                    {
+                                        this.telemetryClient.TrackTrace($"ScheduleShiftCount - {scheduleShiftCount} for {openShiftSchedule.OrgJobPath}");
+                                        continue;
+                                    }
+                                }
+
+                                if (lookUpData.Except(lookUpEntriesFoundList).Any())
+                                {
+                                    this.telemetryClient.TrackTrace($"OpenShiftController - The lookUpEntriesFoundList has {lookUpEntriesFoundList.Count} items which could be deleted");
+                                    await this.DeleteOrphanDataOpenShiftsEntityMappingAsync(allRequiredConfigurations.ShiftsAccessToken, lookUpEntriesFoundList, lookUpData, mappedOrgJobEntity).ConfigureAwait(false);
+                                }
+
+                                if (openShiftsNotFoundList.Count > 0)
+                                {
+                                    this.telemetryClient.TrackTrace($"OpenShiftController - The openShiftsNotFoundList has {openShiftsNotFoundList.Count} items which could be added.");
+                                    await this.CreateEntryOpenShiftsEntityMappingAsync(allRequiredConfigurations.ShiftsAccessToken, openShiftsNotFoundList, monthPartitionKey, mappedOrgJobEntity).ConfigureAwait(false);
                                 }
                             }
-                        }
-                        else
-                        {
-                            this.telemetryClient.TrackTrace($"{Resource.MonthPartitionKeyStatus} - MonthPartitionKey cannot be found please check the data.");
-                            this.telemetryClient.TrackTrace(Resource.SyncOpenShiftsFromKronos, telemetryProps);
-                            continue;
+                            else
+                            {
+                                this.telemetryClient.TrackTrace($"{Resource.SyncOpenShiftsFromKronos} - There is no lookup data present with the schedulingGroupId: " + mappedOrgJobEntity?.TeamsScheduleGroupId);
+                                continue;
+                            }
                         }
                     }
                 }
-                else
-                {
-                    telemetryProps.Add("MonthPartitionsStatus", "There are no month partitions found!");
-                }
-            }
-            else
-            {
-                throw new Exception($"{Resource.SyncOpenShiftsFromKronos} - {Resource.SetUpNotDoneMessage}");
             }
 
             this.telemetryClient.TrackTrace($"{Resource.ProcessOpenShiftsAsync} ended at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)} for isRequestFromLogicApp:  {isRequestFromLogicApp}");
@@ -359,7 +346,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     {
                         var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                         var openShiftResponse = JsonConvert.DeserializeObject<Models.Response.OpenShifts.GraphOpenShift>(responseContent);
-                        var openShiftMappingEntity = this.CreateNewOpenShiftMappingEntity(openShiftResponse, item.KronosUniqueId, monthPartitionKey, mappedTeam?.RowKey, mappedTeam.KronosTimeZone);
+                        var openShiftMappingEntity = this.CreateNewOpenShiftMappingEntity(openShiftResponse, item.KronosUniqueId, monthPartitionKey, mappedTeam?.RowKey);
 
                         telemetryProps.Add("ResultCode", response.StatusCode.ToString());
                         telemetryProps.Add("TeamsOpenShiftId", openShiftResponse.Id);
@@ -510,8 +497,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             Models.Response.OpenShifts.GraphOpenShift responseModel,
             string uniqueId,
             string monthPartitionKey,
-            string orgJobPath,
-            string kronosTimeZone)
+            string orgJobPath)
         {
             var createNewOpenShiftMappingEntityProps = new Dictionary<string, string>()
             {
@@ -521,15 +507,16 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 { "CallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
             };
 
+            var startDateTime = DateTime.SpecifyKind(responseModel.SharedOpenShift.StartDateTime.DateTime, DateTimeKind.Utc);
+
             AllOpenShiftMappingEntity openShiftMappingEntity = new AllOpenShiftMappingEntity
             {
                 PartitionKey = monthPartitionKey,
                 RowKey = uniqueId,
                 TeamsOpenShiftId = responseModel.Id,
                 KronosSlots = Constants.KronosOpenShiftsSlotCount,
-                SchedulingGroupId = responseModel.SchedulingGroupId,
                 OrgJobPath = orgJobPath,
-                OpenShiftStartDate = this.utility.UTCToKronosTimeZone(responseModel.SharedOpenShift.StartDateTime, kronosTimeZone),
+                OpenShiftStartDate = startDateTime,
             };
 
             this.telemetryClient.TrackTrace(Resource.CreateNewOpenShiftMappingEntity, createNewOpenShiftMappingEntityProps);

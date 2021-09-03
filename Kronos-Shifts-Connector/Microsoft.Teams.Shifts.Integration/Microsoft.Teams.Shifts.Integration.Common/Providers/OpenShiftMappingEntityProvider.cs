@@ -116,17 +116,17 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// Method to get all shift mapping entities.
         /// </summary>
         /// <param name="monthPartitionKey">The month partition key.</param>
-        /// <param name="schedulingGroupId">The scheduling group ID.</param>
+        /// <param name="orgJobPath">The org job path.</param>
         /// <param name="queryStartDate">Query start date.</param>
         /// <param name="queryEndDate">Query end date.</param>
         /// <returns>Gets a list of all the open shift mapping entities in the batch.</returns>
         public async Task<List<AllOpenShiftMappingEntity>> GetAllOpenShiftMappingEntitiesInBatch(
             string monthPartitionKey,
-            string schedulingGroupId,
+            string orgJobPath,
             string queryStartDate,
             string queryEndDate)
         {
-            var allOpenShiftMappingEntities = await this.GetAllOpenShiftMappingEntitiesInBatchAsync(monthPartitionKey, schedulingGroupId, queryStartDate, queryEndDate).ConfigureAwait(false);
+            var allOpenShiftMappingEntities = await this.GetAllOpenShiftMappingEntitiesInBatchAsync(monthPartitionKey, orgJobPath, queryStartDate, queryEndDate).ConfigureAwait(false);
             return allOpenShiftMappingEntities;
         }
 
@@ -146,13 +146,13 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// This method gets all Open Shift Mapping entities in batch.
         /// </summary>
         /// <param name="monthPartitionKey">The month wise partition key.</param>
-        /// <param name="schedulingGroupId">The scheduling group ID.</param>
+        /// <param name="orgJobPath">The orgJobPath.</param>
         /// <param name="queryStartDate">Query start date.</param>
         /// <param name="queryEndDate">Query end date.</param>
         /// <returns>A unit of execution that contains a list of open shift mapping entities.</returns>
         private async Task<List<AllOpenShiftMappingEntity>> GetAllOpenShiftMappingEntitiesInBatchAsync(
             string monthPartitionKey,
-            string schedulingGroupId,
+            string orgJobPath,
             string queryStartDate,
             string queryEndDate)
         {
@@ -168,7 +168,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             CultureInfo culture = CultureInfo.InvariantCulture;
 
             string monthPartitionFilter = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, monthPartitionKey);
-            string schedulingGroupIdFilter = TableQuery.GenerateFilterCondition("SchedulingGroupId", QueryComparisons.Equal, schedulingGroupId);
+            string orgJobPathFilter = TableQuery.GenerateFilterCondition("OrgJobPath", QueryComparisons.Equal, orgJobPath);
             string startDateFilter = TableQuery.GenerateFilterConditionForDate("OpenShiftStartDate", QueryComparisons.GreaterThanOrEqual, Convert.ToDateTime(queryStartDate, culture));
             string endDateFilter = TableQuery.GenerateFilterConditionForDate("OpenShiftStartDate", QueryComparisons.LessThanOrEqual, Convert.ToDateTime(queryEndDate, culture).AddDays(1));
 
@@ -178,7 +178,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             query.Where(TableQuery.CombineFilters(
                 TableQuery.CombineFilters(startDateFilter, TableOperators.And, endDateFilter),
                 TableOperators.And,
-                TableQuery.CombineFilters(monthPartitionFilter, TableOperators.And, schedulingGroupIdFilter)));
+                TableQuery.CombineFilters(monthPartitionFilter, TableOperators.And, orgJobPathFilter)));
 
             // Results list
             var results = new List<AllOpenShiftMappingEntity>();

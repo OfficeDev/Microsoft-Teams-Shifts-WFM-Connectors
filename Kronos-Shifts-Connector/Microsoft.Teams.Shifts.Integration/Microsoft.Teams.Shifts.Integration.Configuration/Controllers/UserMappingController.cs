@@ -119,7 +119,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
         {
             this.telemetryClient.TrackTrace($"{MethodBase.GetCurrentMethod().Name}");
 
-            var mappedUsersResult = await this.userMappingProvider.GetAllMappedUserDetailsAsync().ConfigureAwait(false);
+            var mappedUsersResult = await this.userMappingProvider.GetAllActiveMappedUserDetailsAsync().ConfigureAwait(false);
             var mappedUsersResultViewModel = mappedUsersResult.Select(
                 m => new AllUserMappingEntity
                 {
@@ -250,11 +250,12 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                             ShiftUserAadObjectId = row.Cell(4).Value.ToString(),
                             ShiftUserDisplayName = row.Cell(5).Value.ToString(),
                             ShiftUserUpn = row.Cell(6).Value.ToString(),
+                            IsActive = true,
                         };
 
                         if (isValidFile)
                         {
-                            isValidFile = await this.userMappingProvider.KronosShiftUsersMappingAsync(entity).ConfigureAwait(false);
+                            await this.userMappingProvider.SaveOrUpdateUserMappingEntityAsync(entity).ConfigureAwait(false);
                         }
                     }
                 }
@@ -434,7 +435,6 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
         {
             var hyperFindResponse = await this.hyperFindActivity.GetHyperFindQueryValuesAsync(
                 new Uri(configurationEntity.WfmApiEndpoint),
-                configurationEntity.TenantId,
                 result.Jsession,
                 DateTime.Now.ToString("M/dd/yyyy", CultureInfo.InvariantCulture),
                 DateTime.Now.ToString("M/dd/yyyy", CultureInfo.InvariantCulture),

@@ -38,13 +38,13 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// The method definition to be getting entities in a batch manner.
         /// </summary>
         /// <param name="monthPartitionKey">The partition key to search.</param>
-        /// <param name="schedulingGroupId">The scheduling group ID for the open shifts.</param>
+        /// <param name="orgJobPath">The org job path for the open shifts.</param>
         /// <param name="queryStartDate">Query start date.</param>
         /// <param name="queryEndDate">Query end date.</param>
         /// <returns>A unit of execution that contains a list of <see cref="AllOpenShiftMappingEntity"/>.</returns>
         Task<List<AllOpenShiftMappingEntity>> GetAllOpenShiftMappingEntitiesInBatch(
             string monthPartitionKey,
-            string schedulingGroupId,
+            string orgJobPath,
             string queryStartDate,
             string queryEndDate);
 
