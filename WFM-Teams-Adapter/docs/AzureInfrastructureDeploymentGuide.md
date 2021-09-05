@@ -73,7 +73,7 @@ The src folder contains a WfmTeams.Adapter.Infrastructure project which contains
 1. In your Azure subscription create a new resource group to host the application components.
 2. Open this file (AzureInfrastructureDeploymentGuide.md) in **your** GitHub repo and edit the url of the Deploy to Azure button below to refer to your own forked repo e.g. change *OfficeDev* to the name of your repo.
 
-[![Deploy to Azure](https://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAndy65%2FMicrosoft-Teams-Shifts-WFM-Connectors%2Fmaster%2FWFM-Teams-Adapter%2Fsrc%2FWfmTeams.Adapter.Infrastructure%2Fazuredeploy.json)  
+[![Deploy to Azure](https://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAndy65%2FMicrosoft-Teams-Shifts-WFM-Connectors%2Frepl-wfm-teams-adapter%2FWFM-Teams-Adapter%2Fsrc%2FWfmTeams.Adapter.Infrastructure%2Fazuredeploy.json)  
 
 3. After saving the change, reopen this file from your repo and click the button to start the deployment process which will display the following screen:
 
