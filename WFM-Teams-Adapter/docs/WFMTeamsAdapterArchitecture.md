@@ -157,7 +157,7 @@ For each type of integration, Teams calls a single endpoint in the adapter passi
 
 The adpater uses Application Permissions exclusively when calling the Microsoft Graph API which requires an App Registration in Active Directory with the following Application API Permissions assigned:
 
-Group.ReadWriteAll
+Group.ReadAll
 
 Schedule.ReadWriteAll
 

@@ -38,7 +38,6 @@
     "connectorHealthScheduleExpression": {
       "type": "string",
       "defaultValue": "0 0 * * * *",
-      "minLength": 11
     },
     "deleteCacheDataAfterDays": {
       "type": "int",
@@ -64,7 +63,6 @@
     "federatedAuthTokenSigningSecret": {
       "type": "string",
       "defaultValue": "",
-      "minLength": 64
     },
     "functionsAppName": {
       "type": "string",
@@ -78,14 +76,6 @@
       "type": "int",
       "defaultValue": 3
     },
-    "prodOrnonProd": {
-      "type": "string",
-      "defaultValue": "nonProd",
-      "allowedValues": [
-        "prod",
-        "nonProd"
-      ]
-    },
     "keyVaultName": {
       "type": "string",
       "defaultValue": ""
@@ -97,11 +87,18 @@
     "orchestratorScheduleExpression": {
       "type": "string",
       "defaultValue": "0 */1 * * * *",
-      "minLength": 13
     },
     "pastWeeks": {
       "type": "int",
       "defaultValue": 1
+    },
+    "planType": {
+      "type": "string",
+      "defaultValue": "consumption",
+      "allowedValues": [
+        "premium",
+        "consumption"
+      ]
     },
     "redisCacheName": {
       "type": "string",
@@ -149,7 +146,6 @@
     "workforceIntegrationSecret": {
       "type": "string",
       "defaultValue": "",
-      "minLength": 64
     }
   },
   "variables": {
@@ -279,7 +275,7 @@
       ]
     },
     {
-      "condition": "[equals(parameters('prodOrnonProd'), 'prod')]",
+      "condition": "[equals(parameters('planType'), 'premium')]",
       "type": "Microsoft.Web/serverfarms",
       "apiVersion": "2018-02-01",
       "name": "[variables('appServicePlanName')]",
@@ -304,7 +300,7 @@
       }
     },
     {
-      "condition": "[equals(parameters('prodOrnonProd'), 'nonProd')]",
+      "condition": "[equals(parameters('planType'), 'consumption')]",
       "type": "Microsoft.Web/serverfarms",
       "sku": {
         "name": "Y1",

@@ -1,7 +1,3 @@
-
-
-[[_TOC_]]
-
 # Introduction 
 
 WFM Teams Universal Adapter is a Microsoft Azure Functions (serverless) application to integrate Workforce Management/Scheduling Systems such as those provided by Blue Yonder, Ceridian, Quinyx, Reflexis, Rotageek, UKG etc. with the Shifts application developed by Microsoft and hosted within Microsoft Teams.
