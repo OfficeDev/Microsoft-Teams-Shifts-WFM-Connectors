@@ -20,8 +20,8 @@
     },
     "blueYonderBaseAddress": {
       "type": "string",
-      "defaultValue": "",
-      "minLength": 1
+      "defaultValue": "https://yoururl.com",
+      "minLength": 19
     },
     "clearScheduleEnabled": {
       "type": "bool",
@@ -38,6 +38,7 @@
     "connectorHealthScheduleExpression": {
       "type": "string",
       "defaultValue": "0 0 * * * *",
+      "minLength": 11
     },
     "deleteCacheDataAfterDays": {
       "type": "int",
@@ -57,12 +58,12 @@
     },
     "federatedAuthBaseAddress": {
       "type": "string",
-      "defaultValue": "",
-      "minLength": 1
+      "defaultValue": "https://yoururl.com",
+      "minLength": 19
     },
     "federatedAuthTokenSigningSecret": {
       "type": "string",
-      "defaultValue": "",
+      "defaultValue": ""
     },
     "functionsAppName": {
       "type": "string",
@@ -87,6 +88,7 @@
     "orchestratorScheduleExpression": {
       "type": "string",
       "defaultValue": "0 */1 * * * *",
+      "minLength": 13
     },
     "pastWeeks": {
       "type": "int",
@@ -122,12 +124,12 @@
     },
     "taskHubName": {
       "type": "string",
-      "defaultValue": "",
-      "minLength": 1
+      "defaultValue": "WTATaskHub",
+      "minLength": 10
     },
     "tenantId": {
       "type": "string",
-      "defaultValue": "",
+      "defaultValue": "00000000-0000-0000-0000-0000000000000",
       "minLength": 36
     },
     "timeOffFrequencyMinutes": {
@@ -140,12 +142,12 @@
     },
     "workforceIntegrationDisplayName": {
       "type": "string",
-      "defaultValue": "",
+      "defaultValue": "WTA Integration [DEV]",
       "minLength": 1
     },
     "workforceIntegrationSecret": {
       "type": "string",
-      "defaultValue": "",
+      "defaultValue": ""
     }
   },
   "variables": {
