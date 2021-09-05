@@ -1,0 +1,42 @@
+{
+    "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.5/MicrosoftTeams.schema.json",
+    "manifestVersion": "1.5",
+    "version": "1.2.0",
+    "id": "b63dfe6f-87ad-48b7-a8f8-820df6ef25e2",
+    "packageName": "com.wfm.shifts.tab",
+    "developer": {
+        "name": "Microsoft",
+        "websiteUrl": "https://www.microsoft.com",
+        "privacyUrl": "https://go.microsoft.com/fwlink/?LinkId=521839",
+        "termsOfUseUrl": "https://go.microsoft.com/fwlink/?LinkID=206977"
+    },
+    "icons": {
+        "color": "color.png",
+        "outline": "outline.png"
+    },
+    "name": {
+        "short": "Shifts [DEV]",
+        "full": "WFM Shifts DEV"
+    },
+    "description": {
+        "short": "Workforce Management Shifts Integration",
+        "full": "Links Workforce Management and Microsoft Teams"
+    },
+    "accentColor": "#FFFFFF",
+    "configurableTabs": [
+        {
+            "configurationUrl": "https://replaceme.azurewebsites.net/app?theme={theme}",
+            "canUpdateConfiguration": false,
+            "scopes": [
+                "team"
+            ]
+        }
+    ],
+    "permissions": [
+        "identity"
+    ],
+    "validDomains": [
+        "replaceme.azurewebsites.net",
+        "login.microsoftonline.com"
+    ]
+}

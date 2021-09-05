@@ -1,0 +1,9 @@
+﻿namespace Microsoft.Teams.Shifts.Encryption.Encryptors
+
+struct AesCbcHmacEncryptorPayload
+{
+	0: required blob EK;	// Encrypted Content Encryption Key	
+	1: required blob IV;	// Initialization Vector
+	2: required blob CT;	// Encrypted Data (Ciphertext)
+	3: required blob AT;	// Authentication Tag
+}
