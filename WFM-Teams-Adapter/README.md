@@ -8,7 +8,7 @@ WFM Teams Universal Adapter is a Microsoft Azure Functions (serverless) applicat
 
  
 
-![01-WFM Teams Adapter Reference Architecture](docs/images/00-WFM Teams Adapter.png)
+![01-WFM Teams Adapter Reference Architecture](docs/images/00-WFM%20Teams%20Adapter.png)
 
 
 

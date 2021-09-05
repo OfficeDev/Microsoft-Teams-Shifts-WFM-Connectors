@@ -4,7 +4,7 @@
 
 At the heart of the WFM Teams Adapter is an Azure Functions application that utilizes the serverless capability of functions applications to scale out to as many servers as required in order to process the current workload. This architecture has been proven to scale well under load for a large retail organisation in the UK synchronising more than 600 Teams  serving more than 59,000 users.
 
-![01-WFM Teams Adapter Reference Architecture](images/01-WFM Teams Adapter Reference Architecture.png)
+![01-WFM Teams Adapter Reference Architecture](images/01-WFM%20Teams%20Adapter%20Reference%20Architecture.png)
 
 ### WFM System & API
 
@@ -66,7 +66,7 @@ Data is synchronized to the Teams Shifts Application exclusively using the Micro
 
 The components comprising the solution are as follows:
 
-![02-WFM Teams Adapter Components](images/02-WFM Teams Adapter Components.png)
+![02-WFM Teams Adapter Components](images/02-WFM%20Teams%20Adapter%20Components.png)
 
 Other than the functions app itself, the other two key components are the WFM Provider Implementation component and the Microsoft Graph component both of which provide the interfaces with the two external systems being connected.
 
@@ -85,7 +85,7 @@ All synchronisations from the WFM Provider to Teams are controlled by Durable Or
 
 The whole process is controlled by a single timer trigger which fires once per minute and has all the logic to work out which orchestrators need to be triggered for which teams according to the various synchronisation intervals specified for them.
 
-![03-WFM Teams Adpater Orchestrations](images/03-WFM Teams Adpater Orchestrations.png)
+![03-WFM Teams Adpater Orchestrations](images/03-WFM%20Teams%20Adpater%20Orchestrations.png)
 
 ### Timer Trigger Logic
 
@@ -110,7 +110,7 @@ In order to ensure that the synchronisation work is spread out evenly over each 
 
 The work of any single orchestrator is divided over a number of configurable past and future weeks (if appropriate) using sub-orchestrators to manage the work for the specific week. Weeks were selected as the unit of work as businesses typically schedule employees on a week by week basis. 
 
-![04-WFM Teams Adapter Shifts Orchestrator](images/04-WFM Teams Adapter Shifts Orchestrator.png)
+![04-WFM Teams Adapter Shifts Orchestrator](images/04-WFM%20Teams%20Adapter%20Shifts%20Orchestrator.png)
 
 The sub-orchestrators repeatedly call the activity functions until the activity function returns that all work for the week has been completed. This allows the activity function to execute partial jobs and ensures that the execution time of the activity does not exceed the maximum allowed by the functions runtime.
 
@@ -118,7 +118,7 @@ The sub-orchestrators repeatedly call the activity functions until the activity 
 
 Most sync activity functions operate in the same way as specified in the following diagram for the shifts week activity:
 
-![05-WFM Teams Adapter Sync Activity Process](images/05-WFM Teams Adapter Sync Activity Process.png)
+![05-WFM Teams Adapter Sync Activity Process](images/05-WFM%20Teams%20Adapter%20Sync%20Activity%20Process.png)
 
 1. Fetch the appropriate records from WFM
 2. Fetch the cache of records successfully synced to Teams Shifts
@@ -149,7 +149,7 @@ Future integrations to be supported include
 
 For each type of integration, Teams calls a single endpoint in the adapter passing an encrypted JSON Batch payload. The adapter decrypts the payload and then iterates through the collection of handlers to identify the one that is written to handle that specific integration. The handler converts the Teams Shifts ID's into WFM ID's by looking them up in the cached records and then delegates the actual work of updating the WFM system to the WFM connector.
 
-![06-WFM Teams Adapter WFI Handling](images/06-WFM Teams Adapter WFI Handling.png)
+![06-WFM Teams Adapter WFI Handling](images/06-WFM%20Teams%20Adapter%20WFI%20Handling.png)
 
 ## Authentication
 
@@ -184,7 +184,7 @@ When calling the ESS and Site Manager API's it is necessary to use an authentica
 3. The endpoint validates the token and extracts and returns the login name of the user in xml format in the response body
 4. BY logs in the requested user and returns the required token
 
-![07-Federated Authentication](images/07-Federated Authentication.png)
+![07-Federated Authentication](images/07-Federated%20Authentication.png)
 
 Image: courtesy of Blue Yonder
 
