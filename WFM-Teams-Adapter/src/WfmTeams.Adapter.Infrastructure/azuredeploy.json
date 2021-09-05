@@ -94,14 +94,6 @@
       "type": "int",
       "defaultValue": 1
     },
-    "planType": {
-      "type": "string",
-      "defaultValue": "consumption",
-      "allowedValues": [
-        "premium",
-        "consumption"
-      ]
-    },
     "redisCacheName": {
       "type": "string",
       "defaultValue": ""
@@ -135,6 +127,14 @@
     "timeOffFrequencyMinutes": {
       "type": "int",
       "defaultValue": 60
+    },
+    "useConsumptionPlan": {
+      "type": "bool",
+      "defaultValue": true
+    },
+    "usePremiumPlan": {
+      "type": "bool",
+      "defaultValue": false
     },
     "userPrincipalNameFormatString": {
       "type": "string",
@@ -277,7 +277,7 @@
       ]
     },
     {
-      "condition": "[equals(parameters('planType'), 'premium')]",
+      "condition": "[parameters('usePremiumPlan')]",
       "type": "Microsoft.Web/serverfarms",
       "apiVersion": "2018-02-01",
       "name": "[variables('appServicePlanName')]",
@@ -302,7 +302,7 @@
       }
     },
     {
-      "condition": "[equals(parameters('planType'), 'consumption')]",
+      "condition": "[parameters('useConsumptionPlan')]",
       "type": "Microsoft.Web/serverfarms",
       "sku": {
         "name": "Y1",
