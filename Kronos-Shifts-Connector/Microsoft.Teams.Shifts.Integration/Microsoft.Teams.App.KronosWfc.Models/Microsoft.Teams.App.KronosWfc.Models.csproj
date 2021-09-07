@@ -191,9 +191,9 @@
     <Compile Include="LoginResponse.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RequestEntities\Common\Employee.cs" />
+    <Compile Include="RequestEntities\Common\ScheduleShift.cs" />
     <Compile Include="RequestEntities\Common\ShiftSegments.cs" />
     <Compile Include="RequestEntities\Common\ShiftSegment.cs" />
-    <Compile Include="RequestEntities\Common\ScheduleShift.cs" />
     <Compile Include="RequestEntities\Common\ScheduleItems.cs" />
     <Compile Include="RequestEntities\Common\PersonIdentity.cs" />
     <Compile Include="RequestEntities\Common\RequestId.cs" />

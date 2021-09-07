@@ -18,7 +18,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift.OpenShiftRequest;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift.OpenShiftRequest.RequestManagement;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Schedule;
-    using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.ShiftsToKronos.AddRequest;
     using Microsoft.Teams.App.KronosWfc.Service;
     using CommonSegments = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common.ShiftSegments;
     using CreateOpenShiftRequest = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift.CreateOpenShift;

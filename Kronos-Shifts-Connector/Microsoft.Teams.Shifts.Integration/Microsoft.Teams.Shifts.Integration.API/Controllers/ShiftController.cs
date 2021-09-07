@@ -400,11 +400,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 // We want only the entities that started within the query date span.
                                 var shifts = ControllerHelper.FilterEntitiesByQueryDateSpan(shiftsResponse?.Schedule?.ScheduleItems?.ScheduleShifts, queryStartDate, queryEndDate);
 
-                                if (shifts.Count == 0)
-                                {
-                                    continue;
-                                }
-
                                 var lookUpEntriesFoundList = new List<TeamsShiftMappingEntity>();
                                 var shiftsNotFoundList = new List<Shift>();
 
@@ -513,12 +508,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         }
 
         /// <summary>
-        /// Creates a Teams shift object for each shift
+        /// Creates a Teams shift object for each shift.
         /// </summary>
         /// <param name="user">the user details the shift is assigned to.</param>
         /// <param name="kronosShift">The shift to create a Teams shift from.</param>
         /// <returns>A Teams shift object.</returns>
-        private Shift GenerateTeamsShiftObject(UserDetailsModel user, ScheduleShift kronosShift)
+        private Shift GenerateTeamsShiftObject(UserDetailsModel user, UpcomingShiftsResponse.ScheduleShift kronosShift)
         {
             List<ShiftActivity> shiftActivity = new List<ShiftActivity>();
             var shiftDisplayName = string.Empty;
