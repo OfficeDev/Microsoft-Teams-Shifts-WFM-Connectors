@@ -13,11 +13,11 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
     using Microsoft.ApplicationInsights;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.Common;
     using Microsoft.Teams.App.KronosWfc.Common;
+    using Microsoft.Teams.App.KronosWfc.Models.CommonEntities;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift.OpenShiftRequest;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift.OpenShiftRequest.RequestManagement;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Schedule;
-    using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.ShiftsToKronos.AddRequest;
     using Microsoft.Teams.App.KronosWfc.Service;
     using CommonSegments = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common.ShiftSegments;
     using CreateOpenShiftRequest = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift.CreateOpenShift;
@@ -398,7 +398,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
             {
                 new RequestStatusChange
                 {
-                    Comments = new Comment()
+                    Comments = new Comment
                     {
                         CommentText = comment,
                     },

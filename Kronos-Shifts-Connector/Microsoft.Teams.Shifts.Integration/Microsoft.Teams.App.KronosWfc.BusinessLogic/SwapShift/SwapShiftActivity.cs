@@ -12,9 +12,9 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
     using System.Xml.Linq;
     using Microsoft.ApplicationInsights;
     using Microsoft.Teams.App.KronosWfc.Common;
+    using Microsoft.Teams.App.KronosWfc.Models.CommonEntities;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common;
-    using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift.SubmitRequest;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.SwapShift;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.SwapShift.SubmitRequest;
     using Microsoft.Teams.App.KronosWfc.Service;
@@ -394,9 +394,9 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
             {
                 new RequestManagementSwap.RequestStatusChange
                 {
-                    Comments = comment == null ? null : new Comments()
+                    Comments = comment == null ? null : new Comments
                     {
-                        Comment = new Comment[]
+                        Comment = new List<Comment>
                         {
                             new Comment
                             {
@@ -514,9 +514,9 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
             {
                 new RequestManagementSwap.RequestStatusChange
                 {
-                    Comments = comment == null ? null : new Comments()
+                    Comments = comment == null ? null : new Comments
                     {
-                        Comment = new Comment[]
+                        Comment = new List<Comment>
                         {
                             new Comment
                             {

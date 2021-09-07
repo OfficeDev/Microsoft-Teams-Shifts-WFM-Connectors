@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
-namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.ShiftsToKronos.AddRequest
+namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common
 {
     using System.Xml.Serialization;
 

@@ -122,9 +122,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// Gets the shifts for a given Kronos user id.
         /// </summary>
         /// <param name="kronosUserId">A Kronos user id.</param>
-        /// <param name="partitionKey">The partition key for the shift.</param>
+        /// <param name="queryStartDate">The query start date.</param>
+        /// <param name="queryEndDate">The query end date.</param>
         /// <returns>The schedule response.</returns>
-        public async Task<App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.Response> GetShiftsForUser(string kronosUserId, string partitionKey)
+        public async Task<App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.Response> GetShiftsForUser(string kronosUserId, string queryStartDate, string queryEndDate)
         {
             App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.Response shiftsResponse = null;
 
@@ -140,9 +141,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             if ((bool)allRequiredConfigurations?.IsAllSetUpExists)
             {
-                string queryStartDate = Utility.GetFirstDayInMonth(partitionKey);
-                string queryEndDate = Utility.GetLastDayInMonth(partitionKey);
-
                 var user = new List<ResponseHyperFindResult>()
                         {
                             new ResponseHyperFindResult { PersonNumber = kronosUserId },
@@ -152,8 +150,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 shiftsResponse = await this.shiftsActivity.ShowUpcomingShiftsInBatchAsync(
                         new Uri(allRequiredConfigurations.WfmEndPoint),
                         allRequiredConfigurations.KronosSession,
-                        DateTime.Now.ToString(queryStartDate, CultureInfo.InvariantCulture),
-                        DateTime.Now.ToString(queryEndDate, CultureInfo.InvariantCulture),
+                        queryStartDate,
+                        queryEndDate,
                         user).ConfigureAwait(false);
             }
 
@@ -402,11 +400,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 // We want only the entities that started within the query date span.
                                 var shifts = ControllerHelper.FilterEntitiesByQueryDateSpan(shiftsResponse?.Schedule?.ScheduleItems?.ScheduleShifts, queryStartDate, queryEndDate);
 
-                                if (shifts.Count == 0)
-                                {
-                                    continue;
-                                }
-
                                 var lookUpEntriesFoundList = new List<TeamsShiftMappingEntity>();
                                 var shiftsNotFoundList = new List<Shift>();
 
@@ -461,9 +454,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             string monthPartitionKey)
         {
             this.telemetryClient.TrackTrace($"ShiftController - ProcessShiftEntitiesBatchAsync started at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
-            var shiftDisplayName = string.Empty;
             var shiftNotes = string.Empty;
-            var shiftTheme = this.appSettings.ShiftTheme;
 
             // This foreach loop processes each user in the batch.
             foreach (var user in processKronosUsersQueueInBatch)
@@ -474,36 +465,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     if (user.KronosPersonNumber == kronosShift.Employee.FirstOrDefault().PersonNumber)
                     {
                         this.telemetryClient.TrackTrace($"ShiftController - Processing the shifts for user: {user.KronosPersonNumber}");
-                        List<ShiftActivity> shiftActivity = new List<ShiftActivity>();
 
-                        // This foreach loop will create the necessary Shift Activities
-                        // based on the Shift Segments that are retrieved from Kronos.
-                        foreach (var activity in kronosShift?.ShiftSegments)
-                        {
-                            shiftActivity.Add(new ShiftActivity
-                            {
-                                IsPaid = true,
-                                StartDateTime = this.utility.CalculateStartDateTime(activity, user.KronosTimeZone),
-                                EndDateTime = this.utility.CalculateEndDateTime(activity, user.KronosTimeZone),
-                                Code = string.Empty,
-                                DisplayName = activity.SegmentTypeName,
-                            });
-                        }
-
-                        var shift = new Shift
-                        {
-                            UserId = user.ShiftUserId,
-                            SchedulingGroupId = user.ShiftScheduleGroupId,
-                            SharedShift = new SharedShift
-                            {
-                                DisplayName = shiftDisplayName,
-                                Notes = this.utility.GetShiftNotes(kronosShift),
-                                StartDateTime = shiftActivity[0].StartDateTime,
-                                EndDateTime = shiftActivity[shiftActivity.Count - 1].EndDateTime,
-                                Theme = shiftTheme,
-                                Activities = shiftActivity,
-                            },
-                        };
+                        var shift = this.GenerateTeamsShiftObject(user, kronosShift);
 
                         shift.KronosUniqueId = this.utility.CreateUniqueId(shift, user.KronosTimeZone);
 
@@ -542,6 +505,89 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             await this.CreateEntryShiftsEntityMappingAsync(configurationDetails, userModelNotFoundList, shiftsNotFoundList, monthPartitionKey).ConfigureAwait(false);
 
             this.telemetryClient.TrackTrace($"ShiftController - ProcessShiftEntitiesBatchAsync ended at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
+        }
+
+        /// <summary>
+        /// Creates a Teams shift object for each shift.
+        /// </summary>
+        /// <param name="user">the user details the shift is assigned to.</param>
+        /// <param name="kronosShift">The shift to create a Teams shift from.</param>
+        /// <returns>A Teams shift object.</returns>
+        private Shift GenerateTeamsShiftObject(UserDetailsModel user, UpcomingShiftsResponse.ScheduleShift kronosShift)
+        {
+            List<ShiftActivity> shiftActivity = new List<ShiftActivity>();
+            var shiftDisplayName = string.Empty;
+
+            foreach (var activity in kronosShift?.ShiftSegments)
+            {
+                var activityDisplayName = string.Empty;
+
+                // If there is an orgJobPath in the shift segment then this segment is working
+                // a job other than the employees main job (shift transfer)
+                if (activity.OrgJobPath != null)
+                {
+                    var splitOrgJobPath = activity.OrgJobPath.Split("/");
+
+                    // Number of elements to take from the split org job path array.
+                    var numberOfOrgJobPathSections = int.Parse(this.appSettings.NumberOfOrgJobPathSectionsForActivityName, CultureInfo.InvariantCulture);
+
+                    // Ensure that the max number of sections is less than or equal to total number of sections.
+                    numberOfOrgJobPathSections = numberOfOrgJobPathSections <= splitOrgJobPath.Length ? numberOfOrgJobPathSections : splitOrgJobPath.Length;
+
+                    var orgJobPathSections = new List<string>(numberOfOrgJobPathSections);
+
+                    for (int i = splitOrgJobPath.Length - numberOfOrgJobPathSections; i < splitOrgJobPath.Length; i++)
+                    {
+                        orgJobPathSections.Add(splitOrgJobPath[i]);
+                    }
+
+                    activityDisplayName = string.Join("-", orgJobPathSections);
+
+                    // Teams UI has a character limit of 50 so if we exceed this we want to trim the string down
+                    // and prepend an elipses to indicate we have trimmed.
+                    if (activityDisplayName.Length > 50)
+                    {
+                        var trimmedDisplayName = activityDisplayName.Substring(activityDisplayName.Length - 47);
+                        activityDisplayName = trimmedDisplayName.Insert(0, "...");
+                    }
+                }
+
+                shiftActivity.Add(new ShiftActivity
+                {
+                    IsPaid = true,
+                    StartDateTime = this.utility.CalculateStartDateTime(activity, user.KronosTimeZone),
+                    EndDateTime = this.utility.CalculateEndDateTime(activity, user.KronosTimeZone),
+                    Code = string.Empty,
+                    DisplayName = activity.OrgJobPath != null ? activityDisplayName : activity.SegmentTypeName,
+                });
+            }
+
+            var displayNameStartTime = DateTime.Parse(kronosShift.ShiftSegments.First().StartTime, CultureInfo.InvariantCulture);
+            var displayNameEndTime = DateTime.Parse(kronosShift.ShiftSegments.Last().EndTime, CultureInfo.InvariantCulture);
+
+            // We want to make it clear in the shift label/display name that this is a transferred shift.
+            if (kronosShift.ShiftSegments.Any(x => x.SegmentTypeName == "TRANSFER"))
+            {
+                var displayNameTime = $"{displayNameStartTime.ToString("HH:mm", CultureInfo.InvariantCulture)} - {displayNameEndTime.ToString("HH:mm", CultureInfo.InvariantCulture)}";
+                shiftDisplayName = $"TRANSFER {displayNameTime}";
+            }
+
+            var shift = new Shift
+            {
+                UserId = user.ShiftUserId,
+                SchedulingGroupId = user.ShiftScheduleGroupId,
+                SharedShift = new SharedShift
+                {
+                    DisplayName = shiftDisplayName,
+                    Notes = this.utility.GetShiftNotes(kronosShift),
+                    StartDateTime = shiftActivity[0].StartDateTime,
+                    EndDateTime = shiftActivity[shiftActivity.Count - 1].EndDateTime,
+                    Theme = this.appSettings.ShiftTheme,
+                    Activities = shiftActivity,
+                },
+            };
+
+            return shift;
         }
 
         /// <summary>
