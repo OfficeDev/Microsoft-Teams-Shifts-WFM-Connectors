@@ -17,7 +17,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Graph;
-    using Microsoft.Teams.App.KronosWfc.BusinessLogic.ShiftsToKronos.CreateTimeOff;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff;
     using Microsoft.Teams.App.KronosWfc.Common;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.HyperFind;
@@ -41,7 +40,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private readonly TelemetryClient telemetryClient;
         private readonly IUserMappingProvider userMappingProvider;
         private readonly ITimeOffActivity timeOffActivity;
-        private readonly ICreateTimeOffActivity createTimeOffActivity;
         private readonly ITimeOffReasonProvider timeOffReasonProvider;
         private readonly IAzureTableStorageHelper azureTableStorageHelper;
         private readonly ITimeOffMappingEntityProvider timeOffMappingEntityProvider;
@@ -57,7 +55,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="telemetryClient">ApplicationInsights DI.</param>
         /// <param name="userMappingProvider">The User Mapping Provider DI.</param>
         /// <param name="timeOffActivity">Time Off Activity DI.</param>
-        /// <param name="createTimeOffActivity">Create time off activity DI.</param>
         /// <param name="timeOffReasonProvider">Time Off Reason Provider DI.</param>
         /// <param name="azureTableStorageHelper">Azure Storage Helper DI.</param>
         /// <param name="timeOffMappingEntityProvider">Time Off Mapping Provider DI.</param>
@@ -70,7 +67,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             TelemetryClient telemetryClient,
             IUserMappingProvider userMappingProvider,
             ITimeOffActivity timeOffActivity,
-            ICreateTimeOffActivity createTimeOffActivity,
             ITimeOffReasonProvider timeOffReasonProvider,
             IAzureTableStorageHelper azureTableStorageHelper,
             ITimeOffMappingEntityProvider timeOffMappingEntityProvider,
@@ -83,7 +79,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             this.telemetryClient = telemetryClient;
             this.userMappingProvider = userMappingProvider;
             this.timeOffActivity = timeOffActivity;
-            this.createTimeOffActivity = createTimeOffActivity;
             this.timeOffReasonProvider = timeOffReasonProvider;
             this.azureTableStorageHelper = azureTableStorageHelper;
             this.timeOffMappingEntityProvider = timeOffMappingEntityProvider ?? throw new ArgumentNullException(nameof(timeOffMappingEntityProvider));
@@ -227,13 +222,15 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var timeOffReqQueryDateSpan = $"{queryStartDate}-{queryEndDate}";
 
             // Create the Kronos Time Off Request.
-            var timeOffResponse = await this.createTimeOffActivity.CreateTimeOffRequestAsync(
+            var timeOffResponse = await this.timeOffActivity.CreateTimeOffRequestAsync(
                 allRequiredConfigurations.KronosSession,
                 localStartDateTime,
                 localEndDateTime,
                 timeOffReqQueryDateSpan,
                 user.KronosPersonNumber,
                 timeOffReason.RowKey,
+                timeOffEntity.SenderMessage,
+                this.appSettings.SenderTimeOffRequestCommentText,
                 new Uri(allRequiredConfigurations.WfmEndPoint)).ConfigureAwait(false);
 
             if (!string.IsNullOrWhiteSpace(timeOffResponse?.Error?.Message))
@@ -242,7 +239,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 return false;
             }
 
-            var submitTimeOffResponse = await this.createTimeOffActivity.SubmitTimeOffRequestAsync(
+            var submitTimeOffResponse = await this.timeOffActivity.SubmitTimeOffRequestAsync(
                     allRequiredConfigurations.KronosSession,
                     user.KronosPersonNumber,
                     timeOffResponse?.EmployeeRequestMgm?.RequestItem?.GlobalTimeOffRequestItms?.FirstOrDefault()?.Id,
@@ -334,19 +331,32 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// </summary>
         /// <param name="kronosReqId">The Kronos request id for the time off request.</param>
         /// <param name="kronosUserId">The Kronos user id for the assigned user.</param>
+        /// <param name="teamsTimeOffEntity">The Teams time off entity.</param>
         /// <param name="timeOffRequestMapping">The mapping for the time off request.</param>
+        /// <param name="managerMessage">The manager action message from Teams.</param>
         /// <param name="approved">Whether the request should be approved (true) or denied (false).</param>
+        /// <param name="kronosTimeZone">The Kronos timezone.</param>
         /// <returns>Returns a bool that represents whether the request was a success (true) or not (false).</returns>
         internal async Task<bool> ApproveOrDenyTimeOffRequestInKronos(
             string kronosReqId,
             string kronosUserId,
+            TimeOffRequestItem teamsTimeOffEntity,
             TimeOffMappingEntity timeOffRequestMapping,
-            bool approved)
+            string managerMessage,
+            bool approved,
+            string kronosTimeZone)
         {
             var provider = CultureInfo.InvariantCulture;
             this.telemetryClient.TrackTrace($"{Resource.ProcessTimeOffRequestsAsync} start at: {DateTime.Now.ToString("o", provider)}");
 
-            var timeOffRequestQueryDateSpan = $"{timeOffRequestMapping.StartDate}-{timeOffRequestMapping.EndDate}";
+            // Teams provides date times in UTC so convert to the local time.
+            var localStartDateTime = this.utility.UTCToKronosTimeZone(teamsTimeOffEntity.StartDateTime, kronosTimeZone);
+            var localEndDateTime = this.utility.UTCToKronosTimeZone(teamsTimeOffEntity.EndDateTime, kronosTimeZone);
+
+            var queryDateSpanStart = localStartDateTime.ToString(this.appSettings.KronosQueryDateSpanFormat, CultureInfo.InvariantCulture);
+            var queryDateSpanEnd = localEndDateTime.ToString(this.appSettings.KronosQueryDateSpanFormat, CultureInfo.InvariantCulture);
+
+            var timeOffRequestQueryDateSpan = $"{queryDateSpanStart}-{queryDateSpanEnd}";
 
             // Get all the necessary prerequisites.
             var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
@@ -362,6 +372,54 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             if (allRequiredConfigurations.IsAllSetUpExists)
             {
+                // There is a bug in Teams where a managers notes(managerActionMessage) are not added to
+                // the WFI request body. Until this is fixed syncing of manager notes from Teams to Kronos
+                // is not possible. Uncommenting this code once fixed should get manager note syncing to work.
+
+                /*
+                // Get the existing time off request entity so we can add to existing notes
+                var usersTimeOffRequestDetails = await this.timeOffActivity.GetTimeOffRequestDetailsAsync(
+                        new Uri(allRequiredConfigurations.WfmEndPoint),
+                        allRequiredConfigurations.KronosSession,
+                        timeOffRequestQueryDateSpan,
+                        kronosUserId,
+                        kronosReqId).ConfigureAwait(false);
+
+                if (usersTimeOffRequestDetails.Status != "Success")
+                {
+                    this.telemetryClient.TrackTrace($"Could not find the time off request with id: {kronosReqId}", data);
+                    return false;
+                }
+
+                // There is a chance the previous request will return multiple time off entities so slect the correct one
+                var timeOffRequest = usersTimeOffRequestDetails.RequestMgmt.RequestItems.GlobalTimeOffRequestItem.SingleOrDefault(x => x.Id == kronosReqId);
+                if (timeOffRequest == null)
+                {
+                    this.telemetryClient.TrackTrace($"Could not find the time off request with id: {kronosReqId}", data);
+                    return false;
+                }
+
+                // Add the comments to the time off request entity
+                var addCommentsResponse = await this.timeOffActivity.AddManagerCommentsToTimeOffRequestAsync(
+                        new Uri(allRequiredConfigurations.WfmEndPoint),
+                        allRequiredConfigurations.KronosSession,
+                        kronosReqId,
+                        localStartDateTime,
+                        localEndDateTime,
+                        timeOffRequestQueryDateSpan,
+                        kronosUserId,
+                        timeOffRequest.TimeOffPeriods.TimeOffPeriod.PayCodeName,
+                        managerMessage,
+                        this.appSettings.ManagerTimeOffRequestCommentText,
+                        timeOffRequest.Comments).ConfigureAwait(false);
+
+                if (addCommentsResponse.Status != "Success")
+                {
+                    this.telemetryClient.TrackTrace($"Failed to add the manager notes to the time off request: {kronosReqId}", data);
+                    return false;
+                }
+                */
+
                 var response =
                     await this.timeOffActivity.ApproveOrDenyTimeOffRequestAsync(
                         new Uri(allRequiredConfigurations.WfmEndPoint),

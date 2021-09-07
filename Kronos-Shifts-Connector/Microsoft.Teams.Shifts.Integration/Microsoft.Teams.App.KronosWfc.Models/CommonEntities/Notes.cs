@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 // </copyright>
 
-namespace Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests
+namespace Microsoft.Teams.App.KronosWfc.Models.CommonEntities
 {
     using System.Xml.Serialization;
 
@@ -13,7 +13,7 @@ namespace Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests
     public class Notes
     {
         /// <summary>
-        /// Gets or sets a Note.
+        /// Gets or sets the Note details.
         /// </summary>
         [XmlElement(ElementName = "Note")]
         public Note Note { get; set; }

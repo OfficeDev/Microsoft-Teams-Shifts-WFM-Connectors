@@ -883,7 +883,15 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     this.telemetryClient.TrackTrace($"Process denial of {timeOffRequest.Id}", updateProps);
 
                     // Deny in Kronos, Update mapping for Teams.
-                    success = await this.timeOffController.ApproveOrDenyTimeOffRequestInKronos(kronosReqId, kronosUserId, timeOffRequestMapping, approved).ConfigureAwait(false);
+                    success = await this.timeOffController.ApproveOrDenyTimeOffRequestInKronos(
+                            kronosReqId,
+                            kronosUserId,
+                            timeOffRequest,
+                            timeOffRequestMapping,
+                            timeOffRequest.ManagerActionMessage,
+                            approved,
+                            kronosTimeZone).ConfigureAwait(false);
+
                     if (!success)
                     {
                         this.telemetryClient.TrackTrace($"Process failure to deny time off request: {timeOffRequest.Id}", updateProps);
@@ -901,7 +909,15 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 this.telemetryClient.TrackTrace($"Process approval of {timeOffRequest.Id}", updateProps);
 
                 // approve in kronos
-                success = await this.timeOffController.ApproveOrDenyTimeOffRequestInKronos(kronosReqId, kronosUserId, timeOffRequestMapping, approved).ConfigureAwait(false);
+                success = await this.timeOffController.ApproveOrDenyTimeOffRequestInKronos(
+                        kronosReqId,
+                        kronosUserId,
+                        timeOffRequest,
+                        timeOffRequestMapping,
+                        timeOffRequest.ManagerActionMessage,
+                        approved,
+                        kronosTimeZone).ConfigureAwait(false);
+
                 updateProps.Add("SuccessfullyApprovedInKronos", $"{success}");
 
                 if (!success)
@@ -1121,8 +1137,19 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     await this.shiftMappingEntityProvider.DeleteOrphanDataFromShiftMappingAsync(offeredShiftMap).ConfigureAwait(false);
                     await this.shiftMappingEntityProvider.DeleteOrphanDataFromShiftMappingAsync(requestedShiftMap).ConfigureAwait(false);
 
-                    var requestingUserShifts = await this.shiftController.GetShiftsForUser(kronosRequestingUserId, swapShiftRequestMapping.PartitionKey).ConfigureAwait(false);
-                    var requestedUserShifts = await this.shiftController.GetShiftsForUser(kronosRequestedUserId, swapShiftRequestMapping.PartitionKey).ConfigureAwait(false);
+                    var queryStartDate = offeredShiftMap.ShiftStartDate <= requestedShiftMap.ShiftStartDate ? offeredShiftMap.ShiftStartDate : requestedShiftMap.ShiftStartDate;
+                    var queryEndDate = offeredShiftMap.ShiftEndDate >= requestedShiftMap.ShiftEndDate ? offeredShiftMap.ShiftEndDate : requestedShiftMap.ShiftEndDate;
+
+                    var requestingUserShifts = await this.shiftController.GetShiftsForUser(
+                        kronosRequestingUserId,
+                        queryStartDate.ToString("M/dd/yyyy", CultureInfo.InvariantCulture),
+                        queryEndDate.ToString("M/dd/yyyy", CultureInfo.InvariantCulture)).ConfigureAwait(false);
+
+                    var requestedUserShifts = await this.shiftController.GetShiftsForUser(
+                        kronosRequestedUserId,
+                        queryStartDate.ToString("M/dd/yyyy", CultureInfo.InvariantCulture),
+                        queryEndDate.ToString("M/dd/yyyy", CultureInfo.InvariantCulture)).ConfigureAwait(false);
+
                     var requestorShiftDate = this.utility.UTCToKronosTimeZone(requestorShift.SharedShift.StartDateTime, kronosTimeZone).ToString("d", CultureInfo.InvariantCulture);
                     var requestedShiftDate = this.utility.UTCToKronosTimeZone(requestedShift.SharedShift.StartDateTime, kronosTimeZone).ToString("d", CultureInfo.InvariantCulture);
 

@@ -5,7 +5,7 @@
 namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift.OpenShiftRequest.RequestManagement
 {
     using System.Xml.Serialization;
-    using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.ShiftsToKronos.AddRequest;
+    using Microsoft.Teams.App.KronosWfc.Models.CommonEntities;
 
     /// <summary>
     /// This class models the RequestStatusChange.

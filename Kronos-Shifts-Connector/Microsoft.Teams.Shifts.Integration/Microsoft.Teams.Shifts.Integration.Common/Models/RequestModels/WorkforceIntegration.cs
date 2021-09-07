@@ -50,5 +50,11 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.RequestModels
         /// </summary>
         [JsonProperty("supportedEntities")]
         public string SupportedEntities { get; set; }
+
+        /// <summary>
+        /// Gets or sets the eligibility functionalities supported for the outbound sync (from Shifts to the WFM provider).
+        /// </summary>
+        [JsonProperty("eligibilityFilteringEnabledEntities")]
+        public string EligibilityFilteringEnabledEntities { get; set; }
     }
 }

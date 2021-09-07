@@ -421,6 +421,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                 IsActive = true,
                 Url = this.appSettings.IntegrationApiUrl,
                 SupportedEntities = Constants.WFISupports,
+                EligibilityFilteringEnabledEntities = Constants.WFISupportedEligibilityFiltering,
                 Encryption = this.EstablishEncryption(),
             };
 
