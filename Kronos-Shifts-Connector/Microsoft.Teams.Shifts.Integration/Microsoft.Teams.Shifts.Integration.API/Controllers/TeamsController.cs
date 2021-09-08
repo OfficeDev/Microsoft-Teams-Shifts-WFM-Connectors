@@ -279,9 +279,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             if (requestBody != null)
             {
                 var shift = ControllerHelper.Get<Shift>(jsonModel, "/shifts/");
-                var user = await this.userMappingProvider.GetUserMappingEntityAsyncNew(
-                    shift.UserId,
-                    shift.SchedulingGroupId).ConfigureAwait(false);
+                var user = await this.userMappingProvider.GetUserMappingEntityAsyncNew(shift.UserId, shift.SchedulingGroupId).ConfigureAwait(false);
 
                 if (isFromLogicApp)
                 {
@@ -359,13 +357,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     {
                         if (openShift.DraftOpenShift?.IsActive == false || openShift.SharedOpenShift?.IsActive == false)
                         {
-                            // This looks like a bug with shifts sending a PUT for both edits and deletes, so it looks for the isActive flag instead.
-                            //response = await this.openShiftController.DeleteShiftFromKronos(openShift, mappedTeam).ConfigureAwait(false);
+                            // We cannot support delete due to api limitations so block the action.
+                            response = CreateBadResponse(openShift.Id, error: "Deleting open shifts in Teams is not supported. Please make your changes in Kronos.");
                         }
                         else
                         {
-                            // Edit goes here
-                            response = CreateSuccessfulResponse(openShift.Id);
+                            // We cannot support edit due to api limitations so block the action.
+                            response = CreateBadResponse(openShift.Id, error: "Editing open shifts in Teams is not supported. Please make your changes in Kronos.");
                         }
                     }
                 }
