@@ -290,7 +290,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 {
                     if (jsonModel.Requests.Any(c => c.Method == "POST"))
                     {
-                        response = await this.shiftController.AddShiftToKronos(shift, user, mappedTeam).ConfigureAwait(false);
+                        response = await this.shiftController.CreateShiftFromTeamsAsync(shift, user, mappedTeam).ConfigureAwait(false);
                     }
                     else if (jsonModel.Requests.Any(c => c.Method == "PUT"))
                     {
@@ -298,13 +298,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         {
                             // Manager deleted a shift.
                             response = await this.shiftController.DeleteShiftFromKronos(shift, user, mappedTeam).ConfigureAwait(false);
-                            return CreateSuccessfulResponse(shift.Id);
                         }
                         else
                         {
                             // Manager edited a shift.
                             response = await this.shiftController.EditShiftInKronos(shift, user, mappedTeam).ConfigureAwait(false);
-                            return CreateSuccessfulResponse(shift.Id);
                         }
                     }
                 }

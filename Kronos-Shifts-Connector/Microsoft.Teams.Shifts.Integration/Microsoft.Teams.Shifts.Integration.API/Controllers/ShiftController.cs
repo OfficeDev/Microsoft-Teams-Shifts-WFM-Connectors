@@ -26,7 +26,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels;
     using Newtonsoft.Json;
     using static Microsoft.Teams.App.KronosWfc.Common.ApiConstants;
-    using static Microsoft.Teams.Shifts.Integration.API.Common.ResponseHelper;
     using IntegrationApi = Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI;
     using ShiftsShift = Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Shift;
     using UpcomingShiftsResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts;
@@ -167,6 +166,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <returns>A response for teams.</returns>
         public async Task<ShiftsIntegResponse> DeleteShiftFromKronos(ShiftsShift shift, AllUserMappingEntity user, TeamToDepartmentJobMappingEntity mappedTeam)
         {
+            // The connector does not support drafting entities as it is not possible to draft shifts in Kronos.
+            // Likewise there is no share schedule WFI call.
+            if (shift.DraftShift?.StartDateTime != null)
+            {
+                return ResponseHelper.CreateBadResponse(shift.Id, error: "Deleting shifts as a draft is not supported. Please publish changes directly using the 'Share' button.");
+            }
+
             if (user.ErrorIfNull(shift.Id, "User could not be found.", out var response))
             {
                 return response;
@@ -180,7 +186,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             }
 
             // Convert to Kronos local time.
-            var (kronosStartDateTime, kronosEndDateTime) = this.GetConvertedShiftDetails(shift, mappedTeam);
+            var kronosStartDateTime = this.utility.UTCToKronosTimeZone((DateTime)shift.SharedShift?.StartDateTime, mappedTeam.KronosTimeZone);
+            var kronosEndDateTime = this.utility.UTCToKronosTimeZone((DateTime)shift.SharedShift?.EndDateTime, mappedTeam.KronosTimeZone);
 
             var deletionResponse = await this.shiftsActivity.DeleteShift(
                 new Uri(allRequiredConfigurations.WfmEndPoint),
@@ -195,11 +202,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             if (deletionResponse.Status != Success)
             {
-                return CreateBadResponse(shift.Id, error: "Shift was not successfully removed from Kronos.");
+                return ResponseHelper.CreateBadResponse(shift.Id, error: "Shift was not successfully removed from Kronos.");
             }
 
             await this.DeleteShiftMapping(shift).ConfigureAwait(false);
-            return CreateSuccessfulResponse(shift.Id);
+            return ResponseHelper.CreateSuccessfulResponse(shift.Id);
         }
 
         /// <summary>
@@ -209,8 +216,15 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="user">The user the shift is for.</param>
         /// <param name="mappedTeam">The team the user is in.</param>
         /// <returns>A response for teams.</returns>
-        public async Task<ShiftsIntegResponse> AddShiftToKronos(ShiftsShift shift, AllUserMappingEntity user, TeamToDepartmentJobMappingEntity mappedTeam)
+        public async Task<ShiftsIntegResponse> CreateShiftFromTeamsAsync(ShiftsShift shift, AllUserMappingEntity user, TeamToDepartmentJobMappingEntity mappedTeam)
         {
+            // The connector does not support drafting entities as it is not possible to draft shifts in Kronos.
+            // Likewise there is no share schedule WFI call.
+            if (shift.DraftShift?.StartDateTime != null)
+            {
+                return ResponseHelper.CreateBadResponse(shift.Id, error: "Creating draft shifts is not supported. Please publish changes directly using the 'Share' button.");
+            }
+
             if (user.ErrorIfNull(shift.Id, "User could not be found.", out var response))
             {
                 return response;
@@ -223,7 +237,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 return response;
             }
 
-            var (kronosStartDateTime, kronosEndDateTime) = this.GetConvertedShiftDetails(shift, mappedTeam);
+            var kronosStartDateTime = this.utility.UTCToKronosTimeZone((DateTime)shift.SharedShift?.StartDateTime, mappedTeam.KronosTimeZone);
+            var kronosEndDateTime = this.utility.UTCToKronosTimeZone((DateTime)shift.SharedShift?.EndDateTime, mappedTeam.KronosTimeZone);
 
             var creationResponse = await this.shiftsActivity.CreateShift(
                 new Uri(allRequiredConfigurations.WfmEndPoint),
@@ -238,14 +253,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             if (creationResponse.Status != Success)
             {
-                return CreateBadResponse(shift.Id, error: "Shift was not created successfully in Kronos.");
+                return ResponseHelper.CreateBadResponse(shift.Id, error: "Shift was not created successfully in Kronos.");
             }
 
             var monthPartitionKey = Utility.GetMonthPartition(this.utility.FormatDateForKronos(kronosStartDateTime), this.utility.FormatDateForKronos(kronosEndDateTime));
 
             await this.CreateAndStoreShiftMapping(shift, user, mappedTeam, monthPartitionKey).ConfigureAwait(false);
 
-            return CreateSuccessfulResponse(shift.Id);
+            return ResponseHelper.CreateSuccessfulResponse(shift.Id);
         }
 
         /// <summary>
@@ -257,6 +272,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <returns>A response for teams.</returns>
         public async Task<ShiftsIntegResponse> EditShiftInKronos(ShiftsShift editedShift, AllUserMappingEntity user, TeamToDepartmentJobMappingEntity mappedTeam)
         {
+            // The connector does not support drafting entities as it is not possible to draft shifts in Kronos.
+            // Likewise there is no share schedule WFI call.
+            if (editedShift.DraftShift?.StartDateTime != null)
+            {
+                return ResponseHelper.CreateBadResponse(editedShift.Id, error: "Editing shifts as a draft is not supported. Please publish changes directly using the 'Share' button.");
+            }
+
             var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
 
             if ((allRequiredConfigurations?.IsAllSetUpExists).ErrorIfNull(editedShift.Id, "App configuration incorrect.", out var response))
@@ -265,7 +287,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             }
 
             // We need to get all other shifts the employee works that day.
-            var (kronosStartDateTime, kronosEndDateTime) = this.GetConvertedShiftDetails(editedShift, mappedTeam);
+            var kronosStartDateTime = this.utility.UTCToKronosTimeZone((DateTime)editedShift.SharedShift?.StartDateTime, mappedTeam.KronosTimeZone);
+            var kronosEndDateTime = this.utility.UTCToKronosTimeZone((DateTime)editedShift.SharedShift?.EndDateTime, mappedTeam.KronosTimeZone);
+
             var monthPartitionKey = Utility.GetMonthPartition(this.utility.FormatDateForKronos(kronosStartDateTime), this.utility.FormatDateForKronos(kronosEndDateTime));
 
             var shiftToReplace = await this.shiftMappingEntityProvider.GetShiftMappingEntityByRowKeyAsync(editedShift.Id).ConfigureAwait(false);
@@ -289,13 +313,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             if (editResponse.Status != Success)
             {
-                return CreateBadResponse(editedShift.Id, error: "Shift could not be edited in Kronos.");
+                return ResponseHelper.CreateBadResponse(editedShift.Id, error: "Shift could not be edited in Kronos.");
             }
 
             await this.DeleteShiftMapping(editedShift).ConfigureAwait(false);
             await this.CreateAndStoreShiftMapping(editedShift, user, mappedTeam, monthPartitionKey).ConfigureAwait(false);
 
-            return CreateSuccessfulResponse(editedShift.Id);
+            return ResponseHelper.CreateSuccessfulResponse(editedShift.Id);
         }
 
         /// <summary>

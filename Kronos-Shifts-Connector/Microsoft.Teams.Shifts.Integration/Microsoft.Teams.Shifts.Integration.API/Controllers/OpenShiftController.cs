@@ -91,6 +91,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <returns>A response to return to teams.</returns>
         public async Task<ShiftsIntegResponse> CreateOpenShiftFromTeamsAsync(Models.IntegrationAPI.OpenShiftIS openShift, TeamToDepartmentJobMappingEntity team)
         {
+            // The connector does not support drafting entities asit is not possible to draft shifts in Kronos.
+            // Likewise there is no share schedule WFI call.
+            if (openShift.DraftOpenShift?.StartDateTime != null)
+            {
+                return ResponseHelper.CreateBadResponse(openShift.Id, error: "Creating draft open shifts is not supported. Please publish changes directly using the 'Share' button.");
+            }
+
             var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
 
             if ((allRequiredConfigurations?.IsAllSetUpExists).ErrorIfNull(openShift.Id, "App configuration incorrect.", out var response))
@@ -103,9 +110,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             var openShiftDetails = new
             {
-                KronosStartDateTime = this.utility.UTCToKronosTimeZone((DateTime)(openShift.DraftOpenShift?.StartDateTime ?? openShift.SharedOpenShift?.StartDateTime), team.KronosTimeZone),
-                KronosEndDateTime = this.utility.UTCToKronosTimeZone((DateTime)(openShift.DraftOpenShift?.EndDateTime ?? openShift.SharedOpenShift?.EndDateTime), team.KronosTimeZone),
-                DisplayName = openShift.DraftOpenShift?.DisplayName ?? openShift.SharedOpenShift?.DisplayName ?? null,
+                KronosStartDateTime = this.utility.UTCToKronosTimeZone((DateTime)openShift.SharedOpenShift?.StartDateTime, team.KronosTimeZone),
+                KronosEndDateTime = this.utility.UTCToKronosTimeZone((DateTime)openShift.SharedOpenShift?.EndDateTime, team.KronosTimeZone),
+                DisplayName = openShift.SharedOpenShift?.DisplayName ?? null,
             };
 
             var creationResponse = await this.openShiftActivity.CreateOpenShiftAsync(
