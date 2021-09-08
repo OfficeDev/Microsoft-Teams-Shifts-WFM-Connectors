@@ -297,12 +297,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         if (shift.DraftShift?.IsActive == false || shift.SharedShift?.IsActive == false)
                         {
                             // Manager deleted a shift.
-                            response = await this.shiftController.DeleteShiftFromKronos(shift, user, mappedTeam).ConfigureAwait(false);
+                            response = await this.shiftController.DeleteShiftFromKTeamsAsync(shift, user, mappedTeam).ConfigureAwait(false);
                         }
                         else
                         {
                             // Manager edited a shift.
-                            response = await this.shiftController.EditShiftInKronos(shift, user, mappedTeam).ConfigureAwait(false);
+                            response = await this.shiftController.EditShiftFromTeamsAsync(shift, user, mappedTeam).ConfigureAwait(false);
                         }
                     }
                 }

@@ -95,7 +95,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             // Likewise there is no share schedule WFI call.
             if (openShift.DraftOpenShift?.StartDateTime != null)
             {
-                return ResponseHelper.CreateBadResponse(openShift.Id, error: "Creating draft open shifts is not supported. Please publish changes directly using the 'Share' button.");
+                return ResponseHelper.CreateBadResponse(openShift.Id, error: "Creating a draft open shift is not supported. Please publish changes directly using the 'Share' button.");
             }
 
             var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);

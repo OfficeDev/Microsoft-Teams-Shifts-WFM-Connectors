@@ -164,13 +164,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="user">The user the shift is for.</param>
         /// <param name="mappedTeam">The team the user is in.</param>
         /// <returns>A response for teams.</returns>
-        public async Task<ShiftsIntegResponse> DeleteShiftFromKronos(ShiftsShift shift, AllUserMappingEntity user, TeamToDepartmentJobMappingEntity mappedTeam)
+        public async Task<ShiftsIntegResponse> DeleteShiftFromKTeamsAsync(ShiftsShift shift, AllUserMappingEntity user, TeamToDepartmentJobMappingEntity mappedTeam)
         {
             // The connector does not support drafting entities as it is not possible to draft shifts in Kronos.
             // Likewise there is no share schedule WFI call.
             if (shift.DraftShift?.StartDateTime != null)
             {
-                return ResponseHelper.CreateBadResponse(shift.Id, error: "Deleting shifts as a draft is not supported. Please publish changes directly using the 'Share' button.");
+                return ResponseHelper.CreateBadResponse(shift.Id, error: "Deleting a shift as a draft is not supported. Please publish changes directly using the 'Share' button.");
             }
 
             if (user.ErrorIfNull(shift.Id, "User could not be found.", out var response))
@@ -222,7 +222,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             // Likewise there is no share schedule WFI call.
             if (shift.DraftShift?.StartDateTime != null)
             {
-                return ResponseHelper.CreateBadResponse(shift.Id, error: "Creating draft shifts is not supported. Please publish changes directly using the 'Share' button.");
+                return ResponseHelper.CreateBadResponse(shift.Id, error: "Creating a draft shift is not supported. Please publish changes directly using the 'Share' button.");
             }
 
             if (user.ErrorIfNull(shift.Id, "User could not be found.", out var response))
@@ -270,13 +270,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="user">The user the shift is for.</param>
         /// <param name="mappedTeam">The team the user is in.</param>
         /// <returns>A response for teams.</returns>
-        public async Task<ShiftsIntegResponse> EditShiftInKronos(ShiftsShift editedShift, AllUserMappingEntity user, TeamToDepartmentJobMappingEntity mappedTeam)
+        public async Task<ShiftsIntegResponse> EditShiftFromTeamsAsync(ShiftsShift editedShift, AllUserMappingEntity user, TeamToDepartmentJobMappingEntity mappedTeam)
         {
             // The connector does not support drafting entities as it is not possible to draft shifts in Kronos.
             // Likewise there is no share schedule WFI call.
             if (editedShift.DraftShift?.StartDateTime != null)
             {
-                return ResponseHelper.CreateBadResponse(editedShift.Id, error: "Editing shifts as a draft is not supported. Please publish changes directly using the 'Share' button.");
+                return ResponseHelper.CreateBadResponse(editedShift.Id, error: "Editing a shift as a draft is not supported. Please publish changes directly using the 'Share' button.");
             }
 
             var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
