@@ -203,6 +203,7 @@ namespace Microsoft.Teams.Shifts.Integration.API
                 provider.GetRequiredService<IShiftsActivity>(),
                 provider.GetRequiredService<TelemetryClient>(),
                 provider.GetRequiredService<Utility>(),
+                provider.GetRequiredService<IGraphUtility>(),
                 provider.GetRequiredService<IShiftMappingEntityProvider>(),
                 provider.GetRequiredService<ITeamDepartmentMappingProvider>(),
                 provider.GetRequiredService<AppSettings>(),

@@ -17,7 +17,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts;
-    using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.HyperFind;
     using Microsoft.Teams.Shifts.Integration.API.Common;
     using Microsoft.Teams.Shifts.Integration.API.Models.Request;
@@ -41,6 +40,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private readonly IShiftsActivity shiftsActivity;
         private readonly TelemetryClient telemetryClient;
         private readonly Utility utility;
+        private readonly IGraphUtility graphUtility;
         private readonly IShiftMappingEntityProvider shiftMappingEntityProvider;
         private readonly AppSettings appSettings;
         private readonly ITeamDepartmentMappingProvider teamDepartmentMappingProvider;
@@ -54,6 +54,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="upcomingShiftsActivity">upcoming Shifts Activity.</param>
         /// <param name="telemetryClient">ApplicationInsights DI.</param>
         /// <param name="utility">UniqueId Utility DI.</param>
+        /// <param name="graphUtility">The graph utility.</param>
         /// <param name="shiftEntityMappingProvider">ShiftEntityMapper DI.</param>
         /// <param name="appSettings">app settings.</param>
         /// <param name="teamDepartmentMappingProvider">Team department mapping provider.</param>
@@ -64,6 +65,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             IShiftsActivity upcomingShiftsActivity,
             TelemetryClient telemetryClient,
             Utility utility,
+            IGraphUtility graphUtility,
             IShiftMappingEntityProvider shiftEntityMappingProvider,
             ITeamDepartmentMappingProvider teamDepartmentMappingProvider,
             AppSettings appSettings,
@@ -74,6 +76,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             this.shiftsActivity = upcomingShiftsActivity;
             this.telemetryClient = telemetryClient;
             this.utility = utility;
+            this.graphUtility = graphUtility;
             this.shiftMappingEntityProvider = shiftEntityMappingProvider;
             this.appSettings = appSettings;
             this.teamDepartmentMappingProvider = teamDepartmentMappingProvider;
@@ -164,15 +167,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="user">The user the shift is for.</param>
         /// <param name="mappedTeam">The team the user is in.</param>
         /// <returns>A response for teams.</returns>
-        public async Task<ShiftsIntegResponse> DeleteShiftFromKTeamsAsync(ShiftsShift shift, AllUserMappingEntity user, TeamToDepartmentJobMappingEntity mappedTeam)
+        public async Task<ShiftsIntegResponse> DeleteShiftFromTeamsAsync(ShiftsShift shift, AllUserMappingEntity user, TeamToDepartmentJobMappingEntity mappedTeam)
         {
-            // The connector does not support drafting entities as it is not possible to draft shifts in Kronos.
-            // Likewise there is no share schedule WFI call.
-            if (shift.DraftShift?.StartDateTime != null)
-            {
-                return ResponseHelper.CreateBadResponse(shift.Id, error: "Deleting a shift as a draft is not supported. Please publish changes directly using the 'Share' button.");
-            }
-
             if (user.ErrorIfNull(shift.Id, "User could not be found.", out var response))
             {
                 return response;
@@ -205,8 +201,23 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 return ResponseHelper.CreateBadResponse(shift.Id, error: "Shift was not successfully removed from Kronos.");
             }
 
-            await this.DeleteShiftMapping(shift).ConfigureAwait(false);
-            return ResponseHelper.CreateSuccessfulResponse(shift.Id);
+            // This part is failing, look here
+            var shareScheduleResponse = await this.graphUtility.ShareSchedule(
+                allRequiredConfigurations.ShiftsAccessToken,
+                mappedTeam.TeamId,
+                shift.SharedShift.StartDateTime,
+                shift.SharedShift.EndDateTime,
+                false).ConfigureAwait(false);
+
+            if (shareScheduleResponse.IsSuccessStatusCode)
+            {
+                await this.DeleteShiftMapping(shift).ConfigureAwait(false);
+                return ResponseHelper.CreateSuccessfulResponse(shift.Id);
+            }
+
+            this.telemetryClient.TrackTrace("DeleteShiftFromTeamsAsync - Failed to auto share the schedule after a shift deletion.");
+
+            return ResponseHelper.CreateBadResponse(shift.Id, error: "Unexpected error occured.");
         }
 
         /// <summary>

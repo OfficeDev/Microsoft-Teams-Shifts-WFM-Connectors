@@ -297,7 +297,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         if (shift.DraftShift?.IsActive == false || shift.SharedShift?.IsActive == false)
                         {
                             // Manager deleted a shift.
-                            response = await this.shiftController.DeleteShiftFromKTeamsAsync(shift, user, mappedTeam).ConfigureAwait(false);
+                            response = await this.shiftController.DeleteShiftFromTeamsAsync(shift, user, mappedTeam).ConfigureAwait(false);
                         }
                         else
                         {
