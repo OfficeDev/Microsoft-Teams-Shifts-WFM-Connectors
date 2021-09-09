@@ -4,6 +4,7 @@
 
 namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
 {
+    using System;
     using System.Collections.Generic;
     using System.Net.Http;
     using System.Threading.Tasks;
@@ -32,6 +33,17 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// <returns>The shift user.</returns>
         Task<List<ShiftUser>> FetchShiftUserDetailsAsync(
             string accessToken);
+
+        /// <summary>
+        /// Share the schedule between the given date range.
+        /// </summary>
+        /// <param name="accessToken">The MS GraphAPI token.</param>
+        /// <param name="teamId">The id of the team whos schedule we want to share.</param>
+        /// <param name="startDateTime">The start time we want to share from.</param>
+        /// <param name="endDateTime">The end time we want to share until.</param>
+        /// <param name="notifyTeam">Whether we want to notify the team or not.</param>
+        /// <returns>Http response message.</returns>
+        Task<HttpResponseMessage> ShareSchedule(string accessToken, string teamId, DateTime startDateTime, DateTime endDateTime, bool notifyTeam);
 
         /// <summary>
         /// Fetch user details for shifts using graph api tokens.

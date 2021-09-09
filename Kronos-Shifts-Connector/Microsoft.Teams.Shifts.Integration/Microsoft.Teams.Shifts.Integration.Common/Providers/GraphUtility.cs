@@ -134,6 +134,39 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         }
 
         /// <summary>
+        /// Share the schedule between the given dates.
+        /// </summary>
+        /// <param name="accessToken">Access Token.</param>
+        /// <param name="teamId">The id of the team which schedule we want to share.</param>
+        /// <param name="startDateTime">The start time to share the schedule from.</param>
+        /// <param name="endDateTime">the end time to share the schedule to.</param>
+        /// <param name="notifyTeam">Whether to notify the team or not.</param>
+        /// <returns>Http response message.</returns>
+        public async Task<HttpResponseMessage> ShareSchedule(string accessToken, string teamId, DateTime startDateTime, DateTime endDateTime, bool notifyTeam)
+        {
+            var shareRequest = new ScheduleShareRequestBody
+            {
+                NotifyTeam = notifyTeam,
+                StartDateTime = startDateTime,
+                EndDateTime = endDateTime,
+            };
+
+            var requestString = JsonConvert.SerializeObject(shareRequest);
+
+            var httpClient = this.httpClientFactory.CreateClient("GraphBetaAPI");
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, $"teams/{teamId}/schedule/share")
+            {
+                Content = new StringContent(requestString, Encoding.UTF8, "application/json"),
+            })
+            {
+                return await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
+            }
+        }
+
+        /// <summary>
         /// Fetch user details for shifts using graph api tokens.
         /// </summary>
         /// <param name="accessToken">Access Token.</param>
