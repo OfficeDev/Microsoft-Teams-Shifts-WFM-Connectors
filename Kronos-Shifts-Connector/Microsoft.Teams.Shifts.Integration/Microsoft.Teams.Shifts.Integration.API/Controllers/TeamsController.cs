@@ -290,19 +290,19 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 {
                     if (jsonModel.Requests.Any(c => c.Method == "POST"))
                     {
-                        response = await this.shiftController.CreateShiftFromTeamsAsync(shift, user, mappedTeam).ConfigureAwait(false);
+                        response = await this.shiftController.CreateShiftInKronosAsync(shift, user, mappedTeam).ConfigureAwait(false);
                     }
                     else if (jsonModel.Requests.Any(c => c.Method == "PUT"))
                     {
                         if (shift.DraftShift?.IsActive == false || shift.SharedShift?.IsActive == false)
                         {
                             // Manager deleted a shift.
-                            response = await this.shiftController.DeleteShiftFromTeamsAsync(shift, user, mappedTeam).ConfigureAwait(false);
+                            response = await this.shiftController.DeleteShiftInKronosAsync(shift, user, mappedTeam).ConfigureAwait(false);
                         }
                         else
                         {
                             // Manager edited a shift.
-                            response = await this.shiftController.EditShiftFromTeamsAsync(shift, user, mappedTeam).ConfigureAwait(false);
+                            response = await this.shiftController.EditShiftInKronosAsync(shift, user, mappedTeam).ConfigureAwait(false);
                         }
                     }
                 }
@@ -349,7 +349,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 {
                     if (jsonModel.Requests.Any(c => c.Method == "POST"))
                     {
-                        response = await this.openShiftController.CreateOpenShiftFromTeamsAsync(openShift, mappedTeam).ConfigureAwait(false);
+                        response = await this.openShiftController.CreateOpenShiftInKronosAsync(openShift, mappedTeam).ConfigureAwait(false);
                     }
                     else if (jsonModel.Requests.Any(c => c.Method == "PUT"))
                     {

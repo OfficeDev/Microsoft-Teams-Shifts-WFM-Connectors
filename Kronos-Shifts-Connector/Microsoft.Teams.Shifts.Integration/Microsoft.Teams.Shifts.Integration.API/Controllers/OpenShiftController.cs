@@ -89,13 +89,18 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="openShift">The open shift entity to create in Kronos.</param>
         /// <param name="team">The team the open shift belongs to.</param>
         /// <returns>A response to return to teams.</returns>
-        public async Task<ShiftsIntegResponse> CreateOpenShiftFromTeamsAsync(Models.IntegrationAPI.OpenShiftIS openShift, TeamToDepartmentJobMappingEntity team)
+        public async Task<ShiftsIntegResponse> CreateOpenShiftInKronosAsync(Models.IntegrationAPI.OpenShiftIS openShift, TeamToDepartmentJobMappingEntity team)
         {
             // The connector does not support drafting entities asit is not possible to draft shifts in Kronos.
             // Likewise there is no share schedule WFI call.
-            if (openShift.DraftOpenShift?.StartDateTime != null)
+            if (openShift.DraftOpenShift != null)
             {
                 return ResponseHelper.CreateBadResponse(openShift.Id, error: "Creating a draft open shift is not supported. Please publish changes directly using the 'Share' button.");
+            }
+
+            if (openShift.SharedOpenShift == null)
+            {
+                return ResponseHelper.CreateBadResponse(openShift.Id, error: "An unexpected error occured. Could not create open shift.");
             }
 
             var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
@@ -110,9 +115,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             var openShiftDetails = new
             {
-                KronosStartDateTime = this.utility.UTCToKronosTimeZone((DateTime)openShift.SharedOpenShift?.StartDateTime, team.KronosTimeZone),
-                KronosEndDateTime = this.utility.UTCToKronosTimeZone((DateTime)openShift.SharedOpenShift?.EndDateTime, team.KronosTimeZone),
-                DisplayName = openShift.SharedOpenShift?.DisplayName ?? null,
+                KronosStartDateTime = this.utility.UTCToKronosTimeZone(openShift.SharedOpenShift.StartDateTime, team.KronosTimeZone),
+                KronosEndDateTime = this.utility.UTCToKronosTimeZone(openShift.SharedOpenShift.EndDateTime, team.KronosTimeZone),
+                DisplayName = openShift.SharedOpenShift.DisplayName,
             };
 
             var creationResponse = await this.openShiftActivity.CreateOpenShiftAsync(
