@@ -22,12 +22,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Models.Request
         /// Gets or sets the start date time.
         /// </summary>
         [JsonProperty(PropertyName = "startDateTime")]
-        public DateTimeOffset StartDateTime { get; set; }
+        public DateTime StartDateTime { get; set; }
 
         /// <summary>
         /// Gets or sets the end date time.
         /// </summary>
         [JsonProperty(PropertyName = "endDateTime")]
-        public DateTimeOffset EndDateTime { get; set; }
+        public DateTime EndDateTime { get; set; }
     }
 }

@@ -288,6 +288,7 @@
     <Compile Include="Models\ConfigurationEntity.cs" />
     <Compile Include="Models\Encryption.cs" />
     <Compile Include="Models\KronosDetails.cs" />
+    <Compile Include="Models\RequestModels\ShareSchedule.cs" />
     <Compile Include="Models\ResponseModels\ResponseError.cs" />
     <Compile Include="Models\SchedulingGroupDetails.cs" />
     <Compile Include="Models\ShiftSchedulingGroups.cs" />

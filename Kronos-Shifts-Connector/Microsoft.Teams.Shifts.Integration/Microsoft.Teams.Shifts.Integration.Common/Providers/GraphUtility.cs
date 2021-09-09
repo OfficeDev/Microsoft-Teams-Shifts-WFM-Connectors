@@ -17,6 +17,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
     using Microsoft.Extensions.Caching.Distributed;
     using Microsoft.Graph;
     using Microsoft.IdentityModel.Clients.ActiveDirectory;
+    using Microsoft.Teams.Shifts.Integration.API.Models.Request;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Cache;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
     using Newtonsoft.Json;
@@ -144,16 +145,16 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// <returns>Http response message.</returns>
         public async Task<HttpResponseMessage> ShareSchedule(string accessToken, string teamId, DateTime startDateTime, DateTime endDateTime, bool notifyTeam)
         {
-            var shareRequest = new ScheduleShareRequestBody
+            var shareRequest = new ShareSchedule
             {
                 NotifyTeam = notifyTeam,
-                StartDateTime = startDateTime,
-                EndDateTime = endDateTime,
+                StartDateTime = startDateTime.AddMinutes(-60),
+                EndDateTime = endDateTime.AddMinutes(60),
             };
 
             var requestString = JsonConvert.SerializeObject(shareRequest);
 
-            var httpClient = this.httpClientFactory.CreateClient("GraphBetaAPI");
+            var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
             httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
@@ -162,7 +163,8 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
                 Content = new StringContent(requestString, Encoding.UTF8, "application/json"),
             })
             {
-                return await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
+                var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
+                return response;
             }
         }
 

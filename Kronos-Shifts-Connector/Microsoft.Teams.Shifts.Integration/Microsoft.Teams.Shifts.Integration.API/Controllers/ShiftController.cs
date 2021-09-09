@@ -206,13 +206,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 return ResponseHelper.CreateBadResponse(shift.Id, error: "Shift was not successfully removed from Kronos.");
             }
 
-            // This part is failing, look here
             var shareScheduleResponse = await this.graphUtility.ShareSchedule(
                 allRequiredConfigurations.ShiftsAccessToken,
                 mappedTeam.TeamId,
                 shift.SharedShift.StartDateTime,
                 shift.SharedShift.EndDateTime,
-                false).ConfigureAwait(false);
+                false).ConfigureAwait(true);
 
             if (shareScheduleResponse.IsSuccessStatusCode)
             {
