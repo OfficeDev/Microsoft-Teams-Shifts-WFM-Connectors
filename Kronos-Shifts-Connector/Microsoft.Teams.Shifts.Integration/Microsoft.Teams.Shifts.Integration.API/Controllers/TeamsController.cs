@@ -279,9 +279,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             if (requestBody != null)
             {
                 var shift = ControllerHelper.Get<Shift>(jsonModel, "/shifts/");
-                var user = await this.userMappingProvider.GetUserMappingEntityAsyncNew(
-                    shift.UserId,
-                    shift.SchedulingGroupId).ConfigureAwait(false);
+                var user = await this.userMappingProvider.GetUserMappingEntityAsyncNew(shift.UserId, shift.SchedulingGroupId).ConfigureAwait(false);
 
                 if (isFromLogicApp)
                 {
@@ -292,21 +290,19 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 {
                     if (jsonModel.Requests.Any(c => c.Method == "POST"))
                     {
-                        response = await this.shiftController.AddShiftToKronos(shift, user, mappedTeam).ConfigureAwait(false);
+                        response = await this.shiftController.CreateShiftInKronosAsync(shift, user, mappedTeam).ConfigureAwait(false);
                     }
                     else if (jsonModel.Requests.Any(c => c.Method == "PUT"))
                     {
                         if (shift.DraftShift?.IsActive == false || shift.SharedShift?.IsActive == false)
                         {
                             // Manager deleted a shift.
-                            response = await this.shiftController.DeleteShiftFromKronos(shift, user, mappedTeam).ConfigureAwait(false);
-                            return CreateSuccessfulResponse(shift.Id);
+                            response = await this.shiftController.DeleteShiftInKronosAsync(shift, user, mappedTeam).ConfigureAwait(false);
                         }
                         else
                         {
                             // Manager edited a shift.
-                            response = await this.shiftController.EditShiftInKronos(shift, user, mappedTeam).ConfigureAwait(false);
-                            return CreateSuccessfulResponse(shift.Id);
+                            response = await this.shiftController.EditShiftInKronosAsync(shift, user, mappedTeam).ConfigureAwait(false);
                         }
                     }
                 }
@@ -353,19 +349,19 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 {
                     if (jsonModel.Requests.Any(c => c.Method == "POST"))
                     {
-                        response = await this.openShiftController.CreateOpenShiftFromTeamsAsync(openShift, mappedTeam).ConfigureAwait(false);
+                        response = await this.openShiftController.CreateOpenShiftInKronosAsync(openShift, mappedTeam).ConfigureAwait(false);
                     }
                     else if (jsonModel.Requests.Any(c => c.Method == "PUT"))
                     {
                         if (openShift.DraftOpenShift?.IsActive == false || openShift.SharedOpenShift?.IsActive == false)
                         {
-                            // This looks like a bug with shifts sending a PUT for both edits and deletes, so it looks for the isActive flag instead.
-                            //response = await this.openShiftController.DeleteShiftFromKronos(openShift, mappedTeam).ConfigureAwait(false);
+                            // We cannot support delete due to api limitations so block the action.
+                            response = CreateBadResponse(openShift.Id, error: "Deleting open shifts in Teams is not supported. Please make your changes in Kronos.");
                         }
                         else
                         {
-                            // Edit goes here
-                            response = CreateSuccessfulResponse(openShift.Id);
+                            // We cannot support edit due to api limitations so block the action.
+                            response = CreateBadResponse(openShift.Id, error: "Editing open shifts in Teams is not supported. Please make your changes in Kronos.");
                         }
                     }
                 }
