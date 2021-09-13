@@ -150,6 +150,12 @@
         "description": "This is the number of org job path sections you want to appear as a Teams shift activity name (this is only used when syncing a shift transfer)."
       }
     },
+    "shiftNotesCommentText": {
+      "type": "string",
+      "metadata": {
+        "description": "This is the Kronos 'comment text' value to assign to shift notes. This will need to be configured in Kronos beforehand."
+      }
+    },
     "managerTimeOffRequestCommentText": {
       "type": "string",
       "metadata": {
@@ -606,6 +612,10 @@
             {
               "name": "NumberOfOrgJobPathSectionsForActivityName",
               "value": "[parameters('numberOfOrgJobPathSectionsForActivityName')]"
+            },
+            {
+              "name": "ShiftNotesCommentText",
+              "value": "[parameters('shiftNotesCommentText')]"
             },
             {
               "name": "ManagerTimeOffRequestCommentText",
