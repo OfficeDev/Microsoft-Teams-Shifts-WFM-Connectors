@@ -10,13 +10,13 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
     using System.Linq;
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights;
+    using Microsoft.Teams.App.KronosWfc.BusinessLogic.Common;
     using Microsoft.Teams.App.KronosWfc.Common;
+    using Microsoft.Teams.App.KronosWfc.Models.CommonEntities;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Shifts;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.HyperFind;
     using Microsoft.Teams.App.KronosWfc.Service;
-    using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
-    using static Microsoft.Teams.App.KronosWfc.BusinessLogic.Common.XmlHelper;
     using CRUDResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Common.Response;
     using Request = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Shifts.ShiftRequest;
     using Response = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.Response;
@@ -81,9 +81,10 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
             string jobPath,
             string kronosId,
             string startTime,
-            string endTime)
+            string endTime,
+            Comments shiftComments)
         {
-            var createShiftRequest = this.CreateShiftRequest(shiftStartDate, shiftEndDate, overADateBorder, jobPath, kronosId, startTime, endTime);
+            var createShiftRequest = this.CreateShiftRequest(shiftStartDate, shiftEndDate, overADateBorder, jobPath, kronosId, startTime, endTime, shiftComments);
 
             var response = await this.apiHelper.SendSoapPostRequestAsync(
                 endpoint,
@@ -109,7 +110,8 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
             string shiftToReplaceStartDate,
             string shiftToReplaceEndDate,
             string shiftToReplaceStartTime,
-            string shiftToReplaceEndTime)
+            string shiftToReplaceEndTime,
+            Comments comments)
         {
             var createShiftRequest = this.CreateEditRequest(
                 replacementShiftStartDate,
@@ -122,7 +124,8 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
                 shiftToReplaceStartDate,
                 shiftToReplaceEndDate,
                 shiftToReplaceStartTime,
-                shiftToReplaceEndTime);
+                shiftToReplaceEndTime,
+                comments);
 
             var response = await this.apiHelper.SendSoapPostRequestAsync(
                 endpoint,
@@ -165,7 +168,8 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
             string jobPath,
             string kronosId,
             string startTime,
-            string endTime)
+            string endTime,
+            Comments shiftComments)
         {
             var secondDayNumber = overADateBorder ? 2 : 1;
             Request req = new Request
@@ -183,6 +187,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
                             {
                                 StartDate = shiftStartDate,
                                 ShiftSegments = new ShiftSegments().Create(startTime, endTime, 1, secondDayNumber, jobPath),
+                                Comments = shiftComments,
                             },
                         },
                     },
@@ -203,7 +208,8 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
             string shiftToReplaceStartDate,
             string shiftToReplaceEndDate,
             string shiftToReplaceStartTime,
-            string shiftToReplaceEndTime)
+            string shiftToReplaceEndTime,
+            Comments comments)
         {
             // Ensure the query date range spans both the old shift and the shift to replace with
             var queryDateSpanStart = DateTime.Parse(shiftStartDate, CultureInfo.InvariantCulture) <= DateTime.Parse(shiftToReplaceStartDate, CultureInfo.InvariantCulture) ? shiftStartDate : shiftToReplaceStartDate;
@@ -229,6 +235,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
                                 ReplaceStartTime = shiftToReplaceStartTime,
                                 ReplaceEndTime = shiftToReplaceEndTime,
                                 ShiftSegments = new ShiftSegments().Create(startTime, endTime, 1, secondDayNumber, jobPath),
+                                Comments = comments,
                             },
                         },
                     },

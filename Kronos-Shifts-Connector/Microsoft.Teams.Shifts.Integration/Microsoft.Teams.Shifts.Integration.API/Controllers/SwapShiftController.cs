@@ -727,7 +727,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             {
                                 // Fetch notes for the swap shift request.
                                 var notes = approvedData.RequestStatusChanges?.RequestStatusChange;
-                                var note = notes.Select(c => c.Comments).FirstOrDefault()?.Comment?.FirstOrDefault()?.Notes?.FirstOrDefault().Note?.Text;
+                                var note = notes.Select(c => c.Comments).FirstOrDefault()?.Comment?.FirstOrDefault()?.Notes?.FirstOrDefault().Note?.FirstOrDefault().Text;
                                 await this.AddSwapShiftApprovalAsync(
                                     allRequiredConfigurations.ShiftsAccessToken,
                                     swapShiftEntity,
@@ -747,7 +747,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             {
                                 // Fetch notes for the swap shift request.
                                 var notes = refusedData.RequestStatusChanges?.RequestStatusChange;
-                                var note = notes.Select(c => c.Comments).FirstOrDefault()?.Comment?.FirstOrDefault()?.Notes?.FirstOrDefault().Note?.Text;
+                                var note = notes.Select(c => c.Comments).FirstOrDefault()?.Comment?.FirstOrDefault()?.Notes?.FirstOrDefault().Note?.FirstOrDefault().Text;
                                 await this.DeclineSwapShiftRequestAsync(
                                     allRequiredConfigurations?.ShiftsAccessToken,
                                     swapShiftEntity?.ShiftsTeamId,
@@ -770,7 +770,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             {
                                 // Fetch notes for the swap shift request.
                                 var notes = retractedData.RequestStatusChanges?.RequestStatusChange;
-                                var note = notes.Select(c => c.Comments).FirstOrDefault()?.Comment?.FirstOrDefault()?.Notes?.FirstOrDefault().Note?.Text;
+                                var note = notes.Select(c => c.Comments).FirstOrDefault()?.Comment?.FirstOrDefault()?.Notes?.FirstOrDefault().Note?.FirstOrDefault().Text;
                                 await this.DeclineSwapShiftRequestAsync(
                                     allRequiredConfigurations?.ShiftsAccessToken,
                                     swapShiftEntity?.ShiftsTeamId,

@@ -16,6 +16,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.ApplicationInsights;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.Teams.App.KronosWfc.BusinessLogic.Common;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.HyperFind;
@@ -250,6 +251,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var kronosStartDateTime = this.utility.UTCToKronosTimeZone(shift.SharedShift.StartDateTime, mappedTeam.KronosTimeZone);
             var kronosEndDateTime = this.utility.UTCToKronosTimeZone(shift.SharedShift.EndDateTime, mappedTeam.KronosTimeZone);
 
+            var comments = XmlHelper.GenerateKronosComments(shift.SharedShift.Notes, this.appSettings.ShiftNotesCommentText);
+
             var creationResponse = await this.shiftsActivity.CreateShift(
                 new Uri(allRequiredConfigurations.WfmEndPoint),
                 allRequiredConfigurations.KronosSession,
@@ -259,7 +262,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 Utility.OrgJobPathKronosConversion(user.PartitionKey),
                 user.RowKey,
                 kronosStartDateTime.TimeOfDay.ToString(),
-                kronosEndDateTime.TimeOfDay.ToString()).ConfigureAwait(false);
+                kronosEndDateTime.TimeOfDay.ToString(),
+                comments).ConfigureAwait(false);
 
             if (creationResponse.Status != Success)
             {
@@ -311,6 +315,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var shiftToReplaceStartDateTime = this.utility.UTCToKronosTimeZone(shiftToReplace.ShiftStartDate, mappedTeam.KronosTimeZone);
             var shiftToReplaceEndDateTime = this.utility.UTCToKronosTimeZone(shiftToReplace.ShiftEndDate, mappedTeam.KronosTimeZone);
 
+            var comments = XmlHelper.GenerateEditedShiftKronosComments(editedShift.SharedShift.Notes, this.appSettings.ShiftNotesCommentText);
+
             var editResponse = await this.shiftsActivity.EditShift(
                 new Uri(allRequiredConfigurations.WfmEndPoint),
                 allRequiredConfigurations.KronosSession,
@@ -324,7 +330,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 this.utility.FormatDateForKronos(shiftToReplaceStartDateTime),
                 this.utility.FormatDateForKronos(shiftToReplaceEndDateTime),
                 shiftToReplaceStartDateTime.TimeOfDay.ToString(),
-                shiftToReplaceEndDateTime.TimeOfDay.ToString()).ConfigureAwait(false);
+                shiftToReplaceEndDateTime.TimeOfDay.ToString(),
+                comments).ConfigureAwait(false);
 
             if (editResponse.Status != Success)
             {

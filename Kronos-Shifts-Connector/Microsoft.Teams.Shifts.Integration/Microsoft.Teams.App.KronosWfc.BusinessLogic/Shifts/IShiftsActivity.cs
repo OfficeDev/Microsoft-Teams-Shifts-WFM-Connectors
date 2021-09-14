@@ -7,6 +7,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using Microsoft.Teams.App.KronosWfc.Models.CommonEntities;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.HyperFind;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
@@ -46,6 +47,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
         /// <param name="kronosId">The id of the employee.</param>
         /// <param name="startTime">The start time of the shift.</param>
         /// <param name="endTime">The end time of the shift.</param>
+        /// <param name="shiftComments">The shift comments object.</param>
         /// <returns>A task containing the response.</returns>
         Task<CRUDResponse> CreateShift(
             Uri endpoint,
@@ -56,7 +58,8 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
             string jobPath,
             string kronosId,
             string startTime,
-            string endTime);
+            string endTime,
+            Comments shiftComments);
 
         /// <summary>
         /// Edits a shift in Kronos.
@@ -74,6 +77,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
         /// <param name="shiftToReplaceEndDate">The end date of the shift we want to replace.</param>
         /// <param name="shiftToReplaceStartTime">The start time of the shift we want to replace.</param>
         /// <param name="shiftToReplaceEndTime">The end time of the shift we want to replace.</param>
+        /// <param name="comments">The comments for the shift.</param>
         /// <returns>A task containing the response.</returns>
         Task<CRUDResponse> EditShift(
             Uri endpoint,
@@ -88,7 +92,8 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
             string shiftToReplaceStartDate,
             string shiftToReplaceEndDate,
             string shiftToReplaceStartTime,
-            string shiftToReplaceEndTime);
+            string shiftToReplaceEndTime,
+            Comments comments);
 
         /// <summary>
         /// Deletes a shift in Kronos.
