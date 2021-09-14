@@ -4,8 +4,8 @@
 
 namespace Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.SwapShift.FetchApprovals.SwapShiftData
 {
-    using System.Collections.Generic;
     using System.Xml.Serialization;
+    using Microsoft.Teams.App.KronosWfc.Models.CommonEntities;
 
     /// <summary>
     /// This class models the RequestStatusChange.
