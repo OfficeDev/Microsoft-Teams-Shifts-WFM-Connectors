@@ -367,14 +367,10 @@
     <Compile Include="ResponseEntities\SwapShift\SubmitSwapShift\RequestItems.cs" />
     <Compile Include="ResponseEntities\SwapShift\SubmitSwapShift\Response.cs" />
     <Compile Include="ResponseEntities\SwapShift\SubmitSwapShift\ShiftRequestItem.cs" />
-    <Compile Include="ResponseEntities\SwapShift\SwapShiftData\Comment.cs" />
-    <Compile Include="ResponseEntities\SwapShift\SwapShiftData\Comments.cs" />
     <Compile Include="ResponseEntities\SwapShift\SwapShiftData\CreatedByUser.cs" />
     <Compile Include="ResponseEntities\SwapShift\SwapShiftData\DataSource.cs" />
     <Compile Include="ResponseEntities\SwapShift\SwapShiftData\Employee.cs" />
     <Compile Include="ResponseEntities\SwapShift\SwapShiftData\Employees.cs" />
-    <Compile Include="ResponseEntities\SwapShift\SwapShiftData\Note.cs" />
-    <Compile Include="ResponseEntities\SwapShift\SwapShiftData\Notes.cs" />
     <Compile Include="ResponseEntities\SwapShift\SwapShiftData\OfferedShift.cs" />
     <Compile Include="ResponseEntities\SwapShift\SwapShiftData\RequestedShift.cs" />
     <Compile Include="ResponseEntities\SwapShift\SwapShiftData\RequestItems.cs" />

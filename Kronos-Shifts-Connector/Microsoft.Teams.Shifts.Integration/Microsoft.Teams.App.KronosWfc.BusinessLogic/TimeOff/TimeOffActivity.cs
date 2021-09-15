@@ -87,11 +87,9 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
             string queryDateSpan,
             string personNumber,
             string reason,
-            string senderMessage,
-            string senderCommentText,
+            Comments comments,
             Uri endPointUrl)
         {
-            var comments = this.AddTimeOffRequestNotes(senderMessage, senderCommentText);
             string xmlTimeOffRequest = this.CreateAddTimeOffRequest(startDateTime, endDateTime, queryDateSpan, personNumber, reason, comments);
 
             var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
@@ -188,11 +186,8 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
             string queryDateSpan,
             string personNumber,
             string reason,
-            string managerMessage,
-            string managerCommentText,
-            Comments existingNotes)
+            Comments comments)
         {
-            var comments = this.AddTimeOffRequestNotes(managerMessage, managerCommentText, existingNotes.Comment);
             var xmlTimeOffRequestUpdateRequest = this.CreateUpdateTimeOffRequest(kronosRequestId, startDateTime, endDateTime, queryDateSpan, personNumber, reason, comments);
 
             var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
@@ -510,41 +505,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
                 };
 
             return request.XmlSerialize();
-        }
-
-        /// <summary>
-        /// Adds a note to a time off request ensuring we retain all previous notes.
-        /// </summary>
-        /// <param name="noteMessage">The note to add.</param>
-        /// <param name="noteCommentText">The comment text value of the note to add.</param>
-        /// <param name="existingNotes">Existing notes already attached to a TOR.</param>
-        /// <returns>List of comments for a time off request.</returns>
-        private Comments AddTimeOffRequestNotes(string noteMessage, string noteCommentText, List<Comment> existingNotes = null)
-        {
-            var comments = new Comments
-            {
-                Comment = new List<Comment>(),
-            };
-
-            if (existingNotes != null)
-            {
-                comments.Comment.AddRange(existingNotes);
-            }
-
-            comments.Comment.Add(new Comment
-            {
-                CommentText = noteCommentText,
-                Notes = new Notes
-                {
-                    Note = new Note
-                    {
-                        Text = noteMessage,
-                        Timestamp = DateTime.UtcNow.ToString(CultureInfo.InvariantCulture),
-                    },
-                },
-            });
-
-            return comments;
         }
     }
 }

@@ -202,6 +202,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         public string NumberOfOrgJobPathSectionsForActivityName => this.configuration["NumberOfOrgJobPathSectionsForActivityName"];
 
         /// <summary>
+        /// Gets the shift notes comment text value.
+        /// </summary>
+        public string ShiftNotesCommentText => this.configuration["ShiftNotesCommentText"];
+
+        /// <summary>
         /// Gets the manager time off request comment text value.
         /// </summary>
         public string ManagerTimeOffRequestCommentText => this.configuration["ManagerTimeOffRequestCommentText"];

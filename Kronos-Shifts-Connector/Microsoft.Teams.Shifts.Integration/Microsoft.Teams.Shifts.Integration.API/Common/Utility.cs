@@ -337,13 +337,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         }
 
         /// <summary>
-        /// Having the method to construct the notes properly.
+        /// Generate a notes string for Teams from the Kronos comments.
         /// </summary>
         /// <param name="shift">The shift that contains the notes.</param>
-        /// <returns>A string.</returns>
+        /// <returns>A string containing the joined comments.</returns>
         public string GetShiftNotes(App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.ScheduleShift shift)
         {
-            string result, noteContents;
+            string result;
             this.telemetryClient.TrackTrace($"GetShiftNotes start at {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
 
             if (shift is null)
@@ -353,28 +353,23 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
 
             if (shift.ShiftComments != null)
             {
-                noteContents = string.Empty;
-                var notesStr = string.Empty;
-                foreach (var item in shift.ShiftComments.Comment)
+                var notesList = new List<string>();
+                foreach (var comment in shift.ShiftComments.Comment)
                 {
-                    foreach (var noteItem in item?.Notes)
+                    foreach (var note in comment.Notes.Note)
                     {
-                        notesStr += noteItem?.Note?.Text + ' ';
+                        notesList.Add(note.Text);
                     }
-
-                    noteContents += notesStr + Environment.NewLine;
                 }
 
-                result = noteContents;
+                result = string.Join(" * ", notesList.ToArray());
                 this.telemetryClient.TrackTrace($"Notes-ShiftEntity: {result}");
             }
             else
             {
                 result = string.Empty;
                 var noNotesStr = "There are no notes for this shift";
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
                 this.telemetryClient.TrackTrace($"Notes-ShiftEntity: {noNotesStr}");
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
             }
 
             this.telemetryClient.TrackTrace($"GetShiftNotes end at {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
@@ -401,14 +396,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
             {
                 noteContents = string.Empty;
                 var notesStr = string.Empty;
-                foreach (var item in openShift.OpenShiftComments.Comment)
+                foreach (var comment in openShift.OpenShiftComments.Comment)
                 {
-                    foreach (var noteItem in item?.Notes)
+                    foreach (var note in comment.Notes.Note)
                     {
-                        notesStr += noteItem?.Note?.Text + ' ';
+                        notesStr += $"- {note.Text}";
                     }
-
-                    noteContents += notesStr + Environment.NewLine;
                 }
 
                 result = noteContents;
@@ -576,9 +569,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
                 sb.Append(this.CalculateStartDateTime(item.StartDateTime, kronosTimeZone));
             }
 
-            // From Kronos to Shifts sync, the notes are passed as an empty string.
-            // Therefore, the notes are marked as empty while creating the unique ID from Shifts to Kronos.
-            notes = string.Empty;
             var stringToHash = $"{this.CalculateStartDateTime(shiftStartDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(shiftEndDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}{sb}{notes}{shift.UserId}";
 
             this.telemetryClient.TrackTrace($"String to create hash - Shift (IntegrationAPI Model): {stringToHash}");
