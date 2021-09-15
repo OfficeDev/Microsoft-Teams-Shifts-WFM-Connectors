@@ -45,9 +45,10 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Common
         /// </summary>
         /// <param name="noteMessage">The note to add.</param>
         /// <param name="noteCommentText">The comment text value of the note to add.</param>
+        /// <param name="timeStamp">The time stamp in local time to assign to the comments.</param>
         /// <param name="existingNotes">Existing notes.</param>
         /// <returns>Kronos Comments object.</returns>
-        public static Comments GenerateKronosComments(string noteMessage, string noteCommentText, List<Comment> existingNotes = null)
+        public static Comments GenerateKronosComments(string noteMessage, string noteCommentText, string timeStamp, List<Comment> existingNotes = null)
         {
             var comments = new Comments
             {
@@ -62,17 +63,14 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Common
             comments.Comment.Add(new Comment
             {
                 CommentText = noteCommentText,
-                Notes = new List<Notes>
+                Notes = new Notes
                 {
-                    new Notes
+                    Note = new List<Note>
                     {
-                        Note = new List<Note>
+                        new Note
                         {
-                            new Note
-                            {
-                                Text = noteMessage,
-                                Timestamp = DateTime.UtcNow.ToString(CultureInfo.InvariantCulture),
-                            },
+                            Text = noteMessage.Trim(),
+                            Timestamp = timeStamp,
                         },
                     },
                 },
@@ -86,8 +84,9 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Common
         /// </summary>
         /// <param name="noteMessage">The note to .</param>
         /// <param name="noteCommentText">The comment text value of the note to add.</param>
+        /// <param name="timeStamp">The timestamp in local time to assign to the comments.</param>
         /// <returns>Kronos Comments object.</returns>
-        public static Comments GenerateEditedShiftKronosComments(string noteMessage, string noteCommentText)
+        public static Comments GenerateEditedShiftKronosComments(string noteMessage, string noteCommentText, string timeStamp)
         {
             var comments = new Comments
             {
@@ -103,8 +102,8 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Common
             {
                 var noteToAdd = new Note
                 {
-                    Text = note,
-                    Timestamp = DateTime.UtcNow.ToString(CultureInfo.InvariantCulture),
+                    Text = note.Trim(),
+                    Timestamp = timeStamp,
                 };
 
                 noteList.Add(noteToAdd);
@@ -113,12 +112,9 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Common
             comments.Comment.Add(new Comment
             {
                 CommentText = noteCommentText,
-                Notes = new List<Notes>
+                Notes = new Notes
                 {
-                    new Notes
-                    {
-                        Note = noteList,
-                    },
+                    Note = noteList,
                 },
             });
 

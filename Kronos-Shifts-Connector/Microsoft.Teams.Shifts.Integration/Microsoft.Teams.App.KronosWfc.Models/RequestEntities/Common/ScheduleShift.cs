@@ -62,7 +62,7 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common
         public ShiftSegments ShiftSegments { get; set; }
 
         /// <summary>
-        /// Gets or sets the Comments associated with time off.
+        /// Gets or sets the Comments associated with the shift.
         /// </summary>
         [XmlElement]
         public Comments Comments { get; set; }

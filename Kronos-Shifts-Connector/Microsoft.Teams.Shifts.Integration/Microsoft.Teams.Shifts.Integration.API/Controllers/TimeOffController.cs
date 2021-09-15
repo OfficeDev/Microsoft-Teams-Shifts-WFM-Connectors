@@ -222,7 +222,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             var timeOffReqQueryDateSpan = $"{queryStartDate}-{queryEndDate}";
 
-            var comments = XmlHelper.GenerateKronosComments(timeOffEntity.SenderMessage, this.appSettings.SenderTimeOffRequestCommentText);
+            var commentTimeStamp = this.utility.UTCToKronosTimeZone(DateTime.UtcNow, kronosTimeZone).ToString(CultureInfo.InvariantCulture);
+            var comments = XmlHelper.GenerateKronosComments(timeOffEntity.SenderMessage, this.appSettings.SenderTimeOffRequestCommentText, commentTimeStamp);
 
             // Create the Kronos Time Off Request.
             var timeOffResponse = await this.timeOffActivity.CreateTimeOffRequestAsync(

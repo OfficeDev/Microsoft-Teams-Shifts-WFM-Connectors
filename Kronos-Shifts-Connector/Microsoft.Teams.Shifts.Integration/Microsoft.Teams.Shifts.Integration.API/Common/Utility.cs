@@ -356,12 +356,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
                 var notesList = new List<string>();
                 foreach (var comment in shift.ShiftComments.Comment)
                 {
-                    foreach (var notes in comment.Notes)
+                    foreach (var note in comment.Notes.Note)
                     {
-                        foreach (var note in notes.Note)
-                        {
-                            notesList.Add(note.Text);
-                        }
+                        notesList.Add(note.Text);
                     }
                 }
 
@@ -401,12 +398,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
                 var notesStr = string.Empty;
                 foreach (var comment in openShift.OpenShiftComments.Comment)
                 {
-                    foreach (var notes in comment.Notes)
+                    foreach (var note in comment.Notes.Note)
                     {
-                        foreach (var note in notes.Note)
-                        {
-                            notesStr += $"- {note.Text}";
-                        }
+                        notesStr += $"- {note.Text}";
                     }
                 }
 

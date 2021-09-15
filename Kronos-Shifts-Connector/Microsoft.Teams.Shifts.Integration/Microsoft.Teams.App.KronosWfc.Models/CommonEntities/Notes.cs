@@ -14,7 +14,7 @@ namespace Microsoft.Teams.App.KronosWfc.Models.CommonEntities
     public class Notes
     {
         /// <summary>
-        /// Gets or sets a note.
+        /// Gets or sets a list of note.
         /// </summary>
         [XmlElement(ElementName = "Note")]
         public List<Note> Note { get; set; }

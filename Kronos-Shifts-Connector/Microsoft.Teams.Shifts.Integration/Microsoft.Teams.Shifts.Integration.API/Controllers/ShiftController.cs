@@ -251,7 +251,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var kronosStartDateTime = this.utility.UTCToKronosTimeZone(shift.SharedShift.StartDateTime, mappedTeam.KronosTimeZone);
             var kronosEndDateTime = this.utility.UTCToKronosTimeZone(shift.SharedShift.EndDateTime, mappedTeam.KronosTimeZone);
 
-            var comments = XmlHelper.GenerateKronosComments(shift.SharedShift.Notes, this.appSettings.ShiftNotesCommentText);
+            var commentTimeStamp = this.utility.UTCToKronosTimeZone(DateTime.UtcNow, mappedTeam.KronosTimeZone).ToString(CultureInfo.InvariantCulture);
+            var comments = XmlHelper.GenerateKronosComments(shift.SharedShift.Notes, this.appSettings.ShiftNotesCommentText, commentTimeStamp);
 
             var creationResponse = await this.shiftsActivity.CreateShift(
                 new Uri(allRequiredConfigurations.WfmEndPoint),
@@ -315,7 +316,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var shiftToReplaceStartDateTime = this.utility.UTCToKronosTimeZone(shiftToReplace.ShiftStartDate, mappedTeam.KronosTimeZone);
             var shiftToReplaceEndDateTime = this.utility.UTCToKronosTimeZone(shiftToReplace.ShiftEndDate, mappedTeam.KronosTimeZone);
 
-            var comments = XmlHelper.GenerateEditedShiftKronosComments(editedShift.SharedShift.Notes, this.appSettings.ShiftNotesCommentText);
+            var commentTimeStamp = this.utility.UTCToKronosTimeZone(DateTime.UtcNow, mappedTeam.KronosTimeZone).ToString(CultureInfo.InvariantCulture);
+            var shiftComments = XmlHelper.GenerateEditedShiftKronosComments(editedShift.SharedShift.Notes, this.appSettings.ShiftNotesCommentText, commentTimeStamp);
 
             var editResponse = await this.shiftsActivity.EditShift(
                 new Uri(allRequiredConfigurations.WfmEndPoint),
@@ -331,7 +333,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 this.utility.FormatDateForKronos(shiftToReplaceEndDateTime),
                 shiftToReplaceStartDateTime.TimeOfDay.ToString(),
                 shiftToReplaceEndDateTime.TimeOfDay.ToString(),
-                comments).ConfigureAwait(false);
+                shiftComments).ConfigureAwait(false);
 
             if (editResponse.Status != Success)
             {

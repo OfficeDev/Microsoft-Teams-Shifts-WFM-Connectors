@@ -18,9 +18,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
-    using Microsoft.Extensions.Caching.Distributed;
     using Microsoft.Graph;
-    using Microsoft.Teams.App.KronosWfc.BusinessLogic.HyperFind;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.Logon;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift;
     using Microsoft.Teams.App.KronosWfc.Common;
@@ -727,7 +725,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             {
                                 // Fetch notes for the swap shift request.
                                 var notes = approvedData.RequestStatusChanges?.RequestStatusChange;
-                                var note = notes.Select(c => c.Comments).FirstOrDefault()?.Comment?.FirstOrDefault()?.Notes?.FirstOrDefault().Note?.FirstOrDefault().Text;
+                                var note = notes.Select(c => c.Comments).FirstOrDefault()?.Comment?.FirstOrDefault()?.Notes?.Note?.FirstOrDefault().Text;
                                 await this.AddSwapShiftApprovalAsync(
                                     allRequiredConfigurations.ShiftsAccessToken,
                                     swapShiftEntity,
@@ -747,7 +745,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             {
                                 // Fetch notes for the swap shift request.
                                 var notes = refusedData.RequestStatusChanges?.RequestStatusChange;
-                                var note = notes.Select(c => c.Comments).FirstOrDefault()?.Comment?.FirstOrDefault()?.Notes?.FirstOrDefault().Note?.FirstOrDefault().Text;
+                                var note = notes.Select(c => c.Comments).FirstOrDefault()?.Comment?.FirstOrDefault()?.Notes?.Note?.FirstOrDefault().Text;
                                 await this.DeclineSwapShiftRequestAsync(
                                     allRequiredConfigurations?.ShiftsAccessToken,
                                     swapShiftEntity?.ShiftsTeamId,
@@ -770,7 +768,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             {
                                 // Fetch notes for the swap shift request.
                                 var notes = retractedData.RequestStatusChanges?.RequestStatusChange;
-                                var note = notes.Select(c => c.Comments).FirstOrDefault()?.Comment?.FirstOrDefault()?.Notes?.FirstOrDefault().Note?.FirstOrDefault().Text;
+                                var note = notes.Select(c => c.Comments).FirstOrDefault()?.Comment?.FirstOrDefault()?.Notes?.Note?.FirstOrDefault().Text;
                                 await this.DeclineSwapShiftRequestAsync(
                                     allRequiredConfigurations?.ShiftsAccessToken,
                                     swapShiftEntity?.ShiftsTeamId,

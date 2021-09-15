@@ -111,7 +111,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
             string shiftToReplaceEndDate,
             string shiftToReplaceStartTime,
             string shiftToReplaceEndTime,
-            Comments comments)
+            Comments shiftComments)
         {
             var createShiftRequest = this.CreateEditRequest(
                 replacementShiftStartDate,
@@ -125,7 +125,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
                 shiftToReplaceEndDate,
                 shiftToReplaceStartTime,
                 shiftToReplaceEndTime,
-                comments);
+                shiftComments);
 
             var response = await this.apiHelper.SendSoapPostRequestAsync(
                 endpoint,

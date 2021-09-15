@@ -4,7 +4,6 @@
 
 namespace Microsoft.Teams.App.KronosWfc.Models.CommonEntities
 {
-    using System.Collections.Generic;
     using System.Xml.Serialization;
 
     /// <summary>
@@ -17,7 +16,7 @@ namespace Microsoft.Teams.App.KronosWfc.Models.CommonEntities
         /// Gets or sets the Notes.
         /// </summary>
         [XmlElement(ElementName = "Notes")]
-        public List<Notes> Notes { get; set; }
+        public Notes Notes { get; set; }
 
         /// <summary>
         /// Gets or sets the CommentText.

@@ -401,16 +401,13 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
                             new Comment
                             {
                                 CommentText = ApiConstants.SwapShiftComment,
-                                Notes = new List<Notes>
+                                Notes = new Notes
                                 {
-                                    new Notes
+                                    Note = new List<Note>
                                     {
-                                        Note = new List<Note>
+                                        new Note
                                         {
-                                            new Note
-                                            {
-                                                Text = ApiConstants.SwapShiftNoteText,
-                                            },
+                                            Text = ApiConstants.SwapShiftNoteText,
                                         },
                                     },
                                 },
@@ -525,16 +522,13 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
                             new Comment
                             {
                                 CommentText = ApiConstants.SwapShiftComment,
-                                Notes = new List<Notes>
+                                Notes = new Notes
                                 {
-                                    new Notes
+                                    Note = new List<Note>
                                     {
-                                        Note = new List<Note>
+                                        new Note
                                         {
-                                            new Note
-                                            {
-                                                Text = comment,
-                                            },
+                                            Text = comment,
                                         },
                                     },
                                 },

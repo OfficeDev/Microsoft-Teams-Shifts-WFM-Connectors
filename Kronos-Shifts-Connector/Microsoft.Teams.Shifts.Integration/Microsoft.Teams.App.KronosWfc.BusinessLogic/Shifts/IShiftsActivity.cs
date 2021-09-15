@@ -77,7 +77,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
         /// <param name="shiftToReplaceEndDate">The end date of the shift we want to replace.</param>
         /// <param name="shiftToReplaceStartTime">The start time of the shift we want to replace.</param>
         /// <param name="shiftToReplaceEndTime">The end time of the shift we want to replace.</param>
-        /// <param name="comments">The comments for the shift.</param>
+        /// <param name="shiftComments">The comments for the shift.</param>
         /// <returns>A task containing the response.</returns>
         Task<CRUDResponse> EditShift(
             Uri endpoint,
@@ -93,7 +93,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts
             string shiftToReplaceEndDate,
             string shiftToReplaceStartTime,
             string shiftToReplaceEndTime,
-            Comments comments);
+            Comments shiftComments);
 
         /// <summary>
         /// Deletes a shift in Kronos.
