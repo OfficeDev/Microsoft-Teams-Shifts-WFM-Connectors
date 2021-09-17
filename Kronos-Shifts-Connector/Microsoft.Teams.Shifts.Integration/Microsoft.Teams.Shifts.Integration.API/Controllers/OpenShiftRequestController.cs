@@ -713,7 +713,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var segments = new List<CommonShiftSegment>();
             var kronosOrgJob = Utility.OrgJobPathKronosConversion(orgJobPath);
 
-            var spansMultipleDays = graphOpenShift.SharedOpenShift.EndDateTime.Day > graphOpenShift.SharedOpenShift.StartDateTime.Day;
+            var localStartDateTime = TimeZoneInfo.ConvertTime(graphOpenShift.SharedOpenShift.StartDateTime, kronosTimeZoneInfo);
+            var localEndDateTime = TimeZoneInfo.ConvertTime(graphOpenShift.SharedOpenShift.EndDateTime, kronosTimeZoneInfo);
+
+            var spansMultipleDays = localEndDateTime.Day > localStartDateTime.Day;
             var endDayNumber = spansMultipleDays ? 2 : 1;
 
             foreach (var item in graphOpenShift.SharedOpenShift.Activities)
