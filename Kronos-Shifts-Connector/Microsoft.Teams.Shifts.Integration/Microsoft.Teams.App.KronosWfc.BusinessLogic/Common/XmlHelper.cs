@@ -60,21 +60,24 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Common
                 comments.Comment.AddRange(existingNotes);
             }
 
-            comments.Comment.Add(new Comment
+            if (!string.IsNullOrEmpty(noteMessage))
             {
-                CommentText = noteCommentText,
-                Notes = new Notes
+                comments.Comment.Add(new Comment
                 {
-                    Note = new List<Note>
+                    CommentText = noteCommentText,
+                    Notes = new Notes
                     {
-                        new Note
+                        Note = new List<Note>
                         {
-                            Text = noteMessage.Trim(),
-                            Timestamp = timeStamp,
+                            new Note
+                            {
+                                Text = noteMessage.Trim(),
+                                Timestamp = timeStamp,
+                            },
                         },
                     },
-                },
-            });
+                });
+            }
 
             return comments;
         }
