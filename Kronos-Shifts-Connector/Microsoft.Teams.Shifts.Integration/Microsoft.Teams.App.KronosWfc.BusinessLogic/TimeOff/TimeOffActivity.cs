@@ -217,7 +217,13 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
         private static TimeOffPeriod CalculateTimeOffPeriod(DateTimeOffset startDateTime, DateTimeOffset endDateTime, string reason)
         {
             string duration;
-            var length = (endDateTime - startDateTime).TotalHours;
+
+            // There is a bug in Teams when creating a TOR on mobile that does not span a full day
+            // where seconds and miliseconds are being added to the start and end time.
+            var modifiedStartDateTime = startDateTime.TimeOfDay.Subtract(new TimeSpan(0, 0, 0, startDateTime.TimeOfDay.Seconds, startDateTime.TimeOfDay.Milliseconds));
+            var modifiedEndDateTime = endDateTime.TimeOfDay.Subtract(new TimeSpan(0, 0, 0, endDateTime.TimeOfDay.Seconds, endDateTime.TimeOfDay.Milliseconds));
+
+            var length = (modifiedEndDateTime - modifiedStartDateTime).TotalHours;
             DateTimeOffset modifiedEndDateTimeForKronos = endDateTime.AddDays(-1);
             if (length % 24 == 0 || length > 24)
             {
