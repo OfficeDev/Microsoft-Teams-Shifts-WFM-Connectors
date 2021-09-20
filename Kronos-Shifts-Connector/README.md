@@ -74,8 +74,12 @@ Review and ensure AAD users, Teams, and Scheduling Groups are properly setup in 
 Kronos requires a **Comment Text** value to be assigned to any comments or notes. This requires you to firstly configure each comment text before adding the chosen values in to the connector appSettings - this will be done when we deploy using the ARM template.
 
 The following settings you must configure are:
+   - **ShiftNotesCommentText** - Used for syncing shift notes.
    - **SenderTimeOffRequestCommentText** - Used for syncing time off request notes added by the requestor.
    - **ManagerTimeOffRequestCommentText** - Used for syncing time off request notes added by the manager. (Please note we do not currently support manager TOR note syncing, however plan to in the near future).
+   - **SenderSwapRequestCommentText** - Used for syncing swap request notes added by the requestor.
+   - **RecipientSwapRequestCommentText** - Used for syncing swap request notes added by the recipient.
+   - **ManagerSwapRequestCommentText** - Used for syncing swap request notes added by the manager. (Please note we do not currently support manager swap request note syncing, however plan to in the near future).
 
 1. First Log in to Kronos as an admin and navigate to the Comments section under Setup -> CommonSetup.
 ![Comment Setup Screen](images/figure53.PNG)
@@ -172,8 +176,12 @@ Here are the following requirements to correctly deploy the **Shifts-Kronos Inte
 |futureSwapEligibilityDays|The number of days in the future to query when checking swap shift eligibility|
 |correctDateSpanForOutboundCalls|The number of days in the past and future when it comes to having outbound calls for the Open Shift and Swap Shift Requests|
 |numberOfOrgJobPathSectionsForActivityName|This is the number of org job path sections you want to appear as a Teams shift activity name (this is only used when syncing a shift transfer). <br /> Example: ./Contoso/UK/Stores/London/Checkout/Checkout Operator <br /> - A value of 2 would lead to shift transfer activities having a title of: _Checkout - Checkout Operator_ <br /> - A value of 1 would lead to shift transfer activities having a title of: _Checkout Operator_|
+|shiftNotesCommentText|Used for syncing shift notes|
 |managerTimeOffRequestCommentText|Used for syncing time off request notes added by the manager. (Please note we do not currently support manager TOR note syncing, however plan to in the near future)|
 |senderTimeOffRequestCommentText|Used for syncing time off request notes added by the requestor|
+|managerSwapRequestCommentText|Used for syncing swap request notes added by the manager. (Please note we do not currently support manager swap request note syncing, however plan to in the near future)|
+|senderSwapRequestCommentText|Used for syncing swap request notes added by the requestor|
+|recipientSwapRequestCommentText|Used for syncing swap request notes added by the recipient|
 |kronosUserName|The Kronos WFC SuperUser name|
 |kronosPassword|The Kronos WFC SuperUser password|
 |authTokenCacheLifetimeInSeconds|The number of seconds to set the time to live when caching the Kronos session auth token. You should set this to less than or equal to you **global.webserver.session.timeout**. <br/>To find this value please login to Kronos as an admin and navigate to Setup -> System Configuration -> System Settings. <br/>Select **Global Values** and find the value assigned to global.webserver.session.timeout|
@@ -536,7 +544,6 @@ In the current version of the connector, it is necessary to make the following C
    	1. **Shift Swap Request** (for Shift Swap Requests)
     	2. **Open Shift - Request** (for Open Shift Requests)
     	3. **TOR** (for Time Off Requests)
-3. When submitting shift swap requests the connector uses a specific comment type which must be created in Kronos with the name **Other reason**
 
 ### Step 5: Perform first time sync
 
