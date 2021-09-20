@@ -225,16 +225,6 @@ namespace Microsoft.Teams.App.KronosWfc.Common
         public const string SwapShiftRequest = "Shift Swap Request";
 
         /// <summary>
-        /// Defines swap Shift comment if Kronos comment is null.
-        /// </summary>
-        public const string SwapShiftComment = "Other reason";
-
-        /// <summary>
-        /// Defines swap Shift comment if Kronos comment is null.
-        /// </summary>
-        public const string SwapShiftNoteText = "Add";
-
-        /// <summary>
         /// Defines Kronos acceptable date format.
         /// </summary>
         public const string KronosAcceptableDateFormat = "MM/d/yyyy hh:mmtt";

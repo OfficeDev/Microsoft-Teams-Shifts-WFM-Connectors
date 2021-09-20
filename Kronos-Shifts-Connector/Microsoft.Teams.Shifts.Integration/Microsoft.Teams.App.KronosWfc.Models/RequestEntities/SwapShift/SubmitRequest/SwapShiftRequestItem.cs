@@ -5,6 +5,7 @@
 namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.SwapShift.SubmitRequest
 {
     using System.Xml.Serialization;
+    using Microsoft.Teams.App.KronosWfc.Models.CommonEntities;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift.ApproveDecline.RequestManagementApproveDecline;
 
     /// <summary>
@@ -41,5 +42,11 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.SwapShift.SubmitR
         /// </summary>
         [XmlAttribute]
         public string StatusName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Comments.
+        /// </summary>
+        [XmlElement]
+        public Comments Comments { get; set; }
     }
 }
