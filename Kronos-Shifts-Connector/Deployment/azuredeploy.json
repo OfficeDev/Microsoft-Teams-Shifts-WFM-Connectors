@@ -168,6 +168,24 @@
         "description": "This is the Kronos 'comment text' value to assign to sender time off request notes. This will need to be configured in Kronos beforehand."
       }
     },
+    "managerSwapRequestCommentText": {
+      "type": "string",
+      "metadata": {
+        "description": "This is the Kronos 'comment text' value to assign to manager swap request notes. This will need to be configured in Kronos beforehand."
+      }
+    },
+    "senderSwapRequestCommentText": {
+      "type": "string",
+      "metadata": {
+        "description": "This is the Kronos 'comment text' value to assign to sender swap request notes. This will need to be configured in Kronos beforehand."
+      }
+    },
+    "recipientSwapRequestCommentText": {
+      "type": "string",
+      "metadata": {
+        "description": "This is the Kronos 'comment text' value to assign to recipient swap request notes. This will need to be configured in Kronos beforehand."
+      }
+    },
     "kronosUserName": {
       "type": "string",
       "metadata": {
@@ -624,6 +642,18 @@
             {
               "name": "SenderTimeOffRequestCommentText",
               "value": "[parameters('senderTimeOffRequestCommentText')]"
+            },
+            {
+              "name": "ManagerSwapRequestCommentText",
+              "value": "[parameters('managerSwapRequestCommentText')]"
+            },
+            {
+              "name": "SenderSwapRequestCommentText",
+              "value": "[parameters('senderSwapRequestCommentText')]"
+            },
+            {
+              "name": "RecipientSwapRequestCommentText",
+              "value": "[parameters('recipientSwapRequestCommentText')]"
             },
             {
               "name": "BaseAddressFirstTimeSync",
