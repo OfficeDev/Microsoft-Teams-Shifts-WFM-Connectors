@@ -96,6 +96,11 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Common
                 Comment = new List<Comment>(),
             };
 
+            if (string.IsNullOrEmpty(noteMessage))
+            {
+                return comments;
+            }
+
             // We join multiple notes from kronos into a single string in Teams, therefore
             // split the string in to the individual parts.
             var notes = noteMessage.Split('*');

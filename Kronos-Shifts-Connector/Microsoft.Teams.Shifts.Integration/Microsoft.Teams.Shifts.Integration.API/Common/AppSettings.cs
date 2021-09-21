@@ -216,6 +216,21 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// </summary>
         public string SenderTimeOffRequestCommentText => this.configuration["SenderTimeOffRequestCommentText"];
 
+        /// <summary>
+        /// Gets the manager swap request comment text value.
+        /// </summary>
+        public string ManagerSwapRequestCommentText => this.configuration["ManagerSwapRequestCommentText"];
+
+        /// <summary>
+        /// Gets the sender swap request comment text value.
+        /// </summary>
+        public string SenderSwapRequestCommentText => this.configuration["SenderSwapRequestCommentText"];
+
+        /// <summary>
+        /// Gets the recipient swap request comment text value.
+        /// </summary>
+        public string RecipientSwapRequestCommentText => this.configuration["RecipientSwapRequestCommentText"];
+
         // **************************************CONFIGURATION PROJECT*********************************************
 
         /// <summary>

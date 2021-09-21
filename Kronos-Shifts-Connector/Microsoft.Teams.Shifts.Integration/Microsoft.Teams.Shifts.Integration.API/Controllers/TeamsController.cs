@@ -517,14 +517,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     // FLW2 has approved the swap shift, updates the status in Kronos to submitted and request goes to manager for approval.
                     else if (requestState == ApiConstants.ShiftsPending && requestAssignedTo == ApiConstants.ShiftsManager)
                     {
-                        integrationResponseSwap = await this.swapShiftController.ApproveOrDeclineSwapShiftRequestToKronosAsync(swapRequest, aadGroupId).ConfigureAwait(false);
+                        integrationResponseSwap = await this.swapShiftController.ApproveOrDeclineSwapShiftRequestToKronosAsync(swapRequest, aadGroupId, kronosTimeZone).ConfigureAwait(false);
                         responseModelList.Add(integrationResponseSwap);
                     }
 
                     // FLW2 has declined the swap shift, updates the status in Kronos to refused.
                     else if (requestState == ApiConstants.Declined && requestAssignedTo == ApiConstants.ShiftsRecipient)
                     {
-                        integrationResponseSwap = await this.swapShiftController.ApproveOrDeclineSwapShiftRequestToKronosAsync(swapRequest, aadGroupId).ConfigureAwait(false);
+                        integrationResponseSwap = await this.swapShiftController.ApproveOrDeclineSwapShiftRequestToKronosAsync(swapRequest, aadGroupId, kronosTimeZone).ConfigureAwait(false);
                         responseModelList.Add(integrationResponseSwap);
                     }
 
