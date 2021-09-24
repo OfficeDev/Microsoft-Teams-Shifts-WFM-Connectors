@@ -91,7 +91,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <returns>A response to return to teams.</returns>
         public async Task<ShiftsIntegResponse> CreateOpenShiftInKronosAsync(Models.IntegrationAPI.OpenShiftIS openShift, TeamToDepartmentJobMappingEntity team)
         {
-            // The connector does not support drafting entities asit is not possible to draft shifts in Kronos.
+            // The connector does not support drafting entities as it is not possible to draft shifts in Kronos.
             // Likewise there is no share schedule WFI call.
             if (openShift.DraftOpenShift != null)
             {
@@ -120,7 +120,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 DisplayName = openShift.SharedOpenShift.DisplayName,
             };
 
-            var creationResponse = await this.openShiftActivity.CreateOpenShiftAsync(
+            for (int i = 0; i < openShift.SharedOpenShift.OpenSlotCount; i++)
+            {
+                var creationResponse = await this.openShiftActivity.CreateOpenShiftAsync(
                 new Uri(allRequiredConfigurations.WfmEndPoint),
                 allRequiredConfigurations.KronosSession,
                 this.utility.FormatDateForKronos(openShiftDetails.KronosStartDateTime),
@@ -131,9 +133,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 openShiftDetails.KronosStartDateTime.TimeOfDay.ToString(),
                 openShiftDetails.KronosEndDateTime.TimeOfDay.ToString()).ConfigureAwait(false);
 
-            if (creationResponse.Status != ApiConstants.Success)
-            {
-                return ResponseHelper.CreateBadResponse(openShift.Id, error: "Open shift was not created successfully in Kronos.");
+                if (creationResponse.Status != ApiConstants.Success)
+                {
+                    return ResponseHelper.CreateBadResponse(openShift.Id, error: "Open shift was not created successfully in Kronos.");
+                }
             }
 
             var monthPartitionKey = Utility.GetMonthPartition(
@@ -572,7 +575,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 PartitionKey = monthPartitionKey,
                 RowKey = kronosUniqueId,
                 TeamsOpenShiftId = openShift.Id,
-                KronosSlots = Constants.KronosOpenShiftsSlotCount,
+                KronosSlots = openShift.SharedOpenShift.OpenSlotCount,
                 OrgJobPath = openShiftOrgJobPath,
                 OpenShiftStartDate = startDateTime,
             };
@@ -609,7 +612,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 PartitionKey = monthPartitionKey,
                 RowKey = uniqueId,
                 TeamsOpenShiftId = responseModel.Id,
-                KronosSlots = Constants.KronosOpenShiftsSlotCount,
+                KronosSlots = responseModel.SharedOpenShift.OpenSlotCount,
                 OrgJobPath = orgJobPath,
                 OpenShiftStartDate = startDateTime,
             };

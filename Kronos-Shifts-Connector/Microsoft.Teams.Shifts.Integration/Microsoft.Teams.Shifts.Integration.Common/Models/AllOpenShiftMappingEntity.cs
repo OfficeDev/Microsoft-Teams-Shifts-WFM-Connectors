@@ -23,7 +23,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Models
         /// Gets or sets the KronosSlots.
         /// </summary>
         [JsonProperty("KronosSlots")]
-        public string KronosSlots { get; set; }
+        public int KronosSlots { get; set; }
 
         /// <summary>
         /// Gets or sets the OrgJobPath.
