@@ -117,6 +117,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         public string ShiftTheme => this.configuration["ShiftTheme"];
 
         /// <summary>
+        /// Gets the TransferredShiftTheme.
+        /// </summary>
+        public string TransferredShiftTheme => this.configuration["TransferredShiftTheme"];
+
+        /// <summary>
         /// Gets Instance.
         /// </summary>
         public string Instance => this.configuration["Instance"];

@@ -540,6 +540,10 @@
               "value": "blue"
             },
             {
+              "name": "TransferredShiftTheme",
+              "value": "red"
+            },
+            {
               "name": "OpenShiftTheme",
               "value": "green"
             },
