@@ -508,6 +508,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         {
             List<ShiftActivity> shiftActivity = new List<ShiftActivity>();
             var shiftDisplayName = string.Empty;
+            var shiftTheme = this.appSettings.ShiftTheme;
 
             foreach (var activity in kronosShift?.ShiftSegments)
             {
@@ -560,7 +561,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             if (kronosShift.ShiftSegments.Any(x => x.SegmentTypeName == "TRANSFER"))
             {
                 var displayNameTime = $"{displayNameStartTime.ToString("HH:mm", CultureInfo.InvariantCulture)} - {displayNameEndTime.ToString("HH:mm", CultureInfo.InvariantCulture)}";
-                shiftDisplayName = $"TRANSFER {displayNameTime}";
+                shiftDisplayName = $"{this.appSettings.TransferredShiftDisplayName} {displayNameTime}";
+                shiftTheme = this.appSettings.TransferredShiftTheme;
             }
 
             var shift = new Shift
@@ -573,7 +575,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     Notes = this.utility.GetShiftNotes(kronosShift),
                     StartDateTime = shiftActivity[0].StartDateTime,
                     EndDateTime = shiftActivity[shiftActivity.Count - 1].EndDateTime,
-                    Theme = this.appSettings.ShiftTheme,
+                    Theme = shiftTheme,
                     Activities = shiftActivity,
                 },
             };

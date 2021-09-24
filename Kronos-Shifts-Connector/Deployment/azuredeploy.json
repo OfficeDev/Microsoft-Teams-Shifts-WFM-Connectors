@@ -150,6 +150,14 @@
         "description": "This is the number of org job path sections you want to appear as a Teams shift activity name (this is only used when syncing a shift transfer)."
       }
     },
+    "transferredShiftDisplayName": {
+      "type": "string",
+      "maxLength": 16,
+      "defaultValue": "TRANSFER",
+      "metadata": {
+        "description": "This is the word or phrase you want to appear in the shift display name of a transferred shift."
+      }
+    },
     "shiftNotesCommentText": {
       "type": "string",
       "metadata": {
@@ -540,6 +548,10 @@
               "value": "blue"
             },
             {
+              "name": "TransferredShiftTheme",
+              "value": "darkPink"
+            },
+            {
               "name": "OpenShiftTheme",
               "value": "green"
             },
@@ -630,6 +642,10 @@
             {
               "name": "NumberOfOrgJobPathSectionsForActivityName",
               "value": "[parameters('numberOfOrgJobPathSectionsForActivityName')]"
+            },
+            {
+              "name": "TransferredShiftDisplayName",
+              "value": "[parameters('transferredShiftDisplayName')]"
             },
             {
               "name": "ShiftNotesCommentText",

@@ -117,6 +117,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         public string ShiftTheme => this.configuration["ShiftTheme"];
 
         /// <summary>
+        /// Gets the TransferredShiftTheme.
+        /// </summary>
+        public string TransferredShiftTheme => this.configuration["TransferredShiftTheme"];
+
+        /// <summary>
         /// Gets Instance.
         /// </summary>
         public string Instance => this.configuration["Instance"];
@@ -200,6 +205,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// Gets the number of org job path section sto use as the activity display name.
         /// </summary>
         public string NumberOfOrgJobPathSectionsForActivityName => this.configuration["NumberOfOrgJobPathSectionsForActivityName"];
+
+        /// <summary>
+        /// Gets the transferred shift display name value.
+        /// </summary>
+        public string TransferredShiftDisplayName => this.configuration["TransferredShiftDisplayName"];
 
         /// <summary>
         /// Gets the shift notes comment text value.
