@@ -561,7 +561,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             if (kronosShift.ShiftSegments.Any(x => x.SegmentTypeName == "TRANSFER"))
             {
                 var displayNameTime = $"{displayNameStartTime.ToString("HH:mm", CultureInfo.InvariantCulture)} - {displayNameEndTime.ToString("HH:mm", CultureInfo.InvariantCulture)}";
-                shiftDisplayName = $"TRANSFER {displayNameTime}";
+                shiftDisplayName = $"{this.appSettings.TransferredShiftDisplayName} {displayNameTime}";
                 shiftTheme = this.appSettings.TransferredShiftTheme;
             }
 

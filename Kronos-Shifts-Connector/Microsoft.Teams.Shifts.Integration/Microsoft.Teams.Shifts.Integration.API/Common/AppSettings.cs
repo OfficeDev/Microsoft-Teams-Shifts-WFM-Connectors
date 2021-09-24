@@ -207,6 +207,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         public string NumberOfOrgJobPathSectionsForActivityName => this.configuration["NumberOfOrgJobPathSectionsForActivityName"];
 
         /// <summary>
+        /// Gets the transferred shift display name value.
+        /// </summary>
+        public string TransferredShiftDisplayName => this.configuration["TransferredShiftDisplayName"];
+
+        /// <summary>
         /// Gets the shift notes comment text value.
         /// </summary>
         public string ShiftNotesCommentText => this.configuration["ShiftNotesCommentText"];

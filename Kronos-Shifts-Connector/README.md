@@ -176,6 +176,7 @@ Here are the following requirements to correctly deploy the **Shifts-Kronos Inte
 |futureSwapEligibilityDays|The number of days in the future to query when checking swap shift eligibility|
 |correctDateSpanForOutboundCalls|The number of days in the past and future when it comes to having outbound calls for the Open Shift and Swap Shift Requests|
 |numberOfOrgJobPathSectionsForActivityName|This is the number of org job path sections you want to appear as a Teams shift activity name (this is only used when syncing a shift transfer). <br /> Example: ./Contoso/UK/Stores/London/Checkout/Checkout Operator <br /> - A value of 2 would lead to shift transfer activities having a title of: _Checkout - Checkout Operator_ <br /> - A value of 1 would lead to shift transfer activities having a title of: _Checkout Operator_|
+|transferredShiftDisplayName|This is the word or phrase you want to appear before the shift hours in the display name of a shift in the event that the shift contains a transfer. There is a 16 character limit. The default value is TRANSFER.|
 |shiftNotesCommentText|Used for syncing shift notes|
 |managerTimeOffRequestCommentText|Used for syncing time off request notes added by the manager. (Please note we do not currently support manager TOR note syncing, however plan to in the near future)|
 |senderTimeOffRequestCommentText|Used for syncing time off request notes added by the requestor|
