@@ -120,9 +120,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 DisplayName = openShift.SharedOpenShift.DisplayName,
             };
 
-            for (int i = 0; i < openShift.SharedOpenShift.OpenSlotCount; i++)
-            {
-                var creationResponse = await this.openShiftActivity.CreateOpenShiftAsync(
+            var creationResponse = await this.openShiftActivity.CreateOpenShiftAsync(
                 new Uri(allRequiredConfigurations.WfmEndPoint),
                 allRequiredConfigurations.KronosSession,
                 this.utility.FormatDateForKronos(openShiftDetails.KronosStartDateTime),
@@ -131,12 +129,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 Utility.OrgJobPathKronosConversion(openShiftOrgJobPath),
                 openShiftDetails.DisplayName,
                 openShiftDetails.KronosStartDateTime.TimeOfDay.ToString(),
-                openShiftDetails.KronosEndDateTime.TimeOfDay.ToString()).ConfigureAwait(false);
+                openShiftDetails.KronosEndDateTime.TimeOfDay.ToString(),
+                openShift.SharedOpenShift.OpenSlotCount).ConfigureAwait(false);
 
-                if (creationResponse.Status != ApiConstants.Success)
-                {
-                    return ResponseHelper.CreateBadResponse(openShift.Id, error: "Open shift was not created successfully in Kronos.");
-                }
+            if (creationResponse.Status != ApiConstants.Success)
+            {
+                return ResponseHelper.CreateBadResponse(openShift.Id, error: "Open shift was not created successfully in Kronos.");
             }
 
             var monthPartitionKey = Utility.GetMonthPartition(

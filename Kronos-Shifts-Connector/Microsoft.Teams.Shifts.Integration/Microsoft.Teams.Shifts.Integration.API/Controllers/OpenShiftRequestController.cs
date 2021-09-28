@@ -799,7 +799,21 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             // Update entities in storage, delete open shift as it no longer exists after approval
             await this.openShiftRequestMappingEntityProvider.SaveOrUpdateOpenShiftRequestMappingEntityAsync(openShiftRequestEntityToUpdate).ConfigureAwait(false);
-            await this.openShiftMappingEntityProvider.DeleteOrphanDataFromOpenShiftMappingByOpenShiftIdAsync(openShift.Id).ConfigureAwait(false);
+
+            // Successfully approved in Teams so we now want to update the mapping table to ensure
+            // it reflects the correct amount of slots, if 1 slot remains the open shift must be deleted.
+            var openShiftMapping = await this.openShiftMappingEntityProvider.GetOpenShiftMappingEntitiesAsync(openShiftRequest.OpenShiftId).ConfigureAwait(false);
+            var openShiftMappingToUpdate = openShiftMapping.FirstOrDefault();
+
+            if (openShiftMappingToUpdate.KronosSlots > 1)
+            {
+                openShiftMappingToUpdate.KronosSlots--;
+                await this.openShiftMappingEntityProvider.SaveOrUpdateOpenShiftMappingEntityAsync(openShiftMappingToUpdate).ConfigureAwait(false);
+            }
+            else
+            {
+                await this.openShiftMappingEntityProvider.DeleteOrphanDataFromOpenShiftMappingAsync(openShiftMappingToUpdate).ConfigureAwait(false);
+            }
 
             responseModelList.Add(ResponseHelper.CreateSuccessfulResponse(openShift.Id));
             responseModelList.Add(ResponseHelper.CreateSuccessfulResponse(openShiftRequest.Id));

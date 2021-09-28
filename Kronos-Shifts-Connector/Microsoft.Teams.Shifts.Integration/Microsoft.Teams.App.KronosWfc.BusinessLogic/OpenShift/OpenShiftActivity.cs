@@ -54,7 +54,8 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
             string jobPath,
             string openShiftLabel,
             string startTime,
-            string endTime)
+            string endTime,
+            int slotCount)
         {
             var createOpenShiftRequest = this.CreateOpenShiftRequest(
                 shiftStartDate,
@@ -63,7 +64,8 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
                 jobPath,
                 openShiftLabel,
                 startTime,
-                endTime);
+                endTime,
+                slotCount);
 
             var response = await this.apiHelper.SendSoapPostRequestAsync(
                 endpoint,
@@ -289,10 +291,26 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
             string jobPath,
             string openShiftLabel,
             string startTime,
-            string endTime)
+            string endTime,
+            int slotCount)
         {
             // If the open shift spans across 2 days then secondDayNumber needs to be 2.
             var secondDayNumber = overADateBorder ? 2 : 1;
+
+            // Kronos does not have slots for open shifts so we just create multiple identical open shifts
+            // and map them to the same entity in Teams.
+            var scheduleShifts = new List<ScheduleShift>();
+
+            for (int i = 0; i < slotCount; i++)
+            {
+                scheduleShifts.Add(new ScheduleShift
+                {
+                    StartDate = openShiftStartDate,
+                    IsOpenShift = true,
+                    ShiftLabel = openShiftLabel,
+                    ShiftSegments = new CommonSegments().Create(startTime, endTime, 1, secondDayNumber, jobPath),
+                });
+            }
 
             var req = new CreateOpenShiftRequest
             {
@@ -304,16 +322,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
                     IsOpenShift = true,
                     ScheduleItems = new ScheduleItems
                     {
-                        ScheduleShift = new List<ScheduleShift>
-                        {
-                            new ScheduleShift
-                            {
-                                StartDate = openShiftStartDate,
-                                IsOpenShift = true,
-                                ShiftLabel = openShiftLabel,
-                                ShiftSegments = new CommonSegments().Create(startTime, endTime, 1, secondDayNumber, jobPath),
-                            },
-                        },
+                        ScheduleShift = scheduleShifts,
                     },
                 },
             };
