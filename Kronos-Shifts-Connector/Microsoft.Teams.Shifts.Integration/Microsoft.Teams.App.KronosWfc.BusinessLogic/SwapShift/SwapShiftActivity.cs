@@ -403,11 +403,14 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
                                 CommentText = ApiConstants.SwapShiftComment,
                                 Notes = new Notes
                                 {
-                                    Note = new Note
+                                    Note = new List<Note>
                                     {
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
-                                        Text = ApiConstants.SwapShiftNoteText,
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
+                                        new Note
+                                        {
+                                            #pragma warning disable CA1303 // Do not pass literals as localized parameters
+                                            Text = ApiConstants.SwapShiftNoteText,
+                                            #pragma warning restore CA1303 // Do not pass literals as localized parameters
+                                        },
                                     },
                                 },
                             },
@@ -523,9 +526,12 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
                                 CommentText = ApiConstants.SwapShiftComment,
                                 Notes = new Notes
                                 {
-                                    Note = new Note
+                                    Note = new List<Note>
                                     {
-                                        Text = comment,
+                                        new Note
+                                        {
+                                            Text = comment,
+                                        },
                                     },
                                 },
                             },
