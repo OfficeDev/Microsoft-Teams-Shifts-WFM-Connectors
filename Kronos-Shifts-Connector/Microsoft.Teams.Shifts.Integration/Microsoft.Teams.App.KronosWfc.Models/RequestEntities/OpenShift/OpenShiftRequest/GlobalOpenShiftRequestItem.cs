@@ -4,7 +4,6 @@
 
 namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift.OpenShiftRequest
 {
-    using System.Collections.Generic;
     using System.Xml.Serialization;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.ShiftsToKronos.AddRequest;
 
@@ -35,8 +34,6 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift.OpenShi
         /// Gets or sets the ShiftSegments.
         /// </summary>
         [XmlElement]
-#pragma warning disable CA2227 // Collection properties should be read only
-        public ShiftSegments ShiftSegments { get; set; }
-#pragma warning restore CA2227 // Collection properties should be read only
+        public Common.ShiftSegments ShiftSegments { get; set; }
     }
 }

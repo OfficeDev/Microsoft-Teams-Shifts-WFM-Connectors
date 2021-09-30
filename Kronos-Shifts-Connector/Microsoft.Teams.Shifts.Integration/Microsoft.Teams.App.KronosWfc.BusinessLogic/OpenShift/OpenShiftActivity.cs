@@ -279,10 +279,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
                             },
                             RequestFor = ApiConstants.OpenShiftRequest,
                             ShiftDate = obj.ShiftDate,
-                            ShiftSegments = new ShiftSegments()
-                            {
-                                ShiftSegment = obj.OpenShiftSegments,
-                            },
+                            ShiftSegments = obj.OpenShiftSegments,
                         },
                     },
                 },
