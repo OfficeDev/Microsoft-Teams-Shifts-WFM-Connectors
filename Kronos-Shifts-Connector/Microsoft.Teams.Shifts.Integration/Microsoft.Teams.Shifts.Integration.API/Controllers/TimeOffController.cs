@@ -17,6 +17,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Graph;
+    using Microsoft.Teams.App.KronosWfc.BusinessLogic.Common;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff;
     using Microsoft.Teams.App.KronosWfc.Common;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.HyperFind;
@@ -242,6 +243,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             var timeOffReqQueryDateSpan = $"{queryStartDate}-{queryEndDate}";
 
+            var commentTimeStamp = this.utility.UTCToKronosTimeZone(DateTime.UtcNow, kronosTimeZone).ToString(CultureInfo.InvariantCulture);
+            var comments = XmlHelper.GenerateKronosComments(timeOffEntity.SenderMessage, this.appSettings.SenderTimeOffRequestCommentText, commentTimeStamp);
+
             // Create the Kronos Time Off Request.
             var timeOffResponse = await this.timeOffActivity.CreateTimeOffRequestAsync(
                 allRequiredConfigurations.KronosSession,
@@ -250,8 +254,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 timeOffReqQueryDateSpan,
                 user.KronosPersonNumber,
                 timeOffReason.RowKey,
-                timeOffEntity.SenderMessage,
-                this.appSettings.SenderTimeOffRequestCommentText,
+                comments,
                 new Uri(allRequiredConfigurations.WfmEndPoint)).ConfigureAwait(false);
 
             if (!string.IsNullOrWhiteSpace(timeOffResponse?.Error?.Message))

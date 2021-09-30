@@ -7,6 +7,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using Microsoft.Teams.App.KronosWfc.Models.CommonEntities;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests;
     using CommonComments = Microsoft.Teams.App.KronosWfc.Models.CommonEntities.Comments;
     using CommonResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Common.Response;
@@ -59,8 +60,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
         /// <param name="queryDateSpan">The query date span.</param>
         /// <param name="personNumber">Person Number.</param>
         /// <param name="reason">Reason string.</param>
-        /// <param name="senderMessage">The sender notes of the time off request.</param>
-        /// <param name="senderCommentText">The Kronos comment text value to assign to the notes.</param>
+        /// <param name="comments">The Kronos comments for the request.</param>
         /// <param name="endPointUrl">Endpoint url for Kronos.</param>
         /// <returns>Time off add response.</returns>
         Task<Models.ResponseEntities.ShiftsToKronos.TimeOffRequests.Response> CreateTimeOffRequestAsync(
@@ -70,8 +70,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
             string queryDateSpan,
             string personNumber,
             string reason,
-            string senderMessage,
-            string senderCommentText,
+            Comments comments,
             Uri endPointUrl);
 
         /// <summary>
