@@ -118,7 +118,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             }
 
             await this.ProcessTask(this.openShiftController.ProcessOpenShiftsAsync(isRequestFromLogicApp), Resource.ProcessOpenShiftsAsync).ConfigureAwait(false);
-            bool isOpenShiftRequestSyncSuccessful = await this.ProcessTask(this.openShiftRequestController.ProcessOpenShiftsRequests(isRequestFromLogicApp), Resource.ProcessOpenShiftsRequests).ConfigureAwait(false);
+            bool isOpenShiftRequestSyncSuccessful = await this.ProcessTask(this.openShiftRequestController.ProcessOpenShiftRequestsAsync(isRequestFromLogicApp), Resource.ProcessOpenShiftRequestsAsync).ConfigureAwait(false);
             bool isSwapShiftRequestSyncSuccessful = await this.ProcessTask(this.swapShiftController.ProcessSwapShiftsAsync(isRequestFromLogicApp), Resource.ProcessSwapShiftsAsync).ConfigureAwait(false);
             bool isMapPayCodeTimeOffReasonsSuccessful = await this.ProcessTask(this.timeOffReasonController.MapPayCodeTimeOffReasonsAsync(isRequestFromLogicApp), Resource.MapPayCodeTimeOffReasonsAsync).ConfigureAwait(false);
 
