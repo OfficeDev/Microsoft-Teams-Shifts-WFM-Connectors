@@ -496,18 +496,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
                 throw new ArgumentNullException(nameof(openShift));
             }
 
+            var startDateTime = openShift.SharedOpenShift.StartDateTime;
+            var endDateTime = openShift.SharedOpenShift.EndDateTime;
+
+            // Todo: If this works I need to write some comments to explain this choice
             var sb = new StringBuilder();
-
-            var activities = openShift.DraftOpenShift?.Activities ?? openShift.SharedOpenShift?.Activities;
-            var startDateTime = (DateTime)(openShift.DraftOpenShift?.StartDateTime ?? openShift.SharedOpenShift?.StartDateTime);
-            var endDateTime = (DateTime)(openShift.DraftOpenShift?.EndDateTime ?? openShift.SharedOpenShift?.EndDateTime);
-
-            foreach (var item in activities)
-            {
-                sb.Append(item.DisplayName);
-                sb.Append(this.CalculateEndDateTime(item.EndDateTime, kronosTimeZone));
-                sb.Append(this.CalculateStartDateTime(item.StartDateTime, kronosTimeZone));
-            }
+            sb.Append("REGULAR");
+            sb.Append(this.CalculateStartDateTime(startDateTime, kronosTimeZone));
+            sb.Append(this.CalculateEndDateTime(endDateTime, kronosTimeZone));
 
             var stringToHash = $"{this.CalculateStartDateTime(startDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(endDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}{sb}{orgJobPath}";
 

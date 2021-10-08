@@ -719,6 +719,22 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var spansMultipleDays = localEndDateTime.Day > localStartDateTime.Day;
             var endDayNumber = spansMultipleDays ? 2 : 1;
 
+            // Todo: Describe why we are doing this.
+            if (graphOpenShift.SharedOpenShift.Activities.Count == 0)
+            {
+                segments.Add(new CommonShiftSegment
+                {
+                    OrgJobPath = kronosOrgJob,
+                    EndDayNumber = endDayNumber,
+                    StartDayNumber = 1,
+                    StartTime = localStartDateTime.ToString("hh:mm tt", CultureInfo.InvariantCulture),
+                    EndTime = localEndDateTime.ToString("hh:mm tt", CultureInfo.InvariantCulture),
+                    SegmentTypeName = "REGULAR",
+                });
+
+                return new CommonShiftSegments { ShiftSegment = segments, };
+            }
+
             foreach (var item in graphOpenShift.SharedOpenShift.Activities)
             {
                 // OrgJobPath represent a job in Kronos and so we do not want to give an orgJobPath value
