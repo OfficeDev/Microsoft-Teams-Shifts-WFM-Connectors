@@ -719,7 +719,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var spansMultipleDays = localEndDateTime.Day > localStartDateTime.Day;
             var endDayNumber = spansMultipleDays ? 2 : 1;
 
-            // Todo: Describe why we are doing this.
+            // Activites act differently in Teams and as such we actively block managers from editing/adding
+            // activities. Kronos requires segments to be added to the create request so we create a segment
+            // of type 'REGULAR' for the entire OS duration.
             if (graphOpenShift.SharedOpenShift.Activities.Count == 0)
             {
                 segments.Add(new CommonShiftSegment
@@ -729,7 +731,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     StartDayNumber = 1,
                     StartTime = localStartDateTime.ToString("hh:mm tt", CultureInfo.InvariantCulture),
                     EndTime = localEndDateTime.ToString("hh:mm tt", CultureInfo.InvariantCulture),
-                    SegmentTypeName = "REGULAR",
+                    SegmentTypeName = ApiConstants.RegularSegmentType,
                 });
 
                 return new CommonShiftSegments { ShiftSegment = segments, };
