@@ -263,5 +263,10 @@ namespace Microsoft.Teams.App.KronosWfc.Common
         /// Defines the action for replacing a shift.
         /// </summary>
         public const string ReplaceShift = "ReplaceShift";
+
+        /// <summary>
+        /// Defines the segment type that represents a users main job.
+        /// </summary>
+        public const string RegularSegmentType = "REGULAR";
     }
 }

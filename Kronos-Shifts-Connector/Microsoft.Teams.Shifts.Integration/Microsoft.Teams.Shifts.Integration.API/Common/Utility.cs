@@ -16,6 +16,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
     using Microsoft.ApplicationInsights;
     using Microsoft.Extensions.Caching.Distributed;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.Logon;
+    using Microsoft.Teams.App.KronosWfc.Common;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests;
     using Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
@@ -483,13 +484,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         }
 
         /// <summary>
-        /// This method creates the expected shift hash using the open shift details.
+        /// This method creates the expected shift hash in the event that a open shift is
+        /// created in Teams using the open shift details.
         /// </summary>
         /// <param name="openShift">The open shift from Graph.</param>
         /// <param name="kronosTimeZone">The time zone to use when converting the times.</param>
         /// <param name="orgJobPath">The org job path of the open shift.</param>
         /// <returns>A string that represents the expected hash of the new shift that is to be created.</returns>
-        public string CreateUniqueId(OpenShiftIS openShift, string kronosTimeZone, string orgJobPath)
+        public string CreateOpenShiftInTeamsUniqueId(OpenShiftIS openShift, string kronosTimeZone, string orgJobPath)
         {
             if (openShift is null)
             {
@@ -499,13 +501,15 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
             var startDateTime = openShift.SharedOpenShift.StartDateTime;
             var endDateTime = openShift.SharedOpenShift.EndDateTime;
 
-            // Todo: If this works I need to write some comments to explain this choice
+            // We do not allow activities to be edited/added in Teams but Kronos requires segments in requests.
+            // We need to track shift segments to know when a shift transfer occurs so we add these details to the hash
+            // using the 'Regular' segment type for the entire OS duration.
             var sb = new StringBuilder();
-            sb.Append("REGULAR");
-            sb.Append(this.CalculateStartDateTime(startDateTime, kronosTimeZone));
+            sb.Append(ApiConstants.RegularSegmentType);
             sb.Append(this.CalculateEndDateTime(endDateTime, kronosTimeZone));
+            sb.Append(this.CalculateStartDateTime(startDateTime, kronosTimeZone));
 
-            var stringToHash = $"{this.CalculateStartDateTime(startDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(endDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}{sb}{orgJobPath}";
+            var stringToHash = $"{this.CalculateStartDateTime(startDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(endDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}{sb}{openShift.SharedOpenShift.Notes}{orgJobPath}";
 
             // Utilizing the MD5 hash
             using (MD5CryptoServiceProvider md5 = new MD5CryptoServiceProvider())

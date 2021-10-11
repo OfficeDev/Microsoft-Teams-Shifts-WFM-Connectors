@@ -53,7 +53,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
 
             var saveOrUpdateShiftMappingProps = new Dictionary<string, string>()
             {
-                { "TeamsOpenShiftId", entity.TeamsOpenShiftId },
+                { "TeamsOpenShiftId", entity.RowKey },
                 { "KronosSlots", entity.KronosSlots.ToString(CultureInfo.InvariantCulture) },
                 { "CallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
             };
@@ -80,7 +80,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
 
             // Table query
             TableQuery<AllOpenShiftMappingEntity> query = new TableQuery<AllOpenShiftMappingEntity>();
-            query.Where(TableQuery.GenerateFilterCondition("TeamsOpenShiftId", QueryComparisons.Equal, openShiftId));
+            query.Where(TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, openShiftId));
 
             // Results list
             List<AllOpenShiftMappingEntity> results = new List<AllOpenShiftMappingEntity>();

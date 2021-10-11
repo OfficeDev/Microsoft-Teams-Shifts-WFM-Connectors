@@ -299,12 +299,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                         }
                                         else
                                         {
-                                            var kronosUniqueIdExists = lookUpData.Where(c => c.RowKey == teamsOpenShiftEntity.KronosUniqueId);
+                                            var kronosUniqueIdExists = lookUpData.Where(c => c.KronosOpenShiftUniqueId == teamsOpenShiftEntity.KronosUniqueId);
 
                                             if ((kronosUniqueIdExists != default(List<AllOpenShiftMappingEntity>)) && kronosUniqueIdExists.Any())
                                             {
-                                                this.telemetryClient.TrackTrace($"OpenShiftController - Adding {kronosUniqueIdExists.FirstOrDefault().RowKey} to the lookUpEntriesFoundList as there is data in the lookUpData list.");
-                                                lookUpEntriesFoundList.Add(kronosUniqueIdExists.FirstOrDefault());
+                                                this.telemetryClient.TrackTrace($"OpenShiftController - Adding {kronosUniqueIdExists.FirstOrDefault().KronosOpenShiftUniqueId} to the lookUpEntriesFoundList as there is data in the lookUpData list.");
+                                                lookUpEntriesFoundList.AddRange(kronosUniqueIdExists);
                                                 openShiftsFoundList.Add(teamsOpenShiftEntity);
                                             }
                                             else
@@ -316,9 +316,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                     }
                                 }
 
-                                // We now want to process open shifts that are identical, this includes open shifts with a slot count in
-                                // Teams as well as any open shift with a matching hash
-                                await this.ProcessIdenticalOpenShifts(allRequiredConfigurations, monthPartitionKey, openShiftsFoundList, mappedOrgJobEntity, lookUpData).ConfigureAwait(false);
+                                // We now want to process open shifts that are identical to one or more other open shifts,
+                                // this includes open shifts with a slot count in Teams as well as any open shift with a matching hash.
+                                await this.ProcessIdenticalOpenShifts(allRequiredConfigurations, monthPartitionKey, openShiftsFoundList, lookUpEntriesFoundList, mappedOrgJobEntity, lookUpData).ConfigureAwait(false);
 
                                 if (lookUpData.Except(lookUpEntriesFoundList).Any())
                                 {
@@ -329,7 +329,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 if (openShiftsNotFoundList.Count > 0)
                                 {
                                     this.telemetryClient.TrackTrace($"OpenShiftController - The openShiftsNotFoundList has {openShiftsNotFoundList.Count} items which could be added.");
-                                    await this.CreateEntryOpenShiftsEntityMappingAsync(allRequiredConfigurations, openShiftsNotFoundList, monthPartitionKey, mappedOrgJobEntity).ConfigureAwait(false);
+                                    await this.CreateEntryOpenShiftsEntityMappingAsync(allRequiredConfigurations, openShiftsNotFoundList, lookUpEntriesFoundList, monthPartitionKey, mappedOrgJobEntity).ConfigureAwait(false);
                                 }
                             }
                             else
@@ -345,28 +345,40 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             this.telemetryClient.TrackTrace($"{Resource.ProcessOpenShiftsAsync} ended at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)} for isRequestFromLogicApp:  {isRequestFromLogicApp}");
         }
 
+        /// <summary>
+        /// This method finds any idnetical open shifts before performing logic specific to OS
+        /// that occur more than once enabling open shift slot count support.
+        /// </summary>
+        /// <param name="allRequiredConfigurations">The required configuration details.</param>
+        /// <param name="monthPartitionKey">The month partition key currently being synced.</param>
+        /// <param name="openShiftsFoundList">The list of Teams open shift entities we found in cache.</param>
+        /// <param name="lookUpEntriesFoundList">The list of mapping entities retrieved from Kronos and found in cache.</param>
+        /// <param name="mappedOrgJobEntity">The team deatils.</param>
+        /// <param name="lookUpData">All of the cache records retrieved for the query date span.</param>
+        /// <returns>A unit of execution.</returns>
         private async Task ProcessIdenticalOpenShifts(
             SetupDetails allRequiredConfigurations,
             string monthPartitionKey,
             List<OpenShiftRequestModel> openShiftsFoundList,
+            List<AllOpenShiftMappingEntity> lookUpEntriesFoundList,
             TeamToDepartmentJobMappingEntity mappedOrgJobEntity,
             List<AllOpenShiftMappingEntity> lookUpData)
         {
             var identicalOpenShifts = new List<AllOpenShiftMappingEntity>();
 
-            // Look through cache and count up each individual open shift that we expect in Kronos
+            // Count up each individual open shift stored in our cache.
             var map = new Dictionary<string, int>();
             foreach (var openShiftMapping in lookUpData)
             {
-                if (map.ContainsKey(openShiftMapping.RowKey))
+                if (map.ContainsKey(openShiftMapping.KronosOpenShiftUniqueId))
                 {
-                    var val = map[openShiftMapping.RowKey];
-                    map.Remove(openShiftMapping.RowKey);
-                    map.Add(openShiftMapping.RowKey, val + openShiftMapping.KronosSlots);
+                    var val = map[openShiftMapping.KronosOpenShiftUniqueId];
+                    map.Remove(openShiftMapping.KronosOpenShiftUniqueId);
+                    map.Add(openShiftMapping.KronosOpenShiftUniqueId, val + openShiftMapping.KronosSlots);
                 }
                 else
                 {
-                    map.Add(openShiftMapping.RowKey, openShiftMapping.KronosSlots);
+                    map.Add(openShiftMapping.KronosOpenShiftUniqueId, openShiftMapping.KronosSlots);
                 }
             }
 
@@ -374,27 +386,29 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             {
                 if (item.Value > 1)
                 {
-                    // There is more than one identical entity in cache so we need to process these seperately
-                    identicalOpenShifts.AddRange(lookUpData.Where(x => x.RowKey == item.Key));
+                    // Where there are more than one identical entity in cache so we require seperate processing.
+                    identicalOpenShifts.AddRange(lookUpData.Where(x => x.KronosOpenShiftUniqueId == item.Key));
                 }
             }
 
-            // Get each unique hash from the list of open shifts that occur more than once in cache
-            var identicalOpenShiftRowKeys = identicalOpenShifts.Select(x => x.RowKey).Distinct();
+            // Get each unique hash from the list of open shifts that occur more than once in cache.
+            var identicalOpenShiftHash = identicalOpenShifts.Select(x => x.KronosOpenShiftUniqueId).Distinct();
 
-            foreach (var openShiftRowKey in identicalOpenShiftRowKeys)
+            foreach (var openShiftHash in identicalOpenShiftHash)
             {
-                // Retrieve the open shifts to process from cache as well as what we have retrieved from Kronos
-                var openShiftsToProcess = identicalOpenShifts.Where(x => x.RowKey == openShiftRowKey).ToList();
-                var kronosOpenShiftsToProcess = openShiftsFoundList.Where(x => x.KronosUniqueId == openShiftRowKey).ToList();
+                // Retrieve the open shifts to process from cache as well as what we have retrieved from Kronos using the hash.
+                var openShiftsInCacheToProcess = identicalOpenShifts.Where(x => x.KronosOpenShiftUniqueId == openShiftHash).ToList();
+                var kronosOpenShiftsToProcess = openShiftsFoundList.Where(x => x.KronosUniqueId == openShiftHash).ToList();
 
                 // Calculate the difference in number of open shifts between Kronos and cache
-                var numberOfOpenShiftsToRemove = openShiftsToProcess.Count - kronosOpenShiftsToProcess.Count;
+                var cacheOpenShiftSlotCount = 0;
+                openShiftsInCacheToProcess.ForEach(x => cacheOpenShiftSlotCount += x.KronosSlots);
+                var numberOfOpenShiftsToRemove = cacheOpenShiftSlotCount - kronosOpenShiftsToProcess.Count;
 
                 if (numberOfOpenShiftsToRemove > 0)
                 {
                     // More open shifts in cache than found in Kronos
-                    await this.RemoveAdditionalOpenShiftsFromTeamsAsync(allRequiredConfigurations, mappedOrgJobEntity, openShiftsToProcess, numberOfOpenShiftsToRemove).ConfigureAwait(false);
+                    await this.RemoveAdditionalOpenShiftsFromTeamsAsync(allRequiredConfigurations, mappedOrgJobEntity, openShiftsInCacheToProcess, numberOfOpenShiftsToRemove).ConfigureAwait(false);
                     continue;
                 }
 
@@ -408,7 +422,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         openShiftsToAdd.Add(kronosOpenShiftsToProcess.First());
                     }
 
-                    await this.CreateEntryOpenShiftsEntityMappingAsync(allRequiredConfigurations, openShiftsToAdd, monthPartitionKey, mappedOrgJobEntity).ConfigureAwait(false);
+                    await this.CreateEntryOpenShiftsEntityMappingAsync(allRequiredConfigurations, openShiftsToAdd, lookUpEntriesFoundList, monthPartitionKey, mappedOrgJobEntity).ConfigureAwait(false);
                     continue;
                 }
 
@@ -417,6 +431,15 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             }
         }
 
+        /// <summary>
+        /// This method will remove open shifts from Teams in the event we find more OS in cache
+        /// than retrieved from Kronos.
+        /// </summary>
+        /// <param name="allRequiredConfigurations">The required configuration details.</param>
+        /// <param name="mappedOrgJobEntity">The team deatils.</param>
+        /// <param name="openShiftsToProcess">All of the matching entities in cache.</param>
+        /// <param name="numberOfOpenShiftsToRemove">The number of matching entities we want to remove.</param>
+        /// <returns>A unit of execution.</returns>
         private async Task RemoveAdditionalOpenShiftsFromTeamsAsync(
             SetupDetails allRequiredConfigurations,
             TeamToDepartmentJobMappingEntity mappedOrgJobEntity,
@@ -425,20 +448,20 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         {
             while (numberOfOpenShiftsToRemove != 0)
             {
-                if (openShiftsToProcess.Count == 0)
+                if (!openShiftsToProcess.Any())
                 {
-                    // This code should not ever be used in theory however it protects against and infinite loop.
+                    // This code should not ever be used in theory however it protects against an infinite loop.
                     this.telemetryClient.TrackTrace($"Unexpected error when removing open shifts from Teams. No open shifts left to remove however we expect {numberOfOpenShiftsToRemove} remaining in Teams.");
                     break;
                 }
 
                 // Find the mapping entity with the most slots
-                var mappingEntitiesToDecrement = openShiftsToProcess.OrderByDescending(x => x.KronosSlots).First();
+                var mappingEntityToDecrement = openShiftsToProcess.OrderByDescending(x => x.KronosSlots).First();
 
-                if (mappingEntitiesToDecrement.KronosSlots - numberOfOpenShiftsToRemove > 0)
+                if (mappingEntityToDecrement.KronosSlots - numberOfOpenShiftsToRemove > 0)
                 {
-                    // More slots than what we need to remove so update slot count and cache
-                    var teamsOpenShiftEntity = await this.GetOpenShiftFromTeams(allRequiredConfigurations, mappedOrgJobEntity, mappingEntitiesToDecrement).ConfigureAwait(false);
+                    // More slots than what we need to remove so update slot count in Teams and update cache.
+                    var teamsOpenShiftEntity = await this.GetOpenShiftFromTeams(allRequiredConfigurations, mappedOrgJobEntity, mappingEntityToDecrement).ConfigureAwait(false);
 
                     if (teamsOpenShiftEntity != null)
                     {
@@ -447,8 +470,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                         if (response.IsSuccessStatusCode)
                         {
-                            mappingEntitiesToDecrement.KronosSlots -= numberOfOpenShiftsToRemove;
-                            await this.openShiftMappingEntityProvider.SaveOrUpdateOpenShiftMappingEntityAsync(mappingEntitiesToDecrement).ConfigureAwait(false);
+                            mappingEntityToDecrement.KronosSlots -= numberOfOpenShiftsToRemove;
+                            await this.openShiftMappingEntityProvider.SaveOrUpdateOpenShiftMappingEntityAsync(mappingEntityToDecrement).ConfigureAwait(false);
 
                             numberOfOpenShiftsToRemove = 0;
                         }
@@ -457,20 +480,26 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 else
                 {
                     // We need to remove more so delete the entity in Teams and delete from cache
-                    var response = await this.DeleteOpenShiftInTeams(allRequiredConfigurations, mappingEntitiesToDecrement, mappedOrgJobEntity).ConfigureAwait(false);
+                    var response = await this.DeleteOpenShiftInTeams(allRequiredConfigurations, mappingEntityToDecrement, mappedOrgJobEntity).ConfigureAwait(false);
 
                     if (response.IsSuccessStatusCode)
                     {
-                        numberOfOpenShiftsToRemove -= mappingEntitiesToDecrement.KronosSlots;
+                        numberOfOpenShiftsToRemove -= mappingEntityToDecrement.KronosSlots;
                     }
                 }
 
                 // Remove the mapping entity so we can process the next entity if necessary.
-                openShiftsToProcess.Remove(mappingEntitiesToDecrement);
+                openShiftsToProcess.Remove(mappingEntityToDecrement);
             }
         }
 
-        private OpenShiftRequestModel GenerateTeamsOpenShiftEntity(OpenShiftBatch.ScheduleShift kronosOpenShift, TeamToDepartmentJobMappingEntity mappedOrgJobEntity, int slotCount = Constants.ShiftsOpenSlotCount)
+        /// <summary>
+        /// Generate a Teams open shift entity.
+        /// </summary>
+        /// <param name="kronosOpenShift">the Kronos open shift object.</param>
+        /// <param name="mappedOrgJobEntity">The team details.</param>
+        /// <returns>An open shift request model.</returns>
+        private OpenShiftRequestModel GenerateTeamsOpenShiftEntity(OpenShiftBatch.ScheduleShift kronosOpenShift, TeamToDepartmentJobMappingEntity mappedOrgJobEntity)
         {
             var openShiftActivity = new List<Activity>();
 
@@ -493,7 +522,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 SharedOpenShift = new OpenShiftItem
                 {
                     DisplayName = string.Empty,
-                    OpenSlotCount = slotCount,
+                    OpenSlotCount = Constants.ShiftsOpenSlotCount,
                     Notes = this.utility.GetOpenShiftNotes(kronosOpenShift),
                     StartDateTime = openShiftActivity.First().StartDateTime,
                     EndDateTime = openShiftActivity.Last().EndDateTime,
@@ -507,12 +536,19 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             return openShift;
         }
 
-        private async Task<GraphOpenShift> GetOpenShiftFromTeams(SetupDetails allRequiredConfigurations, TeamToDepartmentJobMappingEntity mappedOrgJobEntity, AllOpenShiftMappingEntity mappingEntitiesToDecrement)
+        /// <summary>
+        /// Retrieve an open shift from Teams by Team open shift Id.
+        /// </summary>
+        /// <param name="allRequiredConfigurations">The required configuration details.</param>
+        /// <param name="mappedOrgJobEntity">The team details.</param>
+        /// <param name="mappingEntityToDecrement">The mapping entity conatianing the details of the OS we want to retrieve.</param>
+        /// <returns>A Graph open shift object.</returns>
+        private async Task<GraphOpenShift> GetOpenShiftFromTeams(SetupDetails allRequiredConfigurations, TeamToDepartmentJobMappingEntity mappedOrgJobEntity, AllOpenShiftMappingEntity mappingEntityToDecrement)
         {
             var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfigurations.ShiftsAccessToken);
 
-            using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, $"teams/{mappedOrgJobEntity.TeamId}/schedule/openShifts/{mappingEntitiesToDecrement.TeamsOpenShiftId}"))
+            using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, $"teams/{mappedOrgJobEntity.TeamId}/schedule/openShifts/{mappingEntityToDecrement.RowKey}"))
             {
                 var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
                 if (response.IsSuccessStatusCode)
@@ -522,7 +558,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 }
                 else
                 {
-                    this.telemetryClient.TrackTrace($"The open shift with id {mappingEntitiesToDecrement.TeamsOpenShiftId} could not be found in Teams. ");
+                    this.telemetryClient.TrackTrace($"The open shift with id {mappingEntityToDecrement.RowKey} could not be found in Teams. ");
                     return null;
                 }
             }
@@ -540,6 +576,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private async Task CreateEntryOpenShiftsEntityMappingAsync(
             SetupDetails allRequiredConfiguration,
             List<OpenShiftRequestModel> openShiftNotFound,
+            List<AllOpenShiftMappingEntity> lookUpEntriesFoundList,
             string monthPartitionKey,
             TeamToDepartmentJobMappingEntity mappedTeam)
         {
@@ -578,6 +615,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                         this.telemetryClient.TrackTrace(Resource.CreateEntryOpenShiftsEntityMappingAsync, telemetryProps);
                         await this.openShiftMappingEntityProvider.SaveOrUpdateOpenShiftMappingEntityAsync(openShiftMappingEntity).ConfigureAwait(false);
+
+                        // Add the entity to the found list to prevent later processes from deleting
+                        // the newly added entity.
+                        lookUpEntriesFoundList.Add(openShiftMappingEntity);
                     }
                     else
                     {
@@ -598,6 +639,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             this.telemetryClient.TrackTrace($"CreateEntryOpenShiftsEntityMappingAsync end at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
         }
 
+        /// <summary>
+        /// Update an open shift entity in Teams.
+        /// </summary>
+        /// <param name="allRequiredConfiguration">The required configuration details.</param>
+        /// <param name="openShift">The open shift entity to update.</param>
+        /// <param name="mappedTeam">The team details.</param>
+        /// <returns>A unit of execution.</returns>
         private async Task<HttpResponseMessage> UpdateOpenShiftInTeams(SetupDetails allRequiredConfiguration, GraphOpenShift openShift, TeamToDepartmentJobMappingEntity mappedTeam)
         {
             var requestString = JsonConvert.SerializeObject(openShift);
@@ -663,30 +711,37 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             // are propagating to Shifts.
             foreach (var item in orphanList)
             {
-                this.telemetryClient.TrackTrace($"OpenShiftController - Checking {item.TeamsOpenShiftId} to see if there are any Open Shift Requests");
-                var isInOpenShiftRequestMappingTable = await this.openShiftRequestMappingEntityProvider.CheckOpenShiftRequestExistance(item.TeamsOpenShiftId).ConfigureAwait(false);
+                this.telemetryClient.TrackTrace($"OpenShiftController - Checking {item.RowKey} to see if there are any Open Shift Requests");
+                var isInOpenShiftRequestMappingTable = await this.openShiftRequestMappingEntityProvider.CheckOpenShiftRequestExistance(item.RowKey).ConfigureAwait(false);
                 if (!isInOpenShiftRequestMappingTable)
                 {
-                    this.telemetryClient.TrackTrace($"{item.TeamsOpenShiftId} is not in the Open Shift Request mapping table - deletion can be done.");
+                    this.telemetryClient.TrackTrace($"{item.RowKey} is not in the Open Shift Request mapping table - deletion can be done.");
                     await this.DeleteOpenShiftInTeams(allRequiredConfiguration, item, mappedTeam).ConfigureAwait(false);
                 }
                 else
                 {
                     // Log that the open shift exists in another table and it should not be deleted.
-                    this.telemetryClient.TrackTrace($"OpenShiftController - Open Shift ID: {item.TeamsOpenShiftId} is being handled by another process.");
+                    this.telemetryClient.TrackTrace($"OpenShiftController - Open Shift ID: {item.RowKey} is being handled by another process.");
                 }
             }
 
             this.telemetryClient.TrackTrace($"DeleteOrphanDataOpenShiftsEntityMappingAsync ended at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
         }
 
+        /// <summary>
+        /// Delete an open shift entity from Teams.
+        /// </summary>
+        /// <param name="allRequiredConfiguration">The required configuration details.</param>
+        /// <param name="openShiftMapping">The open shift entity to delete.</param>
+        /// <param name="mappedTeam">The team details.</param>
+        /// <returns>A unit of execution.</returns>
         private async Task<HttpResponseMessage> DeleteOpenShiftInTeams(SetupDetails allRequiredConfiguration, AllOpenShiftMappingEntity openShiftMapping, TeamToDepartmentJobMappingEntity mappedTeam)
         {
             var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
             httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfiguration.ShiftsAccessToken);
             httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", allRequiredConfiguration.WFIId);
 
-            using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Delete, "teams/" + mappedTeam.TeamId + "/schedule/openShifts/" + openShiftMapping.TeamsOpenShiftId))
+            using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Delete, "teams/" + mappedTeam.TeamId + "/schedule/openShifts/" + openShiftMapping.RowKey))
             {
                 var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
                 if (response.IsSuccessStatusCode)
@@ -696,7 +751,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 { "ResponseCode", response.StatusCode.ToString() },
                                 { "ResponseHeader", response.Headers.ToString() },
                                 { "MappedTeamId", mappedTeam?.TeamId },
-                                { "OpenShiftIdToDelete", openShiftMapping.TeamsOpenShiftId },
+                                { "OpenShiftIdToDelete", openShiftMapping.RowKey },
                             };
 
                     this.telemetryClient.TrackTrace(Resource.DeleteOrphanDataOpenShiftsEntityMappingAsync, successfulDeleteProps);
@@ -710,7 +765,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 { "ResponseCode", response.StatusCode.ToString() },
                                 { "ResponseHeader", response.Headers.ToString() },
                                 { "MappedTeamId", mappedTeam?.TeamId },
-                                { "OpenShiftIdToDelete", openShiftMapping.TeamsOpenShiftId },
+                                { "OpenShiftIdToDelete", openShiftMapping.RowKey },
                             };
 
                     this.telemetryClient.TrackTrace(Resource.DeleteOrphanDataOpenShiftsEntityMappingAsync, errorDeleteProps);
@@ -770,15 +825,15 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <returns>A task.</returns>
         private async Task CreateAndStoreOpenShiftMapping(Models.IntegrationAPI.OpenShiftIS openShift, TeamToDepartmentJobMappingEntity mappedTeam, string monthPartitionKey, string openShiftOrgJobPath)
         {
-            var kronosUniqueId = this.utility.CreateUniqueId(openShift, mappedTeam.KronosTimeZone, openShiftOrgJobPath);
+            var kronosUniqueId = this.utility.CreateOpenShiftInTeamsUniqueId(openShift, mappedTeam.KronosTimeZone, openShiftOrgJobPath);
 
             var startDateTime = DateTime.SpecifyKind(openShift.SharedOpenShift.StartDateTime, DateTimeKind.Utc);
 
             AllOpenShiftMappingEntity openShiftMappingEntity = new AllOpenShiftMappingEntity
             {
                 PartitionKey = monthPartitionKey,
-                RowKey = kronosUniqueId,
-                TeamsOpenShiftId = openShift.Id,
+                RowKey = openShift.Id,
+                KronosOpenShiftUniqueId = kronosUniqueId,
                 KronosSlots = openShift.SharedOpenShift.OpenSlotCount,
                 OrgJobPath = openShiftOrgJobPath,
                 OpenShiftStartDate = startDateTime,
@@ -814,8 +869,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             AllOpenShiftMappingEntity openShiftMappingEntity = new AllOpenShiftMappingEntity
             {
                 PartitionKey = monthPartitionKey,
-                RowKey = uniqueId,
-                TeamsOpenShiftId = responseModel.Id,
+                RowKey = responseModel.Id,
+                KronosOpenShiftUniqueId = uniqueId,
                 KronosSlots = responseModel.SharedOpenShift.OpenSlotCount,
                 OrgJobPath = orgJobPath,
                 OpenShiftStartDate = startDateTime,
