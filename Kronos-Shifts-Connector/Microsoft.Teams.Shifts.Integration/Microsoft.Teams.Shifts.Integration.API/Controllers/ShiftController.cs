@@ -12,6 +12,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using System.Net.Http.Headers;
     using System.Reflection;
     using System.Text;
+    using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights;
     using Microsoft.AspNetCore.Authorization;
@@ -206,22 +207,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 return ResponseHelper.CreateBadResponse(shift.Id, error: "Shift was not successfully removed from Kronos.");
             }
 
-            var shareScheduleResponse = await this.graphUtility.ShareSchedule(
-                allRequiredConfigurations.ShiftsAccessToken,
-                mappedTeam.TeamId,
-                shift.SharedShift.StartDateTime,
-                shift.SharedShift.EndDateTime,
-                false).ConfigureAwait(true);
+            Task t = Task.Run(() => this.ShareScheduleAfterShiftDeletion(shift, mappedTeam, allRequiredConfigurations));
 
-            if (shareScheduleResponse.IsSuccessStatusCode)
-            {
-                await this.DeleteShiftMapping(shift).ConfigureAwait(false);
-                return ResponseHelper.CreateSuccessfulResponse(shift.Id);
-            }
-
-            this.telemetryClient.TrackTrace("DeleteShiftFromTeamsAsync - Failed to auto share the schedule after a shift deletion.");
-
-            return ResponseHelper.CreateBadResponse(shift.Id, error: "Unexpected error occured.");
+            await this.DeleteShiftMapping(shift).ConfigureAwait(false);
+            return ResponseHelper.CreateSuccessfulResponse(shift.Id);
         }
 
         /// <summary>
@@ -345,6 +334,18 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             await this.CreateAndStoreShiftMapping(editedShift, user, mappedTeam, monthPartitionKey).ConfigureAwait(false);
 
             return ResponseHelper.CreateSuccessfulResponse(editedShift.Id);
+        }
+
+        private async Task ShareScheduleAfterShiftDeletion(ShiftsShift shift, TeamToDepartmentJobMappingEntity mappedTeam, IntegrationApi.SetupDetails allRequiredConfigurations)
+        {
+            Thread.Sleep(5000);
+
+            await this.graphUtility.ShareSchedule(
+                            allRequiredConfigurations.ShiftsAccessToken,
+                            mappedTeam.TeamId,
+                            shift.SharedShift.StartDateTime,
+                            shift.SharedShift.EndDateTime,
+                            false).ConfigureAwait(true);
         }
 
         /// <summary>
