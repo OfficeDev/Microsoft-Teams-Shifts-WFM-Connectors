@@ -491,7 +491,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                 // Remove the mapping entity so we can process the next entity if necessary.
                 openShiftsToProcess.Remove(mappingEntityToDecrement);
-            } while (numberOfOpenShiftsToRemove > 0);
+            }
+            while (numberOfOpenShiftsToRemove > 0);
         }
 
         /// <summary>
