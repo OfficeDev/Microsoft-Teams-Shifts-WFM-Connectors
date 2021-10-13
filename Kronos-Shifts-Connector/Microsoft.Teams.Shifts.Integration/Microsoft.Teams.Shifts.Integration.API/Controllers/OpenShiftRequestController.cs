@@ -719,6 +719,24 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var spansMultipleDays = localEndDateTime.Day > localStartDateTime.Day;
             var endDayNumber = spansMultipleDays ? 2 : 1;
 
+            // Activites act differently in Teams and as such we actively block managers from editing/adding
+            // activities. Kronos requires segments to be added to the create request so we create a segment
+            // of type 'REGULAR' for the entire OS duration.
+            if (graphOpenShift.SharedOpenShift.Activities.Count == 0)
+            {
+                segments.Add(new CommonShiftSegment
+                {
+                    OrgJobPath = kronosOrgJob,
+                    EndDayNumber = endDayNumber,
+                    StartDayNumber = 1,
+                    StartTime = localStartDateTime.ToString("hh:mm tt", CultureInfo.InvariantCulture),
+                    EndTime = localEndDateTime.ToString("hh:mm tt", CultureInfo.InvariantCulture),
+                    SegmentTypeName = ApiConstants.RegularSegmentType,
+                });
+
+                return new CommonShiftSegments { ShiftSegment = segments, };
+            }
+
             foreach (var item in graphOpenShift.SharedOpenShift.Activities)
             {
                 // OrgJobPath represent a job in Kronos and so we do not want to give an orgJobPath value
@@ -799,7 +817,21 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             // Update entities in storage, delete open shift as it no longer exists after approval
             await this.openShiftRequestMappingEntityProvider.SaveOrUpdateOpenShiftRequestMappingEntityAsync(openShiftRequestEntityToUpdate).ConfigureAwait(false);
-            await this.openShiftMappingEntityProvider.DeleteOrphanDataFromOpenShiftMappingByOpenShiftIdAsync(openShift.Id).ConfigureAwait(false);
+
+            // Successfully approved in Teams so we now want to update the mapping table to ensure
+            // it reflects the correct amount of slots, if 1 slot remains the open shift must be deleted.
+            var openShiftMapping = await this.openShiftMappingEntityProvider.GetOpenShiftMappingEntitiesAsync(openShiftRequest.OpenShiftId).ConfigureAwait(false);
+            var openShiftMappingToUpdate = openShiftMapping.FirstOrDefault();
+
+            if (openShiftMappingToUpdate.KronosSlots > 1)
+            {
+                openShiftMappingToUpdate.KronosSlots--;
+                await this.openShiftMappingEntityProvider.SaveOrUpdateOpenShiftMappingEntityAsync(openShiftMappingToUpdate).ConfigureAwait(false);
+            }
+            else
+            {
+                await this.openShiftMappingEntityProvider.DeleteOrphanDataFromOpenShiftMappingAsync(openShiftMappingToUpdate).ConfigureAwait(false);
+            }
 
             responseModelList.Add(ResponseHelper.CreateSuccessfulResponse(openShift.Id));
             responseModelList.Add(ResponseHelper.CreateSuccessfulResponse(openShiftRequest.Id));
