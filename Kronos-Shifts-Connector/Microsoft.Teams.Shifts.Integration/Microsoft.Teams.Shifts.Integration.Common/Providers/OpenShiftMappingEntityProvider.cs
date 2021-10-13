@@ -54,7 +54,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             var saveOrUpdateShiftMappingProps = new Dictionary<string, string>()
             {
                 { "TeamsOpenShiftId", entity.RowKey },
-                { "KronosSlots", entity.KronosSlots.ToString(CultureInfo.InvariantCulture) },
+                { "KronosSlots", entity.KronosSlots.ToString() },
                 { "CallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
             };
 

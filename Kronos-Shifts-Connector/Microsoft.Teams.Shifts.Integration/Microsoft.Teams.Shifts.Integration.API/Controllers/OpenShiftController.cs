@@ -279,7 +279,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                                     if (openShifts.Count == 0)
                                     {
-                                        this.telemetryClient.TrackTrace($"ScheduleShiftCount - {openShifts.Count} for {openShiftSchedule.OrgJobPath}");
+                                        this.telemetryClient.TrackTrace($"OpenShiftCount - {openShifts.Count} for {openShiftSchedule.OrgJobPath}");
                                         continue;
                                     }
 
@@ -372,9 +372,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             {
                 if (map.ContainsKey(openShiftMapping.KronosOpenShiftUniqueId))
                 {
-                    var val = map[openShiftMapping.KronosOpenShiftUniqueId];
-                    map.Remove(openShiftMapping.KronosOpenShiftUniqueId);
-                    map.Add(openShiftMapping.KronosOpenShiftUniqueId, val + openShiftMapping.KronosSlots);
+                    map[openShiftMapping.KronosOpenShiftUniqueId] += openShiftMapping.KronosSlots;
                 }
                 else
                 {
@@ -446,15 +444,18 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             List<AllOpenShiftMappingEntity> openShiftsToProcess,
             int numberOfOpenShiftsToRemove)
         {
-            while (numberOfOpenShiftsToRemove != 0)
-            {
-                if (!openShiftsToProcess.Any())
-                {
-                    // This code should not ever be used in theory however it protects against an infinite loop.
-                    this.telemetryClient.TrackTrace($"Unexpected error when removing open shifts from Teams. No open shifts left to remove however we expect {numberOfOpenShiftsToRemove} remaining in Teams.");
-                    break;
-                }
+            var totalSlotsInCache = 0;
+            openShiftsToProcess.ForEach(x => totalSlotsInCache += x.KronosSlots);
 
+            if (!openShiftsToProcess.Any() || totalSlotsInCache < numberOfOpenShiftsToRemove)
+            {
+                // This code should not ever be used in theory however it protects against an infinite loop.
+                this.telemetryClient.TrackTrace($"Error when removing open shifts from Teams. We need to remove {numberOfOpenShiftsToRemove} slots from cache but there is only {totalSlotsInCache} remaining in cache.");
+                return;
+            }
+
+            do
+            {
                 // Find the mapping entity with the most slots
                 var mappingEntityToDecrement = openShiftsToProcess.OrderByDescending(x => x.KronosSlots).First();
 
@@ -490,7 +491,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                 // Remove the mapping entity so we can process the next entity if necessary.
                 openShiftsToProcess.Remove(mappingEntityToDecrement);
-            }
+            } while (numberOfOpenShiftsToRemove > 0);
         }
 
         /// <summary>
