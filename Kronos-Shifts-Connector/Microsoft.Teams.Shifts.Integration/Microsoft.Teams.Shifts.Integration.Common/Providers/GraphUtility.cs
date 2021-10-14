@@ -148,8 +148,8 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             var shareRequest = new ShareSchedule
             {
                 NotifyTeam = notifyTeam,
-                StartDateTime = startDateTime.AddMinutes(-60),
-                EndDateTime = endDateTime.AddMinutes(60),
+                StartDateTime = startDateTime,
+                EndDateTime = endDateTime,
             };
 
             var requestString = JsonConvert.SerializeObject(shareRequest);
