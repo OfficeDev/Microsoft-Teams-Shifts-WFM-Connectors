@@ -220,8 +220,8 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
 
             // There is a bug in Teams when creating a TOR on mobile that does not span a full day
             // where seconds and miliseconds are being added to the start and end time.
-            var modifiedStartDateTime = startDateTime.TimeOfDay.Subtract(new TimeSpan(0, 0, 0, startDateTime.TimeOfDay.Seconds, startDateTime.TimeOfDay.Milliseconds));
-            var modifiedEndDateTime = endDateTime.TimeOfDay.Subtract(new TimeSpan(0, 0, 0, endDateTime.TimeOfDay.Seconds, endDateTime.TimeOfDay.Milliseconds));
+            DateTimeOffset modifiedStartDateTime = startDateTime.AddMilliseconds(-startDateTime.Millisecond).AddSeconds(-startDateTime.Second);
+            DateTimeOffset modifiedEndDateTime = endDateTime.AddMilliseconds(-endDateTime.Millisecond).AddSeconds(-endDateTime.Second);
 
             var length = (modifiedEndDateTime - modifiedStartDateTime).TotalHours;
 
@@ -230,7 +230,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
                 // Teams returns the next day as the end date of the TOR. For example:
                 // Request off the 15th-16th - startDate = 15, endDate = 17
                 // So we need to remove a day from the end date when creating the Kronos request.
-                DateTimeOffset modifiedEndDateTimeForKronos = endDateTime.AddDays(-1);
+                DateTimeOffset modifiedEndDateTimeForKronos = modifiedEndDateTime.AddDays(-1);
                 duration = ApiConstants.FullDayDuration;
 
                 return new TimeOffPeriod()
@@ -238,7 +238,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
                     Duration = duration,
                     EndDate = modifiedEndDateTimeForKronos.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
                     PayCodeName = reason,
-                    StartDate = startDateTime.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
+                    StartDate = modifiedStartDateTime.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
                 };
             }
             else
@@ -247,10 +247,10 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
                 return new TimeOffPeriod()
                 {
                     Duration = duration,
-                    EndDate = endDateTime.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
+                    EndDate = modifiedEndDateTime.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
                     PayCodeName = reason,
-                    StartDate = startDateTime.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
-                    StartTime = startDateTime.ToString("hh:mm tt", CultureInfo.InvariantCulture),
+                    StartDate = modifiedStartDateTime.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
+                    StartTime = modifiedStartDateTime.ToString("hh:mm tt", CultureInfo.InvariantCulture),
                     Length = Convert.ToString(length, CultureInfo.InvariantCulture),
                 };
             }
