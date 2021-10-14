@@ -5,6 +5,7 @@
 namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.SwapShift
 {
     using System;
+    using Microsoft.Teams.App.KronosWfc.Models.CommonEntities;
 
     /// <summary>
     /// This class models the SwapShiftObj.
@@ -85,5 +86,10 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.SwapShift
         /// Gets or sets the RequestId.
         /// </summary>
         public string RequestId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the comments.
+        /// </summary>
+        public Comments Comments { get; set; }
     }
 }

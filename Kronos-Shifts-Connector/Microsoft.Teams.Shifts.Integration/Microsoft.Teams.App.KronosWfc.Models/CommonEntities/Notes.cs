@@ -4,6 +4,7 @@
 
 namespace Microsoft.Teams.App.KronosWfc.Models.CommonEntities
 {
+    using System.Collections.Generic;
     using System.Xml.Serialization;
 
     /// <summary>
@@ -13,9 +14,9 @@ namespace Microsoft.Teams.App.KronosWfc.Models.CommonEntities
     public class Notes
     {
         /// <summary>
-        /// Gets or sets the Note details.
+        /// Gets or sets a list of note.
         /// </summary>
         [XmlElement(ElementName = "Note")]
-        public Note Note { get; set; }
+        public List<Note> Note { get; set; }
     }
 }

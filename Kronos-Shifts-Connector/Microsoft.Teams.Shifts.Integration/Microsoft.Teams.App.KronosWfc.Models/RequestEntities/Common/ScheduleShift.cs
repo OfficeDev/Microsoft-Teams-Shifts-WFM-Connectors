@@ -6,6 +6,7 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common
 {
     using System.Collections.Generic;
     using System.Xml.Serialization;
+    using Microsoft.Teams.App.KronosWfc.Models.CommonEntities;
 
     /// <summary>
     /// This class models the Schedule Shifts.
@@ -59,6 +60,12 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common
         /// </summary>
         [XmlElement]
         public ShiftSegments ShiftSegments { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Comments associated with the shift.
+        /// </summary>
+        [XmlElement]
+        public Comments Comments { get; set; }
 
         /// <summary>
         /// Denotes whether the shift label should be serialised if it is null.

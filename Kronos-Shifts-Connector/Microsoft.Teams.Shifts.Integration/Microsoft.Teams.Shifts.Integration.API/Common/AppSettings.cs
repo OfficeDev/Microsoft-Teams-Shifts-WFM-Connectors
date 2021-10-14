@@ -117,6 +117,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         public string ShiftTheme => this.configuration["ShiftTheme"];
 
         /// <summary>
+        /// Gets the TransferredShiftTheme.
+        /// </summary>
+        public string TransferredShiftTheme => this.configuration["TransferredShiftTheme"];
+
+        /// <summary>
         /// Gets Instance.
         /// </summary>
         public string Instance => this.configuration["Instance"];
@@ -202,6 +207,16 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         public string NumberOfOrgJobPathSectionsForActivityName => this.configuration["NumberOfOrgJobPathSectionsForActivityName"];
 
         /// <summary>
+        /// Gets the transferred shift display name value.
+        /// </summary>
+        public string TransferredShiftDisplayName => this.configuration["TransferredShiftDisplayName"];
+
+        /// <summary>
+        /// Gets the shift notes comment text value.
+        /// </summary>
+        public string ShiftNotesCommentText => this.configuration["ShiftNotesCommentText"];
+
+        /// <summary>
         /// Gets the manager time off request comment text value.
         /// </summary>
         public string ManagerTimeOffRequestCommentText => this.configuration["ManagerTimeOffRequestCommentText"];
@@ -210,6 +225,21 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// Gets the sender time off request comment text value.
         /// </summary>
         public string SenderTimeOffRequestCommentText => this.configuration["SenderTimeOffRequestCommentText"];
+
+        /// <summary>
+        /// Gets the manager swap request comment text value.
+        /// </summary>
+        public string ManagerSwapRequestCommentText => this.configuration["ManagerSwapRequestCommentText"];
+
+        /// <summary>
+        /// Gets the sender swap request comment text value.
+        /// </summary>
+        public string SenderSwapRequestCommentText => this.configuration["SenderSwapRequestCommentText"];
+
+        /// <summary>
+        /// Gets the recipient swap request comment text value.
+        /// </summary>
+        public string RecipientSwapRequestCommentText => this.configuration["RecipientSwapRequestCommentText"];
 
         // **************************************CONFIGURATION PROJECT*********************************************
 

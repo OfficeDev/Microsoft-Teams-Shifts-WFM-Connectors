@@ -16,6 +16,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
     using Microsoft.ApplicationInsights;
     using Microsoft.Extensions.Caching.Distributed;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.Logon;
+    using Microsoft.Teams.App.KronosWfc.Common;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests;
     using Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
@@ -337,13 +338,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         }
 
         /// <summary>
-        /// Having the method to construct the notes properly.
+        /// Generate a notes string for Teams from the Kronos comments.
         /// </summary>
         /// <param name="shift">The shift that contains the notes.</param>
-        /// <returns>A string.</returns>
+        /// <returns>A string containing the joined comments.</returns>
         public string GetShiftNotes(App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.ScheduleShift shift)
         {
-            string result, noteContents;
+            string result;
             this.telemetryClient.TrackTrace($"GetShiftNotes start at {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
 
             if (shift is null)
@@ -353,28 +354,23 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
 
             if (shift.ShiftComments != null)
             {
-                noteContents = string.Empty;
-                var notesStr = string.Empty;
-                foreach (var item in shift.ShiftComments.Comment)
+                var notesList = new List<string>();
+                foreach (var comment in shift.ShiftComments.Comment)
                 {
-                    foreach (var noteItem in item?.Notes)
+                    foreach (var note in comment.Notes.Note)
                     {
-                        notesStr += noteItem?.Note?.Text + ' ';
+                        notesList.Add(note.Text);
                     }
-
-                    noteContents += notesStr + Environment.NewLine;
                 }
 
-                result = noteContents;
+                result = string.Join(" * ", notesList.ToArray());
                 this.telemetryClient.TrackTrace($"Notes-ShiftEntity: {result}");
             }
             else
             {
                 result = string.Empty;
                 var noNotesStr = "There are no notes for this shift";
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
                 this.telemetryClient.TrackTrace($"Notes-ShiftEntity: {noNotesStr}");
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
             }
 
             this.telemetryClient.TrackTrace($"GetShiftNotes end at {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
@@ -401,14 +397,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
             {
                 noteContents = string.Empty;
                 var notesStr = string.Empty;
-                foreach (var item in openShift.OpenShiftComments.Comment)
+                foreach (var comment in openShift.OpenShiftComments.Comment)
                 {
-                    foreach (var noteItem in item?.Notes)
+                    foreach (var note in comment.Notes.Note)
                     {
-                        notesStr += noteItem?.Note?.Text + ' ';
+                        notesStr += $"- {note.Text}";
                     }
-
-                    noteContents += notesStr + Environment.NewLine;
                 }
 
                 result = noteContents;
@@ -490,33 +484,32 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         }
 
         /// <summary>
-        /// This method creates the expected shift hash using the open shift details.
+        /// This method creates the expected shift hash in the event that a open shift is
+        /// created in Teams using the open shift details.
         /// </summary>
         /// <param name="openShift">The open shift from Graph.</param>
         /// <param name="kronosTimeZone">The time zone to use when converting the times.</param>
         /// <param name="orgJobPath">The org job path of the open shift.</param>
         /// <returns>A string that represents the expected hash of the new shift that is to be created.</returns>
-        public string CreateUniqueId(OpenShiftIS openShift, string kronosTimeZone, string orgJobPath)
+        public string CreateOpenShiftInTeamsUniqueId(OpenShiftIS openShift, string kronosTimeZone, string orgJobPath)
         {
             if (openShift is null)
             {
                 throw new ArgumentNullException(nameof(openShift));
             }
 
+            var startDateTime = openShift.SharedOpenShift.StartDateTime;
+            var endDateTime = openShift.SharedOpenShift.EndDateTime;
+
+            // We do not allow activities to be edited/added in Teams but Kronos requires segments in requests.
+            // We need to track shift segments to know when a shift transfer occurs so we add these details to the hash
+            // using the 'Regular' segment type for the entire OS duration.
             var sb = new StringBuilder();
+            sb.Append(ApiConstants.RegularSegmentType);
+            sb.Append(this.CalculateEndDateTime(endDateTime, kronosTimeZone));
+            sb.Append(this.CalculateStartDateTime(startDateTime, kronosTimeZone));
 
-            var activities = openShift.DraftOpenShift?.Activities ?? openShift.SharedOpenShift?.Activities;
-            var startDateTime = (DateTime)(openShift.DraftOpenShift?.StartDateTime ?? openShift.SharedOpenShift?.StartDateTime);
-            var endDateTime = (DateTime)(openShift.DraftOpenShift?.EndDateTime ?? openShift.SharedOpenShift?.EndDateTime);
-
-            foreach (var item in activities)
-            {
-                sb.Append(item.DisplayName);
-                sb.Append(this.CalculateEndDateTime(item.EndDateTime, kronosTimeZone));
-                sb.Append(this.CalculateStartDateTime(item.StartDateTime, kronosTimeZone));
-            }
-
-            var stringToHash = $"{this.CalculateStartDateTime(startDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(endDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}{sb}{orgJobPath}";
+            var stringToHash = $"{this.CalculateStartDateTime(startDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(endDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}{sb}{openShift.SharedOpenShift.Notes}{orgJobPath}";
 
             // Utilizing the MD5 hash
             using (MD5CryptoServiceProvider md5 = new MD5CryptoServiceProvider())
@@ -576,9 +569,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
                 sb.Append(this.CalculateStartDateTime(item.StartDateTime, kronosTimeZone));
             }
 
-            // From Kronos to Shifts sync, the notes are passed as an empty string.
-            // Therefore, the notes are marked as empty while creating the unique ID from Shifts to Kronos.
-            notes = string.Empty;
             var stringToHash = $"{this.CalculateStartDateTime(shiftStartDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(shiftEndDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}{sb}{notes}{shift.UserId}";
 
             this.telemetryClient.TrackTrace($"String to create hash - Shift (IntegrationAPI Model): {stringToHash}");

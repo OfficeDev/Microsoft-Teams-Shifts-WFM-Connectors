@@ -296,8 +296,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     {
                         if (shift.DraftShift?.IsActive == false || shift.SharedShift?.IsActive == false)
                         {
-                            // Manager deleted a shift.
-                            response = await this.shiftController.DeleteShiftInKronosAsync(shift, user, mappedTeam).ConfigureAwait(false);
+                            // We cannot support delete as we cannot draft delete in Kronos.
+                            response = CreateBadResponse(shift.Id, error: "Deleting shifts in Teams is not supported. Please make your changes in Kronos.");
                         }
                         else
                         {
@@ -517,14 +517,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     // FLW2 has approved the swap shift, updates the status in Kronos to submitted and request goes to manager for approval.
                     else if (requestState == ApiConstants.ShiftsPending && requestAssignedTo == ApiConstants.ShiftsManager)
                     {
-                        integrationResponseSwap = await this.swapShiftController.ApproveOrDeclineSwapShiftRequestToKronosAsync(swapRequest, aadGroupId).ConfigureAwait(false);
+                        integrationResponseSwap = await this.swapShiftController.ApproveOrDeclineSwapShiftRequestToKronosAsync(swapRequest, aadGroupId, kronosTimeZone).ConfigureAwait(false);
                         responseModelList.Add(integrationResponseSwap);
                     }
 
                     // FLW2 has declined the swap shift, updates the status in Kronos to refused.
                     else if (requestState == ApiConstants.Declined && requestAssignedTo == ApiConstants.ShiftsRecipient)
                     {
-                        integrationResponseSwap = await this.swapShiftController.ApproveOrDeclineSwapShiftRequestToKronosAsync(swapRequest, aadGroupId).ConfigureAwait(false);
+                        integrationResponseSwap = await this.swapShiftController.ApproveOrDeclineSwapShiftRequestToKronosAsync(swapRequest, aadGroupId, kronosTimeZone).ConfigureAwait(false);
                         responseModelList.Add(integrationResponseSwap);
                     }
 
@@ -1096,17 +1096,17 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var swapShiftRequestMapping = await this.swapShiftMappingEntityProvider.
                     GetMapping(offeredShiftMap.RowKey, requestedShiftMap.RowKey).ConfigureAwait(false);
                 var kronosReqId = swapShiftRequestMapping.KronosReqId;
-                var kronosRequestingUserId = swapShiftRequestMapping.RequestorKronosPersonNumber;
+                var kronosRequestorUserId = swapShiftRequestMapping.RequestorKronosPersonNumber;
                 var kronosRequestedUserId = swapShiftRequestMapping.RequestedKronosPersonNumber;
 
-                updateProps.Add("KronosRequestingPersonNumber", kronosRequestingUserId);
+                updateProps.Add("KronosRequestingPersonNumber", kronosRequestorUserId);
                 updateProps.Add("SwapShiftRequestID", swapRequest.Id);
                 updateProps.Add("KronosOpenShiftRequestId", kronosReqId);
 
                 if (!approved)
                 {
                     // Deny in Kronos, Update mapping for Teams.
-                    success = await this.swapShiftController.ApproveSwapShiftInKronos(kronosReqId, kronosRequestingUserId, swapShiftRequestMapping, approved).ConfigureAwait(false);
+                    success = await this.swapShiftController.ApproveSwapShiftInKronos(kronosReqId, kronosRequestorUserId, swapShiftRequestMapping, approved).ConfigureAwait(false);
                     if (!success)
                     {
                         responseModelList.Add(CreateBadResponse(swapRequest.Id, (int)HttpStatusCode.BadRequest, "Failed in Kronos."));
@@ -1122,7 +1122,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 this.telemetryClient.TrackTrace($"Process approval of {swapRequest.Id}", updateProps);
 
                 // approve in kronos
-                success = await this.swapShiftController.ApproveSwapShiftInKronos(kronosReqId, kronosRequestingUserId, swapShiftRequestMapping, approved).ConfigureAwait(false);
+                success = await this.swapShiftController.ApproveSwapShiftInKronos(kronosReqId, kronosRequestorUserId, swapShiftRequestMapping, approved).ConfigureAwait(false);
                 updateProps.Add("SuccessfullyApprovedInKronos", $"{success}");
 
                 if (success)
@@ -1137,7 +1137,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     var queryEndDate = offeredShiftMap.ShiftEndDate >= requestedShiftMap.ShiftEndDate ? offeredShiftMap.ShiftEndDate : requestedShiftMap.ShiftEndDate;
 
                     var requestingUserShifts = await this.shiftController.GetShiftsForUser(
-                        kronosRequestingUserId,
+                        kronosRequestorUserId,
                         queryStartDate.ToString("M/dd/yyyy", CultureInfo.InvariantCulture),
                         queryEndDate.ToString("M/dd/yyyy", CultureInfo.InvariantCulture)).ConfigureAwait(false);
 
@@ -1152,7 +1152,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     // confirm new shifts exists on kronos
                     var requestedShiftKronos = requestingUserShifts
                         .Schedule.ScheduleItems.ScheduleShifts
-                        .FirstOrDefault(x => x.Employee.FirstOrDefault().PersonNumber == kronosRequestingUserId && x.StartDate == requestorShiftDate);
+                        .FirstOrDefault(x => x.Employee.FirstOrDefault().PersonNumber == kronosRequestorUserId && x.StartDate == requestorShiftDate);
                     var requestorsShiftKronos = requestedUserShifts
                         .Schedule.ScheduleItems.ScheduleShifts
                         .FirstOrDefault(x => x.Employee.FirstOrDefault().PersonNumber == kronosRequestedUserId && x.StartDate == requestedShiftDate);
@@ -1161,8 +1161,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     {
                         var kronosRequestorsShiftUniqueId = this.utility.CreateUniqueId(requestorShift, kronosTimeZone);
                         var kronosRequestedShiftUniqueId = this.utility.CreateUniqueId(requestedShift, kronosTimeZone);
-                        var requestorsShiftLink = this.shiftController.CreateNewShiftMappingEntity(requestorShift, kronosRequestorsShiftUniqueId, kronosRequestedUserId);
-                        var requestedShiftLink = this.shiftController.CreateNewShiftMappingEntity(requestedShift, kronosRequestedShiftUniqueId, kronosRequestingUserId);
+                        var requestorsShiftLink = this.shiftController.CreateNewShiftMappingEntity(requestorShift, kronosRequestorsShiftUniqueId, kronosRequestorUserId);
+                        var requestedShiftLink = this.shiftController.CreateNewShiftMappingEntity(requestedShift, kronosRequestedShiftUniqueId, kronosRequestedUserId);
 
                         await this.ApproveSwapShiftRequestInTables(swapRequest, swapShiftRequestMapping, responseModelList).ConfigureAwait(false);
                         await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(requestorsShiftLink, requestorShift.Id, swapShiftRequestMapping.PartitionKey).ConfigureAwait(false);

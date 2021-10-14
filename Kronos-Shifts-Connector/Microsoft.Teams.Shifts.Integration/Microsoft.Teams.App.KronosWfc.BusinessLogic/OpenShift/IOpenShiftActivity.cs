@@ -27,6 +27,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
         /// <param name="openShiftlabel">The open shift label.</param>
         /// <param name="startTime">The start time of the open shift.</param>
         /// <param name="endTime">The end time of the open shift.</param>
+        /// <param name="slotCount">The number of open shifts to create.</param>
         /// <returns>A task containing the response.</returns>
         Task<OpenShiftResponse> CreateOpenShiftAsync(
             Uri endpoint,
@@ -37,7 +38,8 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
             string jobPath,
             string openShiftlabel,
             string startTime,
-            string endTime);
+            string endTime,
+            int slotCount);
 
         /// <summary>
         /// Fetch open shifts from Kronos in a batch manner.

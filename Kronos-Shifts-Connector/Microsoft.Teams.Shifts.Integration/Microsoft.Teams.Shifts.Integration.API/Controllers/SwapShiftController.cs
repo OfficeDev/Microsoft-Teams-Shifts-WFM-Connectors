@@ -18,9 +18,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
-    using Microsoft.Extensions.Caching.Distributed;
     using Microsoft.Graph;
-    using Microsoft.Teams.App.KronosWfc.BusinessLogic.HyperFind;
+    using Microsoft.Teams.App.KronosWfc.BusinessLogic.Common;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.Logon;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift;
     using Microsoft.Teams.App.KronosWfc.Common;
@@ -196,6 +195,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                         this.telemetryClient.TrackTrace($"{Resource.SubmitSwapShiftRequestToKronosAsync} - Successfully got the shift of {recipient?.KronosUserName} - {recipientShiftDetails?.Id} and now forming the request POST to Kronos WFC.", telemetryProps);
 
+                        var commentTimeStamp = this.utility.UTCToKronosTimeZone(DateTime.UtcNow, mappedTeam.KronosTimeZone).ToString(CultureInfo.InvariantCulture);
+                        var comments = XmlHelper.GenerateKronosComments(swapRequest.SenderMessage, this.appSettings.SenderSwapRequestCommentText, commentTimeStamp);
+
                         SwapShiftObj swapShiftObj = new SwapShiftObj
                         {
                             // Convert shift time to Kronos time zone.
@@ -212,6 +214,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             SelectedJob = sender.PartitionKey.Replace("$", "/", StringComparison.InvariantCulture),
                             SelectedLocation = "All",
                             SelectedShiftToSwap = string.Empty,
+                            Comments = comments,
                         };
 
                         // Step 2 - Draft the swap shift request.
@@ -234,7 +237,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 sender?.RowKey,
                                 draftKronosRequestId,
                                 swapShiftObj.QueryDateSpan,
-                                swapRequest.SenderMessage,
                                 new Uri(allRequiredConfigurations.WfmEndPoint)).ConfigureAwait(false);
 
                             // Step 4 - Check if the Swap Shift Request status has been updated successfully.
@@ -381,10 +383,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// </summary>
         /// <param name="swapRequest">The incoming Swap Shift Request.</param>
         /// <param name="teamsId">User teams id.</param>
+        /// <param name="kronosTimeZone">The Kronos time zone.</param>
         /// <returns>A unit of execution.</returns>
-        public async Task<ShiftsIntegResponse> ApproveOrDeclineSwapShiftRequestToKronosAsync(
-          SwapRequest swapRequest,
-          string teamsId)
+        public async Task<ShiftsIntegResponse> ApproveOrDeclineSwapShiftRequestToKronosAsync(SwapRequest swapRequest, string teamsId, string kronosTimeZone)
         {
             if (swapRequest is null)
             {
@@ -459,6 +460,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                         var kronosReqId = await this.swapShiftMappingEntityProvider.GetKronosReqAsync(swapRequest.Id).ConfigureAwait(false);
 
+                        var commentTimeStamp = this.utility.UTCToKronosTimeZone(DateTime.UtcNow, kronosTimeZone).ToString(CultureInfo.InvariantCulture);
+                        var comments = XmlHelper.GenerateKronosComments(swapRequest.RecipientActionMessage, this.appSettings.RecipientSwapRequestCommentText, commentTimeStamp);
+
                         // Step 3 - If the request state is declined, then post status as Refused in Kronos. Otherwise, the status remains as Submitted.
                         var swapShiftSubmitRes = await this.swapShiftActivity.SubmitApprovalAsync(
                             loginKronosResult.Jsession,
@@ -466,7 +470,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             kronosReqId.RequestedKronosPersonNumber,
                             swapRequest.State == "Declined" ? ApiConstants.Refused : ApiConstants.Submitted,
                             $"{shiftStartDate}-{shiftEndDate}",
-                            swapRequest.RecipientActionMessage,
+                            comments,
                             new Uri(allRequiredConfigurations.WfmEndPoint)).ConfigureAwait(false);
 
                         // Step 4 - If the request has successfully updated the status.
@@ -727,7 +731,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             {
                                 // Fetch notes for the swap shift request.
                                 var notes = approvedData.RequestStatusChanges?.RequestStatusChange;
-                                var note = notes.Select(c => c.Comments).FirstOrDefault()?.Comment?.FirstOrDefault()?.Notes?.FirstOrDefault().Note?.Text;
+                                var note = notes.Select(c => c.Comments).FirstOrDefault()?.Comment?.FirstOrDefault()?.Notes?.Note?.FirstOrDefault().Text;
                                 await this.AddSwapShiftApprovalAsync(
                                     allRequiredConfigurations.ShiftsAccessToken,
                                     swapShiftEntity,
@@ -747,7 +751,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             {
                                 // Fetch notes for the swap shift request.
                                 var notes = refusedData.RequestStatusChanges?.RequestStatusChange;
-                                var note = notes.Select(c => c.Comments).FirstOrDefault()?.Comment?.FirstOrDefault()?.Notes?.FirstOrDefault().Note?.Text;
+                                var note = notes.Select(c => c.Comments).FirstOrDefault()?.Comment?.FirstOrDefault()?.Notes?.Note?.FirstOrDefault().Text;
                                 await this.DeclineSwapShiftRequestAsync(
                                     allRequiredConfigurations?.ShiftsAccessToken,
                                     swapShiftEntity?.ShiftsTeamId,
@@ -770,7 +774,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             {
                                 // Fetch notes for the swap shift request.
                                 var notes = retractedData.RequestStatusChanges?.RequestStatusChange;
-                                var note = notes.Select(c => c.Comments).FirstOrDefault()?.Comment?.FirstOrDefault()?.Notes?.FirstOrDefault().Note?.Text;
+                                var note = notes.Select(c => c.Comments).FirstOrDefault()?.Comment?.FirstOrDefault()?.Notes?.Note?.FirstOrDefault().Text;
                                 await this.DeclineSwapShiftRequestAsync(
                                     allRequiredConfigurations?.ShiftsAccessToken,
                                     swapShiftEntity?.ShiftsTeamId,
