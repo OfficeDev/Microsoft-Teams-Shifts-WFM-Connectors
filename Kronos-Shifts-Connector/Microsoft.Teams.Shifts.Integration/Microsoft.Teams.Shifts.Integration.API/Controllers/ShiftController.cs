@@ -208,9 +208,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 return ResponseHelper.CreateBadResponse(shift.Id, error: "Shift was not successfully removed from Kronos.");
             }
 
-            Task t = Task.Run(() => this.ShareScheduleAfterShiftDeletion(shift, mappedTeam, allRequiredConfigurations));
-
             await this.DeleteShiftMapping(shift).ConfigureAwait(false);
+
+#pragma warning disable CS4014 // We do not want to await this call as we need the shift to be deleted in Teams before sharing the schedule.
+            Task.Run(() => this.ShareScheduleAfterShiftDeletion(shift, mappedTeam, allRequiredConfigurations));
+#pragma warning restore CS4014
+
             return ResponseHelper.CreateSuccessfulResponse(shift.Id);
         }
 
@@ -345,16 +348,27 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             return ResponseHelper.CreateSuccessfulResponse(editedShift.Id);
         }
 
+        /// <summary>
+        /// This method will cause the thread to wait allowing us to retrun a success response
+        /// for the delete WFI request. It will then share the changes.
+        /// </summary>
+        /// <param name="shift">The shift we want to share.</param>
+        /// <param name="mappedTeam">The team details of the schedule we want to share.</param>
+        /// <param name="allRequiredConfigurations">The required configuration.</param>
+        /// <returns>A unit of execution.</returns>
         private async Task ShareScheduleAfterShiftDeletion(ShiftsShift shift, TeamToDepartmentJobMappingEntity mappedTeam, IntegrationApi.SetupDetails allRequiredConfigurations)
         {
+            // We want to wait so that there is time to respond a success to the WFI request
+            // meaning the shift will be deleted in Teams.
             Thread.Sleep(5000);
 
+            // We now want to share the schedule between the start and end time of the deleted shift.
             await this.graphUtility.ShareSchedule(
                             allRequiredConfigurations.ShiftsAccessToken,
                             mappedTeam.TeamId,
                             shift.SharedShift.StartDateTime,
                             shift.SharedShift.EndDateTime,
-                            false).ConfigureAwait(true);
+                            false).ConfigureAwait(false);
         }
 
         /// <summary>
