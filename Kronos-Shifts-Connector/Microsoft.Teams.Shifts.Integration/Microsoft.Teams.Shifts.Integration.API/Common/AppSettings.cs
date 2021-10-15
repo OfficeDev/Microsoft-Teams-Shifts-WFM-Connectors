@@ -303,6 +303,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         public string SyncDelayForPolling => this.configuration["SyncDelayForPolling"];
 
         /// <summary>
+        /// Gets the configuration for the number of seconds to wait between deleting a shift in Teams
+        /// And auto sharing the schedule.
+        /// </summary>
+        public string AutoShareScheduleWaitTime => this.configuration["AutoShareScheduleWaitTime"];
+
+        /// <summary>
         /// Gets security group name for managers.
         /// </summary>
         public string AdSecurityGroupName => this.configuration["SecurityGroupName"];
