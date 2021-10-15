@@ -360,7 +360,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         {
             // We want to wait so that there is time to respond a success to the WFI request
             // meaning the shift will be deleted in Teams.
-            Thread.Sleep(5000);
+            Thread.Sleep(int.Parse(appSettings.AutoShareScheduleWaitTime));
 
             // We now want to share the schedule between the start and end time of the deleted shift.
             await this.graphUtility.ShareSchedule(
