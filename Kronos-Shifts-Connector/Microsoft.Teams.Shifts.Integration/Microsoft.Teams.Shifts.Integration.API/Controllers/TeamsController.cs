@@ -281,7 +281,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var shift = ControllerHelper.Get<Shift>(jsonModel, "/shifts/");
                 var user = await this.userMappingProvider.GetUserMappingEntityAsyncNew(shift.UserId, shift.SchedulingGroupId).ConfigureAwait(false);
 
-                // We must check if the request is from the logic app first to ensure these requests arent blocked.
+                // We must check if the request is from the logic app first to ensure these requests aren't blocked.
                 if (isFromLogicApp)
                 {
                     return CreateSuccessfulResponse(shift.Id);
@@ -347,7 +347,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             {
                 var openShift = ControllerHelper.Get<OpenShiftIS>(jsonModel, "/openshifts/");
 
-                // We must check if the request is from the logic app first to ensure these requests arent blocked.
+                // We must check if the request is from the logic app first to ensure these requests aren't blocked.
                 if (isFromLogicApp)
                 {
                     return CreateSuccessfulResponse(openShift.Id);
