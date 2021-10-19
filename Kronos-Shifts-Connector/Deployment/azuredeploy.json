@@ -212,6 +212,13 @@
         "description": "Please enter the Kronos session timeout value in seconds. This will be used when caching the token."
       }
     },
+    "allowManagersToModifyScheduleInTeams": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Setting this to true will enable managers to create shifts and open shifts as well as edit and delete shifts within the Teams client."
+      }
+    },
     "gitRepoUrl": {
       "type": "string",
       "defaultValue": "https://github.com/OfficeDev/Microsoft-Teams-Shifts-WFM-Connectors"
@@ -602,6 +609,10 @@
             {
               "name": "AuthTokenCacheLifetimeInSeconds",
               "value": "[parameters('authTokenCacheLifetimeInSeconds')]"
+            },
+            {
+              "name": "AllowManagersToModifyScheduleInTeams",
+              "value": "[parameters('allowManagersToModifyScheduleInTeams')]"
             },
             {
               "name": "ClientSecret",

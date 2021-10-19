@@ -281,9 +281,16 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var shift = ControllerHelper.Get<Shift>(jsonModel, "/shifts/");
                 var user = await this.userMappingProvider.GetUserMappingEntityAsyncNew(shift.UserId, shift.SchedulingGroupId).ConfigureAwait(false);
 
+                // We must check if the request is from the logic app first to ensure these requests arent blocked.
                 if (isFromLogicApp)
                 {
                     return CreateSuccessfulResponse(shift.Id);
+                }
+
+                if (!bool.Parse(this.appSettings.AllowManagersToModifyScheduleInTeams))
+                {
+                    // Manager CRUD within Teams is disabled.
+                    return CreateBadResponse(shift.Id, error: "Modifying the schedule within Teams has been disabled.");
                 }
 
                 try
@@ -340,9 +347,16 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             {
                 var openShift = ControllerHelper.Get<OpenShiftIS>(jsonModel, "/openshifts/");
 
+                // We must check if the request is from the logic app first to ensure these requests arent blocked.
                 if (isFromLogicApp)
                 {
                     return CreateSuccessfulResponse(openShift.Id);
+                }
+
+                if (!bool.Parse(this.appSettings.AllowManagersToModifyScheduleInTeams))
+                {
+                    // Manager CRUD within Teams is disabled.
+                    return CreateBadResponse(openShift.Id, error: "Modifying the schedule within Teams has been disabled.");
                 }
 
                 try
