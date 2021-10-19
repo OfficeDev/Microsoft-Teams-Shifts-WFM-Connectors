@@ -296,8 +296,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     {
                         if (shift.DraftShift?.IsActive == false || shift.SharedShift?.IsActive == false)
                         {
-                            // Manager deleted a shift.
-                            response = await this.shiftController.DeleteShiftInKronosAsync(shift, user, mappedTeam).ConfigureAwait(false);
+                            // We cannot support delete as we cannot draft delete in Kronos.
+                            response = CreateBadResponse(shift.Id, error: "Deleting shifts in Teams is not supported. Please make your changes in Kronos.");
                         }
                         else
                         {
@@ -356,12 +356,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         if (openShift.DraftOpenShift?.IsActive == false || openShift.SharedOpenShift?.IsActive == false)
                         {
                             // We cannot support delete due to api limitations so block the action.
-                            response = CreateBadResponse(openShift.Id, error: "Deleting open shifts in Teams is not supported. Please make your changes in Kronos.");
+                            response = CreateBadResponse(openShift.Id, error: "Deleting open shifts is not supported for your team in Teams");
                         }
                         else
                         {
                             // We cannot support edit due to api limitations so block the action.
-                            response = CreateBadResponse(openShift.Id, error: "Editing open shifts in Teams is not supported. Please make your changes in Kronos.");
+                            response = CreateBadResponse(openShift.Id, error: "Editing open shifts is not supported for your team in Teams.");
                         }
                     }
                 }

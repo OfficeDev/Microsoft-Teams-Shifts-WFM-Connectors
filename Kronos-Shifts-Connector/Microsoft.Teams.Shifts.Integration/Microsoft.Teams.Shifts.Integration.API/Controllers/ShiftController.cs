@@ -230,7 +230,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             // Likewise there is no share schedule WFI call.
             if (shift.DraftShift != null)
             {
-                return ResponseHelper.CreateBadResponse(shift.Id, error: "Creating a draft shift is not supported. Please publish changes directly using the 'Share' button.");
+                return ResponseHelper.CreateBadResponse(shift.Id, error: "Creating a shift as a draft is not supported for your team in Teams. Please publish changes directly using the 'Share' button.");
             }
 
             if (shift.SharedShift == null)
@@ -293,7 +293,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             // Likewise there is no share schedule WFI call.
             if (editedShift.DraftShift != null)
             {
-                return ResponseHelper.CreateBadResponse(editedShift.Id, error: "Editing a shift as a draft is not supported. Please publish changes directly using the 'Share' button.");
+                return ResponseHelper.CreateBadResponse(editedShift.Id, error: "Editing a shift as a draft is not supported for your team in Teams. Please publish changes directly using the 'Share' button.");
             }
 
             if (editedShift.SharedShift == null)
