@@ -147,6 +147,7 @@ Here are the following requirements to correctly deploy the **Shifts-Kronos Inte
 4. You will be prompted to click on the *Deploy to Azure* button below, and when prompted log in to your Azure subscription
 
 [![Deploy to Azure](https://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAndy65%2FMicrosoft-Teams-Shifts-WFM-Connectors%2Fmaster%2FKronos-Shifts-Connector%2FDeployment%2Fazuredeploy.json)  
+
 5. It will navigate to the form for filling the template parameters  
 6. The figure below shows the form once the *Deploy to Azure* button is clicked
 
@@ -186,6 +187,7 @@ Here are the following requirements to correctly deploy the **Shifts-Kronos Inte
 |kronosUserName|The Kronos WFC SuperUser name|
 |kronosPassword|The Kronos WFC SuperUser password|
 |authTokenCacheLifetimeInSeconds|The number of seconds to set the time to live when caching the Kronos session auth token. You should set this to less than or equal to you **global.webserver.session.timeout**. <br/>To find this value please login to Kronos as an admin and navigate to Setup -> System Configuration -> System Settings. <br/>Select **Global Values** and find the value assigned to global.webserver.session.timeout|
+|allowManagersToModifyScheduleInTeams|Setting this to true will enable managers to create shifts and open shifts as well as edit and delete shifts within the Teams client.<br/>This setting does not affect manager approvals.|
 |gitRepoUrl|The public GitHub repository URL|
 |gitBranch|The specific branch from which the code can be deployed. The recommended value is master, however, at the time of deployment this value can be changed|
 
