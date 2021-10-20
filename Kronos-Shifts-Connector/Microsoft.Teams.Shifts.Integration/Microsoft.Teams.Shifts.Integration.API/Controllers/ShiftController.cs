@@ -19,6 +19,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.Common;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts;
+    using Microsoft.Teams.App.KronosWfc.Common;
+    using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.HyperFind;
     using Microsoft.Teams.Shifts.Integration.API.Common;
     using Microsoft.Teams.Shifts.Integration.API.Models.Request;
@@ -304,6 +306,23 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             if (editedShift.SharedShift == null)
             {
                 return ResponseHelper.CreateBadResponse(editedShift.Id, error: "An unexpected error occured. Could not edit the shift.");
+            }
+
+            // We use the display name to indicate shift transfers. As we cannot support editing shifts
+            // with a transfer we block edits on shifts containing the transfer string.
+            if (editedShift.SharedShift.DisplayName.Contains(appSettings.TransferredShiftDisplayName))
+            {
+                return ResponseHelper.CreateBadResponse(editedShift.Id, error: "You cannot edit a shift in Teams that includes a shift transfer.");
+            }
+
+            // We do not support editing activities in Teamsand cannot support editing shift transfers
+            // therefore we only expect activities with the regular segment type. Anything else means the
+            // manager has modified or added an activity.
+            var invalidActivities = editedShift.SharedShift.Activities.Where(x => x.DisplayName != ApiConstants.RegularSegmentType);
+
+            if (invalidActivities.Any())
+            {
+                return ResponseHelper.CreateBadResponse(editedShift.Id, error: "Editing a shifts activities is not supported for your team in Teams.");
             }
 
             var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
