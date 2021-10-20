@@ -540,36 +540,48 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// <param name="shift">The shift entity that is coming from the response.</param>
         /// <param name="kronosTimeZone">The time zone to use when converting the times.</param>
         /// <returns>A string that represents the Kronos Unique Id.</returns>
-        public string CreateUniqueId(Models.IntegrationAPI.Shift shift, string kronosTimeZone)
+        public string CreateShiftUniqueId(Models.IntegrationAPI.Shift shift, string kronosTimeZone)
         {
             if (shift is null)
             {
                 throw new ArgumentNullException(nameof(shift));
             }
 
-            var activities = shift.SharedShift?.Activities ?? shift.DraftShift?.Activities;
-            var shiftStartDateTime = (DateTime)(shift.SharedShift?.StartDateTime ?? shift.DraftShift?.StartDateTime);
-            var shiftEndDateTime = (DateTime)(shift.SharedShift?.EndDateTime ?? shift.DraftShift?.EndDateTime);
-            var notes = shift.SharedShift?.Notes ?? shift.DraftShift?.Notes ?? string.Empty;
+            var sb = new StringBuilder();
+            var startDateTime = shift.SharedShift.StartDateTime;
+            var endDateTime = shift.SharedShift.EndDateTime;
+
+            // If there are no activities then this was an open shift created in Teams that has been claimed.
+            // To prevent excess notfications we want to add a single activity of Regular for the entire duration
+            // to the hash as this is what Kronos will do.
+            if (!shift.SharedShift.Activities.Any())
+            {
+                sb.Append(ApiConstants.RegularSegmentType);
+                sb.Append(this.CalculateEndDateTime(endDateTime, kronosTimeZone));
+                sb.Append(this.CalculateStartDateTime(startDateTime, kronosTimeZone));
+            }
+            else
+            {
+                var activities = shift.SharedShift?.Activities;
+
+                foreach (var item in activities)
+                {
+                    sb.Append(item.DisplayName);
+                    sb.Append(this.CalculateEndDateTime(item.EndDateTime, kronosTimeZone));
+                    sb.Append(this.CalculateStartDateTime(item.StartDateTime, kronosTimeZone));
+                }
+            }
+
             var createUniqueIdProps = new Dictionary<string, string>()
             {
-                { "StartDateTimeStamp", shiftStartDateTime.ToString(CultureInfo.InvariantCulture) },
-                { "EndDateTimeStamp", shiftEndDateTime.ToString(CultureInfo.InvariantCulture) },
+                { "StartDateTimeStamp", startDateTime.ToString(CultureInfo.InvariantCulture) },
+                { "EndDateTimeStamp", endDateTime.ToString(CultureInfo.InvariantCulture) },
                 { "UserId", shift.UserId },
                 { "CallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
                 { "ExecutingAssembly", Assembly.GetExecutingAssembly().GetName().Name },
             };
 
-            var sb = new StringBuilder();
-
-            foreach (var item in activities)
-            {
-                sb.Append(item.DisplayName);
-                sb.Append(this.CalculateEndDateTime(item.EndDateTime, kronosTimeZone));
-                sb.Append(this.CalculateStartDateTime(item.StartDateTime, kronosTimeZone));
-            }
-
-            var stringToHash = $"{this.CalculateStartDateTime(shiftStartDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(shiftEndDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}{sb}{notes}{shift.UserId}";
+            var stringToHash = $"{this.CalculateStartDateTime(startDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(endDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}{sb}{shift.SharedShift.Notes}{shift.UserId}";
 
             this.telemetryClient.TrackTrace($"String to create hash - Shift (IntegrationAPI Model): {stringToHash}");
 

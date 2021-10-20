@@ -984,8 +984,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var newShiftSecond = JsonConvert.DeserializeObject<Shift>(postedShifts.Last().Body.ToString());
 
                 // Step 1 - Create the Kronos Unique ID.
-                var kronosUniqueIdFirst = this.utility.CreateUniqueId(newShiftFirst, kronosTimeZone);
-                var kronosUniqueIdSecond = this.utility.CreateUniqueId(newShiftSecond, kronosTimeZone);
+                var kronosUniqueIdFirst = this.utility.CreateShiftUniqueId(newShiftFirst, kronosTimeZone);
+                var kronosUniqueIdSecond = this.utility.CreateShiftUniqueId(newShiftSecond, kronosTimeZone);
 
                 try
                 {
@@ -1173,8 +1173,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                     if (requestedShiftKronos != null && requestorsShiftKronos != null)
                     {
-                        var kronosRequestorsShiftUniqueId = this.utility.CreateUniqueId(requestorShift, kronosTimeZone);
-                        var kronosRequestedShiftUniqueId = this.utility.CreateUniqueId(requestedShift, kronosTimeZone);
+                        var kronosRequestorsShiftUniqueId = this.utility.CreateShiftUniqueId(requestorShift, kronosTimeZone);
+                        var kronosRequestedShiftUniqueId = this.utility.CreateShiftUniqueId(requestedShift, kronosTimeZone);
                         var requestorsShiftLink = this.shiftController.CreateNewShiftMappingEntity(requestorShift, kronosRequestorsShiftUniqueId, kronosRequestorUserId);
                         var requestedShiftLink = this.shiftController.CreateNewShiftMappingEntity(requestedShift, kronosRequestedShiftUniqueId, kronosRequestedUserId);
 
