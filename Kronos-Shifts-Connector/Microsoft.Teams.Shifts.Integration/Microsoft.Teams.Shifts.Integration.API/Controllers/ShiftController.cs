@@ -238,6 +238,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 return ResponseHelper.CreateBadResponse(shift.Id, error: "An unexpected error occured. Could not create the shift.");
             }
 
+            if (shift.SharedShift.Activities.Any())
+            {
+                return ResponseHelper.CreateBadResponse(shift.Id, error: "Adding activities to shifts is not supported for your team in Teams. Remove all activities and try sharing again.");
+            }
+
             if (user.ErrorIfNull(shift.Id, "User could not be found.", out var response))
             {
                 return response;
@@ -392,7 +397,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <returns>A task.</returns>
         private async Task CreateAndStoreShiftMapping(ShiftsShift shift, AllUserMappingEntity user, TeamToDepartmentJobMappingEntity mappedTeam, List<string> monthPartitionKey)
         {
-            var kronosUniqueId = this.utility.CreateUniqueId(shift, mappedTeam.KronosTimeZone);
+            var kronosUniqueId = this.utility.CreateShiftUniqueId(shift, mappedTeam.KronosTimeZone);
             var shiftMappingEntity = this.CreateNewShiftMappingEntity(shift, kronosUniqueId, user.RowKey);
             await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(shiftMappingEntity, shift.Id, monthPartitionKey[0]).ConfigureAwait(false);
         }
