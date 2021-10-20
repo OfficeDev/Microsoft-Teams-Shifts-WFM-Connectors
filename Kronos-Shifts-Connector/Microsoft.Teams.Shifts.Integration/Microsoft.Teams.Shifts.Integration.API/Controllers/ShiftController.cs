@@ -312,7 +312,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             // with a transfer we block edits on shifts containing the transfer string.
             if (editedShift.SharedShift.DisplayName.Contains(appSettings.TransferredShiftDisplayName))
             {
-                return ResponseHelper.CreateBadResponse(editedShift.Id, error: "You cannot edit a shift in Teams that includes a shift transfer.");
+                return ResponseHelper.CreateBadResponse(editedShift.Id, error: "You can't edit a shift that includes a shift transfer. Please make your changes in Kronos");
             }
 
             // We do not support editing activities in Teamsand cannot support editing shift transfers
@@ -322,7 +322,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             if (invalidActivities.Any())
             {
-                return ResponseHelper.CreateBadResponse(editedShift.Id, error: "Editing a shifts activities is not supported for your team in Teams.");
+                return ResponseHelper.CreateBadResponse(editedShift.Id, error: "Editing shift activities is not supported for your team in Teams.");
             }
 
             var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
