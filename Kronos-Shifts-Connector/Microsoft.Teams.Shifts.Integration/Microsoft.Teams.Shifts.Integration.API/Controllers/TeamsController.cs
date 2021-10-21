@@ -281,9 +281,16 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var shift = ControllerHelper.Get<Shift>(jsonModel, "/shifts/");
                 var user = await this.userMappingProvider.GetUserMappingEntityAsyncNew(shift.UserId, shift.SchedulingGroupId).ConfigureAwait(false);
 
+                // We must check if the request is from the logic app first to ensure these requests aren't blocked.
                 if (isFromLogicApp)
                 {
                     return CreateSuccessfulResponse(shift.Id);
+                }
+
+                if (!bool.Parse(this.appSettings.AllowManagersToModifyScheduleInTeams))
+                {
+                    // Manager CRUD within Teams is disabled.
+                    return CreateBadResponse(shift.Id, error: "Modifying the schedule within Teams has been disabled.");
                 }
 
                 try
@@ -340,9 +347,16 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             {
                 var openShift = ControllerHelper.Get<OpenShiftIS>(jsonModel, "/openshifts/");
 
+                // We must check if the request is from the logic app first to ensure these requests aren't blocked.
                 if (isFromLogicApp)
                 {
                     return CreateSuccessfulResponse(openShift.Id);
+                }
+
+                if (!bool.Parse(this.appSettings.AllowManagersToModifyScheduleInTeams))
+                {
+                    // Manager CRUD within Teams is disabled.
+                    return CreateBadResponse(openShift.Id, error: "Modifying the schedule within Teams has been disabled.");
                 }
 
                 try
@@ -356,12 +370,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         if (openShift.DraftOpenShift?.IsActive == false || openShift.SharedOpenShift?.IsActive == false)
                         {
                             // We cannot support delete due to api limitations so block the action.
-                            response = CreateBadResponse(openShift.Id, error: "Deleting open shifts in Teams is not supported. Please make your changes in Kronos.");
+                            response = CreateBadResponse(openShift.Id, error: "Deleting open shifts is not supported for your team in Teams");
                         }
                         else
                         {
                             // We cannot support edit due to api limitations so block the action.
-                            response = CreateBadResponse(openShift.Id, error: "Editing open shifts in Teams is not supported. Please make your changes in Kronos.");
+                            response = CreateBadResponse(openShift.Id, error: "Editing open shifts is not supported for your team in Teams.");
                         }
                     }
                 }
@@ -970,8 +984,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var newShiftSecond = JsonConvert.DeserializeObject<Shift>(postedShifts.Last().Body.ToString());
 
                 // Step 1 - Create the Kronos Unique ID.
-                var kronosUniqueIdFirst = this.utility.CreateUniqueId(newShiftFirst, kronosTimeZone);
-                var kronosUniqueIdSecond = this.utility.CreateUniqueId(newShiftSecond, kronosTimeZone);
+                var kronosUniqueIdFirst = this.utility.CreateShiftUniqueId(newShiftFirst, kronosTimeZone);
+                var kronosUniqueIdSecond = this.utility.CreateShiftUniqueId(newShiftSecond, kronosTimeZone);
 
                 try
                 {
@@ -1159,8 +1173,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                     if (requestedShiftKronos != null && requestorsShiftKronos != null)
                     {
-                        var kronosRequestorsShiftUniqueId = this.utility.CreateUniqueId(requestorShift, kronosTimeZone);
-                        var kronosRequestedShiftUniqueId = this.utility.CreateUniqueId(requestedShift, kronosTimeZone);
+                        var kronosRequestorsShiftUniqueId = this.utility.CreateShiftUniqueId(requestorShift, kronosTimeZone);
+                        var kronosRequestedShiftUniqueId = this.utility.CreateShiftUniqueId(requestedShift, kronosTimeZone);
                         var requestorsShiftLink = this.shiftController.CreateNewShiftMappingEntity(requestorShift, kronosRequestorsShiftUniqueId, kronosRequestorUserId);
                         var requestedShiftLink = this.shiftController.CreateNewShiftMappingEntity(requestedShift, kronosRequestedShiftUniqueId, kronosRequestedUserId);
 

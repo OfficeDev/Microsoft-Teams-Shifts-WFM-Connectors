@@ -19,6 +19,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.Common;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts;
+    using Microsoft.Teams.App.KronosWfc.Common;
+    using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.HyperFind;
     using Microsoft.Teams.Shifts.Integration.API.Common;
     using Microsoft.Teams.Shifts.Integration.API.Models.Request;
@@ -230,12 +232,17 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             // Likewise there is no share schedule WFI call.
             if (shift.DraftShift != null)
             {
-                return ResponseHelper.CreateBadResponse(shift.Id, error: "Creating a draft shift is not supported. Please publish changes directly using the 'Share' button.");
+                return ResponseHelper.CreateBadResponse(shift.Id, error: "Creating a shift as a draft is not supported for your team in Teams. Please publish changes directly using the 'Share' button.");
             }
 
             if (shift.SharedShift == null)
             {
                 return ResponseHelper.CreateBadResponse(shift.Id, error: "An unexpected error occured. Could not create the shift.");
+            }
+
+            if (shift.SharedShift.Activities.Any())
+            {
+                return ResponseHelper.CreateBadResponse(shift.Id, error: "Adding activities to shifts is not supported for your team in Teams. Remove all activities and try sharing again.");
             }
 
             if (user.ErrorIfNull(shift.Id, "User could not be found.", out var response))
@@ -293,12 +300,29 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             // Likewise there is no share schedule WFI call.
             if (editedShift.DraftShift != null)
             {
-                return ResponseHelper.CreateBadResponse(editedShift.Id, error: "Editing a shift as a draft is not supported. Please publish changes directly using the 'Share' button.");
+                return ResponseHelper.CreateBadResponse(editedShift.Id, error: "Editing a shift as a draft is not supported for your team in Teams. Please publish changes directly using the 'Share' button.");
             }
 
             if (editedShift.SharedShift == null)
             {
                 return ResponseHelper.CreateBadResponse(editedShift.Id, error: "An unexpected error occured. Could not edit the shift.");
+            }
+
+            // We use the display name to indicate shift transfers. As we cannot support editing shifts
+            // with a transfer we block edits on shifts containing the transfer string.
+            if (editedShift.SharedShift.DisplayName.Contains(appSettings.TransferredShiftDisplayName))
+            {
+                return ResponseHelper.CreateBadResponse(editedShift.Id, error: "You can't edit a shift that includes a shift transfer. Please make your changes in Kronos");
+            }
+
+            // We do not support editing activities in Teamsand cannot support editing shift transfers
+            // therefore we only expect activities with the regular segment type. Anything else means the
+            // manager has modified or added an activity.
+            var invalidActivities = editedShift.SharedShift.Activities.Where(x => x.DisplayName != ApiConstants.RegularSegmentType);
+
+            if (invalidActivities.Any())
+            {
+                return ResponseHelper.CreateBadResponse(editedShift.Id, error: "Editing shift activities is not supported for your team in Teams.");
             }
 
             var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
@@ -392,7 +416,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <returns>A task.</returns>
         private async Task CreateAndStoreShiftMapping(ShiftsShift shift, AllUserMappingEntity user, TeamToDepartmentJobMappingEntity mappedTeam, List<string> monthPartitionKey)
         {
-            var kronosUniqueId = this.utility.CreateUniqueId(shift, mappedTeam.KronosTimeZone);
+            var kronosUniqueId = this.utility.CreateShiftUniqueId(shift, mappedTeam.KronosTimeZone);
             var shiftMappingEntity = this.CreateNewShiftMappingEntity(shift, kronosUniqueId, user.RowKey);
             await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(shiftMappingEntity, shift.Id, monthPartitionKey[0]).ConfigureAwait(false);
         }

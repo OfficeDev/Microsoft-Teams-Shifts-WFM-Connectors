@@ -202,6 +202,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         public string AuthTokenCacheLifetimeInSeconds => this.configuration["AuthTokenCacheLifetimeInSeconds"];
 
         /// <summary>
+        /// Gets whether manager CRUD within Teams is enabled.
+        /// </summary>
+        public string AllowManagersToModifyScheduleInTeams => this.configuration["AllowManagersToModifyScheduleInTeams"];
+
+        /// <summary>
         /// Gets the number of org job path section sto use as the activity display name.
         /// </summary>
         public string NumberOfOrgJobPathSectionsForActivityName => this.configuration["NumberOfOrgJobPathSectionsForActivityName"];

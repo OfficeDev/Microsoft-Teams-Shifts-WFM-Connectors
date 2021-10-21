@@ -296,7 +296,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var shift = ControllerHelper.Get<Shift>(jsonModel, "/shifts/", approved);
 
                 var openShift = ControllerHelper.Get<OpenShiftIS>(jsonModel, "/openshifts/", approved);
-                var kronosUniqueId = this.utility.CreateUniqueId(shift, kronosTimeZone);
+                var kronosUniqueId = this.utility.CreateShiftUniqueId(shift, kronosTimeZone);
                 var newShiftLinkEntity = this.shiftController.CreateNewShiftMappingEntity(shift, kronosUniqueId, kronosUserId);
 
                 await this.ApproveOpenShiftRequestInTables(openShiftRequest, openShift, responseModelList).ConfigureAwait(false);
@@ -338,7 +338,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             updateProps.Add("GraphOpenShiftRequestId", finalOpenShiftRequest.Id);
             updateProps.Add("GraphOpenShiftId", finalOpenShift.Id);
 
-            var kronosUniqueId = this.utility.CreateUniqueId(finalShift, kronosTimeZone);
+            var kronosUniqueId = this.utility.CreateShiftUniqueId(finalShift, kronosTimeZone);
 
             this.telemetryClient.TrackTrace("KronosHash-OpenShiftRequestApproval-TeamsController: " + kronosUniqueId);
             try

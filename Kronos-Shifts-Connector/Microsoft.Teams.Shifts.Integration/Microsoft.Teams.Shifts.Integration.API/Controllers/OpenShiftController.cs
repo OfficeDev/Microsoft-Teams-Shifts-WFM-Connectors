@@ -97,7 +97,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             // Likewise there is no share schedule WFI call.
             if (openShift.DraftOpenShift != null)
             {
-                return ResponseHelper.CreateBadResponse(openShift.Id, error: "Creating a draft open shift is not supported. Please publish changes directly using the 'Share' button.");
+                return ResponseHelper.CreateBadResponse(openShift.Id, error: "Creating an open shift as a draft is not supported for your team in Teams. Please publish changes directly using the 'Share' button.");
             }
 
             if (openShift.SharedOpenShift == null)
@@ -107,7 +107,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             if (openShift.SharedOpenShift.Activities.Any())
             {
-                return ResponseHelper.CreateBadResponse(openShift.Id, error: "Adding activities to open shifts is not supported. Please remove all activities and try sharing again.");
+                return ResponseHelper.CreateBadResponse(openShift.Id, error: "Adding activities to open shifts is not supported for your team in Teams. Remove all activities and try sharing again.");
             }
 
             var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
