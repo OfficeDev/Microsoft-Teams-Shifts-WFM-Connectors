@@ -73,7 +73,7 @@ Review and ensure AAD users, Teams, and Scheduling Groups are properly setup in 
 #### Configuration to Enable Syncing of Notes
 Kronos requires a **Comment Text** value to be assigned to any comments or notes. This requires you to firstly configure each comment text before adding the chosen values in to the connector appSettings - this will be done when we deploy using the ARM template.
 
-The following settings you must configure are:
+You must configure the following settings:
    - **ShiftNotesCommentText** - Used for syncing shift notes (we also use this category for open shift notes).
    - **SenderTimeOffRequestCommentText** - Used for syncing time off request notes added by the requestor.
    - **ManagerTimeOffRequestCommentText** - Used for syncing time off request notes added by the manager. (Please note we do not currently support manager TOR note syncing, however plan to in the near future).

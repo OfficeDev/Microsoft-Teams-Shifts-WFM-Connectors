@@ -10,7 +10,7 @@ A manager can now modify a schedule within Teams allowing them to create new shi
 
 To enable this feature please set the value of *'AllowManagersToModifyScheduleInTeams'* to true when deploying. 
 
-Please bare the following considerations in mind:
+Please consider the following:
 
 - A manager has to share changes directly using the Share button. Drafting entities within Teams using the Save button is actively blocked
 - A manager cannot create a shift with activities and cannot edit activities within Teams. 
@@ -23,7 +23,7 @@ A manager can now create open shifts within Teams in the same way as above. This
 
 To enable this feature please set the value of *'AllowManagersToModifyScheduleInTeams'* to true when deploying. 
 
-Please bare the following considerations in mind:
+Please consider the following:
 
 - A manager cannot draft an open shift creation using the Save button
 
