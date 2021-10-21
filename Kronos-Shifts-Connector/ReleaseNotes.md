@@ -8,7 +8,36 @@
 
 A manager can now modify a schedule within Teams allowing them to create new shifts, edit existing shifts and remove shifts completely. All changes will sync across to Kronos as they are made.
 
-To enable this feature please set the value of the 
+To enable this feature please set the value of *'AllowManagersToModifyScheduleInTeams'* to true when deploying. 
+
+Please bare the following considerations in mind:
+
+- A manager has to share changes directly using the Share button. Drafting entities within Teams using the Save button is actively blocked
+- A manager cannot create a shift with activities and cannot edit activities within Teams. 
+- A manager cannot create a transfer shift
+- A manager cannot edit a transfer shift
+
+**Manager can Create Open shifts**
+
+A manager can now create open shifts within Teams in the same way as above. This also enables managers to create open shifts in teams with a slot count.
+
+To enable this feature please set the value of *'AllowManagersToModifyScheduleInTeams'* to true when deploying. 
+
+Please bare the following considerations in mind:
+
+- A manager cannot draft an open shift creation using the Save button
+
+- A manager cannot ever update or delete open shifts in Teams, please make these changes within Kronos
+- A manager cannot create an open shift with activities within Teams
+- A manager cannot create an open shift which includes a shift transfer
+
+**Additional Note Syncing Supported** 
+
+We now support syncing even more types of notes between Kronos and Teams. We have added support for syncing shift notes, sender swap request notes and recipient swap request notes.
+
+Syncing these notes requires a relevant commentText value to be created in Kronos during deployment. Please refer to the section titled *Configuration to Enable Syncing of Notes* within the readme for steps on how to do this.
+
+Please note that open shifts share the commentText value used for shift notes.
 
 ### 30th September 2021
 
