@@ -385,7 +385,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         public string GetOpenShiftNotes(App.KronosWfc.Models.ResponseEntities.OpenShift.Batch.ScheduleShift openShift)
         {
             var provider = CultureInfo.InvariantCulture;
-            string result, noteContents;
+            string result;
             this.telemetryClient.TrackTrace($"GetOpenShiftNotes start at {DateTime.UtcNow.ToString("O", provider)}");
 
             if (openShift is null)
@@ -395,17 +395,16 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
 
             if (openShift.OpenShiftComments != null)
             {
-                noteContents = string.Empty;
-                var notesStr = string.Empty;
+                var notesList = new List<string>();
                 foreach (var comment in openShift.OpenShiftComments.Comment)
                 {
                     foreach (var note in comment.Notes.Note)
                     {
-                        notesStr += $"- {note.Text}";
+                        notesList.Add(note.Text);
                     }
                 }
 
-                result = noteContents;
+                result = string.Join(" * ", notesList.ToArray());
                 this.telemetryClient.TrackTrace($"Notes-OpenShiftEntity: {result}");
             }
             else

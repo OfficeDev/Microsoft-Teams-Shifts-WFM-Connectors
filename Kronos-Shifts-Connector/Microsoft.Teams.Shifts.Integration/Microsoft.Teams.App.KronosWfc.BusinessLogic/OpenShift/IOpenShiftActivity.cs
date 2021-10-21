@@ -7,6 +7,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using Microsoft.Teams.App.KronosWfc.Models.CommonEntities;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift.OpenShiftRequest;
     using OpenShiftResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.OpenShift.Batch.Response;
 
@@ -28,6 +29,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
         /// <param name="startTime">The start time of the open shift.</param>
         /// <param name="endTime">The end time of the open shift.</param>
         /// <param name="slotCount">The number of open shifts to create.</param>
+        /// <param name="comments">The comments for the open shift.</param>
         /// <returns>A task containing the response.</returns>
         Task<OpenShiftResponse> CreateOpenShiftAsync(
             Uri endpoint,
@@ -39,7 +41,8 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
             string openShiftlabel,
             string startTime,
             string endTime,
-            int slotCount);
+            int slotCount,
+            Comments comments);
 
         /// <summary>
         /// Fetch open shifts from Kronos in a batch manner.

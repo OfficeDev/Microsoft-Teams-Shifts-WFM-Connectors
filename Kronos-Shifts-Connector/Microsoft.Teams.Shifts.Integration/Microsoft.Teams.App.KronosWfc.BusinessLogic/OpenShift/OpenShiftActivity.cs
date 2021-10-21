@@ -55,7 +55,8 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
             string openShiftLabel,
             string startTime,
             string endTime,
-            int slotCount)
+            int slotCount,
+            Comments comments)
         {
             var createOpenShiftRequest = this.CreateOpenShiftRequest(
                 shiftStartDate,
@@ -65,7 +66,8 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
                 openShiftLabel,
                 startTime,
                 endTime,
-                slotCount);
+                slotCount,
+                comments);
 
             var response = await this.apiHelper.SendSoapPostRequestAsync(
                 endpoint,
@@ -292,7 +294,8 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
             string openShiftLabel,
             string startTime,
             string endTime,
-            int slotCount)
+            int slotCount,
+            Comments comments)
         {
             // If the open shift spans across 2 days then secondDayNumber needs to be 2.
             var secondDayNumber = overADateBorder ? 2 : 1;
@@ -309,6 +312,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
                     IsOpenShift = true,
                     ShiftLabel = openShiftLabel,
                     ShiftSegments = new CommonSegments().Create(startTime, endTime, 1, secondDayNumber, jobPath),
+                    Comments = comments,
                 });
             }
 
