@@ -1175,6 +1175,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     {
                         var kronosRequestorsShiftUniqueId = this.utility.CreateShiftUniqueId(requestorShift, kronosTimeZone);
                         var kronosRequestedShiftUniqueId = this.utility.CreateShiftUniqueId(requestedShift, kronosTimeZone);
+
                         var requestorsShiftLink = this.shiftController.CreateNewShiftMappingEntity(requestorShift, kronosRequestorsShiftUniqueId, kronosRequestorUserId);
                         var requestedShiftLink = this.shiftController.CreateNewShiftMappingEntity(requestedShift, kronosRequestedShiftUniqueId, kronosRequestedUserId);
 

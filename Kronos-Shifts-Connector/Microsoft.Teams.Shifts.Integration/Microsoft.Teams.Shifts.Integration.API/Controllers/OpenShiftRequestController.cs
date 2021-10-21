@@ -736,7 +736,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                 return new CommonShiftSegments { ShiftSegment = segments, };
             }
-
+            
             foreach (var item in graphOpenShift.SharedOpenShift.Activities)
             {
                 // OrgJobPath represent a job in Kronos and so we do not want to give an orgJobPath value

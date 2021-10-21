@@ -200,6 +200,8 @@
     <Compile Include="RequestEntities\Common\RequestIds.cs" />
     <Compile Include="RequestEntities\Common\Employees.cs" />
     <Compile Include="RequestEntities\Common\RequestMgmt.cs" />
+    <Compile Include="RequestEntities\Common\ShiftSegment.cs" />
+    <Compile Include="RequestEntities\Common\ShiftSegments.cs" />
     <Compile Include="RequestEntities\Common\TimeOffPeriod.cs" />
     <Compile Include="RequestEntities\Common\TimeOffPeriods.cs" />
     <Compile Include="RequestEntities\HyperFind\Request.cs" />

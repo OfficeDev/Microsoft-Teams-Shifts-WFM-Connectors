@@ -732,6 +732,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 // Fetch notes for the swap shift request.
                                 var notes = approvedData.RequestStatusChanges?.RequestStatusChange;
                                 var note = notes.Select(c => c.Comments).FirstOrDefault()?.Comment?.FirstOrDefault()?.Notes?.Note?.FirstOrDefault().Text;
+
                                 await this.AddSwapShiftApprovalAsync(
                                     allRequiredConfigurations.ShiftsAccessToken,
                                     swapShiftEntity,
@@ -752,6 +753,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 // Fetch notes for the swap shift request.
                                 var notes = refusedData.RequestStatusChanges?.RequestStatusChange;
                                 var note = notes.Select(c => c.Comments).FirstOrDefault()?.Comment?.FirstOrDefault()?.Notes?.Note?.FirstOrDefault().Text;
+
                                 await this.DeclineSwapShiftRequestAsync(
                                     allRequiredConfigurations?.ShiftsAccessToken,
                                     swapShiftEntity?.ShiftsTeamId,
@@ -775,6 +777,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 // Fetch notes for the swap shift request.
                                 var notes = retractedData.RequestStatusChanges?.RequestStatusChange;
                                 var note = notes.Select(c => c.Comments).FirstOrDefault()?.Comment?.FirstOrDefault()?.Notes?.Note?.FirstOrDefault().Text;
+
                                 await this.DeclineSwapShiftRequestAsync(
                                     allRequiredConfigurations?.ShiftsAccessToken,
                                     swapShiftEntity?.ShiftsTeamId,
@@ -811,6 +814,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         {
             var provider = CultureInfo.InvariantCulture;
             this.telemetryClient.TrackTrace($"ApproveSwapShiftInKronos start at: {DateTime.Now.ToString("o", provider)}");
+
             this.utility.SetQuerySpan(true, out var openShiftStartDate, out var openShiftEndDate);
 
             var openShiftQueryDateSpan = $"{openShiftStartDate}-{openShiftEndDate}";

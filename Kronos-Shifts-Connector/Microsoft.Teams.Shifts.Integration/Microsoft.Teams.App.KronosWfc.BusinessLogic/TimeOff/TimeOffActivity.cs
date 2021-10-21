@@ -220,6 +220,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
 
             // There is a bug in Teams when creating a TOR on mobile that does not span a full day
             // where seconds and miliseconds are being added to the start and end time.
+
             DateTimeOffset modifiedStartDateTime = startDateTime.AddMilliseconds(-startDateTime.Millisecond).AddSeconds(-startDateTime.Second);
             DateTimeOffset modifiedEndDateTime = endDateTime.AddMilliseconds(-endDateTime.Millisecond).AddSeconds(-endDateTime.Second);
 
