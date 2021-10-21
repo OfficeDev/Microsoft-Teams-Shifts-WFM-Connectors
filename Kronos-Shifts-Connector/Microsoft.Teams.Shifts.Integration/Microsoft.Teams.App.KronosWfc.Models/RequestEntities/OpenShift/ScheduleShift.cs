@@ -6,6 +6,7 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Schedule
 {
     using System.Collections.Generic;
     using System.Xml.Serialization;
+    using Microsoft.Teams.App.KronosWfc.Models.CommonEntities;
 
     /// <summary>
     /// This class models the ScheduleShift.
@@ -55,5 +56,11 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Schedule
         /// </summary>
         [XmlAttribute]
         public bool IsOpenShift { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Comments associated with the shift.
+        /// </summary>
+        [XmlElement]
+        public Comments Comments { get; set; }
     }
 }

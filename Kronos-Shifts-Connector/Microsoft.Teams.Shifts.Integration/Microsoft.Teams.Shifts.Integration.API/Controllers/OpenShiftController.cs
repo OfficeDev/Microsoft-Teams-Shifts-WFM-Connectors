@@ -16,6 +16,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.ApplicationInsights;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.Teams.App.KronosWfc.BusinessLogic.Common;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift;
     using Microsoft.Teams.App.KronosWfc.Common;
     using Microsoft.Teams.Shifts.Integration.API.Common;
@@ -119,6 +120,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var possibleTeams = await this.teamDepartmentMappingProvider.GetMappedTeamDetailsBySchedulingGroupAsync(team.TeamId, openShift.SchedulingGroupId).ConfigureAwait(false);
             var openShiftOrgJobPath = possibleTeams.FirstOrDefault().RowKey;
 
+            var commentTimeStamp = this.utility.UTCToKronosTimeZone(DateTime.UtcNow, team.KronosTimeZone).ToString(CultureInfo.InvariantCulture);
+            var comments = XmlHelper.GenerateKronosComments(openShift.SharedOpenShift.Notes, this.appSettings.ShiftNotesCommentText, commentTimeStamp);
+
             var openShiftDetails = new
             {
                 KronosStartDateTime = this.utility.UTCToKronosTimeZone(openShift.SharedOpenShift.StartDateTime, team.KronosTimeZone),
@@ -136,7 +140,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 openShiftDetails.DisplayName,
                 openShiftDetails.KronosStartDateTime.TimeOfDay.ToString(),
                 openShiftDetails.KronosEndDateTime.TimeOfDay.ToString(),
-                openShift.SharedOpenShift.OpenSlotCount).ConfigureAwait(false);
+                openShift.SharedOpenShift.OpenSlotCount,
+                comments).ConfigureAwait(false);
 
             if (creationResponse.Status != ApiConstants.Success)
             {
