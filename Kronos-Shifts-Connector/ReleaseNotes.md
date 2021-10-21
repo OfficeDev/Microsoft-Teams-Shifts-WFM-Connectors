@@ -1,5 +1,34 @@
 # Release Notes
 
+### 21st October 2021
+
+------
+
+**Manager Create, Update and Delete shifts in Teams**
+
+A manager can now modify a schedule within Teams allowing them to create new shifts, edit existing shifts and remove shifts completely. All changes will sync across to Kronos as they are made.
+
+To enable this feature please set the value of the 
+
+### 30th September 2021
+
+------
+
+**Further Improvements to Transfer Shift Visibility**
+
+We have improved the way that a shift indicates to employees that it contains a shift transfer (all or part of the shift involves a job other than their main job).
+
+- The colour of shifts including a transfer is set as dark-pink. This is configurable in the integration-Api appSettings.
+- The display name that is shown for all shift transfers is configurable. This value has a max value of 16 characters and is defaulted to 'TRANSFER'. Whatever value you provide will be followed by the start and end time of the entire shift ie. TRANSFER 08:00 - 15:00 
+
+**Bugfixes**
+
+- Seconds and milliseconds were being added to a time off request when requested on mobile for a partial day
+- Open shifts could not be requested when they started at midnight
+- Could not request to swap a shift if it had already been swapped once before
+
+
+
 ### 27th August 2021
 
 ------
