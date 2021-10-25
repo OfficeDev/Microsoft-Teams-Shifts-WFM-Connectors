@@ -37,7 +37,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         }
 
         /// <summary>
-        /// Function that will return all of the Users that are mapped in Azure Table storage.
+        /// Function that will return all of the users that are mapped in Azure Table storage.
         /// </summary>
         /// <returns>A list of the mapped Users.</returns>
         public async Task<List<AllUserMappingEntity>> GetAllMappedUserDetailsAsync()
@@ -62,7 +62,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         }
 
         /// <summary>
-        /// Function that will return all of the Users that are mapped in Azure Table storage.
+        /// Function that will return all of the active users that are mapped in Azure Table storage.
         /// </summary>
         /// <returns>A list of the mapped Users.</returns>
         public async Task<List<AllUserMappingEntity>> GetAllActiveMappedUserDetailsAsync()
