@@ -596,15 +596,6 @@ namespace Microsoft.Teams.Shifts.Integration.API
                 return ResourceManager.GetString("ProcessCreateOpenShiftRequestFromTeamsAsync", resourceCulture);
             }
         }
-
-        /// <summary>
-        ///   Looks up a localized string similar to ProcessCreateOpenShiftRequestFromTeamsAsync.
-        /// </summary>
-        public static string ProcessCreateOpenShiftRequestFromTeamsAsync {
-            get {
-                return ResourceManager.GetString("ProcessCreateOpenShiftRequestFromTeamsAsync", resourceCulture);
-            }
-        }
         
         /// <summary>
         ///   Looks up a localized string similar to ProcessKronosToShiftsShiftsAsync.
