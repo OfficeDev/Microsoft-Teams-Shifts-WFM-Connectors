@@ -85,16 +85,16 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             {
                 var isUserActive = response.HyperFindResult.Any(h => h.PersonNumber == mappedUser.RowKey);
 
-                // User is either inactive or terminated in Kronos.
-                if (!isUserActive)
+                if (!isUserActive && mappedUser.IsActive)
                 {
+                    // User is either inactive or terminated in Kronos but appears as active in cache.
                     mappedUser.IsActive = false;
                     await this.userMappingProvider.SaveOrUpdateUserMappingEntityAsync(mappedUser).ConfigureAwait(false);
                 }
 
-                // User is active in Kronos but has previosuly been marked as inactive in cache.
                 if (isUserActive && !mappedUser.IsActive)
                 {
+                    // User is active in Kronos but has previosuly been marked as inactive in cache.
                     mappedUser.IsActive = true;
                     await this.userMappingProvider.SaveOrUpdateUserMappingEntityAsync(mappedUser).ConfigureAwait(false);
                 }
