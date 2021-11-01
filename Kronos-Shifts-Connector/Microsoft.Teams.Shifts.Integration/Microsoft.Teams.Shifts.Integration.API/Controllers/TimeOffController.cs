@@ -375,11 +375,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             if (allRequiredConfigurations.IsAllSetUpExists)
             {
-                // There is a bug in Teams where a managers notes(managerActionMessage) are not added to
-                // the WFI request body. Until this is fixed syncing of manager notes from Teams to Kronos
-                // is not possible. Uncommenting this code once fixed should get manager note syncing to work.
-
-                /*
                 // Get the existing time off request entity so we can add to existing notes
                 var usersTimeOffRequestDetails = await this.timeOffActivity.GetTimeOffRequestDetailsAsync(
                         new Uri(allRequiredConfigurations.WfmEndPoint),
@@ -402,7 +397,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     return false;
                 }
 
-                var comments = XmlHelper.GenerateKronosComments(managerMessage, this.appSettings.ManagerTimeOffRequestCommentText, timeOffRequest.Comments);
+                var commentTimeStamp = this.utility.UTCToKronosTimeZone(DateTime.UtcNow, kronosTimeZone).ToString(CultureInfo.InvariantCulture);
+                var comments = XmlHelper.GenerateKronosComments(managerMessage, this.appSettings.ManagerTimeOffRequestCommentText, commentTimeStamp, timeOffRequest.Comments.Comment);
 
                 // Add the comments to the time off request entity
                 var addCommentsResponse = await this.timeOffActivity.AddManagerCommentsToTimeOffRequestAsync(
@@ -421,7 +417,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     this.telemetryClient.TrackTrace($"Failed to add the manager notes to the time off request: {kronosReqId}", data);
                     return false;
                 }
-                */
 
                 var response =
                     await this.timeOffActivity.ApproveOrDenyTimeOffRequestAsync(

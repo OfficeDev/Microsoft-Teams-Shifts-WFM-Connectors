@@ -39,10 +39,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
         /// <param name="personNumber">The kronos employee id of the user who created request.</param>
         /// <param name="kronosRequestId">The kronos request id.</param>
         /// <returns>Request details response object.</returns>
-        /// <remarks>
-        /// Due to a bug in Teams this method is not currently used however it is required once
-        /// the bug is fixed.
-        /// </remarks>
         Task<Response> GetTimeOffRequestDetailsAsync(
             Uri endPointUrl,
             string jSession,
