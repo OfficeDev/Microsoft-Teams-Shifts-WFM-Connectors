@@ -646,38 +646,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         }
 
         /// <summary>
-        /// Method that creates the Microsoft Graph Service client.
-        /// </summary>
-        /// <param name="token">The Graph Access token.</param>
-        /// <returns>A type of <see cref="GraphServiceClient"/> contained in a unit of execution.</returns>
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-
-        private async Task<GraphServiceClient> CreateGraphClientWithDelegatedAccessAsync(
-            string token,
-            string workforceIntegrationId)
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
-        {
-            if (string.IsNullOrEmpty(token))
-            {
-                throw new ArgumentNullException(token);
-            }
-
-            var provider = CultureInfo.InvariantCulture;
-            this.telemetryClient.TrackTrace($"CreateGraphClientWithDelegatedAccessAsync-TimeController called at {DateTime.Now.ToString("o", provider)}");
-
-            var graphClient = new GraphServiceClient(
-            new DelegateAuthenticationProvider(
-                (requestMessage) =>
-                {
-                    requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                    requestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    requestMessage.Headers.Add("X-MS-WFMPassthrough", workforceIntegrationId);
-                    return Task.FromResult(0);
-                }));
-            return graphClient;
-        }
-
-        /// <summary>
         /// Method that will calculate the end date accordingly.
         /// </summary>
         /// <param name="requestItem">An object of type <see cref="GlobalTimeOffRequestItem"/>.</param>

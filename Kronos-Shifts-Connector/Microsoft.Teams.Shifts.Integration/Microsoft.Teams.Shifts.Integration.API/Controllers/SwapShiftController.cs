@@ -161,8 +161,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                 // Step 1c - Get the sender's shift details.
                 var senderShiftDetails = await this.GetShiftDetailsAsync(
-                    allRequiredConfigurations.GraphConfigurationDetails.ShiftsAccessToken,
-                    allRequiredConfigurations.GraphConfigurationDetails.ShiftsAdminAadObjectId,
+                    allRequiredConfigurations,
                     teamsId,
                     swapRequest.SenderShiftId).ConfigureAwait(false);
 
@@ -173,8 +172,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                     // Step 1e - Get the recipient's shift details.
                     var recipientShiftDetails = await this.GetShiftDetailsAsync(
-                        allRequiredConfigurations.GraphConfigurationDetails.ShiftsAccessToken,
-                        allRequiredConfigurations.GraphConfigurationDetails.ShiftsAdminAadObjectId,
+                        allRequiredConfigurations,
                         teamsId,
                         swapRequest.RecipientShiftId).ConfigureAwait(false);
 
@@ -425,8 +423,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var recipient = await this.userMappingProvider.GetUserMappingEntityAsyncNew(swapRequest.RecipientUserId, teamsId).ConfigureAwait(false);
 
                 var senderShiftDetails = await this.GetShiftDetailsAsync(
-                        allRequiredConfigurations.GraphConfigurationDetails.ShiftsAccessToken,
-                        allRequiredConfigurations.GraphConfigurationDetails.ShiftsAdminAadObjectId,
+                        allRequiredConfigurations,
                         teamsId,
                         swapRequest.SenderShiftId).ConfigureAwait(false);
 
@@ -436,8 +433,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     this.telemetryClient.TrackTrace($"{Resource.ApproveOrDeclineSwapShiftRequestToKronosAsync} - Successfully got the shift of {sender?.KronosUserName} - {senderShiftDetails?.Id}", telemetryProps);
 
                     var recipientShiftDetails = await this.GetShiftDetailsAsync(
-                    allRequiredConfigurations.GraphConfigurationDetails.ShiftsAccessToken,
-                    allRequiredConfigurations.GraphConfigurationDetails.ShiftsAdminAadObjectId,
+                    allRequiredConfigurations,
                     teamsId,
                     swapRequest.RecipientShiftId).ConfigureAwait(false);
 
@@ -722,8 +718,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         allRequiredConfigurations.KronosSession,
                         queryDateSpan).ConfigureAwait(false);
 
-                    var graphClient = this.CreateGraphClientWithDelegatedAccess(allRequiredConfigurations.GraphConfigurationDetails.ShiftsAccessToken);
-
                     if (swapshiftDetails != null && swapshiftDetails.RequestMgmt?.RequestItems?.SwapShiftRequestItem?.Count > 0)
                     {
                         // Process for only those requests which are approved in Kronos but still pending in our db.
@@ -868,57 +862,46 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <summary>
         /// This method obtains the Shift details from Microsoft Graph.
         /// </summary>
-        /// <param name="accessToken">The MS Graph Access token.</param>
-        /// <param name="userId">The AAD object ID of the user.</param>
+        /// <param name="allRequiredConfigurations">All required configuration.</param>
         /// <param name="teamsId">The team ID that the user belongs to.</param>
         /// <param name="shiftId">The Shift ID being requested.</param>
         /// <returns>A unit of exection that contains a type of <see cref="Graph.Shift"/>.</returns>
-        private async Task<Graph.Shift> GetShiftDetailsAsync(string accessToken, string userId, string teamsId, string shiftId)
+        private async Task<Graph.Shift> GetShiftDetailsAsync(SetupDetails allRequiredConfigurations, string teamsId, string shiftId)
         {
             var telemetryProps = new Dictionary<string, string>
             {
-                { "ShiftDetails for user: ", userId },
                 { "ShiftDetails for ShiftId: ", shiftId },
             };
 
             this.telemetryClient.TrackTrace($"GetShiftDetailsAsync start at {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}", telemetryProps);
 
-            // Populates the graphClient variable.
-            var graphClient = this.CreateGraphClientWithDelegatedAccess(accessToken);
-
             // Check if shift is synced from Kronos.
             if (await this.swapShiftMappingEntityProvider.CheckShiftExistanceAsync(shiftId).ConfigureAwait(false))
             {
                 // Get the shift details using graph call.
-                var shiftDetails = await graphClient.Teams[teamsId].Schedule.Shifts[shiftId].Request().GetAsync().ConfigureAwait(false);
-                this.telemetryClient.TrackTrace($"GetShiftDetailsAsync end at {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}", telemetryProps);
-                return shiftDetails;
+                var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfigurations.GraphConfigurationDetails.ShiftsAccessToken);
+
+                // Send Passthrough header to indicate the sender of request in outbound call.
+                httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", allRequiredConfigurations.WFIId);
+
+                var requestUrl = $"teams/{teamsId}/schedule/shifts/{shiftId}";
+
+                var response = await this.graphUtility.SendGraphHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Get, requestUrl).ConfigureAwait(false);
+                if (response.IsSuccessStatusCode)
+                {
+                    this.telemetryClient.TrackTrace($"GetShiftDetailsAsync end at {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}", telemetryProps);
+
+                    var responseString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    return JsonConvert.DeserializeObject<Microsoft.Graph.Shift>(responseString);
+                }
+
+                return null;
             }
             else
             {
                 return null;
             }
-        }
-
-        /// <summary>
-        /// This method establishes the GraphServiceClient.
-        /// </summary>
-        /// <param name="accessToken">The Microsoft Graph Access token.</param>
-        /// <returns>A type of <see cref="GraphServiceClient"/> which enables Graph API calls to be made through C# code.</returns>
-        private GraphServiceClient CreateGraphClientWithDelegatedAccess(string accessToken)
-        {
-            this.telemetryClient.TrackTrace($"{MethodBase.GetCurrentMethod().Name}");
-
-            var graphClient = new GraphServiceClient(
-            new DelegateAuthenticationProvider(
-                (requestMessage) =>
-                {
-                    var token = accessToken;
-                    requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                    return Task.FromResult(0);
-                }));
-
-            return graphClient;
         }
 
         /// <summary>
