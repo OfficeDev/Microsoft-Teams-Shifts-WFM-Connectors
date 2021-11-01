@@ -262,12 +262,17 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                 var graphConfigurationDetails = this.utility.GetTenantDetails();
                 graphConfigurationDetails.ShiftsAdminAadObjectId = this.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
 
-                var graphAccessToken = await this.graphUtility.GetAccessTokenAsync(graphConfigurationDetails).ConfigureAwait(false);
+                graphConfigurationDetails.ShiftsAccessToken = await this.graphUtility.GetAccessTokenAsync(graphConfigurationDetails).ConfigureAwait(false);
+
+                configurationEntity.WorkforceIntegrationSecret = workforceIntegrationRequest.Encryption.Secret;
+                configurationEntity.AdminAadObjectId = this.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
+
+                await this.configurationProvider.SaveOrUpdateConfigurationAsync(configurationEntity).ConfigureAwait(false);
 
                 // Call the Graph API to register the workforce integration
                 var workforceIntegrationResponse = await this.graphUtility.RegisterWorkforceIntegrationAsync(
                     workforceIntegrationRequest,
-                    graphAccessToken).ConfigureAwait(false);
+                    graphConfigurationDetails).ConfigureAwait(false);
 
                 if (workforceIntegrationResponse.IsSuccessStatusCode)
                 {
