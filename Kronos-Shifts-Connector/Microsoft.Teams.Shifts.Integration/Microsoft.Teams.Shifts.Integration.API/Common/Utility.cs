@@ -20,6 +20,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests;
     using Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
+    using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.Graph;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers;
     using Newtonsoft.Json;
     using Logon = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Logon;
@@ -996,7 +997,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
                 { "CallingMethod", "UpdateTeam" },
             };
 
-            this.GetTenantDetails(out string tenantId, out string clientId, out string clientSecret, out string instance);
+            // Get config details necessary for graph operations from appSettings.
+            setupDetails.GraphConfigurationDetails = this.GetTenantDetails();
 
             // Get configuration info from table.
             var configurationEntity = (await this.configurationProvider.GetConfigurationsAsync().ConfigureAwait(false)).FirstOrDefault();
@@ -1010,17 +1012,16 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
                 setupDetails.ErrorMessage += Resource.KronosURLNotPresent;
             }
 
-            if (!string.IsNullOrEmpty(configurationEntity?.AdminAadObjectId))
+            if (!string.IsNullOrEmpty(configurationEntity.AdminAadObjectId))
             {
                 setupDetails.WFIId = configurationEntity?.WorkforceIntegrationId;
-                var accessToken = this.graphUtility.GetAccessTokenAsync(tenantId, instance, clientId, clientSecret, configurationEntity?.AdminAadObjectId).GetAwaiter().GetResult();
+                setupDetails.GraphConfigurationDetails.ShiftsAdminAadObjectId = configurationEntity?.AdminAadObjectId;
 
-                setupDetails.ShiftsAdminAadObjectId = configurationEntity?.AdminAadObjectId;
+                var accessToken = this.graphUtility.GetAccessTokenAsync(setupDetails.GraphConfigurationDetails).GetAwaiter().GetResult();
 
                 if (!string.IsNullOrEmpty(accessToken))
                 {
-                    setupDetails.ShiftsAccessToken = accessToken;
-                    setupDetails.TenantId = tenantId;
+                    setupDetails.GraphConfigurationDetails.ShiftsAccessToken = accessToken;
                 }
                 else
                 {
@@ -1046,7 +1047,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
 
             setupDetails.IsAllSetUpExists =
                 !string.IsNullOrEmpty(setupDetails.WFIId)
-                && !string.IsNullOrEmpty(setupDetails.ShiftsAccessToken)
+                && !string.IsNullOrEmpty(setupDetails.GraphConfigurationDetails.ShiftsAccessToken)
                 && !string.IsNullOrEmpty(setupDetails.KronosSession)
                 && !string.IsNullOrEmpty(setupDetails.WfmEndPoint)
                 && !string.IsNullOrEmpty(setupDetails.KronosPassword)
@@ -1087,20 +1088,16 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// <summary>
         /// Method to retrieve the necessary details from AppSettings.
         /// </summary>
-        /// <param name="tenantId">The tenant ID.</param>
-        /// <param name="clientId">The client ID.</param>
-        /// <param name="clientSecret">The client secret.</param>
-        /// <param name="instance">The instance URL.</param>
-        private void GetTenantDetails(
-            out string tenantId,
-            out string clientId,
-            out string clientSecret,
-            out string instance)
+        /// <returns>A GraphConfigurationDetails object.</returns>
+        public GraphConfigurationDetails GetTenantDetails()
         {
-            tenantId = this.appSettings.TenantId;
-            clientId = this.appSettings.ClientId;
-            clientSecret = this.appSettings.ClientSecret;
-            instance = this.appSettings.Instance;
+            return new GraphConfigurationDetails
+            {
+                TenantId = this.appSettings.TenantId,
+                ClientId = this.appSettings.ClientId,
+                ClientSecret = this.appSettings.ClientSecret,
+                Instance = this.appSettings.Instance,
+            };
         }
 
         /// <summary>
