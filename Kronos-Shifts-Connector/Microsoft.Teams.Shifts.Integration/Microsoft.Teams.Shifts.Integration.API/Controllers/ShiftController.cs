@@ -388,7 +388,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             // We now want to share the schedule between the start and end time of the deleted shift.
             await this.graphUtility.ShareSchedule(
-                            allRequiredConfigurations.ShiftsAccessToken,
+                            allRequiredConfigurations.GraphConfigurationDetails,
                             mappedTeam.TeamId,
                             shift.SharedShift.StartDateTime,
                             shift.SharedShift.EndDateTime,
@@ -706,39 +706,33 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             // create entries from not found list
             for (int i = 0; i < notFoundShifts.Count; i++)
             {
-                var requestString = JsonConvert.SerializeObject(notFoundShifts[i]);
-
                 var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", configurationDetails.ShiftsAccessToken);
-                httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", configurationDetails.GraphConfigurationDetails.ShiftsAccessToken);
                 httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", configurationDetails.WFIId);
 
-                using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, "teams/" + userModelNotFoundList[i].ShiftTeamId + "/schedule/shifts")
+                var requestUrl = $"teams/{userModelNotFoundList[i].ShiftTeamId}/schedule/shifts";
+                var requestString = JsonConvert.SerializeObject(notFoundShifts[i]);
+
+                var response = await this.graphUtility.SendGraphHttpRequest(configurationDetails.GraphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl, requestString).ConfigureAwait(false);
+                if (response.IsSuccessStatusCode)
                 {
-                    Content = new StringContent(requestString, Encoding.UTF8, "application/json"),
-                })
+                    var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var shiftResponse = JsonConvert.DeserializeObject<Models.Response.Shifts.Shift>(responseContent);
+                    var shiftId = shiftResponse.Id;
+                    var shiftMappingEntity = this.CreateNewShiftMappingEntity(shiftResponse, notFoundShifts[i].KronosUniqueId, userModelNotFoundList[i]);
+                    await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(shiftMappingEntity, shiftId, monthPartitionKey).ConfigureAwait(false);
+                    continue;
+                }
+                else
                 {
-                    var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                        var shiftResponse = JsonConvert.DeserializeObject<Models.Response.Shifts.Shift>(responseContent);
-                        var shiftId = shiftResponse.Id;
-                        var shiftMappingEntity = this.CreateNewShiftMappingEntity(shiftResponse, notFoundShifts[i].KronosUniqueId, userModelNotFoundList[i]);
-                        await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(shiftMappingEntity, shiftId, monthPartitionKey).ConfigureAwait(false);
-                        continue;
-                    }
-                    else
-                    {
-                        var errorProps = new Dictionary<string, string>()
+                    var errorProps = new Dictionary<string, string>()
                         {
                             { "ResultCode", response.StatusCode.ToString() },
                             { "IntegerResult", Convert.ToInt32(response.StatusCode, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture) },
                         };
 
-                        // Have the log to capture the 403.
-                        this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, errorProps);
-                    }
+                    // Have the log to capture the 403.
+                    this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, errorProps);
                 }
             }
         }
@@ -764,39 +758,40 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             foreach (var item in orphanList)
             {
                 var user = userModelList.FirstOrDefault(u => u.KronosPersonNumber == item.KronosPersonNumber);
+
+                if (user == null)
+                {
+                    return;
+                }
+
                 var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", configurationDetails.ShiftsAccessToken);
-                httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", configurationDetails.GraphConfigurationDetails.ShiftsAccessToken);
                 httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", configurationDetails.WFIId);
 
-                if (user != null)
+                var requestUrl = $"teams/{user.ShiftTeamId}/schedule/shifts/{item.RowKey}";
+
+                var response = await this.graphUtility.SendGraphHttpRequest(configurationDetails.GraphConfigurationDetails, httpClient, HttpMethod.Delete, requestUrl).ConfigureAwait(false);
+                if (response.IsSuccessStatusCode)
                 {
-                    using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Delete, $"teams/{user.ShiftTeamId}/schedule/shifts/{item.RowKey}"))
-                    {
-                        var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
-                        if (response.IsSuccessStatusCode)
-                        {
-                            var successfulDeleteProps = new Dictionary<string, string>()
+                    var successfulDeleteProps = new Dictionary<string, string>()
                             {
                                 { "ResponseCode", response.StatusCode.ToString() },
                                 { "ResponseHeader", response.Headers.ToString() },
                             };
 
-                            this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, successfulDeleteProps);
+                    this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, successfulDeleteProps);
 
-                            await this.shiftMappingEntityProvider.DeleteOrphanDataFromShiftMappingAsync(item).ConfigureAwait(false);
-                        }
-                        else
-                        {
-                            var errorDeleteProps = new Dictionary<string, string>()
+                    await this.shiftMappingEntityProvider.DeleteOrphanDataFromShiftMappingAsync(item).ConfigureAwait(false);
+                }
+                else
+                {
+                    var errorDeleteProps = new Dictionary<string, string>()
                             {
                                 { "ResponseCode", response.StatusCode.ToString() },
                                 { "ResponseHeader", response.Headers.ToString() },
                             };
 
-                            this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, errorDeleteProps);
-                        }
-                    }
+                    this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, errorDeleteProps);
                 }
             }
         }

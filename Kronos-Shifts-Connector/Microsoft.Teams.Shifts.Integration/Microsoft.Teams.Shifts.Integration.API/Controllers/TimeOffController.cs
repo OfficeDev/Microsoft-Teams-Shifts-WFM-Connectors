@@ -45,6 +45,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private readonly IAzureTableStorageHelper azureTableStorageHelper;
         private readonly ITimeOffMappingEntityProvider timeOffMappingEntityProvider;
         private readonly Utility utility;
+        private readonly IGraphUtility graphUtility;
         private readonly ITeamDepartmentMappingProvider teamDepartmentMappingProvider;
         private readonly IHttpClientFactory httpClientFactory;
         private readonly BackgroundTaskWrapper taskWrapper;
@@ -60,6 +61,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="azureTableStorageHelper">Azure Storage Helper DI.</param>
         /// <param name="timeOffMappingEntityProvider">Time Off Mapping Provider DI.</param>
         /// <param name="utility">Utility DI.</param>
+        /// <param name="graphUtility">Graph utility DI.</param>
         /// <param name="teamDepartmentMappingProvider">Team Department Mapping Provider DI.</param>
         /// <param name="httpClientFactory">HttpClientFactory DI.</param>
         /// <param name="taskWrapper">Wrapper class instance for BackgroundTask.</param>
@@ -72,6 +74,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             IAzureTableStorageHelper azureTableStorageHelper,
             ITimeOffMappingEntityProvider timeOffMappingEntityProvider,
             Utility utility,
+            IGraphUtility graphUtility,
             ITeamDepartmentMappingProvider teamDepartmentMappingProvider,
             IHttpClientFactory httpClientFactory,
             BackgroundTaskWrapper taskWrapper)
@@ -84,6 +87,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             this.azureTableStorageHelper = azureTableStorageHelper;
             this.timeOffMappingEntityProvider = timeOffMappingEntityProvider ?? throw new ArgumentNullException(nameof(timeOffMappingEntityProvider));
             this.utility = utility;
+            this.graphUtility = graphUtility;
             this.teamDepartmentMappingProvider = teamDepartmentMappingProvider;
             this.httpClientFactory = httpClientFactory;
             this.taskWrapper = taskWrapper;
@@ -116,7 +120,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var processNumberOfUsersInBatch = this.appSettings.ProcessNumberOfUsersInBatch;
                 var userCount = allUsers.Count();
                 int userIteration = Utility.GetIterablesCount(Convert.ToInt32(processNumberOfUsersInBatch, CultureInfo.InvariantCulture), userCount);
-                var graphClient = await this.CreateGraphClientWithDelegatedAccessAsync(allRequiredConfigurations.ShiftsAccessToken, allRequiredConfigurations.WFIId).ConfigureAwait(false);
 
                 if (monthPartitions?.Count > 0)
                 {
@@ -173,7 +176,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 lookUpData,
                                 timeOffDetails?.RequestMgmt?.RequestItems?.GlobalTimeOffRequestItem,
                                 timeOffReasons,
-                                graphClient,
                                 monthPartitionKey).ConfigureAwait(false);
                         }
                     }
@@ -463,7 +465,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="lookUpData">The look up data.</param>
         /// <param name="timeOffResponseDetails">The time off response details.</param>
         /// <param name="timeOffReasons">The time off reasons.</param>
-        /// <param name="graphClient">The MS Graph Service client.</param>
         /// <param name="monthPartitionKey">The montwise partition key.</param>
         /// <returns>A unit of execution.</returns>
         private async Task ProcessTimeOffEntitiesBatchAsync(
@@ -472,7 +473,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             List<TimeOffMappingEntity> lookUpData,
             List<GlobalTimeOffRequestItem> timeOffResponseDetails,
             List<PayCodeToTimeOffReasonsMappingEntity> timeOffReasons,
-            GraphServiceClient graphClient,
             string monthPartitionKey)
         {
             this.telemetryClient.TrackTrace($"ProcessTimeOffEntitiesBatchAsync start at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
@@ -599,8 +599,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                  monthPartitionKey,
                  globalTimeOffRequestDetails).ConfigureAwait(false);
 
-            await this.AddTimeOffRequestAsync(
-                graphClient,
+            await this.AddTimeOffAsync(
+                configurationDetails,
                 userModelNotFoundList,
                 timeOffNotFoundList,
                 kronosPayCodeList,
@@ -734,14 +734,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <summary>
         /// Method that will add a time off request.
         /// </summary>
-        /// <param name="graphClient">The MS Graph client.</param>
+        /// <param name="configurationDetails">The configuration details.</param>
         /// <param name="userModelNotFoundList">The list of users that are not found.</param>
         /// <param name="timeOffNotFoundList">This list of time off records that are not found.</param>
         /// <param name="kronosPayCodeList">The list of Kronos WFC Paycodes.</param>
         /// <param name="monthPartitionKey">The month partition key.</param>
         /// <returns>A unit of execution.</returns>
-        private async Task AddTimeOffRequestAsync(
-            GraphServiceClient graphClient,
+        private async Task AddTimeOffAsync(
+            SetupDetails configurationDetails,
             List<UserDetailsModel> userModelNotFoundList,
             List<GlobalTimeOffRequestItem> timeOffNotFoundList,
             List<PayCodeToTimeOffReasonsMappingEntity> kronosPayCodeList,
@@ -771,28 +771,40 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         },
                     };
 
-                    var timeOffs = await graphClient.Teams[userModelNotFoundList[i].ShiftTeamId].Schedule.TimesOff
-                        .Request()
-                        .AddAsync(timeOff).ConfigureAwait(false);
+                    var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", configurationDetails.GraphConfigurationDetails.ShiftsAccessToken);
 
-                    TimeOffMappingEntity timeOffMappingEntity = new TimeOffMappingEntity
+                    // Send Passthrough header to indicate the sender of request in outbound call.
+                    httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", configurationDetails.WFIId);
+
+                    var requestUrl = $"teams/{userModelNotFoundList[i].ShiftTeamId}/schedule/timesOff";
+                    var requestString = JsonConvert.SerializeObject(timeOff);
+
+                    var response = await this.graphUtility.SendGraphHttpRequest(configurationDetails.GraphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl, requestString).ConfigureAwait(false);
+                    if (response.IsSuccessStatusCode)
                     {
-                        Duration = timeOffNotFoundList[i].TimeOffPeriods.TimeOffPeriod.Duration,
-                        EndDate = timeOffNotFoundList[i].TimeOffPeriods.TimeOffPeriod.EndDate,
-                        StartDate = timeOffNotFoundList[i].TimeOffPeriods.TimeOffPeriod.StartDate,
-                        StartTime = timeOffNotFoundList[i].TimeOffPeriods.TimeOffPeriod.StartTime,
-                        PayCodeName = timeOffNotFoundList[i].TimeOffPeriods.TimeOffPeriod.PayCodeName,
-                        KronosPersonNumber = timeOffNotFoundList[i].Employee.PersonIdentity.PersonNumber,
-                        PartitionKey = monthPartitionKey,
-                        RowKey = timeOffNotFoundList[i].Id,
-                        ShiftsRequestId = timeOffs.Id,
-                        KronosRequestId = timeOffNotFoundList[i].Id,
-                        ShiftsStatus = ApiConstants.Pending,
-                        KronosStatus = ApiConstants.Submitted,
-                        IsActive = true,
-                    };
+                        var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                        var timeOffResponse = JsonConvert.DeserializeObject<TimeOff>(responseContent);
 
-                    this.AddorUpdateTimeOffMappingAsync(timeOffMappingEntity);
+                        TimeOffMappingEntity timeOffMappingEntity = new TimeOffMappingEntity
+                        {
+                            Duration = timeOffNotFoundList[i].TimeOffPeriods.TimeOffPeriod.Duration,
+                            EndDate = timeOffNotFoundList[i].TimeOffPeriods.TimeOffPeriod.EndDate,
+                            StartDate = timeOffNotFoundList[i].TimeOffPeriods.TimeOffPeriod.StartDate,
+                            StartTime = timeOffNotFoundList[i].TimeOffPeriods.TimeOffPeriod.StartTime,
+                            PayCodeName = timeOffNotFoundList[i].TimeOffPeriods.TimeOffPeriod.PayCodeName,
+                            KronosPersonNumber = timeOffNotFoundList[i].Employee.PersonIdentity.PersonNumber,
+                            PartitionKey = monthPartitionKey,
+                            RowKey = timeOffNotFoundList[i].Id,
+                            ShiftsRequestId = timeOffResponse.Id,
+                            KronosRequestId = timeOffNotFoundList[i].Id,
+                            ShiftsStatus = ApiConstants.Pending,
+                            KronosStatus = ApiConstants.Submitted,
+                            IsActive = true,
+                        };
+
+                        this.AddorUpdateTimeOffMappingAsync(timeOffMappingEntity);
+                    }
                 }
                 else
                 {
@@ -828,42 +840,36 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     Message = string.Empty,
                 };
 
-                var requestString = JsonConvert.SerializeObject(timeOffReqCon);
                 var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", configurationDetails.ShiftsAccessToken);
-                httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", configurationDetails.GraphConfigurationDetails.ShiftsAccessToken);
 
                 // Send Passthrough header to indicate the sender of request in outbound call.
                 httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", configurationDetails.WFIId);
 
-                using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, "teams/" + user[i].ShiftTeamId + "/schedule/timeOffRequests/" + timeOffLookUpEntriesFoundList[i].ShiftsRequestId + "/approve")
-                {
-                    Content = new StringContent(requestString, Encoding.UTF8, "application/json"),
-                })
-                {
-                    var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                        TimeOffMappingEntity timeOffMappingEntity = new TimeOffMappingEntity
-                        {
-                            Duration = globalTimeOffRequestDetails[i].TimeOffPeriods.TimeOffPeriod.Duration,
-                            EndDate = globalTimeOffRequestDetails[i].TimeOffPeriods.TimeOffPeriod.EndDate,
-                            StartDate = globalTimeOffRequestDetails[i].TimeOffPeriods.TimeOffPeriod.StartDate,
-                            StartTime = globalTimeOffRequestDetails[i].TimeOffPeriods.TimeOffPeriod.StartTime,
-                            PayCodeName = globalTimeOffRequestDetails[i].TimeOffPeriods.TimeOffPeriod.PayCodeName,
-                            KronosPersonNumber = globalTimeOffRequestDetails[i].Employee.PersonIdentity.PersonNumber,
-                            PartitionKey = monthPartitionKey,
-                            RowKey = globalTimeOffRequestDetails[i].Id,
-                            ShiftsRequestId = timeOffLookUpEntriesFoundList[i].ShiftsRequestId,
-                            IsActive = true,
-                            KronosRequestId = globalTimeOffRequestDetails[i].Id,
-                            ShiftsStatus = ApiConstants.ApprovedStatus,
-                            KronosStatus = ApiConstants.ApprovedStatus,
-                        };
+                var requestUrl = $"teams/{user[i].ShiftTeamId}/schedule/timeOffRequests/{timeOffLookUpEntriesFoundList[i].ShiftsRequestId}/approve";
+                var requestString = JsonConvert.SerializeObject(timeOffReqCon);
 
-                        this.AddorUpdateTimeOffMappingAsync(timeOffMappingEntity);
-                    }
+                var response = await this.graphUtility.SendGraphHttpRequest(configurationDetails.GraphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl, requestString).ConfigureAwait(false);
+                if (response.IsSuccessStatusCode)
+                {
+                    TimeOffMappingEntity timeOffMappingEntity = new TimeOffMappingEntity
+                    {
+                        Duration = globalTimeOffRequestDetails[i].TimeOffPeriods.TimeOffPeriod.Duration,
+                        EndDate = globalTimeOffRequestDetails[i].TimeOffPeriods.TimeOffPeriod.EndDate,
+                        StartDate = globalTimeOffRequestDetails[i].TimeOffPeriods.TimeOffPeriod.StartDate,
+                        StartTime = globalTimeOffRequestDetails[i].TimeOffPeriods.TimeOffPeriod.StartTime,
+                        PayCodeName = globalTimeOffRequestDetails[i].TimeOffPeriods.TimeOffPeriod.PayCodeName,
+                        KronosPersonNumber = globalTimeOffRequestDetails[i].Employee.PersonIdentity.PersonNumber,
+                        PartitionKey = monthPartitionKey,
+                        RowKey = globalTimeOffRequestDetails[i].Id,
+                        ShiftsRequestId = timeOffLookUpEntriesFoundList[i].ShiftsRequestId,
+                        IsActive = true,
+                        KronosRequestId = globalTimeOffRequestDetails[i].Id,
+                        ShiftsStatus = ApiConstants.ApprovedStatus,
+                        KronosStatus = ApiConstants.ApprovedStatus,
+                    };
+
+                    this.AddorUpdateTimeOffMappingAsync(timeOffMappingEntity);
                 }
             }
 
@@ -887,39 +893,36 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             string monthPartitionKey)
         {
             this.telemetryClient.TrackTrace($"DeclineTimeOffRequestAsync started for time off id {timeOffId}.");
+
             var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-            httpClient.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", configurationDetails.ShiftsAccessToken);
-            httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", configurationDetails.GraphConfigurationDetails.ShiftsAccessToken);
 
             // Send Passthrough header to indicate the sender of request in outbound call.
             httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", configurationDetails.WFIId);
 
-            using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, "teams/" + user.ShiftTeamId + "/schedule/timeOffRequests/" + timeOffId + "/decline"))
-            {
-                var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
-                if (response.IsSuccessStatusCode)
-                {
-                    var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    TimeOffMappingEntity timeOffMappingEntity = new TimeOffMappingEntity
-                    {
-                        Duration = globalTimeOffRequestItem.TimeOffPeriods.TimeOffPeriod.Duration,
-                        EndDate = globalTimeOffRequestItem.TimeOffPeriods.TimeOffPeriod.EndDate,
-                        StartDate = globalTimeOffRequestItem.TimeOffPeriods.TimeOffPeriod.StartDate,
-                        StartTime = globalTimeOffRequestItem.TimeOffPeriods.TimeOffPeriod.StartTime,
-                        PayCodeName = globalTimeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName,
-                        KronosPersonNumber = globalTimeOffRequestItem.Employee.PersonIdentity.PersonNumber,
-                        PartitionKey = monthPartitionKey,
-                        RowKey = globalTimeOffRequestItem.Id,
-                        ShiftsRequestId = timeOffId,
-                        IsActive = true,
-                        KronosRequestId = globalTimeOffRequestItem.Id,
-                        ShiftsStatus = globalTimeOffRequestItem.StatusName,
-                        KronosStatus = ApiConstants.Refused,
-                    };
+            var requestUrl = $"teams/" + user.ShiftTeamId + "/schedule/timeOffRequests/" + timeOffId + "/decline";
 
-                    this.AddorUpdateTimeOffMappingAsync(timeOffMappingEntity);
-                }
+            var response = await this.graphUtility.SendGraphHttpRequest(configurationDetails.GraphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl).ConfigureAwait(false);
+            if (response.IsSuccessStatusCode)
+            {
+                TimeOffMappingEntity timeOffMappingEntity = new TimeOffMappingEntity
+                {
+                    Duration = globalTimeOffRequestItem.TimeOffPeriods.TimeOffPeriod.Duration,
+                    EndDate = globalTimeOffRequestItem.TimeOffPeriods.TimeOffPeriod.EndDate,
+                    StartDate = globalTimeOffRequestItem.TimeOffPeriods.TimeOffPeriod.StartDate,
+                    StartTime = globalTimeOffRequestItem.TimeOffPeriods.TimeOffPeriod.StartTime,
+                    PayCodeName = globalTimeOffRequestItem.TimeOffPeriods.TimeOffPeriod.PayCodeName,
+                    KronosPersonNumber = globalTimeOffRequestItem.Employee.PersonIdentity.PersonNumber,
+                    PartitionKey = monthPartitionKey,
+                    RowKey = globalTimeOffRequestItem.Id,
+                    ShiftsRequestId = timeOffId,
+                    IsActive = true,
+                    KronosRequestId = globalTimeOffRequestItem.Id,
+                    ShiftsStatus = globalTimeOffRequestItem.StatusName,
+                    KronosStatus = ApiConstants.Refused,
+                };
+
+                this.AddorUpdateTimeOffMappingAsync(timeOffMappingEntity);
             }
 
             this.telemetryClient.TrackTrace($"DeclineTimeOffRequestAsync ended for time off id {timeOffId}.");

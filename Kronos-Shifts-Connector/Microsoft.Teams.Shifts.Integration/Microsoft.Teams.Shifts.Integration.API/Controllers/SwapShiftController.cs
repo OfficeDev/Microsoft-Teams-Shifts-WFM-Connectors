@@ -48,6 +48,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private readonly ISwapShiftActivity swapShiftActivity;
         private readonly ISwapShiftMappingEntityProvider swapShiftMappingEntityProvider;
         private readonly Utility utility;
+        private readonly IGraphUtility graphUtility;
         private readonly IHttpClientFactory httpClientFactory;
         private readonly ITeamDepartmentMappingProvider teamDepartmentMappingProvider;
         private readonly IShiftMappingEntityProvider shiftMappingEntityProvider;
@@ -63,6 +64,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="swapShiftActivity">swapshift activity.</param>
         /// <param name="swapShiftMappingEntityProvider">Swap Shift entity provider.</param>
         /// <param name="utility">UniqueId Utility DI.</param>
+        /// <param name="graphUtility">GraphUtility DI.</param>
         /// <param name="httpClientFactory">The HTTP Client DI.</param>
         /// <param name="shiftMappingEntityProvider">Shift mapping entity provider DI.</param>
         /// <param name="teamDepartmentMappingProvider">Team department mapping provider.</param>
@@ -75,6 +77,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             ISwapShiftActivity swapShiftActivity,
             ISwapShiftMappingEntityProvider swapShiftMappingEntityProvider,
             Utility utility,
+            IGraphUtility graphUtility,
             IHttpClientFactory httpClientFactory,
             ITeamDepartmentMappingProvider teamDepartmentMappingProvider,
             IShiftMappingEntityProvider shiftMappingEntityProvider,
@@ -92,6 +95,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             this.swapShiftActivity = swapShiftActivity;
             this.swapShiftMappingEntityProvider = swapShiftMappingEntityProvider;
             this.utility = utility;
+            this.graphUtility = graphUtility;
             this.httpClientFactory = httpClientFactory;
             this.teamDepartmentMappingProvider = teamDepartmentMappingProvider;
             this.shiftMappingEntityProvider = shiftMappingEntityProvider;
@@ -157,8 +161,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                 // Step 1c - Get the sender's shift details.
                 var senderShiftDetails = await this.GetShiftDetailsAsync(
-                    allRequiredConfigurations.ShiftsAccessToken,
-                    allRequiredConfigurations.ShiftsAdminAadObjectId,
+                    allRequiredConfigurations.GraphConfigurationDetails.ShiftsAccessToken,
+                    allRequiredConfigurations.GraphConfigurationDetails.ShiftsAdminAadObjectId,
                     teamsId,
                     swapRequest.SenderShiftId).ConfigureAwait(false);
 
@@ -169,8 +173,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                     // Step 1e - Get the recipient's shift details.
                     var recipientShiftDetails = await this.GetShiftDetailsAsync(
-                        allRequiredConfigurations.ShiftsAccessToken,
-                        allRequiredConfigurations.ShiftsAdminAadObjectId,
+                        allRequiredConfigurations.GraphConfigurationDetails.ShiftsAccessToken,
+                        allRequiredConfigurations.GraphConfigurationDetails.ShiftsAdminAadObjectId,
                         teamsId,
                         swapRequest.RecipientShiftId).ConfigureAwait(false);
 
@@ -421,8 +425,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var recipient = await this.userMappingProvider.GetUserMappingEntityAsyncNew(swapRequest.RecipientUserId, teamsId).ConfigureAwait(false);
 
                 var senderShiftDetails = await this.GetShiftDetailsAsync(
-                        allRequiredConfigurations.ShiftsAccessToken,
-                        allRequiredConfigurations.ShiftsAdminAadObjectId,
+                        allRequiredConfigurations.GraphConfigurationDetails.ShiftsAccessToken,
+                        allRequiredConfigurations.GraphConfigurationDetails.ShiftsAdminAadObjectId,
                         teamsId,
                         swapRequest.SenderShiftId).ConfigureAwait(false);
 
@@ -432,8 +436,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     this.telemetryClient.TrackTrace($"{Resource.ApproveOrDeclineSwapShiftRequestToKronosAsync} - Successfully got the shift of {sender?.KronosUserName} - {senderShiftDetails?.Id}", telemetryProps);
 
                     var recipientShiftDetails = await this.GetShiftDetailsAsync(
-                    allRequiredConfigurations.ShiftsAccessToken,
-                    allRequiredConfigurations.ShiftsAdminAadObjectId,
+                    allRequiredConfigurations.GraphConfigurationDetails.ShiftsAccessToken,
+                    allRequiredConfigurations.GraphConfigurationDetails.ShiftsAdminAadObjectId,
                     teamsId,
                     swapRequest.RecipientShiftId).ConfigureAwait(false);
 
@@ -718,7 +722,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         allRequiredConfigurations.KronosSession,
                         queryDateSpan).ConfigureAwait(false);
 
-                    var graphClient = this.CreateGraphClientWithDelegatedAccess(allRequiredConfigurations.ShiftsAccessToken);
+                    var graphClient = this.CreateGraphClientWithDelegatedAccess(allRequiredConfigurations.GraphConfigurationDetails.ShiftsAccessToken);
 
                     if (swapshiftDetails != null && swapshiftDetails.RequestMgmt?.RequestItems?.SwapShiftRequestItem?.Count > 0)
                     {
@@ -733,11 +737,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 var notes = approvedData.RequestStatusChanges?.RequestStatusChange;
                                 var note = notes.Select(c => c.Comments).FirstOrDefault()?.Comment?.FirstOrDefault()?.Notes?.Note?.FirstOrDefault().Text;
 
-                                await this.AddSwapShiftApprovalAsync(
-                                    allRequiredConfigurations.ShiftsAccessToken,
-                                    swapShiftEntity,
-                                    note,
-                                    allRequiredConfigurations.WFIId).ConfigureAwait(false);
+                                await this.AddSwapShiftApprovalAsync(allRequiredConfigurations, swapShiftEntity, note).ConfigureAwait(false);
                             }
                         }
                     }
@@ -755,12 +755,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 var note = notes.Select(c => c.Comments).FirstOrDefault()?.Comment?.FirstOrDefault()?.Notes?.Note?.FirstOrDefault().Text;
 
                                 await this.DeclineSwapShiftRequestAsync(
-                                    allRequiredConfigurations?.ShiftsAccessToken,
+                                    allRequiredConfigurations,
                                     swapShiftEntity?.ShiftsTeamId,
                                     swapShiftEntity,
                                     refusedData.StatusName,
-                                    note,
-                                    allRequiredConfigurations.WFIId).ConfigureAwait(false);
+                                    note).ConfigureAwait(false);
                             }
                         }
                     }
@@ -779,12 +778,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 var note = notes.Select(c => c.Comments).FirstOrDefault()?.Comment?.FirstOrDefault()?.Notes?.Note?.FirstOrDefault().Text;
 
                                 await this.DeclineSwapShiftRequestAsync(
-                                    allRequiredConfigurations?.ShiftsAccessToken,
+                                    allRequiredConfigurations,
                                     swapShiftEntity?.ShiftsTeamId,
                                     swapShiftEntity,
                                     retractedData?.StatusName,
-                                    note,
-                                    allRequiredConfigurations.WFIId).ConfigureAwait(false);
+                                    note).ConfigureAwait(false);
                             }
                         }
                     }
@@ -926,11 +924,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <summary>
         /// Method that posts an approved Swap Shift request to Shifts.
         /// </summary>
-        /// <param name="accessToken">The Microsoft Graph access token.</param>
+        /// <param name="allRequiredConfigurations">Configuration details.</param>
         /// <param name="swapShiftMappingEntity">The Swap Shift entity from database.</param>
         /// <param name="note">The necessary notes that are applicable to the Swap Shift request approval.</param>
-        /// <param name="wfIId">The workforce integration id.</param>
-        private async Task AddSwapShiftApprovalAsync(string accessToken, SwapShiftMappingEntity swapShiftMappingEntity, string note, string wfIId)
+        private async Task AddSwapShiftApprovalAsync(SetupDetails allRequiredConfigurations, SwapShiftMappingEntity swapShiftMappingEntity, string note)
         {
             var telemetryProps = new Dictionary<string, string>()
             {
@@ -942,73 +939,68 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             this.telemetryClient.TrackTrace($"{Resource.AddSwapShiftApprovalAsync} starts at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}", telemetryProps);
 
             var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfigurations.GraphConfigurationDetails.ShiftsAccessToken);
 
             // Send Passthrough header to indicate the sender of request in outbound call.
-            httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", wfIId);
+            httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", allRequiredConfigurations.WFIId);
 
-            // Approves the swapShift in Shifts.
+            var requestUrl = $"teams/{swapShiftMappingEntity.ShiftsTeamId}/schedule/swapShiftsChangeRequests/{swapShiftMappingEntity.RowKey}/approve";
+
             ApproveMsg approveMsg = new ApproveMsg { Message = note };
             var requestString = JsonConvert.SerializeObject(approveMsg);
-            using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, "teams/" + swapShiftMappingEntity.ShiftsTeamId + "/schedule/swapShiftsChangeRequests/" + swapShiftMappingEntity.RowKey + "/approve")
+
+            var response = await this.graphUtility.SendGraphHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl, requestString).ConfigureAwait(false);
+            if (response.IsSuccessStatusCode)
             {
-                Content = new StringContent(requestString, Encoding.UTF8, "application/json"),
-            })
-            {
-                var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
-                if (response.IsSuccessStatusCode)
+                swapShiftMappingEntity.KronosStatus = ApiConstants.ApprovedStatus;
+                swapShiftMappingEntity.ShiftsStatus = ApiConstants.ApprovedStatus;
+
+                await this.swapShiftMappingEntityProvider.AddOrUpdateSwapShiftMappingAsync(swapShiftMappingEntity).ConfigureAwait(true);
+
+                var offeredShift = await this.swapShiftMappingEntityProvider.GetShiftDetailsAsync(swapShiftMappingEntity.TeamsOfferedShiftId).ConfigureAwait(false);
+                var requestedShift = await this.swapShiftMappingEntityProvider.GetShiftDetailsAsync(swapShiftMappingEntity.TeamsRequestedShiftId).ConfigureAwait(false);
+
+                telemetryProps.Add("Delete OfferedShiftId", offeredShift?.RowKey);
+                telemetryProps.Add("Delete RequestedShiftId", requestedShift?.RowKey);
+
+                // Delete the earlier mapping from ShiftMappingEntity for sender as well as for recipient.
+                if (offeredShift != null)
                 {
-                    swapShiftMappingEntity.KronosStatus = ApiConstants.ApprovedStatus;
-                    swapShiftMappingEntity.ShiftsStatus = ApiConstants.ApprovedStatus;
-
-                    await this.swapShiftMappingEntityProvider.AddOrUpdateSwapShiftMappingAsync(swapShiftMappingEntity).ConfigureAwait(true);
-
-                    var offeredShift = await this.swapShiftMappingEntityProvider.GetShiftDetailsAsync(swapShiftMappingEntity.TeamsOfferedShiftId).ConfigureAwait(false);
-                    var requestedShift = await this.swapShiftMappingEntityProvider.GetShiftDetailsAsync(swapShiftMappingEntity.TeamsRequestedShiftId).ConfigureAwait(false);
-
-                    telemetryProps.Add("Delete OfferedShiftId", offeredShift?.RowKey);
-                    telemetryProps.Add("Delete RequestedShiftId", requestedShift?.RowKey);
-
-                    // Delete the earlier mapping from ShiftMappingEntity for sender as well as for recipient.
-                    if (offeredShift != null)
-                    {
-                        await this.shiftMappingEntityProvider.DeleteOrphanDataFromShiftMappingAsync(offeredShift).ConfigureAwait(false);
-                    }
-
-                    if (requestedShift != null)
-                    {
-                        await this.shiftMappingEntityProvider.DeleteOrphanDataFromShiftMappingAsync(requestedShift).ConfigureAwait(false);
-                    }
-
-                    this.telemetryClient.TrackTrace($"{Resource.AddSwapShiftApprovalAsync} - MS Graph Approval of {swapShiftMappingEntity?.RowKey} has succeeded with status code: {(int)response.StatusCode}", telemetryProps);
-                }
-                else
-                {
-                    swapShiftMappingEntity.KronosStatus = ApiConstants.Declined;
-                    swapShiftMappingEntity.ShiftsStatus = ApiConstants.Declined;
-
-                    telemetryProps.Add("SwapShiftRequestMessage", response?.RequestMessage.ToString());
-                    telemetryProps.Add("SwapShiftReasonPhrase", response.ReasonPhrase);
-
-                    await this.swapShiftMappingEntityProvider.AddOrUpdateSwapShiftMappingAsync(swapShiftMappingEntity).ConfigureAwait(false);
-
-                    this.telemetryClient.TrackTrace($"{Resource.AddSwapShiftApprovalAsync} - MS Graph Approval of {swapShiftMappingEntity?.RowKey} did not succeed with status code: {(int)response.StatusCode}", telemetryProps);
+                    await this.shiftMappingEntityProvider.DeleteOrphanDataFromShiftMappingAsync(offeredShift).ConfigureAwait(false);
                 }
 
-                this.telemetryClient.TrackTrace($"{Resource.AddSwapShiftApprovalAsync} ends at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}", telemetryProps);
+                if (requestedShift != null)
+                {
+                    await this.shiftMappingEntityProvider.DeleteOrphanDataFromShiftMappingAsync(requestedShift).ConfigureAwait(false);
+                }
+
+                this.telemetryClient.TrackTrace($"{Resource.AddSwapShiftApprovalAsync} - MS Graph Approval of {swapShiftMappingEntity?.RowKey} has succeeded with status code: {(int)response.StatusCode}", telemetryProps);
             }
+            else
+            {
+                swapShiftMappingEntity.KronosStatus = ApiConstants.Declined;
+                swapShiftMappingEntity.ShiftsStatus = ApiConstants.Declined;
+
+                telemetryProps.Add("SwapShiftRequestMessage", response?.RequestMessage.ToString());
+                telemetryProps.Add("SwapShiftReasonPhrase", response.ReasonPhrase);
+
+                await this.swapShiftMappingEntityProvider.AddOrUpdateSwapShiftMappingAsync(swapShiftMappingEntity).ConfigureAwait(false);
+
+                this.telemetryClient.TrackTrace($"{Resource.AddSwapShiftApprovalAsync} - MS Graph Approval of {swapShiftMappingEntity?.RowKey} did not succeed with status code: {(int)response.StatusCode}", telemetryProps);
+            }
+
+            this.telemetryClient.TrackTrace($"{Resource.AddSwapShiftApprovalAsync} ends at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}", telemetryProps);
         }
 
         /// <summary>
         /// Method that will decline a Swap Shift request in Shifts.
         /// </summary>
-        /// <param name="accessToken">The Microsoft Graph access token.</param>
+        /// <param name="allRequiredConfigurations">Configuration details.</param>
         /// <param name="teamsId">The Team ID for which the Swap Shift request is to be declined.</param>
         /// <param name="swapShiftMappingEntity">The Swap Shift entity from database.</param>
         /// <param name="status">The status to post as part of the decline.</param>
         /// <param name="note">Applicable notes for the decline of the Swap Shift request.</param>
-        /// <param name="workforceIntegrationId">The workforce integration id.</param>
-        private async Task DeclineSwapShiftRequestAsync(string accessToken, string teamsId, SwapShiftMappingEntity swapShiftMappingEntity, string status, string note, string workforceIntegrationId)
+        private async Task DeclineSwapShiftRequestAsync(SetupDetails allRequiredConfigurations, string teamsId, SwapShiftMappingEntity swapShiftMappingEntity, string status, string note)
         {
             var telemetryProps = new Dictionary<string, string>()
             {
@@ -1017,36 +1009,32 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             };
 
             this.telemetryClient.TrackTrace($"{Resource.DeclineSwapShiftRequestAsync} starts at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
+
             var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfigurations.GraphConfigurationDetails.ShiftsAccessToken);
 
             // Send Passthrough header to indicate the sender of request in outbound call.
-            httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", workforceIntegrationId);
+            httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", allRequiredConfigurations.WFIId);
 
-            // Declines the swapShift in Shifts.
-            ApproveMsg approveMsg = new ApproveMsg { Message = note };
-            var requestString = JsonConvert.SerializeObject(approveMsg);
-            using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, "teams/" + teamsId + "/schedule/swapShiftsChangeRequests/" + swapShiftMappingEntity.RowKey + "/decline")
-            {
-                Content = new StringContent(requestString, Encoding.UTF8, "application/json"),
-            })
-            {
-                var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
+            var requestUrl = $"teams/{teamsId}/schedule/swapShiftsChangeRequests/{swapShiftMappingEntity.RowKey}/decline";
 
-                if (response.IsSuccessStatusCode)
-                {
-                    this.telemetryClient.TrackTrace($"{Resource.DeclineSwapShiftRequestAsync} - MS Graph Decline of {swapShiftMappingEntity?.RowKey} has succeeded with status code: {(int)response.StatusCode}", telemetryProps);
-                    swapShiftMappingEntity.KronosStatus = status;
-                    swapShiftMappingEntity.ShiftsStatus = status;
-                    await this.swapShiftMappingEntityProvider.AddOrUpdateSwapShiftMappingAsync(swapShiftMappingEntity).ConfigureAwait(false);
-                }
-                else
-                {
-                    this.telemetryClient.TrackTrace($"{Resource.DeclineSwapShiftRequestAsync} - MS Graph Decline of {swapShiftMappingEntity?.RowKey} did not succeed with status code: {(int)response.StatusCode}", telemetryProps);
-                    swapShiftMappingEntity.KronosStatus = status;
-                    swapShiftMappingEntity.ShiftsStatus = status;
-                    await this.swapShiftMappingEntityProvider.AddOrUpdateSwapShiftMappingAsync(swapShiftMappingEntity).ConfigureAwait(false);
-                }
+            ApproveMsg declineMsg = new ApproveMsg { Message = note };
+            var requestString = JsonConvert.SerializeObject(declineMsg);
+
+            var response = await this.graphUtility.SendGraphHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl, requestString).ConfigureAwait(false);
+            if (response.IsSuccessStatusCode)
+            {
+                this.telemetryClient.TrackTrace($"{Resource.DeclineSwapShiftRequestAsync} - MS Graph Decline of {swapShiftMappingEntity?.RowKey} has succeeded with status code: {(int)response.StatusCode}", telemetryProps);
+                swapShiftMappingEntity.KronosStatus = status;
+                swapShiftMappingEntity.ShiftsStatus = status;
+                await this.swapShiftMappingEntityProvider.AddOrUpdateSwapShiftMappingAsync(swapShiftMappingEntity).ConfigureAwait(false);
+            }
+            else
+            {
+                this.telemetryClient.TrackTrace($"{Resource.DeclineSwapShiftRequestAsync} - MS Graph Decline of {swapShiftMappingEntity?.RowKey} did not succeed with status code: {(int)response.StatusCode}", telemetryProps);
+                swapShiftMappingEntity.KronosStatus = status;
+                swapShiftMappingEntity.ShiftsStatus = status;
+                await this.swapShiftMappingEntityProvider.AddOrUpdateSwapShiftMappingAsync(swapShiftMappingEntity).ConfigureAwait(false);
             }
 
             this.telemetryClient.TrackTrace($"DeclineSwapShiftRequestAsync ends at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
