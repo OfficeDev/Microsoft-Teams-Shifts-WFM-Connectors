@@ -60,7 +60,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             var requestUrl = "teamwork/workforceIntegrations";
             var requestString = JsonConvert.SerializeObject(workforceIntegration);
 
-            return await this.SendGraphHttpRequest(graphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl, requestString).ConfigureAwait(false);
+            return await this.SendHttpRequest(graphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl, requestString).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
@@ -83,7 +83,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
 
             do
             {
-                var response = await this.SendGraphHttpRequest(graphConfigurationDetails, httpClient, HttpMethod.Get, requestUrl).ConfigureAwait(false);
+                var response = await this.SendHttpRequest(graphConfigurationDetails, httpClient, HttpMethod.Get, requestUrl).ConfigureAwait(false);
                 if (response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -133,7 +133,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             var requestUrl = $"teams/{teamId}/schedule/share";
             var requestString = JsonConvert.SerializeObject(shareRequest);
 
-            return await this.SendGraphHttpRequest(graphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl, requestString).ConfigureAwait(false);
+            return await this.SendHttpRequest(graphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl, requestString).ConfigureAwait(false);
         }
 
         /// <inheritdoc/>
@@ -157,7 +157,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
 
             do
             {
-                var response = await this.SendGraphHttpRequest(graphConfigurationDetails, httpClient, HttpMethod.Get, requestUrl).ConfigureAwait(false);
+                var response = await this.SendHttpRequest(graphConfigurationDetails, httpClient, HttpMethod.Get, requestUrl).ConfigureAwait(false);
                 if (response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -199,7 +199,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         }
 
         /// <inheritdoc/>
-        public async Task<HttpResponseMessage> SendGraphHttpRequest(GraphConfigurationDetails graphConfigurationDetails, HttpClient httpClient, HttpMethod httpMethod, string requestUrl, string requestString = null)
+        public async Task<HttpResponseMessage> SendHttpRequest(GraphConfigurationDetails graphConfigurationDetails, HttpClient httpClient, HttpMethod httpMethod, string requestUrl, string requestString = null)
         {
             using (var httpRequestMessage = new HttpRequestMessage(httpMethod, requestUrl))
             {
@@ -213,9 +213,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
                 if (response.StatusCode == HttpStatusCode.Unauthorized)
                 {
                     // Refresh the access token and recall
-                    var newToken = await this.GetAccessTokenAsync(graphConfigurationDetails).ConfigureAwait(false);
-
-                    graphConfigurationDetails.ShiftsAccessToken = newToken;
+                    graphConfigurationDetails.ShiftsAccessToken = await this.GetAccessTokenAsync(graphConfigurationDetails).ConfigureAwait(false);
 
                     using (var retryRequestMessage = new HttpRequestMessage(httpMethod, requestUrl))
                     {
@@ -224,7 +222,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
                             retryRequestMessage.Content = new StringContent(requestString, Encoding.UTF8, "application/json");
                         }
 
-                        retryRequestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", newToken);
+                        retryRequestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", graphConfigurationDetails.ShiftsAccessToken);
                         return await httpClient.SendAsync(retryRequestMessage).ConfigureAwait(false);
                     }
                 }
@@ -279,7 +277,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
 
             var requestUrl = $"teamwork/workforceIntegrations/{workforceIntegrationId}";
 
-            var response = await this.SendGraphHttpRequest(graphConfigurationDetails, httpClient, HttpMethod.Delete, requestUrl).ConfigureAwait(false);
+            var response = await this.SendHttpRequest(graphConfigurationDetails, httpClient, HttpMethod.Delete, requestUrl).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
             {
                 return response.StatusCode.ToString();
@@ -314,7 +312,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
 
             var requestUrl = $"teams/{shiftTeamId}/schedule/schedulingGroups";
 
-            var response = await this.SendGraphHttpRequest(graphConfigurationDetails, httpClient, HttpMethod.Get, requestUrl).ConfigureAwait(false);
+            var response = await this.SendHttpRequest(graphConfigurationDetails, httpClient, HttpMethod.Get, requestUrl).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
             {
                 return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -343,7 +341,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
 
                 var scheduleRequestUrl = $"teams/{teamsId}/schedule";
 
-                var getScheduleResponse = await this.SendGraphHttpRequest(graphConfigurationDetails, httpClient, HttpMethod.Get, scheduleRequestUrl).ConfigureAwait(false);
+                var getScheduleResponse = await this.SendHttpRequest(graphConfigurationDetails, httpClient, HttpMethod.Get, scheduleRequestUrl).ConfigureAwait(false);
                 if (!getScheduleResponse.IsSuccessStatusCode)
                 {
                     var failedScheduleResponseContent = await getScheduleResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -371,7 +369,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
                 var addWfiRequestUrl = $"teams/{teamsId}/schedule";
                 var addWfiRequestString = JsonConvert.SerializeObject(schedule);
 
-                var addWfiResponse = await this.SendGraphHttpRequest(graphConfigurationDetails, httpClient, HttpMethod.Put, addWfiRequestUrl, addWfiRequestString).ConfigureAwait(false);
+                var addWfiResponse = await this.SendHttpRequest(graphConfigurationDetails, httpClient, HttpMethod.Put, addWfiRequestUrl, addWfiRequestString).ConfigureAwait(false);
                 if (addWfiResponse.IsSuccessStatusCode)
                 {
                     return true;

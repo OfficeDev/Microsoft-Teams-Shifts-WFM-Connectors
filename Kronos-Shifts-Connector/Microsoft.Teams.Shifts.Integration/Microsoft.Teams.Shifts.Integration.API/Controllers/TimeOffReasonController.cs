@@ -226,7 +226,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             var requestUrl = $"teams/{teamsId}/schedule/timeOffReasons?$search=\"isActive=true\"";
 
-            var response = await this.graphUtility.SendGraphHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Get, requestUrl).ConfigureAwait(false);
+            var response = await this.graphUtility.SendHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Get, requestUrl).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
             {
                 string result = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -274,7 +274,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var requestUrl = $"teams/{teamsId}/schedule/timeOffReasons";
             var requestString = JsonConvert.SerializeObject(timeOffReason);
 
-            var response = await this.graphUtility.SendGraphHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl, requestString).ConfigureAwait(false);
+            var response = await this.graphUtility.SendHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl, requestString).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
             {
                 var createdTimeOffReason = JsonConvert.DeserializeObject<TimeOffReasonResponse.TimeOffReason>(
@@ -303,7 +303,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             var requestUrl = $"teams/{teamsId}/schedule/timeOffReasons/{timeOffId}";
 
-            var response = await this.graphUtility.SendGraphHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Delete, requestUrl).ConfigureAwait(false);
+            var response = await this.graphUtility.SendHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Delete, requestUrl).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
             {
                 return true;

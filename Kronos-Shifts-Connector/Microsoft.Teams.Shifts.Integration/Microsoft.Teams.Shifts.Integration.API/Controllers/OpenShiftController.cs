@@ -560,7 +560,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             var requestUrl = $"teams/{mappedOrgJobEntity.TeamId}/schedule/openShifts/{mappingEntityToDecrement.RowKey}";
 
-            var response = await this.graphUtility.SendGraphHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Get, requestUrl).ConfigureAwait(false);
+            var response = await this.graphUtility.SendHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Get, requestUrl).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
             {
                 var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -609,7 +609,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var requestString = JsonConvert.SerializeObject(item);
                 var requestUrl = $"teams/{mappedTeam.TeamId}/schedule/openShifts";
 
-                var response = await this.graphUtility.SendGraphHttpRequest(allRequiredConfiguration.GraphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl, requestString).ConfigureAwait(false);
+                var response = await this.graphUtility.SendHttpRequest(allRequiredConfiguration.GraphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl, requestString).ConfigureAwait(false);
                 if (response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -660,7 +660,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var requestString = JsonConvert.SerializeObject(openShift);
             var requestUrl = $"teams/{mappedTeam.TeamId}/schedule/openShifts/{openShift.Id}";
 
-            var response = await this.graphUtility.SendGraphHttpRequest(allRequiredConfiguration.GraphConfigurationDetails, httpClient, HttpMethod.Put, requestUrl, requestString).ConfigureAwait(false);
+            var response = await this.graphUtility.SendHttpRequest(allRequiredConfiguration.GraphConfigurationDetails, httpClient, HttpMethod.Put, requestUrl, requestString).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
             {
                 var successfulUpdateProps = new Dictionary<string, string>()
@@ -744,7 +744,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             var requestUrl = $"teams/{mappedTeam.TeamId}/schedule/openShifts/{openShiftMapping.RowKey}";
 
-            var response = await this.graphUtility.SendGraphHttpRequest(allRequiredConfiguration.GraphConfigurationDetails, httpClient, HttpMethod.Delete, requestUrl).ConfigureAwait(false);
+            var response = await this.graphUtility.SendHttpRequest(allRequiredConfiguration.GraphConfigurationDetails, httpClient, HttpMethod.Delete, requestUrl).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
             {
                 var successfulDeleteProps = new Dictionary<string, string>()

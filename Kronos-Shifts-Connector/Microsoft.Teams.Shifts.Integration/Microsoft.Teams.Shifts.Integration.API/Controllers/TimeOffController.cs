@@ -748,7 +748,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     var requestUrl = $"teams/{userModelNotFoundList[i].ShiftTeamId}/schedule/timesOff";
                     var requestString = JsonConvert.SerializeObject(timeOff);
 
-                    var response = await this.graphUtility.SendGraphHttpRequest(configurationDetails.GraphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl, requestString).ConfigureAwait(false);
+                    var response = await this.graphUtility.SendHttpRequest(configurationDetails.GraphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl, requestString).ConfigureAwait(false);
                     if (response.IsSuccessStatusCode)
                     {
                         var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -817,7 +817,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var requestUrl = $"teams/{user[i].ShiftTeamId}/schedule/timeOffRequests/{timeOffLookUpEntriesFoundList[i].ShiftsRequestId}/approve";
                 var requestString = JsonConvert.SerializeObject(timeOffReqCon);
 
-                var response = await this.graphUtility.SendGraphHttpRequest(configurationDetails.GraphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl, requestString).ConfigureAwait(false);
+                var response = await this.graphUtility.SendHttpRequest(configurationDetails.GraphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl, requestString).ConfigureAwait(false);
                 if (response.IsSuccessStatusCode)
                 {
                     TimeOffMappingEntity timeOffMappingEntity = new TimeOffMappingEntity
@@ -870,7 +870,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             var requestUrl = $"teams/" + user.ShiftTeamId + "/schedule/timeOffRequests/" + timeOffId + "/decline";
 
-            var response = await this.graphUtility.SendGraphHttpRequest(configurationDetails.GraphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl).ConfigureAwait(false);
+            var response = await this.graphUtility.SendHttpRequest(configurationDetails.GraphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
             {
                 TimeOffMappingEntity timeOffMappingEntity = new TimeOffMappingEntity

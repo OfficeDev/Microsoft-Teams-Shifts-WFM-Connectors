@@ -713,7 +713,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var requestUrl = $"teams/{userModelNotFoundList[i].ShiftTeamId}/schedule/shifts";
                 var requestString = JsonConvert.SerializeObject(notFoundShifts[i]);
 
-                var response = await this.graphUtility.SendGraphHttpRequest(configurationDetails.GraphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl, requestString).ConfigureAwait(false);
+                var response = await this.graphUtility.SendHttpRequest(configurationDetails.GraphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl, requestString).ConfigureAwait(false);
                 if (response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -770,7 +770,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                 var requestUrl = $"teams/{user.ShiftTeamId}/schedule/shifts/{item.RowKey}";
 
-                var response = await this.graphUtility.SendGraphHttpRequest(configurationDetails.GraphConfigurationDetails, httpClient, HttpMethod.Delete, requestUrl).ConfigureAwait(false);
+                var response = await this.graphUtility.SendHttpRequest(configurationDetails.GraphConfigurationDetails, httpClient, HttpMethod.Delete, requestUrl).ConfigureAwait(false);
                 if (response.IsSuccessStatusCode)
                 {
                     var successfulDeleteProps = new Dictionary<string, string>()

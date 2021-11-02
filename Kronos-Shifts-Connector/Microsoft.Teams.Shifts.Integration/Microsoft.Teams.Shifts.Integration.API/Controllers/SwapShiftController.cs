@@ -887,7 +887,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                 var requestUrl = $"teams/{teamsId}/schedule/shifts/{shiftId}";
 
-                var response = await this.graphUtility.SendGraphHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Get, requestUrl).ConfigureAwait(false);
+                var response = await this.graphUtility.SendHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Get, requestUrl).ConfigureAwait(false);
                 if (response.IsSuccessStatusCode)
                 {
                     this.telemetryClient.TrackTrace($"GetShiftDetailsAsync end at {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}", telemetryProps);
@@ -932,7 +932,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             ApproveMsg approveMsg = new ApproveMsg { Message = note };
             var requestString = JsonConvert.SerializeObject(approveMsg);
 
-            var response = await this.graphUtility.SendGraphHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl, requestString).ConfigureAwait(false);
+            var response = await this.graphUtility.SendHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl, requestString).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
             {
                 swapShiftMappingEntity.KronosStatus = ApiConstants.ApprovedStatus;
@@ -1004,7 +1004,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             ApproveMsg declineMsg = new ApproveMsg { Message = note };
             var requestString = JsonConvert.SerializeObject(declineMsg);
 
-            var response = await this.graphUtility.SendGraphHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl, requestString).ConfigureAwait(false);
+            var response = await this.graphUtility.SendHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl, requestString).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
             {
                 this.telemetryClient.TrackTrace($"{Resource.DeclineSwapShiftRequestAsync} - MS Graph Decline of {swapShiftMappingEntity?.RowKey} has succeeded with status code: {(int)response.StatusCode}", telemetryProps);

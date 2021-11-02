@@ -163,7 +163,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var requestUrl = $"teams/{teamDepartmentMapping.TeamId}/schedule/openShifts/{request.OpenShiftId}";
 
             // Get the open shift entity from Teams as we need the start and end time as well as all the activities.
-            var response = await this.graphUtility.SendGraphHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Get, requestUrl).ConfigureAwait(false);
+            var response = await this.graphUtility.SendHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Get, requestUrl).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
             {
                 var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -472,7 +472,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             var requestUrl = $"teams/{user.ShiftTeamId}/schedule/openShifts/{entityToUpdate.TeamsOpenShiftId}";
 
-            var getOpenShiftResponse = await this.graphUtility.SendGraphHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Get, requestUrl).ConfigureAwait(false);
+            var getOpenShiftResponse = await this.graphUtility.SendHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Get, requestUrl).ConfigureAwait(false);
             if (getOpenShiftResponse.IsSuccessStatusCode)
             {
                 var getOpenShiftResponseStr = await getOpenShiftResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -508,7 +508,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var approvalRequestUrl = $"teams/{user.ShiftTeamId}/schedule/openshiftchangerequests/{entityToUpdate.RowKey}/approve";
                 var approvalString = JsonConvert.SerializeObject(approvalMessageModel);
 
-                var approvalResponse = await this.graphUtility.SendGraphHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Post, approvalRequestUrl, approvalString).ConfigureAwait(false);
+                var approvalResponse = await this.graphUtility.SendHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Post, approvalRequestUrl, approvalString).ConfigureAwait(false);
                 if (approvalResponse.IsSuccessStatusCode)
                 {
                     this.telemetryClient.TrackTrace($"{Resource.ProcessOpenShiftRequestsAsync} ShiftRequestId: {entityToUpdate.RowKey} KronosRequestId: {openShiftRequest.Id}");
@@ -554,7 +554,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var requestUrl = $"teams/{user.ShiftTeamId}/schedule/openshiftchangerequests/{entityToUpdate.RowKey}/decline";
             var requestString = JsonConvert.SerializeObject(declineMessageModel);
 
-            var response = await this.graphUtility.SendGraphHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl, requestString).ConfigureAwait(false);
+            var response = await this.graphUtility.SendHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl, requestString).ConfigureAwait(false);
             if (response.IsSuccessStatusCode)
             {
                 this.telemetryClient.TrackTrace($"{Resource.ProcessOpenShiftRequestsAsync}- DeclinedShiftRequestId: {entityToUpdate.RowKey}, DeclinedKronosRequestId: {openShiftRequest.Id}");

@@ -58,7 +58,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// <param name="requestUrl">The request URI.</param>
         /// <param name="requestString">The request string to add as the request content.</param>
         /// <returns>A HttpResponseMessage object.</returns>
-        Task<HttpResponseMessage> SendGraphHttpRequest(GraphConfigurationDetails graphConfigurationDetails, HttpClient httpClient, HttpMethod httpMethod, string requestUrl, string requestString = null);
+        Task<HttpResponseMessage> SendHttpRequest(GraphConfigurationDetails graphConfigurationDetails, HttpClient httpClient, HttpMethod httpMethod, string requestUrl, string requestString = null);
 
         /// <summary>
         /// Method that will get the Microsoft Graph token.
