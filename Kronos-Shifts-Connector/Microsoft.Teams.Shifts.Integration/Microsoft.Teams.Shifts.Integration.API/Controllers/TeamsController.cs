@@ -16,6 +16,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.ApplicationInsights;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.Teams.App.KronosWfc.BusinessLogic.Common;
     using Microsoft.Teams.App.KronosWfc.Common;
     using Microsoft.Teams.Shifts.Encryption.Encryptors;
     using Microsoft.Teams.Shifts.Integration.API.Common;
@@ -1117,10 +1118,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 updateProps.Add("SwapShiftRequestID", swapRequest.Id);
                 updateProps.Add("KronosOpenShiftRequestId", kronosReqId);
 
+                var commentTimeStamp = this.utility.UTCToKronosTimeZone(DateTime.UtcNow, kronosTimeZone).ToString(CultureInfo.InvariantCulture);
+                var comments = XmlHelper.GenerateKronosComments(swapRequest.ManagerActionMessage, this.appSettings.ManagerSwapRequestCommentText, commentTimeStamp);
+
                 if (!approved)
                 {
                     // Deny in Kronos, Update mapping for Teams.
-                    success = await this.swapShiftController.ApproveSwapShiftInKronos(kronosReqId, kronosRequestorUserId, swapShiftRequestMapping, approved).ConfigureAwait(false);
+                    success = await this.swapShiftController.ApproveSwapShiftInKronos(kronosReqId, kronosRequestorUserId, swapShiftRequestMapping, comments, approved).ConfigureAwait(false);
                     if (!success)
                     {
                         responseModelList.Add(CreateBadResponse(swapRequest.Id, (int)HttpStatusCode.BadRequest, "Failed in Kronos."));
@@ -1136,7 +1140,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 this.telemetryClient.TrackTrace($"Process approval of {swapRequest.Id}", updateProps);
 
                 // approve in kronos
-                success = await this.swapShiftController.ApproveSwapShiftInKronos(kronosReqId, kronosRequestorUserId, swapShiftRequestMapping, approved).ConfigureAwait(false);
+                success = await this.swapShiftController.ApproveSwapShiftInKronos(kronosReqId, kronosRequestorUserId, swapShiftRequestMapping, comments, approved).ConfigureAwait(false);
                 updateProps.Add("SuccessfullyApprovedInKronos", $"{success}");
 
                 if (success)

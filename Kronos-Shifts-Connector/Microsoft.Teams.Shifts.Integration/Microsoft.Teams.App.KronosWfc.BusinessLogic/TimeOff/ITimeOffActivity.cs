@@ -132,10 +132,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
         /// <param name="reason">Reason string.</param>
         /// <param name="comments">The Kronos comments assigned to the request.</param>
         /// <returns>A response.</returns>
-        /// <remarks>
-        /// Due to a bug in Teams this method is not currently used however it is required once
-        /// the bug is fixed.
-        /// </remarks>
         Task<CommonResponse> AddManagerCommentsToTimeOffRequestAsync(
             Uri endPointUrl,
             string jSession,

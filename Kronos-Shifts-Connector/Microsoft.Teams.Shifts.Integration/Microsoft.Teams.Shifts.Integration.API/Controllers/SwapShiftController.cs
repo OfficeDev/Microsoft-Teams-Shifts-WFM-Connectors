@@ -23,6 +23,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.Logon;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift;
     using Microsoft.Teams.App.KronosWfc.Common;
+    using Microsoft.Teams.App.KronosWfc.Models.CommonEntities;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.SwapShift;
     using Microsoft.Teams.Shifts.Integration.API.Common;
     using Microsoft.Teams.Shifts.Integration.API.Models;
@@ -810,30 +811,31 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             string kronosReqId,
             string kronosUserId,
             SwapShiftMappingEntity swapShiftMapping,
+            Comments comments,
             bool approved)
         {
             var provider = CultureInfo.InvariantCulture;
             this.telemetryClient.TrackTrace($"ApproveSwapShiftInKronos start at: {DateTime.Now.ToString("o", provider)}");
 
-            this.utility.SetQuerySpan(true, out var openShiftStartDate, out var openShiftEndDate);
+            this.utility.SetQuerySpan(true, out var swapShiftStartDate, out var swapShiftEndDate);
 
-            var openShiftQueryDateSpan = $"{openShiftStartDate}-{openShiftEndDate}";
+            var swapShiftQueryDateSpan = $"{swapShiftStartDate}-{swapShiftEndDate}";
 
             // Get all the necessary prerequisites.
             var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
 
             // Check whether date range are in correct format.
-            var isCorrectDateRange = Utility.CheckDates(openShiftStartDate, openShiftEndDate);
+            var isCorrectDateRange = Utility.CheckDates(swapShiftStartDate, swapShiftEndDate);
 
             if ((bool)allRequiredConfigurations?.IsAllSetUpExists && isCorrectDateRange)
             {
-                var response =
-                    await this.swapShiftActivity.ApproveOrDenySwapShiftRequestsForUserAsync(
+                var response = await this.swapShiftActivity.ApproveOrDenySwapShiftRequestsForUserAsync(
                         new Uri(allRequiredConfigurations.WfmEndPoint),
                         allRequiredConfigurations.KronosSession,
-                        openShiftQueryDateSpan,
+                        swapShiftQueryDateSpan,
                         kronosUserId,
                         approved,
+                        comments,
                         kronosReqId).ConfigureAwait(false);
 
                 if (response.Status == "Success" && approved)
@@ -1076,7 +1078,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             this.telemetryClient.TrackTrace($"GetSwapShiftResultsByUserAsync start at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}", telemetryProps);
 
-            var swapshiftRequests = await this.swapShiftActivity.GetSwapShiftRequestDetailsAsync(
+            var swapshiftRequests = await this.swapShiftActivity.GetAllSwapShiftRequestDetailsAsync(
                 new Uri(wFEndpoint),
                 jsession,
                 queryDateSpan,
@@ -1119,7 +1121,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, telemetryProps);
 
-            var swapshiftRequests = await this.swapShiftActivity.GetSwapShiftRequestDetailsAsync(
+            var swapshiftRequests = await this.swapShiftActivity.GetAllSwapShiftRequestDetailsAsync(
                 new Uri(wFEndpoint),
                 jsession,
                 queryDateSpan,
@@ -1161,7 +1163,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, telemetryProps);
 
-            var swapshiftRequests = await this.swapShiftActivity.GetSwapShiftRequestDetailsAsync(
+            var swapshiftRequests = await this.swapShiftActivity.GetAllSwapShiftRequestDetailsAsync(
                new Uri(wFEndpoint),
                jsession,
                queryDateSpan,

@@ -5,7 +5,6 @@
 namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.SwapShift
 {
     using System.Xml.Serialization;
-    using Models.RequestEntities.Common;
 
     /// <summary>
     /// This class models the Request.
