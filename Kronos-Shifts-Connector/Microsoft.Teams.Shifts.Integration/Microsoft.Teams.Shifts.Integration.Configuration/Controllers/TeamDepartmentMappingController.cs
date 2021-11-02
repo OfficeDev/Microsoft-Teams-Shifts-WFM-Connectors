@@ -42,6 +42,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
         private readonly ILogonActivity logonActivity;
         private readonly IHyperFindLoadAllActivity hyperFindLoadAllActivity;
         private readonly ShiftsTeamKronosDepartmentViewModel shiftsTeamKronosDepartmentViewModel;
+        private readonly Utility utility;
         private readonly IGraphUtility graphUtility;
         private readonly AppSettings appSettings;
         private readonly IConfigurationProvider configurationProvider;
@@ -57,6 +58,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
         /// <param name="logonActivity">Logon activity.</param>
         /// <param name="hyperFindLoadAllActivity">IHyperFindLoadAllActivity object.</param>
         /// <param name="shiftsTeamKronosDepartmentViewModel">ShiftsTeamKronosDepartmentViewModel object.</param>
+        /// <param name="utility">Utility DI.</param>
         /// <param name="graphUtility">Having the ability to DI the mechanism to get the token from MS Graph.</param>
         /// <param name="appSettings">Configuration DI.</param>
         /// <param name="configurationProvider">ConfigurationProvider DI.</param>
@@ -69,6 +71,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
             ILogonActivity logonActivity,
             IHyperFindLoadAllActivity hyperFindLoadAllActivity,
             ShiftsTeamKronosDepartmentViewModel shiftsTeamKronosDepartmentViewModel,
+            Utility utility,
             IGraphUtility graphUtility,
             AppSettings appSettings,
             IConfigurationProvider configurationProvider,
@@ -81,6 +84,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
             this.logonActivity = logonActivity;
             this.hyperFindLoadAllActivity = hyperFindLoadAllActivity;
             this.shiftsTeamKronosDepartmentViewModel = shiftsTeamKronosDepartmentViewModel;
+            this.utility = utility;
             this.graphUtility = graphUtility;
             this.appSettings = appSettings;
             this.configurationProvider = configurationProvider;
@@ -110,15 +114,8 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
         /// <returns>A type of <see cref="IActionResult"/>.</returns>
         public async Task<IActionResult> SyncDataFirstTimeAsync()
         {
-            HttpRequestMessage request;
-
-            Task<HttpResponseMessage> syncKronosToShiftsResponse;
-
-            HttpResponseMessage syncKronosToShiftsResponseTask;
-
             var client = this.httpClientFactory.CreateClient("ShiftsKronosIntegrationAPI");
 
-            string errorMsgs = string.Empty;
             if (client.BaseAddress == null)
             {
                 client.BaseAddress = new Uri(this.appSettings.BaseAddressFirstTimeSync);
@@ -127,49 +124,35 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
             client.Timeout = TimeSpan.FromMinutes(30);
             var checkSetUp = await client.GetAsync(new Uri(client.BaseAddress + "api/teams/CheckSetup")).ConfigureAwait(false);
 
-            if (checkSetUp.IsSuccessStatusCode)
+            if (!checkSetUp.IsSuccessStatusCode)
             {
-                var clientId = this.appSettings.ClientId;
-                var instance = this.appSettings.Instance;
-                var clientSecret = this.appSettings.ClientSecret;
+                return this.RedirectToAction("Index").WithErrorMessage(Resources.ErrorNotificationHeaderText, Resources.SetUpNotDoneMessage);
+            }
 
-                var userId = this.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
-                var tenantId = this.User.GetTenantId();
+            var graphConfigurationDetails = this.utility.GetTenantDetails();
+            graphConfigurationDetails.ShiftsAdminAadObjectId = this.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
+            graphConfigurationDetails.TenantId = this.User.GetTenantId();
 
-                var graphAccessToken = await this.graphUtility.GetAccessTokenAsync(tenantId, instance, clientId, clientSecret, userId).ConfigureAwait(false);
+            var graphAccessToken = await this.graphUtility.GetAccessTokenAsync(graphConfigurationDetails).ConfigureAwait(false);
 
-                // Get JWT Token for API request
-                TokenHelper tokenHelper = new TokenHelper(this.appSettings);
-                string apiAccessToken = tokenHelper.GenerateToken();
+            // Get JWT Token for API request
+            TokenHelper tokenHelper = new TokenHelper(this.appSettings);
+            string apiAccessToken = tokenHelper.GenerateToken();
 
-                // Run sync Kronos to Shifts.
-                using (request = this.PrepareHttpRequest("api/SyncKronosToShifts/StartSync/false", graphAccessToken, apiAccessToken))
+            // Run sync Kronos to Shifts.
+            using (var request = this.PrepareHttpRequest("api/SyncKronosToShifts/StartSync/false", graphAccessToken, apiAccessToken))
+            {
+                var syncKronosToShiftsResponse = await client.SendAsync(request).ConfigureAwait(false);
+
+                if (!syncKronosToShiftsResponse.IsSuccessStatusCode)
                 {
-                    syncKronosToShiftsResponse = client.SendAsync(request);
-                    syncKronosToShiftsResponseTask = await syncKronosToShiftsResponse.ConfigureAwait(false);
-                    var syncKronosToShiftsStatus = syncKronosToShiftsResponseTask.StatusCode;
-                }
-
-                if (!syncKronosToShiftsResponseTask.IsSuccessStatusCode)
-                {
-                    var syncKronosToShiftsError = await syncKronosToShiftsResponseTask.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var syncKronosToShiftsError = await syncKronosToShiftsResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
                     this.telemetryClient.TrackTrace($"{MethodBase.GetCurrentMethod().Name} error: " + syncKronosToShiftsError);
-                    errorMsgs += Resources.SyncKronosToShiftsError;
+                    return this.RedirectToAction("Index").WithErrorMessage(Resources.ErrorNotificationHeaderText, Resources.SyncKronosToShiftsError);
                 }
             }
-            else
-            {
-                errorMsgs += Resources.SetUpNotDoneMessage;
-            }
 
-            if (string.IsNullOrEmpty(errorMsgs))
-            {
-                return this.RedirectToAction("Index").WithSuccess(Resources.SuccessNotificationHeaderText, Resources.SetUpSuccessfulMessage);
-            }
-            else
-            {
-                return this.RedirectToAction("Index").WithErrorMessage(Resources.ErrorNotificationHeaderText, errorMsgs);
-            }
+            return this.RedirectToAction("Index").WithSuccess(Resources.SuccessNotificationHeaderText, Resources.SetUpSuccessfulMessage);
         }
 
         /// <summary>
@@ -230,14 +213,11 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
 
             if (wfi != null && !string.IsNullOrEmpty(wfi.WorkforceIntegrationId))
             {
-                var clientId = this.appSettings.ClientId;
-                var instance = this.appSettings.Instance;
-                var clientSecret = this.appSettings.ClientSecret;
+                var graphConfigurationDetails = this.utility.GetTenantDetails();
+                graphConfigurationDetails.ShiftsAdminAadObjectId = this.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
+                graphConfigurationDetails.TenantId = this.User.GetTenantId();
 
-                var userId = this.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
-                var tenantId = this.User.GetTenantId();
-
-                var graphAccessToken = await this.graphUtility.GetAccessTokenAsync(tenantId, instance, clientId, clientSecret, userId).ConfigureAwait(false);
+                graphConfigurationDetails.ShiftsAccessToken = await this.graphUtility.GetAccessTokenAsync(graphConfigurationDetails).ConfigureAwait(false);
 
                 // Fetching the list of all distinct KronosOrgJobPaths
                 var kronosOrgJobPathList = await this.userMappingProvider.GetDistinctOrgJobPatAsync().ConfigureAwait(false);
@@ -250,13 +230,13 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                 }
 
                 // Fetching the shift team details
-                var shiftTeamsList = await this.graphUtility.FetchShiftTeamDetailsAsync(graphAccessToken).ConfigureAwait(false);
+                var shiftTeamsList = await this.graphUtility.FetchShiftTeamDetailsAsync(graphConfigurationDetails).ConfigureAwait(false);
 
                 // Iterating the shift teams list to fetch the scheduling groups corrsponding to the shift teams id
                 foreach (var shiftTeam in shiftTeamsList)
                 {
                     // Fetching the scheduling group details
-                    var shiftSchedulingGroupDetailsResponse = await this.graphUtility.FetchSchedulingGroupDetailsAsync(graphAccessToken, shiftTeam.ShiftTeamId).ConfigureAwait(false);
+                    var shiftSchedulingGroupDetailsResponse = await this.graphUtility.FetchSchedulingGroupDetailsAsync(graphConfigurationDetails, shiftTeam.ShiftTeamId).ConfigureAwait(false);
 
                     var groupResponse = JsonConvert.DeserializeObject<SchedulingGroupDetails>(shiftSchedulingGroupDetailsResponse);
 
@@ -351,15 +331,12 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
 
                             if (isValidFile)
                             {
-                                var tenantId = this.appSettings.TenantId;
-                                var clientId = this.appSettings.ClientId;
-                                var clientSecret = this.appSettings.ClientSecret;
-                                var instance = this.appSettings.Instance;
+                                var graphConfigurationDetails = this.utility.GetTenantDetails();
+                                graphConfigurationDetails.ShiftsAdminAadObjectId = configEntity.AdminAadObjectId;
 
-                                var accessToken = await this.graphUtility.GetAccessTokenAsync(tenantId, instance, clientId, clientSecret, configEntity.AdminAadObjectId).ConfigureAwait(false);
-                                var graphClient = CreateGraphClientWithDelegatedAccess(accessToken);
+                                graphConfigurationDetails.ShiftsAccessToken = await this.graphUtility.GetAccessTokenAsync(graphConfigurationDetails).ConfigureAwait(false);
 
-                                var isSuccess = await this.graphUtility.AddWFInScheduleAsync(entity.TeamId, graphClient, configEntity.WorkforceIntegrationId, accessToken).ConfigureAwait(false);
+                                var isSuccess = await this.graphUtility.AddWFInScheduleAsync(entity.TeamId, configEntity.WorkforceIntegrationId, graphConfigurationDetails).ConfigureAwait(false);
                                 if (isSuccess)
                                 {
                                     await this.teamDepartmentMappingProvider.SaveOrUpdateTeamsToDepartmentMappingAsync(entity).ConfigureAwait(false);
@@ -447,40 +424,6 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                 kronosOrgJobPathDt?.Dispose();
                 shiftTeamsDt?.Dispose();
             }
-        }
-
-        /// <summary>
-        /// Method that creates the Microsoft Graph Service client.
-        /// </summary>
-        /// <param name="token">The Graph Access token.</param>
-        /// <returns>A type of <see cref="GraphServiceClient"/> contained in a unit of execution.</returns>
-        private static GraphServiceClient CreateGraphClientWithDelegatedAccess(string token)
-        {
-            if (string.IsNullOrEmpty(token))
-            {
-                throw new ArgumentNullException(token);
-            }
-
-            var graphClient = new GraphServiceClient(
-            new DelegateAuthenticationProvider(
-                (requestMessage) =>
-                {
-                    requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                    return Task.FromResult(0);
-                }));
-            return graphClient;
-        }
-
-        private void GetTenantDetails(
-            out string tenantId,
-            out string clientId,
-            out string clientSecret,
-            out string instance)
-        {
-            tenantId = this.appSettings.TenantId;
-            clientId = this.appSettings.ClientId;
-            clientSecret = this.appSettings.ClientSecret;
-            instance = this.appSettings.Instance;
         }
 
         /// <summary>
