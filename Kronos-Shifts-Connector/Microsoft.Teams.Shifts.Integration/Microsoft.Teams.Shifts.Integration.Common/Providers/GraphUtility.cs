@@ -20,7 +20,6 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
     using Microsoft.Teams.Shifts.Integration.API.Models.Request;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Cache;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
-    using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.Graph;
     using Newtonsoft.Json;
 
     /// <summary>
@@ -48,23 +47,40 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             this.httpClientFactory = httpClientFactory;
         }
 
-        /// <inheritdoc/>
-        public async Task<HttpResponseMessage> RegisterWorkforceIntegrationAsync(Models.RequestModels.WorkforceIntegration workforceIntegration, GraphConfigurationDetails graphConfigurationDetails)
+        /// <summary>
+        /// Method to call the Graph API to register the workforce integration.
+        /// </summary>
+        /// <param name="workforceIntegration">The workforce integration.</param>
+        /// <param name="accessToken">The access token.</param>
+        /// <returns>The JSON response of the Workforce Integration registration.</returns>
+        public async Task<HttpResponseMessage> RegisterWorkforceIntegrationAsync(
+            Models.RequestModels.WorkforceIntegration workforceIntegration,
+            string accessToken)
         {
             var provider = CultureInfo.InvariantCulture;
             this.telemetryClient.TrackTrace(BusinessLogicResource.RegisterWorkforceIntegrationAsync + " called at " + DateTime.Now.ToString("o", provider));
 
-            var httpClient = this.httpClientFactory.CreateClient("GraphBetaAPI");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", graphConfigurationDetails.ShiftsAccessToken);
-
-            var requestUrl = "teamwork/workforceIntegrations";
             var requestString = JsonConvert.SerializeObject(workforceIntegration);
-
-            return await this.SendHttpRequest(graphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl, requestString).ConfigureAwait(false);
+            var httpClientWFI = this.httpClientFactory.CreateClient("GraphBetaAPI");
+            httpClientWFI.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            httpClientWFI.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, "teamwork/workforceIntegrations")
+            {
+                Content = new StringContent(requestString, Encoding.UTF8, "application/json"),
+            })
+            {
+                var response = await httpClientWFI.SendAsync(httpRequestMessage).ConfigureAwait(false);
+                return response;
+            }
         }
 
-        /// <inheritdoc/>
-        public async Task<List<ShiftUser>> FetchShiftUserDetailsAsync(GraphConfigurationDetails graphConfigurationDetails)
+        /// <summary>
+        /// Fetch user details for shifts using graph api tokens.
+        /// </summary>
+        /// <param name="accessToken">Access Token.</param>
+        /// <returns>The shift user.</returns>
+        public async Task<List<ShiftUser>> FetchShiftUserDetailsAsync(
+            string accessToken)
         {
             var fetchShiftUserDetailsProps = new Dictionary<string, string>()
             {
@@ -77,38 +93,40 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             bool hasMoreUsers = false;
 
             var httpClient = this.httpClientFactory.CreateClient("GraphBetaAPI");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", graphConfigurationDetails.ShiftsAccessToken);
-
-            var requestUrl = "users";
-
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            var requestUri = "users";
             do
             {
-                var response = await this.SendHttpRequest(graphConfigurationDetails, httpClient, HttpMethod.Get, requestUrl).ConfigureAwait(false);
-                if (response.IsSuccessStatusCode)
+                using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, requestUri))
                 {
-                    var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-
-                    var jsonResult = JsonConvert.DeserializeObject<ShiftUserModel>(responseContent);
-                    shiftUsers.AddRange(jsonResult.Value);
-                    if (jsonResult.NextLink != null)
+                    var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
+                    if (response.IsSuccessStatusCode)
                     {
-                        hasMoreUsers = true;
-                        requestUrl = jsonResult.NextLink.ToString();
+                        var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+                        var jsonResult = JsonConvert.DeserializeObject<ShiftUserModel>(responseContent);
+                        shiftUsers.AddRange(jsonResult.Value);
+                        if (jsonResult.NextLink != null)
+                        {
+                            hasMoreUsers = true;
+                            requestUri = jsonResult.NextLink.ToString();
+                        }
+                        else
+                        {
+                            hasMoreUsers = false;
+                        }
                     }
                     else
                     {
-                        hasMoreUsers = false;
-                    }
-                }
-                else
-                {
-                    var failedResponseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var failedResponseProps = new Dictionary<string, string>()
+                        var failedResponseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                        var failedResponseProps = new Dictionary<string, string>()
                         {
                             { "FailedResponse", failedResponseContent },
                         };
 
-                    this.telemetryClient.TrackTrace(BusinessLogicResource.FetchShiftUserDetailsAsync, failedResponseProps);
+                        this.telemetryClient.TrackTrace(BusinessLogicResource.FetchShiftUserDetailsAsync, failedResponseProps);
+                    }
                 }
             }
             while (hasMoreUsers == true);
@@ -116,8 +134,16 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             return shiftUsers;
         }
 
-        /// <inheritdoc/>
-        public async Task<HttpResponseMessage> ShareSchedule(GraphConfigurationDetails graphConfigurationDetails, string teamId, DateTime startDateTime, DateTime endDateTime, bool notifyTeam)
+        /// <summary>
+        /// Share the schedule between the given dates.
+        /// </summary>
+        /// <param name="accessToken">Access Token.</param>
+        /// <param name="teamId">The id of the team which schedule we want to share.</param>
+        /// <param name="startDateTime">The start time to share the schedule from.</param>
+        /// <param name="endDateTime">the end time to share the schedule to.</param>
+        /// <param name="notifyTeam">Whether to notify the team or not.</param>
+        /// <returns>Http response message.</returns>
+        public async Task<HttpResponseMessage> ShareSchedule(string accessToken, string teamId, DateTime startDateTime, DateTime endDateTime, bool notifyTeam)
         {
             var shareRequest = new ShareSchedule
             {
@@ -126,18 +152,29 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
                 EndDateTime = endDateTime,
             };
 
-            var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", graphConfigurationDetails.ShiftsAccessToken);
-            httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-            var requestUrl = $"teams/{teamId}/schedule/share";
             var requestString = JsonConvert.SerializeObject(shareRequest);
 
-            return await this.SendHttpRequest(graphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl, requestString).ConfigureAwait(false);
+            var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, $"teams/{teamId}/schedule/share")
+            {
+                Content = new StringContent(requestString, Encoding.UTF8, "application/json"),
+            })
+            {
+                var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
+                return response;
+            }
         }
 
-        /// <inheritdoc/>
-        public async Task<List<ShiftTeams>> FetchShiftTeamDetailsAsync(GraphConfigurationDetails graphConfigurationDetails)
+        /// <summary>
+        /// Fetch user details for shifts using graph api tokens.
+        /// </summary>
+        /// <param name="accessToken">Access Token.</param>
+        /// <returns>The shift user.</returns>
+        public async Task<List<ShiftTeams>> FetchShiftTeamDetailsAsync(
+            string accessToken)
         {
             var fetchShiftUserDetailsProps = new Dictionary<string, string>()
             {
@@ -148,47 +185,49 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             var hasMoreTeams = false;
 
             this.telemetryClient.TrackTrace(BusinessLogicResource.FetchShiftTeamDetailsAsync, fetchShiftUserDetailsProps);
-
-            var httpClient = this.httpClientFactory.CreateClient("GraphBetaAPI");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", graphConfigurationDetails.ShiftsAccessToken);
+            var hcfClient = this.httpClientFactory.CreateClient("GraphBetaAPI");
+            hcfClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            hcfClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
             // Filter group who has associated teams also.
-            var requestUrl = "groups?$filter=resourceProvisioningOptions/Any(x:x eq 'Team')";
-
+            var requestUri = "groups?$filter=resourceProvisioningOptions/Any(x:x eq 'Team')";
             do
             {
-                var response = await this.SendHttpRequest(graphConfigurationDetails, httpClient, HttpMethod.Get, requestUrl).ConfigureAwait(false);
-                if (response.IsSuccessStatusCode)
+                using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, requestUri))
                 {
-                    var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var allResponse = JsonConvert.DeserializeObject<AllShiftsTeam>(responseContent);
-                    shiftTeams.AddRange(allResponse.ShiftTeams);
-
-                    // If Shifts has more Teams. Typically graph API has 100 teams in one batch.
-                    // Using nextlink, teams from next batch is fetched.
-                    if (allResponse.NextLink != null)
+                    var response = await hcfClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
+                    if (response.IsSuccessStatusCode)
                     {
-                        requestUrl = allResponse.NextLink.ToString();
-                        hasMoreTeams = true;
-                    }
+                        var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                        var allResponse = JsonConvert.DeserializeObject<AllShiftsTeam>(responseContent);
+                        shiftTeams.AddRange(allResponse.ShiftTeams);
 
-                    // nextlink is null when there are no batch of teams to be fetched.
+                        // If Shifts has more Teams. Typically graph API has 100 teams in one batch.
+                        // Using nextlink, teams from next batch is fetched.
+                        if (allResponse.NextLink != null)
+                        {
+                            requestUri = allResponse.NextLink.ToString();
+                            hasMoreTeams = true;
+                        }
+
+                        // nextlink is null when there are no batch of teams to be fetched.
+                        else
+                        {
+                            hasMoreTeams = false;
+                        }
+                    }
                     else
                     {
                         hasMoreTeams = false;
-                    }
-                }
-                else
-                {
-                    hasMoreTeams = false;
 
-                    var failedResponseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var failedResponseProps = new Dictionary<string, string>()
+                        var failedResponseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                        var failedResponseProps = new Dictionary<string, string>()
                         {
                             { "FailedResponse", failedResponseContent },
                         };
 
-                    this.telemetryClient.TrackTrace(BusinessLogicResource.FetchShiftTeamDetailsAsync, failedResponseProps);
+                        this.telemetryClient.TrackTrace(BusinessLogicResource.FetchShiftTeamDetailsAsync, failedResponseProps);
+                    }
                 }
             }
 
@@ -198,54 +237,34 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             return shiftTeams;
         }
 
-        /// <inheritdoc/>
-        public async Task<HttpResponseMessage> SendHttpRequest(GraphConfigurationDetails graphConfigurationDetails, HttpClient httpClient, HttpMethod httpMethod, string requestUrl, string requestString = null)
+        /// <summary>
+        /// Method that will obtain the Graph token.
+        /// </summary>
+        /// <param name="tenantId">The Tenant ID.</param>
+        /// <param name="instance">The instance.</param>
+        /// <param name="clientId">The App ID of the Web Application.</param>
+        /// <param name="clientSecret">The client secret.</param>
+        /// <param name="userId">The AAD Object ID of the Admin, could also be the UPN.</param>
+        /// <returns>A string that represents the Microsoft Graph API token.</returns>
+        public async Task<string> GetAccessTokenAsync(
+            string tenantId,
+            string instance,
+            string clientId,
+            string clientSecret,
+            string userId = default(string))
         {
-            using (var httpRequestMessage = new HttpRequestMessage(httpMethod, requestUrl))
-            {
-                if (!string.IsNullOrEmpty(requestString))
-                {
-                    httpRequestMessage.Content = new StringContent(requestString, Encoding.UTF8, "application/json");
-                }
-
-                var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
-
-                if (response.StatusCode == HttpStatusCode.Unauthorized)
-                {
-                    // Refresh the access token and recall
-                    graphConfigurationDetails.ShiftsAccessToken = await this.GetAccessTokenAsync(graphConfigurationDetails).ConfigureAwait(false);
-
-                    using (var retryRequestMessage = new HttpRequestMessage(httpMethod, requestUrl))
-                    {
-                        if (!string.IsNullOrEmpty(requestString))
-                        {
-                            retryRequestMessage.Content = new StringContent(requestString, Encoding.UTF8, "application/json");
-                        }
-
-                        retryRequestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", graphConfigurationDetails.ShiftsAccessToken);
-                        return await httpClient.SendAsync(retryRequestMessage).ConfigureAwait(false);
-                    }
-                }
-
-                return response;
-            }
-        }
-
-        /// <inheritdoc/>
-        public async Task<string> GetAccessTokenAsync(GraphConfigurationDetails graphConfigurationDetails)
-        {
-            string authority = $"{graphConfigurationDetails.Instance}{graphConfigurationDetails.TenantId}";
-            var cache = new RedisTokenCache(this.cache, graphConfigurationDetails.ClientId);
+            string authority = $"{instance}{tenantId}";
+            var cache = new RedisTokenCache(this.cache, clientId);
             var authContext = new AuthenticationContext(authority, cache);
-            var userIdentity = new UserIdentifier(graphConfigurationDetails.ShiftsAdminAadObjectId, UserIdentifierType.UniqueId);
+            var userIdentity = new UserIdentifier(userId, UserIdentifierType.UniqueId);
 
             try
             {
                 var result = await authContext.AcquireTokenSilentAsync(
                     "https://graph.microsoft.com",
                     new ClientCredential(
-                        graphConfigurationDetails.ClientId,
-                        graphConfigurationDetails.ClientSecret),
+                        clientId,
+                        clientSecret),
                     userIdentity).ConfigureAwait(false);
                 return result.AccessToken;
             }
@@ -255,14 +274,21 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
                 var retryResult = await authContext.AcquireTokenAsync(
                     "https://graph.microsoft.com",
                     new ClientCredential(
-                        graphConfigurationDetails.ClientId,
-                        graphConfigurationDetails.ClientSecret)).ConfigureAwait(false);
+                        clientId,
+                        clientSecret)).ConfigureAwait(false);
                 return retryResult.AccessToken;
             }
         }
 
-        /// <inheritdoc/>
-        public async Task<string> DeleteWorkforceIntegrationAsync(string workforceIntegrationId, GraphConfigurationDetails graphConfigurationDetails)
+        /// <summary>
+        /// Method that will delete the workforce integration from MS Graph.
+        /// </summary>
+        /// <param name="workforceIntegrationId">The workforce integration ID to delete.</param>
+        /// <param name="accessToken">The access token.</param>
+        /// <returns>A unit of execution that contains the response.</returns>
+        public async Task<string> DeleteWorkforceIntegrationAsync(
+            string workforceIntegrationId,
+            string accessToken)
         {
             var wfiDeletionProps = new Dictionary<string, string>()
             {
@@ -273,31 +299,41 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, wfiDeletionProps);
 
             var httpClient = this.httpClientFactory.CreateClient("GraphBetaAPI");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", graphConfigurationDetails.ShiftsAccessToken);
-
-            var requestUrl = $"teamwork/workforceIntegrations/{workforceIntegrationId}";
-
-            var response = await this.SendHttpRequest(graphConfigurationDetails, httpClient, HttpMethod.Delete, requestUrl).ConfigureAwait(false);
-            if (response.IsSuccessStatusCode)
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Delete, $"teamwork/workforceIntegrations/{workforceIntegrationId}")
             {
-                return response.StatusCode.ToString();
-            }
-            else
+            })
             {
-                var failedResponseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                var failedResponseProps = new Dictionary<string, string>()
+                var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
+                if (response.IsSuccessStatusCode)
+                {
+                    return response.StatusCode.ToString();
+                }
+                else
+                {
+                    var failedResponseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var failedResponseProps = new Dictionary<string, string>()
                     {
                         { "FailedResponse", failedResponseContent },
                         { "WorkForceIntegrationId", workforceIntegrationId },
                     };
 
-                this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, failedResponseProps);
-                return string.Empty;
+                    this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, failedResponseProps);
+                    return string.Empty;
+                }
             }
         }
 
-        /// <inheritdoc/>
-        public async Task<string> FetchSchedulingGroupDetailsAsync(GraphConfigurationDetails graphConfigurationDetails, string shiftTeamId)
+        /// <summary>
+        /// Method that fetchs the scheduling group details based on the shift teams Id provided.
+        /// </summary>
+        /// <param name="accessToken">Access Token.</param>
+        /// <param name="shiftTeamId">Shift Team Id.</param>
+        /// <returns>Shift scheduling group details.</returns>
+        public async Task<string> FetchSchedulingGroupDetailsAsync(
+            string accessToken,
+            string shiftTeamId)
         {
             var fetchShiftUserDetailsProps = new Dictionary<string, string>()
             {
@@ -306,84 +342,97 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             };
 
             this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, fetchShiftUserDetailsProps);
-
             var httpClient = this.httpClientFactory.CreateClient("GraphBetaAPI");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", graphConfigurationDetails.ShiftsAccessToken);
 
-            var requestUrl = $"teams/{shiftTeamId}/schedule/schedulingGroups";
-
-            var response = await this.SendHttpRequest(graphConfigurationDetails, httpClient, HttpMethod.Get, requestUrl).ConfigureAwait(false);
-            if (response.IsSuccessStatusCode)
+            using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, "teams/" + shiftTeamId + "/schedule/schedulingGroups")
             {
-                return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            }
-            else
+                Headers =
+                    {
+                        { HttpRequestHeader.Authorization.ToString(), $"Bearer {accessToken}" },
+                    },
+            })
             {
-                var failedResponseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                var failedResponseProps = new Dictionary<string, string>()
+                var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    return responseContent;
+                }
+                else
+                {
+                    var failedResponseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var failedResponseProps = new Dictionary<string, string>()
                         {
                             { "FailedResponse", failedResponseContent },
                             { "ShiftTeamId", shiftTeamId },
                         };
 
-                this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, failedResponseProps);
-                return string.Empty;
+                    this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, failedResponseProps);
+                    return string.Empty;
+                }
             }
         }
 
-        /// <inheritdoc/>
-        public async Task<bool> AddWFInScheduleAsync(string teamsId, string wfIID, GraphConfigurationDetails graphConfigurationDetails)
+        /// <summary>
+        /// Method to update the Workforce Integration ID to the schedule.
+        /// </summary>
+        /// <param name="teamsId">The Shift team Id.</param>
+        /// <param name="graphClient">The Graph Client.</param>
+        /// <param name="wfIID">The Workforce Integration Id.</param>
+        /// <param name="accessToken">The MS Graph Access token.</param>
+        /// <returns>A unit of execution that contains the success or failure Response.</returns>
+        public async Task<bool> AddWFInScheduleAsync(
+            string teamsId,
+            GraphServiceClient graphClient,
+            string wfIID,
+            string accessToken)
         {
+            if (graphClient is null)
+            {
+                throw new ArgumentNullException(nameof(graphClient));
+            }
+
             try
             {
-                var httpClient = this.httpClientFactory.CreateClient("GraphBetaAPI");
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", graphConfigurationDetails.ShiftsAccessToken);
-
-                var scheduleRequestUrl = $"teams/{teamsId}/schedule";
-
-                var getScheduleResponse = await this.SendHttpRequest(graphConfigurationDetails, httpClient, HttpMethod.Get, scheduleRequestUrl).ConfigureAwait(false);
-                if (!getScheduleResponse.IsSuccessStatusCode)
-                {
-                    var failedScheduleResponseContent = await getScheduleResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var failedResponseProps = new Dictionary<string, string>()
-                        {
-                            { "FailedResponse", failedScheduleResponseContent },
-                        };
-
-                    this.telemetryClient.TrackTrace($"{BusinessLogicResource.AddWorkForceIntegrationToSchedule} - Failed to retrieve schedule.", failedResponseProps);
-                    return false;
-                }
-
-                var scheduleResponseContent = await getScheduleResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
-                var scheduleResponse = JsonConvert.DeserializeObject<Schedule>(scheduleResponseContent);
+                var sched = await graphClient.Teams[teamsId].Schedule
+                            .Request()
+                            .GetAsync().ConfigureAwait(false);
 
                 var schedule = new Schedule
                 {
                     Enabled = true,
-                    TimeZone = scheduleResponse.TimeZone,
+                    TimeZone = sched.TimeZone,
                     WorkforceIntegrationIds = new List<string>() { wfIID },
                 };
 
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", graphConfigurationDetails.ShiftsAccessToken);
-
-                var addWfiRequestUrl = $"teams/{teamsId}/schedule";
-                var addWfiRequestString = JsonConvert.SerializeObject(schedule);
-
-                var addWfiResponse = await this.SendHttpRequest(graphConfigurationDetails, httpClient, HttpMethod.Put, addWfiRequestUrl, addWfiRequestString).ConfigureAwait(false);
-                if (addWfiResponse.IsSuccessStatusCode)
+                var requestString = JsonConvert.SerializeObject(schedule);
+                var httpClient = this.httpClientFactory.CreateClient("GraphBetaAPI");
+                using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Put, "teams/" + teamsId + "/schedule")
                 {
-                    return true;
-                }
-                else
+                    Headers =
+                    {
+                        { HttpRequestHeader.Authorization.ToString(), $"Bearer {accessToken}" },
+                    },
+                    Content = new StringContent(requestString, Encoding.UTF8, "application/json"),
+                })
                 {
-                    var failedResponseContent = await addWfiResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var failedResponseProps = new Dictionary<string, string>()
+                    var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                        return true;
+                    }
+                    else
+                    {
+                        var failedResponseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                        var failedResponseProps = new Dictionary<string, string>()
                         {
                             { "FailedResponse", failedResponseContent },
                         };
 
-                    this.telemetryClient.TrackTrace($"{BusinessLogicResource.AddWorkForceIntegrationToSchedule} - Failed to add WFI Id to schedule.", failedResponseProps);
-                    return false;
+                        this.telemetryClient.TrackTrace(BusinessLogicResource.AddWorkForceIntegrationToSchedule, failedResponseProps);
+                        return false;
+                    }
                 }
             }
             catch (Exception ex)

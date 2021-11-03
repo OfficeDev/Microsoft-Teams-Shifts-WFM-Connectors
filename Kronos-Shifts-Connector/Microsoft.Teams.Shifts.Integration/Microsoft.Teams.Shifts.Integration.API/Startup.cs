@@ -171,7 +171,6 @@ namespace Microsoft.Teams.Shifts.Integration.API
                 provider.GetRequiredService<ISwapShiftActivity>(),
                 provider.GetRequiredService<ISwapShiftMappingEntityProvider>(),
                 provider.GetRequiredService<Utility>(),
-                provider.GetRequiredService<IGraphUtility>(),
                 provider.GetRequiredService<IHttpClientFactory>(),
                 provider.GetRequiredService<ITeamDepartmentMappingProvider>(),
                 provider.GetRequiredService<IShiftMappingEntityProvider>(),
@@ -197,8 +196,7 @@ namespace Microsoft.Teams.Shifts.Integration.API
                 provider.GetRequiredService<AppSettings>(),
                 provider.GetRequiredService<IHttpClientFactory>(),
                 provider.GetRequiredService<ITeamDepartmentMappingProvider>(),
-                provider.GetRequiredService<Utility>(),
-                provider.GetRequiredService<IGraphUtility>()));
+                provider.GetRequiredService<Utility>()));
 
             services.AddSingleton((provider) => new ShiftController(
                 provider.GetRequiredService<IUserMappingProvider>(),
@@ -272,7 +270,6 @@ namespace Microsoft.Teams.Shifts.Integration.API
                 provider.GetRequiredService<TelemetryClient>(),
                 provider.GetRequiredService<IOpenShiftActivity>(),
                 provider.GetRequiredService<Utility>(),
-                provider.GetRequiredService<IGraphUtility>(),
                 provider.GetRequiredService<IOpenShiftMappingEntityProvider>(),
                 provider.GetRequiredService<ITeamDepartmentMappingProvider>(),
                 provider.GetRequiredService<IHttpClientFactory>(),
@@ -290,7 +287,6 @@ namespace Microsoft.Teams.Shifts.Integration.API
                 provider.GetRequiredService<IHttpClientFactory>(),
                 provider.GetRequiredService<IOpenShiftMappingEntityProvider>(),
                 provider.GetRequiredService<Utility>(),
-                provider.GetRequiredService<IGraphUtility>(),
                 provider.GetRequiredService<IShiftMappingEntityProvider>()));
 
             services.AddSingleton((provider) => new TimeOffController(
@@ -302,7 +298,6 @@ namespace Microsoft.Teams.Shifts.Integration.API
                 provider.GetRequiredService<IAzureTableStorageHelper>(),
                 provider.GetRequiredService<ITimeOffMappingEntityProvider>(),
                 provider.GetRequiredService<Utility>(),
-                provider.GetRequiredService<IGraphUtility>(),
                 provider.GetRequiredService<ITeamDepartmentMappingProvider>(),
                 provider.GetRequiredService<IHttpClientFactory>(),
                 provider.GetRequiredService<BackgroundTaskWrapper>()));
@@ -366,6 +361,7 @@ namespace Microsoft.Teams.Shifts.Integration.API
                HttpStatusCode.InternalServerError, // 500
                HttpStatusCode.BadGateway, // 502
                HttpStatusCode.GatewayTimeout, // 504
+               HttpStatusCode.Forbidden, // 403
             };
 
             return HttpPolicyExtensions
