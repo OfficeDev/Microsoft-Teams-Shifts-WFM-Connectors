@@ -234,7 +234,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
         {
             var status = approved ? ApiConstants.ApprovedStatus : ApiConstants.Refused;
 
-            var swapShiftApprovalRequest = this.CreateUpdateStatusRequest(queryDateSpan, kronosPersonNumber, status, kronosId, comments);
+            var swapShiftApprovalRequest = this.CreateUpdateStatusRequest(kronosPersonNumber, kronosId, status, queryDateSpan, comments);
             var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
                 endPointUrl,
                 SoapEnvOpen,

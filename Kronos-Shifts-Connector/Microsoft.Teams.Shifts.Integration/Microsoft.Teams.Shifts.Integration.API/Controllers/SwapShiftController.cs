@@ -884,9 +884,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfigurations.GraphConfigurationDetails.ShiftsAccessToken);
 
-                // Send Passthrough header to indicate the sender of request in outbound call.
-                httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", allRequiredConfigurations.WFIId);
-
                 var requestUrl = $"teams/{teamsId}/schedule/shifts/{shiftId}";
 
                 var response = await this.graphUtility.SendHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Get, requestUrl).ConfigureAwait(false);
