@@ -40,6 +40,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private readonly TelemetryClient telemetryClient;
         private readonly IOpenShiftActivity openShiftActivity;
         private readonly Utility utility;
+        private readonly IGraphUtility graphUtility;
         private readonly IOpenShiftMappingEntityProvider openShiftMappingEntityProvider;
         private readonly ITeamDepartmentMappingProvider teamDepartmentMappingProvider;
         private readonly IHttpClientFactory httpClientFactory;
@@ -63,6 +64,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             TelemetryClient telemetryClient,
             IOpenShiftActivity openShiftActivity,
             Utility utility,
+            IGraphUtility graphUtility,
             IOpenShiftMappingEntityProvider openShiftMappingEntityProvider,
             ITeamDepartmentMappingProvider teamDepartmentMappingProvider,
             IHttpClientFactory httpClientFactory,
@@ -78,6 +80,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             this.telemetryClient = telemetryClient;
             this.openShiftActivity = openShiftActivity;
             this.utility = utility;
+            this.graphUtility = graphUtility;
             this.openShiftMappingEntityProvider = openShiftMappingEntityProvider;
             this.teamDepartmentMappingProvider = teamDepartmentMappingProvider;
             this.httpClientFactory = httpClientFactory;
@@ -553,21 +556,20 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private async Task<GraphOpenShift> GetOpenShiftFromTeams(SetupDetails allRequiredConfigurations, TeamToDepartmentJobMappingEntity mappedOrgJobEntity, AllOpenShiftMappingEntity mappingEntityToDecrement)
         {
             var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfigurations.ShiftsAccessToken);
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfigurations.GraphConfigurationDetails.ShiftsAccessToken);
 
-            using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, $"teams/{mappedOrgJobEntity.TeamId}/schedule/openShifts/{mappingEntityToDecrement.RowKey}"))
+            var requestUrl = $"teams/{mappedOrgJobEntity.TeamId}/schedule/openShifts/{mappingEntityToDecrement.RowKey}";
+
+            var response = await this.graphUtility.SendHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Get, requestUrl).ConfigureAwait(false);
+            if (response.IsSuccessStatusCode)
             {
-                var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
-                if (response.IsSuccessStatusCode)
-                {
-                    var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    return JsonConvert.DeserializeObject<GraphOpenShift>(responseContent);
-                }
-                else
-                {
-                    this.telemetryClient.TrackTrace($"The open shift with id {mappingEntityToDecrement.RowKey} could not be found in Teams. ");
-                    return null;
-                }
+                var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                return JsonConvert.DeserializeObject<GraphOpenShift>(responseContent);
+            }
+            else
+            {
+                this.telemetryClient.TrackTrace($"The open shift with id {mappingEntityToDecrement.RowKey} could not be found in Teams. ");
+                return null;
             }
         }
 
@@ -600,36 +602,33 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     { "SchedulingGroupId", item.SchedulingGroupId },
                 };
 
-                var requestString = JsonConvert.SerializeObject(item);
                 var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfiguration.ShiftsAccessToken);
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfiguration.GraphConfigurationDetails.ShiftsAccessToken);
                 httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", allRequiredConfiguration.WFIId);
 
-                using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, "teams/" + mappedTeam.TeamId + "/schedule/openShifts")
+                var requestString = JsonConvert.SerializeObject(item);
+                var requestUrl = $"teams/{mappedTeam.TeamId}/schedule/openShifts";
+
+                var response = await this.graphUtility.SendHttpRequest(allRequiredConfiguration.GraphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl, requestString).ConfigureAwait(false);
+                if (response.IsSuccessStatusCode)
                 {
-                    Content = new StringContent(requestString, Encoding.UTF8, "application/json"),
-                })
+                    var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var openShiftResponse = JsonConvert.DeserializeObject<Models.Response.OpenShifts.GraphOpenShift>(responseContent);
+                    var openShiftMappingEntity = this.CreateNewOpenShiftMappingEntity(openShiftResponse, item.KronosUniqueId, monthPartitionKey, mappedTeam?.RowKey);
+
+                    telemetryProps.Add("ResultCode", response.StatusCode.ToString());
+                    telemetryProps.Add("TeamsOpenShiftId", openShiftResponse.Id);
+
+                    this.telemetryClient.TrackTrace(Resource.CreateEntryOpenShiftsEntityMappingAsync, telemetryProps);
+                    await this.openShiftMappingEntityProvider.SaveOrUpdateOpenShiftMappingEntityAsync(openShiftMappingEntity).ConfigureAwait(false);
+
+                    // Add the entity to the found list to prevent later processes from deleting
+                    // the newly added entity.
+                    lookUpEntriesFoundList.Add(openShiftMappingEntity);
+                }
+                else
                 {
-                    var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                        var openShiftResponse = JsonConvert.DeserializeObject<Models.Response.OpenShifts.GraphOpenShift>(responseContent);
-                        var openShiftMappingEntity = this.CreateNewOpenShiftMappingEntity(openShiftResponse, item.KronosUniqueId, monthPartitionKey, mappedTeam?.RowKey);
-
-                        telemetryProps.Add("ResultCode", response.StatusCode.ToString());
-                        telemetryProps.Add("TeamsOpenShiftId", openShiftResponse.Id);
-
-                        this.telemetryClient.TrackTrace(Resource.CreateEntryOpenShiftsEntityMappingAsync, telemetryProps);
-                        await this.openShiftMappingEntityProvider.SaveOrUpdateOpenShiftMappingEntityAsync(openShiftMappingEntity).ConfigureAwait(false);
-
-                        // Add the entity to the found list to prevent later processes from deleting
-                        // the newly added entity.
-                        lookUpEntriesFoundList.Add(openShiftMappingEntity);
-                    }
-                    else
-                    {
-                        var errorProps = new Dictionary<string, string>()
+                    var errorProps = new Dictionary<string, string>()
                         {
                             { "ResultCode", response.StatusCode.ToString() },
                             { "ResponseHeader", response.Headers.ToString() },
@@ -637,9 +636,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             { "MappedTeamId", mappedTeam?.TeamId },
                         };
 
-                        // Have the log to capture the 403.
-                        this.telemetryClient.TrackTrace(Resource.CreateEntryOpenShiftsEntityMappingAsync, errorProps);
-                    }
+                    // Have the log to capture the error.
+                    this.telemetryClient.TrackTrace(Resource.CreateEntryOpenShiftsEntityMappingAsync, errorProps);
                 }
             }
 
@@ -655,20 +653,17 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <returns>A unit of execution.</returns>
         private async Task<HttpResponseMessage> UpdateOpenShiftInTeams(SetupDetails allRequiredConfiguration, GraphOpenShift openShift, TeamToDepartmentJobMappingEntity mappedTeam)
         {
-            var requestString = JsonConvert.SerializeObject(openShift);
             var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfiguration.ShiftsAccessToken);
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfiguration.GraphConfigurationDetails.ShiftsAccessToken);
             httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", allRequiredConfiguration.WFIId);
 
-            using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Put, "teams/" + mappedTeam.TeamId + "/schedule/openShifts/" + openShift.Id)
+            var requestString = JsonConvert.SerializeObject(openShift);
+            var requestUrl = $"teams/{mappedTeam.TeamId}/schedule/openShifts/{openShift.Id}";
+
+            var response = await this.graphUtility.SendHttpRequest(allRequiredConfiguration.GraphConfigurationDetails, httpClient, HttpMethod.Put, requestUrl, requestString).ConfigureAwait(false);
+            if (response.IsSuccessStatusCode)
             {
-                Content = new StringContent(requestString, Encoding.UTF8, "application/json"),
-            })
-            {
-                var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
-                if (response.IsSuccessStatusCode)
-                {
-                    var successfulUpdateProps = new Dictionary<string, string>()
+                var successfulUpdateProps = new Dictionary<string, string>()
                             {
                                 { "ResponseCode", response.StatusCode.ToString() },
                                 { "ResponseHeader", response.Headers.ToString() },
@@ -676,23 +671,22 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 { "OpenShiftIdToDelete", openShift.Id },
                             };
 
-                    this.telemetryClient.TrackTrace("Open shift updated.", successfulUpdateProps);
-                }
-                else
-                {
-                    var errorUpdateProps = new Dictionary<string, string>()
-                            {
-                                { "ResponseCode", response.StatusCode.ToString() },
-                                { "ResponseHeader", response.Headers.ToString() },
-                                { "MappedTeamId", mappedTeam?.TeamId },
-                                { "OpenShiftIdToDelete", openShift.Id },
-                            };
-
-                    this.telemetryClient.TrackTrace("Open shift could not be updated.", errorUpdateProps);
-                }
-
-                return response;
+                this.telemetryClient.TrackTrace("Open shift updated.", successfulUpdateProps);
             }
+            else
+            {
+                var errorUpdateProps = new Dictionary<string, string>()
+                            {
+                                { "ResponseCode", response.StatusCode.ToString() },
+                                { "ResponseHeader", response.Headers.ToString() },
+                                { "MappedTeamId", mappedTeam?.TeamId },
+                                { "OpenShiftIdToDelete", openShift.Id },
+                            };
+
+                this.telemetryClient.TrackTrace("Open shift could not be updated.", errorUpdateProps);
+            }
+
+            return response;
         }
 
         /// <summary>
@@ -745,15 +739,15 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private async Task<HttpResponseMessage> DeleteOpenShiftInTeams(SetupDetails allRequiredConfiguration, AllOpenShiftMappingEntity openShiftMapping, TeamToDepartmentJobMappingEntity mappedTeam)
         {
             var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfiguration.ShiftsAccessToken);
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfiguration.GraphConfigurationDetails.ShiftsAccessToken);
             httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", allRequiredConfiguration.WFIId);
 
-            using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Delete, "teams/" + mappedTeam.TeamId + "/schedule/openShifts/" + openShiftMapping.RowKey))
+            var requestUrl = $"teams/{mappedTeam.TeamId}/schedule/openShifts/{openShiftMapping.RowKey}";
+
+            var response = await this.graphUtility.SendHttpRequest(allRequiredConfiguration.GraphConfigurationDetails, httpClient, HttpMethod.Delete, requestUrl).ConfigureAwait(false);
+            if (response.IsSuccessStatusCode)
             {
-                var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
-                if (response.IsSuccessStatusCode)
-                {
-                    var successfulDeleteProps = new Dictionary<string, string>()
+                var successfulDeleteProps = new Dictionary<string, string>()
                             {
                                 { "ResponseCode", response.StatusCode.ToString() },
                                 { "ResponseHeader", response.Headers.ToString() },
@@ -761,25 +755,24 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                 { "OpenShiftIdToDelete", openShiftMapping.RowKey },
                             };
 
-                    this.telemetryClient.TrackTrace(Resource.DeleteOrphanDataOpenShiftsEntityMappingAsync, successfulDeleteProps);
+                this.telemetryClient.TrackTrace(Resource.DeleteOrphanDataOpenShiftsEntityMappingAsync, successfulDeleteProps);
 
-                    await this.openShiftMappingEntityProvider.DeleteOrphanDataFromOpenShiftMappingAsync(openShiftMapping).ConfigureAwait(false);
-                }
-                else
-                {
-                    var errorDeleteProps = new Dictionary<string, string>()
-                            {
-                                { "ResponseCode", response.StatusCode.ToString() },
-                                { "ResponseHeader", response.Headers.ToString() },
-                                { "MappedTeamId", mappedTeam?.TeamId },
-                                { "OpenShiftIdToDelete", openShiftMapping.RowKey },
-                            };
-
-                    this.telemetryClient.TrackTrace(Resource.DeleteOrphanDataOpenShiftsEntityMappingAsync, errorDeleteProps);
-                }
-
-                return response;
+                await this.openShiftMappingEntityProvider.DeleteOrphanDataFromOpenShiftMappingAsync(openShiftMapping).ConfigureAwait(false);
             }
+            else
+            {
+                var errorDeleteProps = new Dictionary<string, string>()
+                            {
+                                { "ResponseCode", response.StatusCode.ToString() },
+                                { "ResponseHeader", response.Headers.ToString() },
+                                { "MappedTeamId", mappedTeam?.TeamId },
+                                { "OpenShiftIdToDelete", openShiftMapping.RowKey },
+                            };
+
+                this.telemetryClient.TrackTrace(Resource.DeleteOrphanDataOpenShiftsEntityMappingAsync, errorDeleteProps);
+            }
+
+            return response;
         }
 
         /// <summary>
