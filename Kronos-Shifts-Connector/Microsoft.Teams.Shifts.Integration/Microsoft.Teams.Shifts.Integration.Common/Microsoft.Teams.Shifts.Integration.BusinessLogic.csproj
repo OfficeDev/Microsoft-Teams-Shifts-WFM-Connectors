@@ -287,6 +287,7 @@
     <Compile Include="Models\ConfigEntityViewModel.cs" />
     <Compile Include="Models\ConfigurationEntity.cs" />
     <Compile Include="Models\Encryption.cs" />
+    <Compile Include="Models\Graph\GraphConfigurationDetails.cs" />
     <Compile Include="Models\KronosDetails.cs" />
     <Compile Include="Models\RequestModels\ShareSchedule.cs" />
     <Compile Include="Models\ResponseModels\ResponseError.cs" />
