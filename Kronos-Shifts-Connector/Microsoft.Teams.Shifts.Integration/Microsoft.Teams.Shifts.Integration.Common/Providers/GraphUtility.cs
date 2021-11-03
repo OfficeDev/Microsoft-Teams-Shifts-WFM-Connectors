@@ -55,7 +55,6 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             this.telemetryClient.TrackTrace(BusinessLogicResource.RegisterWorkforceIntegrationAsync + " called at " + DateTime.Now.ToString("o", provider));
 
             var httpClient = this.httpClientFactory.CreateClient("GraphBetaAPI");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", graphConfigurationDetails.ShiftsAccessToken);
 
             var requestUrl = "teamwork/workforceIntegrations";
             var requestString = JsonConvert.SerializeObject(workforceIntegration);
@@ -77,8 +76,6 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             bool hasMoreUsers = false;
 
             var httpClient = this.httpClientFactory.CreateClient("GraphBetaAPI");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", graphConfigurationDetails.ShiftsAccessToken);
-
             var requestUrl = "users";
 
             do
@@ -126,9 +123,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
                 EndDateTime = endDateTime,
             };
 
-            var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", graphConfigurationDetails.ShiftsAccessToken);
-            httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            var httpClient = this.httpClientFactory.CreateClient("GraphBetaAPI");
 
             var requestUrl = $"teams/{teamId}/schedule/share";
             var requestString = JsonConvert.SerializeObject(shareRequest);
@@ -150,7 +145,6 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             this.telemetryClient.TrackTrace(BusinessLogicResource.FetchShiftTeamDetailsAsync, fetchShiftUserDetailsProps);
 
             var httpClient = this.httpClientFactory.CreateClient("GraphBetaAPI");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", graphConfigurationDetails.ShiftsAccessToken);
 
             // Filter group who has associated teams also.
             var requestUrl = "groups?$filter=resourceProvisioningOptions/Any(x:x eq 'Team')";
@@ -207,6 +201,8 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
                 {
                     httpRequestMessage.Content = new StringContent(requestString, Encoding.UTF8, "application/json");
                 }
+
+                httpRequestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", graphConfigurationDetails.ShiftsAccessToken);
 
                 var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
 
@@ -273,8 +269,6 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, wfiDeletionProps);
 
             var httpClient = this.httpClientFactory.CreateClient("GraphBetaAPI");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", graphConfigurationDetails.ShiftsAccessToken);
-
             var requestUrl = $"teamwork/workforceIntegrations/{workforceIntegrationId}";
 
             var response = await this.SendHttpRequest(graphConfigurationDetails, httpClient, HttpMethod.Delete, requestUrl).ConfigureAwait(false);
@@ -308,8 +302,6 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, fetchShiftUserDetailsProps);
 
             var httpClient = this.httpClientFactory.CreateClient("GraphBetaAPI");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", graphConfigurationDetails.ShiftsAccessToken);
-
             var requestUrl = $"teams/{shiftTeamId}/schedule/schedulingGroups";
 
             var response = await this.SendHttpRequest(graphConfigurationDetails, httpClient, HttpMethod.Get, requestUrl).ConfigureAwait(false);
@@ -337,8 +329,6 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             try
             {
                 var httpClient = this.httpClientFactory.CreateClient("GraphBetaAPI");
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", graphConfigurationDetails.ShiftsAccessToken);
-
                 var scheduleRequestUrl = $"teams/{teamsId}/schedule";
 
                 var getScheduleResponse = await this.SendHttpRequest(graphConfigurationDetails, httpClient, HttpMethod.Get, scheduleRequestUrl).ConfigureAwait(false);
@@ -363,8 +353,6 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
                     TimeZone = scheduleResponse.TimeZone,
                     WorkforceIntegrationIds = new List<string>() { wfIID },
                 };
-
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", graphConfigurationDetails.ShiftsAccessToken);
 
                 var addWfiRequestUrl = $"teams/{teamsId}/schedule";
                 var addWfiRequestString = JsonConvert.SerializeObject(schedule);
