@@ -4,8 +4,6 @@
 
 namespace Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI
 {
-    using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.Graph;
-
     /// <summary>
     /// This class models the SetupDetails.
     /// </summary>
@@ -27,14 +25,29 @@ namespace Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI
         public string KronosSession { get; set; }
 
         /// <summary>
+        /// Gets or sets the MS Graph Access token.
+        /// </summary>
+        public string ShiftsAccessToken { get; set; }
+
+        /// <summary>
         /// Gets or sets the Kronos API Endpoint.
         /// </summary>
         public string WfmEndPoint { get; set; }
 
         /// <summary>
+        /// Gets or sets the TenantId.
+        /// </summary>
+        public string TenantId { get; set; }
+
+        /// <summary>
         /// Gets or sets a value indicating whether or not the prerequisites have been established.
         /// </summary>
         public bool IsAllSetUpExists { get; set; }
+
+        /// <summary>
+        /// Gets or sets the AAD Object Id of the Shifts Admin (Admin using the configurator web app).
+        /// </summary>
+        public string ShiftsAdminAadObjectId { get; set; }
 
         /// <summary>
         /// Gets or sets the Kronos User Name.
@@ -45,10 +58,5 @@ namespace Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI
         /// Gets or sets the Kronos Password.
         /// </summary>
         public string KronosPassword { get; set; }
-
-        /// <summary>
-        /// Gets or sets the GraphConfigurationDetails.
-        /// </summary>
-        public GraphConfigurationDetails GraphConfigurationDetails { get; set; }
     }
 }
