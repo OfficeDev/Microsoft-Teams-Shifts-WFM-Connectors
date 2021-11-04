@@ -32,19 +32,16 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
     {
         private readonly TelemetryClient telemetryClient;
         private readonly IApiHelper apiHelper;
-        private readonly CommonRequests commonRequests;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SwapShiftActivity"/> class.
         /// </summary>
         /// <param name="telemetryClient">ApplicationInsights DI.</param>
         /// <param name="apiHelper">API helper to fetch tuple response by post soap requests.</param>
-        /// <param name="commonRequests">Common Requests DI.</param>
-        public SwapShiftActivity(TelemetryClient telemetryClient, IApiHelper apiHelper, CommonRequests commonRequests)
+        public SwapShiftActivity(TelemetryClient telemetryClient, IApiHelper apiHelper)
         {
             this.telemetryClient = telemetryClient;
             this.apiHelper = apiHelper;
-            this.commonRequests = commonRequests;
         }
 
         /// <inheritdoc/>
@@ -175,7 +172,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
 
             this.telemetryClient.TrackTrace($"SwapShiftActivity - SubmitApprovalAsync starts: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}", telemetryProps);
 
-            string xmlRequest = this.commonRequests.CreateUpdateStatusRequest(personNumber, reqId, status, querySpan, comments);
+            string xmlRequest = CommonRequests.CreateUpdateStatusRequest(personNumber, reqId, status, querySpan, comments);
 
             var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
                 endpointUrl,
@@ -213,7 +210,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
         {
             var status = approved ? ApiConstants.ApprovedStatus : ApiConstants.Refused;
 
-            var swapShiftApprovalRequest = this.commonRequests.CreateUpdateStatusRequest(kronosPersonNumber, kronosId, status, queryDateSpan, comments);
+            var swapShiftApprovalRequest = CommonRequests.CreateUpdateStatusRequest(kronosPersonNumber, kronosId, status, queryDateSpan, comments);
             var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
                 endPointUrl,
                 SoapEnvOpen,

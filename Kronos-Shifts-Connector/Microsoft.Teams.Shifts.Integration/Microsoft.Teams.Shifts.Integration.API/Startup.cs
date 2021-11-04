@@ -73,7 +73,6 @@ namespace Microsoft.Teams.Shifts.Integration.API
             services.AddSingleton<IKeyVaultHelper, KeyVaultHelper>();
             services.AddSingleton<AppSettings>();
             services.AddSingleton<IApiHelper, ApiHelper>();
-            services.AddSingleton<CommonRequests>();
             services.AddApplicationInsightsTelemetry();
             services.AddHttpClient();
             var serviceProvider = services.BuildServiceProvider();
@@ -216,8 +215,7 @@ namespace Microsoft.Teams.Shifts.Integration.API
 
             services.AddSingleton<ISwapShiftActivity, SwapShiftActivity>((provider) => new SwapShiftActivity(
              provider.GetRequiredService<TelemetryClient>(),
-             provider.GetRequiredService<IApiHelper>(),
-             provider.GetRequiredService<CommonRequests>()));
+             provider.GetRequiredService<IApiHelper>()));
 
             services.AddSingleton<ILogonActivity, LogonActivity>((provider) => new LogonActivity(
                 new App.KronosWfc.Models.RequestEntities.Logon.Request(),
@@ -247,13 +245,11 @@ namespace Microsoft.Teams.Shifts.Integration.API
 
             services.AddSingleton<IOpenShiftActivity, OpenShiftActivity>((provider) => new OpenShiftActivity(
                 provider.GetRequiredService<TelemetryClient>(),
-                provider.GetRequiredService<IApiHelper>(),
-                provider.GetRequiredService<CommonRequests>()));
+                provider.GetRequiredService<IApiHelper>()));
 
             services.AddSingleton<ITimeOffActivity, TimeOffActivity>((provider) => new TimeOffActivity(
                 provider.GetRequiredService<TelemetryClient>(),
-                provider.GetRequiredService<IApiHelper>(),
-                provider.GetRequiredService<CommonRequests>()));
+                provider.GetRequiredService<IApiHelper>()));
 
             services.AddSingleton<ITimeOffReasonProvider>((provider) => new TimeOffReasonProvider(
                 appSettings.StorageConnectionString,

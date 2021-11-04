@@ -12,7 +12,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Common
     /// <summary>
     /// Methods for building common requests.
     /// </summary>
-    public class CommonRequests
+    public static class CommonRequests
     {
         /// <summary>
         /// Creates an XML request to updatethe status of time off, swap and open shift requests in Kronos.
@@ -23,7 +23,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Common
         /// <param name="querySpan">The query date span.</param>
         /// <param name="comments">Comments to add to the request.</param>
         /// <returns>String representation of the XML request.</returns>
-        public string CreateUpdateStatusRequest(string personNumber, string reqId, string status, string querySpan, Comments comments)
+        public static string CreateUpdateStatusRequest(string personNumber, string reqId, string status, string querySpan, Comments comments)
         {
             var request = new UpdateStatus.Request
             {

@@ -32,19 +32,16 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
     {
         private readonly TelemetryClient telemetryClient;
         private readonly IApiHelper apiHelper;
-        private readonly CommonRequests commonRequests;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OpenShiftActivity"/> class.
         /// </summary>
         /// <param name="telemetryClient">The mechanisms to capture telemetry.</param>
         /// <param name="apiHelper">API helper to fetch tuple response by post soap requests.</param>
-        /// <param name="commonRequests">CommonRequests DI.</param>
-        public OpenShiftActivity(TelemetryClient telemetryClient, IApiHelper apiHelper, CommonRequests commonRequests)
+        public OpenShiftActivity(TelemetryClient telemetryClient, IApiHelper apiHelper)
         {
             this.telemetryClient = telemetryClient;
             this.apiHelper = apiHelper;
-            this.commonRequests = commonRequests;
         }
 
         /// <inheritdoc/>
@@ -122,7 +119,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
             Comments comments)
         {
             var status = approved ? ApiConstants.ApprovedStatus : ApiConstants.Refused;
-            var xmlOpenShiftApprovalRequest = this.commonRequests.CreateUpdateStatusRequest(kronosPersonNumber, kronosId, status, queryDateSpan, comments);
+            var xmlOpenShiftApprovalRequest = CommonRequests.CreateUpdateStatusRequest(kronosPersonNumber, kronosId, status, queryDateSpan, comments);
 
             var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
                 endPointUrl,

@@ -30,19 +30,16 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
     {
         private readonly TelemetryClient telemetryClient;
         private readonly IApiHelper apiHelper;
-        private readonly CommonRequests commonRequests;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TimeOffActivity"/> class.
         /// </summary>
         /// <param name="telemetryClient">The mechanisms to capture telemetry.</param>
         /// <param name="apiHelper">API helper to fetch tuple response by post soap requests.</param>
-        /// <param name="commonRequests">CommonRequests DI</param>
-        public TimeOffActivity(TelemetryClient telemetryClient, IApiHelper apiHelper, CommonRequests commonRequests)
+        public TimeOffActivity(TelemetryClient telemetryClient, IApiHelper apiHelper)
         {
             this.telemetryClient = telemetryClient;
             this.apiHelper = apiHelper;
-            this.commonRequests = commonRequests;
         }
 
         /// <inheritdoc/>
@@ -148,7 +145,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
             Comments comments)
         {
             var status = approved ? ApiConstants.ApprovedStatus : ApiConstants.Refused;
-            var xmlTimeOffApprovalRequest = this.commonRequests.CreateUpdateStatusRequest(kronosPersonNumber, kronosId, status, queryDateSpan, comments);
+            var xmlTimeOffApprovalRequest = CommonRequests.CreateUpdateStatusRequest(kronosPersonNumber, kronosId, status, queryDateSpan, comments);
 
             var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
                 endPointUrl,
