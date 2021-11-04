@@ -247,7 +247,8 @@ namespace Microsoft.Teams.Shifts.Integration.API
 
             services.AddSingleton<IOpenShiftActivity, OpenShiftActivity>((provider) => new OpenShiftActivity(
                 provider.GetRequiredService<TelemetryClient>(),
-                provider.GetRequiredService<IApiHelper>()));
+                provider.GetRequiredService<IApiHelper>(),
+                provider.GetRequiredService<CommonRequests>()));
 
             services.AddSingleton<ITimeOffActivity, TimeOffActivity>((provider) => new TimeOffActivity(
                 provider.GetRequiredService<TelemetryClient>(),

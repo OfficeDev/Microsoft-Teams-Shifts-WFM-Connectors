@@ -249,7 +249,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// <summary>
         /// Gets the manager open shift request comment text value.
         /// </summary>
-        public string ManagerOpenShiftRequestRequestCommentText => this.configuration["ManagerOpenShiftRequestCommentText"];
+        public string ManagerOpenShiftRequestCommentText => this.configuration["ManagerOpenShiftRequestCommentText"];
 
         // **************************************CONFIGURATION PROJECT*********************************************
 

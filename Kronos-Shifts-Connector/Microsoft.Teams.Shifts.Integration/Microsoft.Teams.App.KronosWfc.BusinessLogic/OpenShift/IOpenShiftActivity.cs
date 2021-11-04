@@ -113,6 +113,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
         /// <param name="kronosPersonNumber">The Kronos person number.</param>
         /// <param name="approved">Whether the request is being accepted or denied.</param>
         /// <param name="kronosId">The id of the OpenShiftRequest in Kronos.</param>
+        /// <param name="comments">The comments to add to the request.</param>
         /// <returns>A response.</returns>
         Task<Models.ResponseEntities.OpenShiftRequest.ApproveDecline.Response> ApproveOrDenyOpenShiftRequestsForUserAsync(
             Uri endPointUrl,
@@ -120,6 +121,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
             string queryDateSpan,
             string kronosPersonNumber,
             bool approved,
-            string kronosId);
+            string kronosId,
+            Comments comments);
     }
 }

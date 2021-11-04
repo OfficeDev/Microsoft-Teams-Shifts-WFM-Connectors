@@ -12,8 +12,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Common
     using Microsoft.ApplicationInsights;
     using Microsoft.Teams.App.KronosWfc.Common;
     using Microsoft.Teams.App.KronosWfc.Models.CommonEntities;
-    using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common;
-    using UpdateStatus = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.UpdateStatus;
     using static Microsoft.Teams.App.KronosWfc.Common.ApiConstants;
 
     /// <summary>
@@ -50,17 +48,12 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Common
         /// <param name="timeStamp">The time stamp in local time to assign to the comments.</param>
         /// <param name="existingNotes">Existing notes.</param>
         /// <returns>Kronos Comments object.</returns>
-        public static Comments GenerateKronosComments(string noteMessage, string noteCommentText, string timeStamp, List<Comment> existingNotes = null)
+        public static Comments GenerateKronosComments(string noteMessage, string noteCommentText, string timeStamp)
         {
             var comments = new Comments
             {
                 Comment = new List<Comment>(),
             };
-
-            if (existingNotes != null)
-            {
-                comments.Comment.AddRange(existingNotes);
-            }
 
             if (!string.IsNullOrEmpty(noteMessage))
             {

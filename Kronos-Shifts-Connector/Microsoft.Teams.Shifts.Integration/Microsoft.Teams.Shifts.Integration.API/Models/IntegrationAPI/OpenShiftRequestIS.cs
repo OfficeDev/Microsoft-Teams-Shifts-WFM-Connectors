@@ -49,6 +49,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI
         public string ManagerUserId { get; set; }
 
         /// <summary>
+        /// Gets or sets the managerActionMessage.
+        /// </summary>
+        [JsonProperty("managerActionMessage")]
+        public string ManagerActionMessage { get; set; }
+
+        /// <summary>
         /// Gets or sets the openShiftId.
         /// </summary>
         [JsonProperty("openShiftId")]

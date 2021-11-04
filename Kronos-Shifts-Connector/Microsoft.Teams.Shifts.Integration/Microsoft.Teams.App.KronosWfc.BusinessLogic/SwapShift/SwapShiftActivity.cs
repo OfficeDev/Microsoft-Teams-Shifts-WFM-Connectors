@@ -76,26 +76,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
         }
 
         /// <inheritdoc/>
-        public async Task<FetchApprovalResponse> GetSwapRequestDetailsAsync(
-            Uri endPointUrl,
-            string jSession,
-            string queryDateSpan,
-            string personNumber,
-            string kronosRequestId)
-        {
-            var xmlRequest = this.CreateRetrieveSwapRequest(queryDateSpan, personNumber, kronosRequestId);
-
-            var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
-                endPointUrl,
-                SoapEnvOpen,
-                xmlRequest,
-                SoapEnvClose,
-                jSession).ConfigureAwait(false);
-
-            return tupleResponse.ProcessResponse<FetchApprovalResponse>(this.telemetryClient);
-        }
-
-        /// <inheritdoc/>
         public async Task<SubmitResponse> DraftSwapShiftAsync(
             string jSession,
             SwapShiftObj obj,
@@ -418,41 +398,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
             this.telemetryClient.TrackTrace($"SwapShiftActivity - CreateApproveSwapShiftRequests: {request.ToString(CultureInfo.InvariantCulture)}", telemetryProps);
             this.telemetryClient.TrackTrace($"SwapShiftActivity - CreateApproveSwapShiftRequests ends: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}", telemetryProps);
             return request;
-        }
-
-        /// <summary>
-        /// Creates a request to retrieve a single swap request.
-        /// </summary>
-        /// <param name="queryDateSpan">The queryDateSpan string.</param>
-        /// <param name="personNumber">The Kronos Person Number.</param>
-        /// <param name="id">The Kronos id of the request.</param>
-        /// <returns>XML request string.</returns>
-        private string CreateRetrieveSwapRequest(string queryDateSpan, string personNumber, string id)
-        {
-            var request = new GetDetailsRequest
-            {
-                Action = ApiConstants.RetrieveWithDetails,
-                RequestMgmt = new Models.RequestEntities.SwapShift.RequestMgmt
-                {
-                    Employees = new Employees
-                    {
-                        PersonIdentity = new List<PersonIdentity>
-                        {
-                                new PersonIdentity { PersonNumber = personNumber },
-                        },
-                    },
-                    QueryDateSpan = queryDateSpan,
-                    RequestIds = new RequestIds
-                    {
-                        RequestId = new List<RequestId>
-                        {
-                            new RequestId { Id = id },
-                        },
-                    },
-                },
-            };
-
-            return request.XmlSerialize();
         }
 
         /// <summary>

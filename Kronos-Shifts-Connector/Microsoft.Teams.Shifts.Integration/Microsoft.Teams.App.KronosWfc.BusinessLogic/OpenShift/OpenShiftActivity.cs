@@ -32,16 +32,19 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
     {
         private readonly TelemetryClient telemetryClient;
         private readonly IApiHelper apiHelper;
+        private readonly CommonRequests commonRequests;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OpenShiftActivity"/> class.
         /// </summary>
         /// <param name="telemetryClient">The mechanisms to capture telemetry.</param>
         /// <param name="apiHelper">API helper to fetch tuple response by post soap requests.</param>
-        public OpenShiftActivity(TelemetryClient telemetryClient, IApiHelper apiHelper)
+        /// <param name="commonRequests">CommonRequests DI.</param>
+        public OpenShiftActivity(TelemetryClient telemetryClient, IApiHelper apiHelper, CommonRequests commonRequests)
         {
             this.telemetryClient = telemetryClient;
             this.apiHelper = apiHelper;
+            this.commonRequests = commonRequests;
         }
 
         /// <inheritdoc/>
@@ -108,25 +111,19 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
             return response;
         }
 
-        /// <summary>
-        /// Approves or Denies the request.
-        /// </summary>
-        /// <param name="endPointUrl">The Kronos WFC endpoint URL.</param>
-        /// <param name="jSession">JSession.</param>
-        /// <param name="queryDateSpan">QueryDateSpan string.</param>
-        /// <param name="kronosPersonNumber">The Kronos Person Number.</param>
-        /// <param name="approved">Whether the request needs to be approved or denied.</param>
-        /// <param name="kronosId">The Kronos id of the request.</param>
-        /// <returns>Request details response object.</returns>
+        /// <inheritdoc/>
         public async Task<Models.ResponseEntities.OpenShiftRequest.ApproveDecline.Response> ApproveOrDenyOpenShiftRequestsForUserAsync(
             Uri endPointUrl,
             string jSession,
             string queryDateSpan,
             string kronosPersonNumber,
             bool approved,
-            string kronosId)
+            string kronosId,
+            Comments comments)
         {
-            var xmlOpenShiftApprovalRequest = this.CreateApproveOrDeclineRequest(queryDateSpan, kronosPersonNumber, approved, kronosId);
+            var status = approved ? ApiConstants.ApprovedStatus : ApiConstants.Refused;
+            var xmlOpenShiftApprovalRequest = this.commonRequests.CreateUpdateStatusRequest(kronosPersonNumber, kronosId, status, queryDateSpan, comments);
+
             var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
                 endPointUrl,
                 ApiConstants.SoapEnvOpen,
