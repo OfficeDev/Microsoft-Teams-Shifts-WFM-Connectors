@@ -110,6 +110,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
         /// <param name="kronosPersonNumber">The Kronos person number.</param>
         /// <param name="approved">Whether the request is being accepted or denied.</param>
         /// <param name="kronosId">The id of the TimeOffRequest in Kronos.</param>
+        /// <param name="comments">Comments to add to the request.</param>
         /// <returns>A response.</returns>
         Task<CommonResponse> ApproveOrDenyTimeOffRequestAsync(
             Uri endPointUrl,
@@ -117,7 +118,8 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
             string queryDateSpan,
             string kronosPersonNumber,
             bool approved,
-            string kronosId);
+            string kronosId,
+            Comments comments);
 
         /// <summary>
         /// Updates a time off request with manager comments.

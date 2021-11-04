@@ -183,6 +183,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\CommonRequests.cs" />
     <Compile Include="Common\XmlHelper.cs" />
     <Compile Include="HyperFindLoadAll\HyperFindLoadAllActivity.cs" />
     <Compile Include="HyperFindLoadAll\IHyperFindLoadAllActivity.cs" />

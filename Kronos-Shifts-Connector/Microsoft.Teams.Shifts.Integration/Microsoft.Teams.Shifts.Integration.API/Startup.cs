@@ -21,6 +21,7 @@ namespace Microsoft.Teams.Shifts.Integration.API
     using Microsoft.Extensions.Hosting;
     using Microsoft.Graph;
     using Microsoft.IdentityModel.Logging;
+    using Microsoft.Teams.App.KronosWfc.BusinessLogic.Common;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.HyperFind;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.JobAssignment;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.Logon;
@@ -72,6 +73,7 @@ namespace Microsoft.Teams.Shifts.Integration.API
             services.AddSingleton<IKeyVaultHelper, KeyVaultHelper>();
             services.AddSingleton<AppSettings>();
             services.AddSingleton<IApiHelper, ApiHelper>();
+            services.AddSingleton<CommonRequests>();
             services.AddApplicationInsightsTelemetry();
             services.AddHttpClient();
             var serviceProvider = services.BuildServiceProvider();
@@ -248,7 +250,8 @@ namespace Microsoft.Teams.Shifts.Integration.API
 
             services.AddSingleton<ITimeOffActivity, TimeOffActivity>((provider) => new TimeOffActivity(
                 provider.GetRequiredService<TelemetryClient>(),
-                provider.GetRequiredService<IApiHelper>()));
+                provider.GetRequiredService<IApiHelper>(),
+                provider.GetRequiredService<CommonRequests>()));
 
             services.AddSingleton<ITimeOffReasonProvider>((provider) => new TimeOffReasonProvider(
                 appSettings.StorageConnectionString,

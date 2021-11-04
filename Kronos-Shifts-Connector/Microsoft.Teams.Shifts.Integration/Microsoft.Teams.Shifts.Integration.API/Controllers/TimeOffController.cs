@@ -377,57 +377,17 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             if (allRequiredConfigurations.IsAllSetUpExists)
             {
-                // Get the existing time off request entity so we can add to existing notes
-                var usersTimeOffRequestDetails = await this.timeOffActivity.GetTimeOffRequestDetailsAsync(
-                        new Uri(allRequiredConfigurations.WfmEndPoint),
-                        allRequiredConfigurations.KronosSession,
-                        timeOffRequestQueryDateSpan,
-                        kronosUserId,
-                        kronosReqId).ConfigureAwait(false);
-
-                if (usersTimeOffRequestDetails.Status != "Success")
-                {
-                    this.telemetryClient.TrackTrace($"Could not find the time off request with id: {kronosReqId}", data);
-                    return false;
-                }
-
-                // There is a chance the previous request will return multiple time off entities so select the correct one
-                var timeOffRequest = usersTimeOffRequestDetails.RequestMgmt.RequestItems.GlobalTimeOffRequestItem.SingleOrDefault(x => x.Id == kronosReqId);
-                if (timeOffRequest == null)
-                {
-                    this.telemetryClient.TrackTrace($"Could not find the time off request with id: {kronosReqId}", data);
-                    return false;
-                }
-
                 var commentTimeStamp = this.utility.UTCToKronosTimeZone(DateTime.UtcNow, kronosTimeZone).ToString(CultureInfo.InvariantCulture);
-                var comments = XmlHelper.GenerateKronosComments(managerMessage, this.appSettings.ManagerTimeOffRequestCommentText, commentTimeStamp, timeOffRequest.Comments.Comment);
+                var comments = XmlHelper.GenerateKronosComments(managerMessage, this.appSettings.ManagerTimeOffRequestCommentText, commentTimeStamp);
 
-                // Add the comments to the time off request entity
-                var addCommentsResponse = await this.timeOffActivity.AddManagerCommentsToTimeOffRequestAsync(
-                        new Uri(allRequiredConfigurations.WfmEndPoint),
-                        allRequiredConfigurations.KronosSession,
-                        kronosReqId,
-                        localStartDateTime,
-                        localEndDateTime,
-                        timeOffRequestQueryDateSpan,
-                        kronosUserId,
-                        timeOffRequest.TimeOffPeriods.TimeOffPeriod.PayCodeName,
-                        comments).ConfigureAwait(false);
-
-                if (addCommentsResponse.Status != "Success")
-                {
-                    this.telemetryClient.TrackTrace($"Failed to add the manager notes to the time off request: {kronosReqId}", data);
-                    return false;
-                }
-
-                var response =
-                    await this.timeOffActivity.ApproveOrDenyTimeOffRequestAsync(
+                var response = await this.timeOffActivity.ApproveOrDenyTimeOffRequestAsync(
                         new Uri(allRequiredConfigurations.WfmEndPoint),
                         allRequiredConfigurations.KronosSession,
                         timeOffRequestQueryDateSpan,
                         kronosUserId,
                         approved,
-                        kronosReqId).ConfigureAwait(false);
+                        kronosReqId,
+                        comments).ConfigureAwait(false);
 
                 data.Add("ResponseStatus", $"{response.Status}");
 
