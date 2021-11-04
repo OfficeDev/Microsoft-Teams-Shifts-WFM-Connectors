@@ -262,8 +262,6 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                 var graphConfigurationDetails = this.utility.GetTenantDetails();
                 graphConfigurationDetails.ShiftsAdminAadObjectId = this.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
 
-                graphConfigurationDetails.ShiftsAccessToken = await this.graphUtility.GetAccessTokenAsync(graphConfigurationDetails).ConfigureAwait(false);
-
                 configurationEntity.WorkforceIntegrationSecret = workforceIntegrationRequest.Encryption.Secret;
                 configurationEntity.AdminAadObjectId = this.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
 
@@ -333,8 +331,6 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
 
                 var graphConfigurationDetails = this.utility.GetTenantDetails();
                 graphConfigurationDetails.ShiftsAdminAadObjectId = this.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
-
-                graphConfigurationDetails.ShiftsAccessToken = await this.graphUtility.GetAccessTokenAsync(graphConfigurationDetails).ConfigureAwait(false);
 
                 var wfiDeletionResponse = await this.graphUtility.DeleteWorkforceIntegrationAsync(
                     configurationEntity?.WorkforceIntegrationId,
