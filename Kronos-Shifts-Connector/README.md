@@ -76,10 +76,11 @@ Kronos requires a **Comment Text** value to be assigned to any comments or notes
 You must configure the following settings:
    - **ShiftNotesCommentText** - Used for syncing shift notes and open shift notes.
    - **SenderTimeOffRequestCommentText** - Used for syncing time off request notes added by the requestor.
-   - **ManagerTimeOffRequestCommentText** - Used for syncing time off request notes added by the manager. (Please note we do not currently support manager TOR note syncing, however plan to in the near future).
+   - **ManagerTimeOffRequestCommentText** - Used for syncing time off request notes added by the manager. 
    - **SenderSwapRequestCommentText** - Used for syncing swap request notes added by the requestor.
    - **RecipientSwapRequestCommentText** - Used for syncing swap request notes added by the recipient.
-   - **ManagerSwapRequestCommentText** - Used for syncing swap request notes added by the manager. (Please note we do not currently support manager swap request note syncing, however plan to in the near future).
+   - **ManagerSwapRequestCommentText** - Used for syncing swap request notes added by the manager. 
+   - **ManagerOpenShiftRequestCommentText** - Used for syncing open shift request notes added by the manager. 
 
 1. First Log in to Kronos as an admin and navigate to the Comments section under Setup -> CommonSetup.
 ![Comment Setup Screen](images/figure53.PNG)
@@ -179,11 +180,12 @@ Here are the following requirements to correctly deploy the **Shifts-Kronos Inte
 |numberOfOrgJobPathSectionsForActivityName|This is the number of org job path sections you want to appear as a Teams shift activity name (this is only used when syncing a shift transfer). <br /> Example: ./Contoso/UK/Stores/London/Checkout/Checkout Operator <br /> - A value of 2 would lead to shift transfer activities having a title of: _Checkout - Checkout Operator_ <br /> - A value of 1 would lead to shift transfer activities having a title of: _Checkout Operator_|
 |transferredShiftDisplayName|This is the word or phrase you want to appear before the shift hours in the display name of a shift in the event that the shift contains a transfer. There is a 16 character limit. The default value is TRANSFER.|
 |shiftNotesCommentText|Used for syncing shift notes and open shift notes|
-|managerTimeOffRequestCommentText|Used for syncing time off request notes added by the manager. (Please note we do not currently support manager TOR note syncing, however plan to in the near future)|
+|managerTimeOffRequestCommentText|Used for syncing time off request notes added by the manager.|
 |senderTimeOffRequestCommentText|Used for syncing time off request notes added by the requestor|
-|managerSwapRequestCommentText|Used for syncing swap request notes added by the manager. (Please note we do not currently support manager swap request note syncing, however plan to in the near future)|
+|managerSwapRequestCommentText|Used for syncing swap request notes added by the manager.|
 |senderSwapRequestCommentText|Used for syncing swap request notes added by the requestor|
 |recipientSwapRequestCommentText|Used for syncing swap request notes added by the recipient|
+|managerOpenShiftRequestCommentText|Used for syncing open shift request notes added by the manager|
 |kronosUserName|The Kronos WFC SuperUser name|
 |kronosPassword|The Kronos WFC SuperUser password|
 |authTokenCacheLifetimeInSeconds|The number of seconds to set the time to live when caching the Kronos session auth token. You should set this to less than or equal to you **global.webserver.session.timeout**. <br/>To find this value please login to Kronos as an admin and navigate to Setup -> System Configuration -> System Settings. <br/>Select **Global Values** and find the value assigned to global.webserver.session.timeout|

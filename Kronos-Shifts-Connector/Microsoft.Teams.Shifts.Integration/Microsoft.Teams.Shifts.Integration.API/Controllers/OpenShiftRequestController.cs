@@ -17,8 +17,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.Teams.App.KronosWfc.BusinessLogic.Common;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift;
     using Microsoft.Teams.App.KronosWfc.Common;
+    using Microsoft.Teams.App.KronosWfc.Models.CommonEntities;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift.OpenShiftRequest;
     using Microsoft.Teams.Shifts.Integration.API.Common;
     using Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI;
@@ -259,12 +261,15 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 updateProps.Add("OpenShiftRequestID", openShiftRequest.Id);
                 updateProps.Add("KronosOpenShiftRequestId", kronosReqId);
 
+                var commentTimeStamp = this.utility.UTCToKronosTimeZone(DateTime.UtcNow, kronosTimeZone).ToString(CultureInfo.InvariantCulture);
+                var comments = XmlHelper.GenerateKronosComments(openShiftRequest.ManagerActionMessage, this.appSettings.ManagerOpenShiftRequestCommentText, commentTimeStamp);
+
                 if (!approved)
                 {
                     this.telemetryClient.TrackTrace($"Process denial of {openShiftRequest.Id}", updateProps);
 
                     // Deny in Kronos, Update mapping for Teams.
-                    success = await this.ApproveOrDenyOpenShiftRequestInKronos(kronosReqId, kronosUserId, openShiftRequestMapping, approved).ConfigureAwait(false);
+                    success = await this.ApproveOrDenyOpenShiftRequestInKronos(kronosReqId, kronosUserId, openShiftRequestMapping, approved, comments).ConfigureAwait(false);
                     if (!success)
                     {
                         this.telemetryClient.TrackTrace($"Process failure of denial of {openShiftRequest.Id}", updateProps);
@@ -282,7 +287,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 this.telemetryClient.TrackTrace($"Process approval of {openShiftRequest.Id}", updateProps);
 
                 // approve in kronos
-                success = await this.ApproveOrDenyOpenShiftRequestInKronos(kronosReqId, kronosUserId, openShiftRequestMapping, approved).ConfigureAwait(false);
+                success = await this.ApproveOrDenyOpenShiftRequestInKronos(kronosReqId, kronosUserId, openShiftRequestMapping, approved, comments).ConfigureAwait(false);
 
                 if (!success)
                 {
@@ -595,8 +600,9 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="kronosUserId">The Kronos user id for the assigned user.</param>
         /// <param name="openShiftRequestMapping">The mapping for the open shift request.</param>
         /// <param name="approved">Whether the open shift should be approved (true) or denied (false).</param>
+        /// <param name="comments">The comments to add to the request.</param>
         /// <returns>Returns a bool that represents whether the request was a success (true) or not (false).</returns>
-        private async Task<bool> ApproveOrDenyOpenShiftRequestInKronos(string kronosReqId, string kronosUserId, AllOpenShiftRequestMappingEntity openShiftRequestMapping, bool approved)
+        private async Task<bool> ApproveOrDenyOpenShiftRequestInKronos(string kronosReqId, string kronosUserId, AllOpenShiftRequestMappingEntity openShiftRequestMapping, bool approved, Comments comments)
         {
             var provider = CultureInfo.InvariantCulture;
             this.telemetryClient.TrackTrace($"ApproveOrDenyOpenShiftRequestInKronos start at: {DateTime.Now.ToString("o", provider)}");
@@ -622,14 +628,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             if ((bool)allRequiredConfigurations?.IsAllSetUpExists && isCorrectDateRange)
             {
-                var response =
-                    await this.openShiftActivity.ApproveOrDenyOpenShiftRequestsForUserAsync(
+                var response = await this.openShiftActivity.ApproveOrDenyOpenShiftRequestsForUserAsync(
                         new Uri(allRequiredConfigurations.WfmEndPoint),
                         allRequiredConfigurations.KronosSession,
                         openShiftQueryDateSpan,
                         kronosUserId,
                         approved,
-                        kronosReqId).ConfigureAwait(false);
+                        kronosReqId,
+                        comments).ConfigureAwait(false);
 
                 data.Add("ResponseStatus", $"{response.Status}");
 

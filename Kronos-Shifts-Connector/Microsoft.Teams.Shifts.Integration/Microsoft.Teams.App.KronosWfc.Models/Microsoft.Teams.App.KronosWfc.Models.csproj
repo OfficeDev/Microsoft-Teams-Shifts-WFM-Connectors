@@ -263,7 +263,9 @@
     <Compile Include="RequestEntities\Shifts\ShiftRequest.cs" />
     <Compile Include="RequestEntities\SwapShiftEligibility\Request.cs" />
     <Compile Include="RequestEntities\SwapShiftEligibility\SwapShiftEmployees.cs" />
+    <Compile Include="RequestEntities\SwapShift\GetAllApprovedRequests\GetAllApprovedRequest.cs" />
     <Compile Include="RequestEntities\SwapShift\GetDetailsRequest.cs" />
+    <Compile Include="RequestEntities\SwapShift\RequestMgmt.cs" />
     <Compile Include="RequestEntities\SwapShift\RetractRequest.cs" />
     <Compile Include="RequestEntities\SwapShift\SubmitRequest\EmployeeRequestMgmt.cs" />
     <Compile Include="RequestEntities\SwapShift\SubmitRequest\OfferedShift.cs" />
@@ -283,6 +285,10 @@
     <Compile Include="RequestEntities\TimeOffRequests\RequestItems.cs" />
     <Compile Include="RequestEntities\TimeOffRequests\RequestMgmt.cs" />
     <Compile Include="RequestEntities\Schedule\Request.cs" />
+    <Compile Include="RequestEntities\UpdateStatus\Request.cs" />
+    <Compile Include="RequestEntities\UpdateStatus\RequestMgmt.cs" />
+    <Compile Include="RequestEntities\UpdateStatus\RequestStatusChange.cs" />
+    <Compile Include="RequestEntities\UpdateStatus\RequestStatusChanges.cs" />
     <Compile Include="ResponseEntities\Common\Person.cs" />
     <Compile Include="ResponseEntities\Common\Response.cs" />
     <Compile Include="ResponseEntities\Error.cs" />

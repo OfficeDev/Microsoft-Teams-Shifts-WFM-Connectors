@@ -194,6 +194,12 @@
         "description": "This is the Kronos 'comment text' value to assign to recipient swap request notes. This will need to be configured in Kronos beforehand."
       }
     },
+    "managerOpenShiftRequestCommentText": {
+      "type": "string",
+      "metadata": {
+        "description": "This is the Kronos 'comment text' value to assign to manager open shift request notes. This will need to be configured in Kronos beforehand."
+      }
+    },
     "kronosUserName": {
       "type": "string",
       "metadata": {
@@ -681,6 +687,10 @@
             {
               "name": "RecipientSwapRequestCommentText",
               "value": "[parameters('recipientSwapRequestCommentText')]"
+            },
+            {
+              "name": "ManagerOpenShiftRequestCommentText",
+              "value": "[parameters('managerOpenShiftRequestCommentText')]"
             },
             {
               "name": "BaseAddressFirstTimeSync",

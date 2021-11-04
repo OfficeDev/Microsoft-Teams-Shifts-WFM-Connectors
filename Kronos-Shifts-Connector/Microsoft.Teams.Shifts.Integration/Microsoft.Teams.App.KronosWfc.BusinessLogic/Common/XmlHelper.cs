@@ -46,19 +46,13 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.Common
         /// <param name="noteMessage">The note to add.</param>
         /// <param name="noteCommentText">The comment text value of the note to add.</param>
         /// <param name="timeStamp">The time stamp in local time to assign to the comments.</param>
-        /// <param name="existingNotes">Existing notes.</param>
         /// <returns>Kronos Comments object.</returns>
-        public static Comments GenerateKronosComments(string noteMessage, string noteCommentText, string timeStamp, List<Comment> existingNotes = null)
+        public static Comments GenerateKronosComments(string noteMessage, string noteCommentText, string timeStamp)
         {
             var comments = new Comments
             {
                 Comment = new List<Comment>(),
             };
-
-            if (existingNotes != null)
-            {
-                comments.Comment.AddRange(existingNotes);
-            }
 
             if (!string.IsNullOrEmpty(noteMessage))
             {

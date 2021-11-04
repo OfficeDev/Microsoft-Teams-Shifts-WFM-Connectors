@@ -108,25 +108,19 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
             return response;
         }
 
-        /// <summary>
-        /// Approves or Denies the request.
-        /// </summary>
-        /// <param name="endPointUrl">The Kronos WFC endpoint URL.</param>
-        /// <param name="jSession">JSession.</param>
-        /// <param name="queryDateSpan">QueryDateSpan string.</param>
-        /// <param name="kronosPersonNumber">The Kronos Person Number.</param>
-        /// <param name="approved">Whether the request needs to be approved or denied.</param>
-        /// <param name="kronosId">The Kronos id of the request.</param>
-        /// <returns>Request details response object.</returns>
+        /// <inheritdoc/>
         public async Task<Models.ResponseEntities.OpenShiftRequest.ApproveDecline.Response> ApproveOrDenyOpenShiftRequestsForUserAsync(
             Uri endPointUrl,
             string jSession,
             string queryDateSpan,
             string kronosPersonNumber,
             bool approved,
-            string kronosId)
+            string kronosId,
+            Comments comments)
         {
-            var xmlOpenShiftApprovalRequest = this.CreateApproveOrDeclineRequest(queryDateSpan, kronosPersonNumber, approved, kronosId);
+            var status = approved ? ApiConstants.ApprovedStatus : ApiConstants.Refused;
+            var xmlOpenShiftApprovalRequest = CommonRequests.CreateUpdateStatusRequest(kronosPersonNumber, kronosId, status, queryDateSpan, comments);
+
             var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
                 endPointUrl,
                 ApiConstants.SoapEnvOpen,
