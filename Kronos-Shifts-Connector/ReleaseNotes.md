@@ -33,11 +33,15 @@ Please consider the following:
 
 **Additional Note Syncing Supported** 
 
-We now support syncing even more types of notes between Kronos and Teams. We have added support for syncing shift notes, sender swap request notes and recipient swap request notes.
+We now support syncing even more types of notes between Kronos and Teams: shift notes, sender swap request notes, recipient swap request notes, manager swap request notes, manager open shift request notes and manager time off request notes.
 
 Syncing these notes requires a relevant commentText value to be created in Kronos during deployment. Please refer to the section titled *Configuration to Enable Syncing of Notes* within the readme for steps on how to do this.
 
 Please note that open shifts share the commentText value used for shift notes.
+
+**Bugfixes**
+
+- Improvements to how we handle graph tokens allowing us to retry failed requests in the event of an expired token
 
 ### 30th September 2021
 
