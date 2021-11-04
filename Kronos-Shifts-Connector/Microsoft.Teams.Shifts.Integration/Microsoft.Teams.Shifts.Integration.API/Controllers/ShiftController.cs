@@ -766,7 +766,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
                 httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", configurationDetails.WFIId);
 
-                var requestUrl = $"teams/{item.ShiftsTeamId}/schedule/shifts/{item.RowKey}";
+                // If the shift mapping doesnt have a teamId take the users teamId
+                var teamId = string.IsNullOrEmpty(item.ShiftsTeamId) ? user.ShiftTeamId : item.ShiftsTeamId;
+
+                var requestUrl = $"teams/{teamId}/schedule/shifts/{item.RowKey}";
 
                 var response = await this.graphUtility.SendHttpRequest(configurationDetails.GraphConfigurationDetails, httpClient, HttpMethod.Delete, requestUrl).ConfigureAwait(false);
                 if (response.IsSuccessStatusCode)

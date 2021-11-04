@@ -42,7 +42,20 @@ Please note that open shifts share the commentText value used for shift notes.
 **Bugfixes**
 
 - Improvements to how we handle graph tokens allowing us to retry failed requests in the event of an expired token
-- Fixed the issue where a users shifts would not be deleted in the old team if they move to a new team - Please ensure you clear the shift mapping cache as we need the new 'TeamId' column to be populated which is done during the creation of each shift.
+
+- Fixed the issue where a users shifts would not be deleted in the old team if they move to a new team 
+
+  *We are aware of an issue that will prevent this fix from working on existing shifts. For example:*
+
+  *1- A shift is created and stored in cache before this fix is deployed*
+
+  *2- The fix is then deployed in your environment*
+
+  *3- The user then changes team*
+
+  *4- The existing shift will fail to be deleted*
+
+  *This will only be a problem for existing shifts, newly created shifts will have the TeamId column in cache populated and be deleted successfully.*
 
 ### 30th September 2021
 
