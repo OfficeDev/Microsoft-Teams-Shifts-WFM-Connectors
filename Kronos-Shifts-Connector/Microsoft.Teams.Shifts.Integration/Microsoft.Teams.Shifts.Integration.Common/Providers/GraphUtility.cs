@@ -195,6 +195,11 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// <inheritdoc/>
         public async Task<HttpResponseMessage> SendHttpRequest(GraphConfigurationDetails graphConfigurationDetails, HttpClient httpClient, HttpMethod httpMethod, string requestUrl, string requestString = null)
         {
+            if (graphConfigurationDetails.ShiftsAccessToken == null)
+            {
+                graphConfigurationDetails.ShiftsAccessToken = await this.GetAccessTokenAsync(graphConfigurationDetails).ConfigureAwait(false);
+            }
+
             using (var httpRequestMessage = new HttpRequestMessage(httpMethod, requestUrl))
             {
                 if (!string.IsNullOrEmpty(requestString))
@@ -227,8 +232,12 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             }
         }
 
-        /// <inheritdoc/>
-        public async Task<string> GetAccessTokenAsync(GraphConfigurationDetails graphConfigurationDetails)
+        /// <summary>
+        /// Method that will get the Microsoft Graph token.
+        /// </summary>
+        /// <param name="graphConfigurationDetails">The graph configuration details.</param>
+        /// <returns>The string that represents the Microsoft Graph token.</returns>
+        private async Task<string> GetAccessTokenAsync(GraphConfigurationDetails graphConfigurationDetails)
         {
             string authority = $"{graphConfigurationDetails.Instance}{graphConfigurationDetails.TenantId}";
             var cache = new RedisTokenCache(this.cache, graphConfigurationDetails.ClientId);
