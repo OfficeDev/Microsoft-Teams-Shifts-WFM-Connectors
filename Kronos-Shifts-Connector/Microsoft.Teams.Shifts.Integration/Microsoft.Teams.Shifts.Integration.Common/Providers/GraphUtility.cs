@@ -195,7 +195,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         /// <inheritdoc/>
         public async Task<HttpResponseMessage> SendHttpRequest(GraphConfigurationDetails graphConfigurationDetails, HttpClient httpClient, HttpMethod httpMethod, string requestUrl, string requestString = null)
         {
-            if (graphConfigurationDetails.ShiftsAccessToken == null)
+            if (string.IsNullOrEmpty(graphConfigurationDetails.ShiftsAccessToken))
             {
                 graphConfigurationDetails.ShiftsAccessToken = await this.GetAccessTokenAsync(graphConfigurationDetails).ConfigureAwait(false);
             }
