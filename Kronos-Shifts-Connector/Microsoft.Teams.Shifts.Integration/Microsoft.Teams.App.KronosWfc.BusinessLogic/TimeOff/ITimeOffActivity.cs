@@ -31,22 +31,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
             List<Models.ResponseEntities.HyperFind.ResponseHyperFindResult> employees);
 
         /// <summary>
-        /// Fecth time off request details.
-        /// </summary>
-        /// <param name="endPointUrl">The Kronos WFC endpoint URL.</param>
-        /// <param name="jSession">JSession.</param>
-        /// <param name="queryDateSpan">QueryDateSpan string.</param>
-        /// <param name="personNumber">The kronos employee id of the user who created request.</param>
-        /// <param name="kronosRequestId">The kronos request id.</param>
-        /// <returns>Request details response object.</returns>
-        Task<Response> GetTimeOffRequestDetailsAsync(
-            Uri endPointUrl,
-            string jSession,
-            string queryDateSpan,
-            string personNumber,
-            string kronosRequestId);
-
-        /// <summary>
         /// Send time off request to Kronos API and get response.
         /// </summary>
         /// <param name="jSession">J Session.</param>
@@ -119,30 +103,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
             string kronosPersonNumber,
             bool approved,
             string kronosId,
-            Comments comments);
-
-        /// <summary>
-        /// Updates a time off request with manager comments.
-        /// </summary>
-        /// <param name="endPointUrl">Kronos API Endpoint.</param>
-        /// <param name="jSession">The jSession.</param>
-        /// <param name="kronosRequestId">The id of the request.</param>
-        /// <param name="startDateTime">Start Date.</param>
-        /// <param name="endDateTime">End Date.</param>
-        /// <param name="queryDateSpan">The query date span.</param>
-        /// <param name="personNumber">Person Number.</param>
-        /// <param name="reason">Reason string.</param>
-        /// <param name="comments">The Kronos comments assigned to the request.</param>
-        /// <returns>A response.</returns>
-        Task<CommonResponse> AddManagerCommentsToTimeOffRequestAsync(
-            Uri endPointUrl,
-            string jSession,
-            string kronosRequestId,
-            DateTimeOffset startDateTime,
-            DateTimeOffset endDateTime,
-            string queryDateSpan,
-            string personNumber,
-            string reason,
             Comments comments);
     }
 }

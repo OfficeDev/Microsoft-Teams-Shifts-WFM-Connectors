@@ -68,20 +68,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
         }
 
         /// <inheritdoc/>
-        public async Task<TimeOffResponse> GetTimeOffRequestDetailsAsync(Uri endPointUrl, string jSession, string queryDateSpan, string personNumber, string kronosRequestId)
-        {
-            var xmlTimeOffRequest = this.CreateRetrieveTimeOffRequest(queryDateSpan, personNumber, kronosRequestId);
-            var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
-                endPointUrl,
-                ApiConstants.SoapEnvOpen,
-                xmlTimeOffRequest,
-                ApiConstants.SoapEnvClose,
-                jSession).ConfigureAwait(false);
-
-            return tupleResponse.ProcessResponse<TimeOffResponse>(this.telemetryClient);
-        }
-
-        /// <inheritdoc/>
         public async Task<TimeOffAddResponse> CreateTimeOffRequestAsync(
             string jSession,
             DateTimeOffset startDateTime,
@@ -180,37 +166,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
             return tupleResponse.ProcessResponse<CommonResponse>(this.telemetryClient);
         }
 
-        /// <inheritdoc/>
-        public async Task<CommonResponse> AddManagerCommentsToTimeOffRequestAsync(
-            Uri endPointUrl,
-            string jSession,
-            string kronosRequestId,
-            DateTimeOffset startDateTime,
-            DateTimeOffset endDateTime,
-            string queryDateSpan,
-            string personNumber,
-            string reason,
-            Comments comments)
-        {
-            var xmlTimeOffRequestUpdateRequest = this.CreateUpdateTimeOffRequest(kronosRequestId, startDateTime, endDateTime, queryDateSpan, personNumber, reason, comments);
-
-            var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
-                endPointUrl,
-                ApiConstants.SoapEnvOpen,
-                xmlTimeOffRequestUpdateRequest,
-                ApiConstants.SoapEnvClose,
-                jSession).ConfigureAwait(false);
-
-            this.telemetryClient.TrackTrace(
-                "TimeOffActivity - ApproveOrDenyTimeOffRequestAsync",
-                new Dictionary<string, string>()
-                {
-                    { "Response", tupleResponse.Item1 },
-                });
-
-            return tupleResponse.ProcessResponse<CommonResponse>(this.telemetryClient);
-        }
-
         /// <summary>
         /// This method will calculate the necessary duration of the time off.
         /// </summary>
@@ -287,42 +242,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
             rq.RequestMgmt.Employees.PersonIdentity.AddRange(timeOffEmployees);
 
             return rq.XmlSerialize();
-        }
-
-        /// <summary>
-        /// Creates a request to retrieve a time off request.
-        /// </summary>
-        /// <param name="queryDateSpan">The queryDateSpan string.</param>
-        /// <param name="personNumber">The Kronos Person Number.</param>
-        /// <param name="id">The Kronos id of the request.</param>
-        /// <returns>XML request string.</returns>
-        private string CreateRetrieveTimeOffRequest(string queryDateSpan, string personNumber, string id)
-        {
-            var request =
-                new CommonTimeOffRequest.Request
-                {
-                    Action = ApiConstants.RetrieveWithDetails,
-                    RequestMgmt = new CommonTimeOffRequest.RequestMgmt
-                    {
-                        Employees = new Employees
-                        {
-                            PersonIdentity = new List<PersonIdentity>
-                            {
-                                new PersonIdentity { PersonNumber = personNumber },
-                            },
-                        },
-                        QueryDateSpan = queryDateSpan,
-                        RequestIds = new CommonTimeOffRequest.RequestIds
-                        {
-                            RequestId = new CommonTimeOffRequest.RequestId[1]
-                            {
-                                new CommonTimeOffRequest.RequestId() { Id = id },
-                            },
-                        },
-                    },
-                };
-
-            return request.XmlSerialize();
         }
 
         /// <summary>
@@ -460,61 +379,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
                             RequestId = new CommonTimeOffRequest.RequestId[1]
                             {
                                 new CommonTimeOffRequest.RequestId() { Id = id },
-                            },
-                        },
-                    },
-                };
-
-            return request.XmlSerialize();
-        }
-
-        /// <summary>
-        /// Creates an update time off request.
-        /// </summary>
-        /// <param name="id">The Kronos id of the request.</param>
-        /// <param name="startDateTime">Start date.</param>
-        /// <param name="endDateTime">End Date.</param>
-        /// <param name="queryDateSpan">The queryDateSpan string.</param>
-        /// <param name="personNumber">The Kronos Person Number.</param>
-        /// <param name="reason">Reason string.</param>
-        /// <param name="comments">Any comments to be attached to the TOR.</param>
-        /// <returns>XML request string.</returns>
-        private string CreateUpdateTimeOffRequest(
-            string id,
-            DateTimeOffset startDateTime,
-            DateTimeOffset endDateTime,
-            string queryDateSpan,
-            string personNumber,
-            string reason,
-            Comments comments)
-        {
-            // Kronos API expects a collection of periods so first calculate the actual period
-            // before adding it to a list.
-            var timeOffPeriod = CalculateTimeOffPeriod(startDateTime, endDateTime, reason);
-            var timeOffPeriods = new List<TimeOffPeriod>() { timeOffPeriod };
-
-            var request =
-                new TimeOffRequest.Request
-                {
-                    Action = ApiConstants.Update,
-                    RequestMgmt = new TimeOffRequest.RequestMgmt
-                    {
-                        Employees = new Employees
-                        {
-                            PersonIdentity = new List<PersonIdentity>
-                            {
-                                new PersonIdentity { PersonNumber = personNumber },
-                            },
-                        },
-                        QueryDateSpan = queryDateSpan,
-                        RequestItems = new TimeOffRequest.RequestItems
-                        {
-                            GlobalTimeOffRequestItem = new TimeOffRequest.GlobalTimeOffRequestItem
-                            {
-                                Id = id,
-                                RequestFor = ApiConstants.TOR,
-                                TimeOffPeriods = new TimeOffPeriods() { TimeOffPeriod = timeOffPeriods },
-                                Comments = comments,
                             },
                         },
                     },
