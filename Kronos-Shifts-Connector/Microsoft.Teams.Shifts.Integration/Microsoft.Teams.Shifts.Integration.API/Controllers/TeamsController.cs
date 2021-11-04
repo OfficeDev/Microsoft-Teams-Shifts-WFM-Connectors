@@ -457,13 +457,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             if (isRequestFromCorrectIntegration)
                             {
                                 this.telemetryClient.TrackTrace($"Request coming from correct workforce integration is {isRequestFromCorrectIntegration} for OpenShiftRequest approval outbound call.");
-                                responseModelList = await this.openShiftRequestController.ProcessOpenShiftRequestApprovalAsync(jsonModel, updateProps, kronosTimeZone).ConfigureAwait(false);
+                                responseModelList = await this.openShiftRequestController.ProcessOpenShiftRequestApprovalAsync(jsonModel, teamsId, updateProps, kronosTimeZone).ConfigureAwait(false);
                             }
 
                             // Request is coming from the Shifts UI.
                             else
                             {
-                                responseModelList = await this.openShiftRequestController.ProcessOpenShiftRequestApprovalFromTeamsAsync(jsonModel, updateProps, kronosTimeZone, true).ConfigureAwait(false);
+                                responseModelList = await this.openShiftRequestController.ProcessOpenShiftRequestApprovalFromTeamsAsync(jsonModel, teamsId, updateProps, kronosTimeZone, true).ConfigureAwait(false);
                             }
                         }
 
@@ -487,7 +487,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                             // Request is coming from the Shifts UI.
                             else
                             {
-                                responseModelList = await this.openShiftRequestController.ProcessOpenShiftRequestApprovalFromTeamsAsync(jsonModel, updateProps, kronosTimeZone, false).ConfigureAwait(false);
+                                responseModelList = await this.openShiftRequestController.ProcessOpenShiftRequestApprovalFromTeamsAsync(jsonModel, teamsId, updateProps, kronosTimeZone, false).ConfigureAwait(false);
                             }
                         }
 
@@ -502,10 +502,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// Process swap shift requests outbound calls.
         /// </summary>
         /// <param name="jsonModel">Incoming payload for the request been made in Shifts.</param>
-        /// <param name="aadGroupId">AAD Group id.</param>
+        /// <param name="teamId">The team id the request is coming from.</param>
         /// <param name="kronosTimeZone">The time zone to use when converting the times.</param>
         /// <returns>Returns list of ShiftIntegResponse for request.</returns>
-        private async Task<List<ShiftsIntegResponse>> ProcessSwapShiftRequest(RequestModel jsonModel, string aadGroupId, bool isRequestFromCorrectIntegration, string kronosTimeZone)
+        private async Task<List<ShiftsIntegResponse>> ProcessSwapShiftRequest(RequestModel jsonModel, string teamId, bool isRequestFromCorrectIntegration, string kronosTimeZone)
         {
             List<ShiftsIntegResponse> responseModelList = new List<ShiftsIntegResponse>();
             var requestBody = jsonModel.Requests.First(x => x.Url.Contains("/swapRequests/", StringComparison.InvariantCulture)).Body;
@@ -525,21 +525,21 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     // FLW1 has requested for swap shift, submit the request in Kronos.
                     if (requestState == ApiConstants.ShiftsPending && requestAssignedTo == ApiConstants.ShiftsRecipient)
                     {
-                        integrationResponseSwap = await this.swapShiftController.SubmitSwapShiftRequestToKronosAsync(swapRequest, aadGroupId).ConfigureAwait(false);
+                        integrationResponseSwap = await this.swapShiftController.SubmitSwapShiftRequestToKronosAsync(swapRequest, teamId).ConfigureAwait(false);
                         responseModelList.Add(integrationResponseSwap);
                     }
 
                     // FLW2 has approved the swap shift, updates the status in Kronos to submitted and request goes to manager for approval.
                     else if (requestState == ApiConstants.ShiftsPending && requestAssignedTo == ApiConstants.ShiftsManager)
                     {
-                        integrationResponseSwap = await this.swapShiftController.ApproveOrDeclineSwapShiftRequestToKronosAsync(swapRequest, aadGroupId, kronosTimeZone).ConfigureAwait(false);
+                        integrationResponseSwap = await this.swapShiftController.ApproveOrDeclineSwapShiftRequestToKronosAsync(swapRequest, teamId, kronosTimeZone).ConfigureAwait(false);
                         responseModelList.Add(integrationResponseSwap);
                     }
 
                     // FLW2 has declined the swap shift, updates the status in Kronos to refused.
                     else if (requestState == ApiConstants.Declined && requestAssignedTo == ApiConstants.ShiftsRecipient)
                     {
-                        integrationResponseSwap = await this.swapShiftController.ApproveOrDeclineSwapShiftRequestToKronosAsync(swapRequest, aadGroupId, kronosTimeZone).ConfigureAwait(false);
+                        integrationResponseSwap = await this.swapShiftController.ApproveOrDeclineSwapShiftRequestToKronosAsync(swapRequest, teamId, kronosTimeZone).ConfigureAwait(false);
                         responseModelList.Add(integrationResponseSwap);
                     }
 
@@ -557,7 +557,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         // Request is coming from either Shifts UI or from incorrect workforce integration.
                         else
                         {
-                            responseModelList = await this.ProcessShiftSwapRequestApprovalViaTeams(jsonModel, kronosTimeZone, false).ConfigureAwait(false);
+                            responseModelList = await this.ProcessShiftSwapRequestApprovalViaTeams(jsonModel, teamId, kronosTimeZone, false).ConfigureAwait(false);
                         }
                     }
 
@@ -568,13 +568,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         if (isRequestFromCorrectIntegration)
                         {
                             this.telemetryClient.TrackTrace($"Request coming from correct workforce integration is {isRequestFromCorrectIntegration} for SwapShiftRequest approval outbound call.");
-                            responseModelList = await this.ProcessSwapShiftRequestApprovalAsync(jsonModel, aadGroupId, kronosTimeZone).ConfigureAwait(false);
+                            responseModelList = await this.ProcessSwapShiftRequestApprovalAsync(jsonModel, teamId, kronosTimeZone).ConfigureAwait(false);
                         }
 
                         // Request is coming from either Shifts UI or from incorrect workforce integration.
                         else
                         {
-                            responseModelList = await this.ProcessShiftSwapRequestApprovalViaTeams(jsonModel, kronosTimeZone, true).ConfigureAwait(false);
+                            responseModelList = await this.ProcessShiftSwapRequestApprovalViaTeams(jsonModel, teamId, kronosTimeZone, true).ConfigureAwait(false);
                         }
                     }
 
@@ -1006,7 +1006,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     var monthPartition = monthPartitions?.FirstOrDefault();
 
                     // Create the shift mapping entity based on the finalShift object also.
-                    var shiftEntity = this.utility.CreateShiftMappingEntity(newShiftFirst, userMappingRecord, kronosUniqueIdFirst);
+                    var shiftEntity = this.utility.CreateShiftMappingEntity(newShiftFirst, userMappingRecord, kronosUniqueIdFirst, aadGroupId);
                     await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(
                         shiftEntity,
                         newShiftFirst.Id,
@@ -1029,7 +1029,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     var monthPartitionSec = monthPartitionsSec?.FirstOrDefault();
 
                     // Create the shift mapping entity based on the finalShift object also.
-                    var shiftEntitySec = this.utility.CreateShiftMappingEntity(newShiftSecond, userMappingRecordSec, kronosUniqueIdSecond);
+                    var shiftEntitySec = this.utility.CreateShiftMappingEntity(newShiftSecond, userMappingRecordSec, kronosUniqueIdSecond, aadGroupId);
                     await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(
                         shiftEntitySec,
                         newShiftSecond.Id,
@@ -1093,6 +1093,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <returns>A unit of execution.</returns>
         private async Task<List<ShiftsIntegResponse>> ProcessShiftSwapRequestApprovalViaTeams(
            RequestModel jsonModel,
+           string teamId,
            string kronosTimeZone,
            bool approved)
         {
@@ -1180,8 +1181,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         var kronosRequestorsShiftUniqueId = this.utility.CreateShiftUniqueId(requestorShift, kronosTimeZone);
                         var kronosRequestedShiftUniqueId = this.utility.CreateShiftUniqueId(requestedShift, kronosTimeZone);
 
-                        var requestorsShiftLink = this.shiftController.CreateNewShiftMappingEntity(requestorShift, kronosRequestorsShiftUniqueId, kronosRequestorUserId);
-                        var requestedShiftLink = this.shiftController.CreateNewShiftMappingEntity(requestedShift, kronosRequestedShiftUniqueId, kronosRequestedUserId);
+                        var requestorsShiftLink = this.shiftController.CreateNewShiftMappingEntity(requestorShift, kronosRequestorsShiftUniqueId, kronosRequestorUserId, teamId);
+                        var requestedShiftLink = this.shiftController.CreateNewShiftMappingEntity(requestedShift, kronosRequestedShiftUniqueId, kronosRequestedUserId, teamId);
 
                         await this.ApproveSwapShiftRequestInTables(swapRequest, swapShiftRequestMapping, responseModelList).ConfigureAwait(false);
                         await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(requestorsShiftLink, requestorShift.Id, swapShiftRequestMapping.PartitionKey).ConfigureAwait(false);
