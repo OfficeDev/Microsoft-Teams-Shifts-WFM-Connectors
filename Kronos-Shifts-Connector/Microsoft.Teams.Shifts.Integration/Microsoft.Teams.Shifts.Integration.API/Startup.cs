@@ -216,7 +216,8 @@ namespace Microsoft.Teams.Shifts.Integration.API
 
             services.AddSingleton<ISwapShiftActivity, SwapShiftActivity>((provider) => new SwapShiftActivity(
              provider.GetRequiredService<TelemetryClient>(),
-             provider.GetRequiredService<IApiHelper>()));
+             provider.GetRequiredService<IApiHelper>(),
+             provider.GetRequiredService<CommonRequests>()));
 
             services.AddSingleton<ILogonActivity, LogonActivity>((provider) => new LogonActivity(
                 new App.KronosWfc.Models.RequestEntities.Logon.Request(),

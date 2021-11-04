@@ -37,6 +37,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
         /// </summary>
         /// <param name="telemetryClient">The mechanisms to capture telemetry.</param>
         /// <param name="apiHelper">API helper to fetch tuple response by post soap requests.</param>
+        /// <param name="commonRequests">CommonRequests DI</param>
         public TimeOffActivity(TelemetryClient telemetryClient, IApiHelper apiHelper, CommonRequests commonRequests)
         {
             this.telemetryClient = telemetryClient;
