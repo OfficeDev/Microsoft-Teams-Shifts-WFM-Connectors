@@ -1,6 +1,6 @@
 # Release Notes
 
-### 21st October 2021
+### 4th November 2021
 
 ------
 
@@ -42,6 +42,7 @@ Please note that open shifts share the commentText value used for shift notes.
 **Bugfixes**
 
 - Improvements to how we handle graph tokens allowing us to retry failed requests in the event of an expired token
+- Fixed the issue where a users shifts would not be deleted in the old team if they move to a new team - Please ensure you clear the shift mapping cache as we need the new 'TeamId' column to be populated which is done during the creation of each shift.
 
 ### 30th September 2021
 
