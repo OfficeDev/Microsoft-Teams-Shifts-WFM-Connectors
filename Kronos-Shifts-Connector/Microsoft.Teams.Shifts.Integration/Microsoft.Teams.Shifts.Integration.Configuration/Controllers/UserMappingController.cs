@@ -341,8 +341,6 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
             graphConfigurationDetails.ShiftsAdminAadObjectId = this.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
             graphConfigurationDetails.TenantId = this.User.GetTenantId();
 
-            graphConfigurationDetails.ShiftsAccessToken = await this.graphUtility.GetAccessTokenAsync(graphConfigurationDetails).ConfigureAwait(false);
-
             return await this.graphUtility.FetchShiftUserDetailsAsync(graphConfigurationDetails).ConfigureAwait(false);
         }
 

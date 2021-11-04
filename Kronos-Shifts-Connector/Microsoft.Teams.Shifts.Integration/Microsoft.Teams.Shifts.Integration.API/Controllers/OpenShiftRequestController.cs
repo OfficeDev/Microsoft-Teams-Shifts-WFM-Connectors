@@ -160,8 +160,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             var teamDepartmentMapping = await this.teamDepartmentMappingProvider.GetTeamMappingForOrgJobPathAsync(allRequiredConfigurations.WFIId, userMappingRecord.OrgJobPath).ConfigureAwait(false);
 
             var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfigurations.GraphConfigurationDetails.ShiftsAccessToken);
-
             var requestUrl = $"teams/{teamDepartmentMapping.TeamId}/schedule/openShifts/{request.OpenShiftId}";
 
             // Get the open shift entity from Teams as we need the start and end time as well as all the activities.
@@ -473,8 +471,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             // Get the open shift that has been requested from Teams
             var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfigurations.GraphConfigurationDetails.ShiftsAccessToken);
-
             var requestUrl = $"teams/{user.ShiftTeamId}/schedule/openShifts/{entityToUpdate.TeamsOpenShiftId}";
 
             var getOpenShiftResponse = await this.graphUtility.SendHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Get, requestUrl).ConfigureAwait(false);
@@ -505,7 +501,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 };
 
                 var approvalHttpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-                approvalHttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfigurations.GraphConfigurationDetails.ShiftsAccessToken);
 
                 // Send Passthrough header to indicate the sender of request in outbound call.
                 approvalHttpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", allRequiredConfigurations.WFIId);
@@ -551,7 +546,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             };
 
             var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfigurations.GraphConfigurationDetails.ShiftsAccessToken);
 
             // Send Passthrough header to indicate the sender of request in outbound call.
             httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", allRequiredConfigurations.WFIId);

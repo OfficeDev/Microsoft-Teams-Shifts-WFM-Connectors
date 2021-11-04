@@ -1017,19 +1017,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
                 setupDetails.WFIId = configurationEntity?.WorkforceIntegrationId;
                 setupDetails.GraphConfigurationDetails.ShiftsAdminAadObjectId = configurationEntity?.AdminAadObjectId;
 
-                var accessToken = this.graphUtility.GetAccessTokenAsync(setupDetails.GraphConfigurationDetails).GetAwaiter().GetResult();
-
-                if (!string.IsNullOrEmpty(accessToken))
-                {
-                    setupDetails.GraphConfigurationDetails.ShiftsAccessToken = accessToken;
-                }
-                else
-                {
-                    telemetryProps.Add("ShiftAccessToken", Resource.IssueShiftsAccessToken);
-                    setupDetails.ErrorMessage += Resource.IssueShiftsAccessToken;
-                }
-
-                setupDetails.KronosSession = this.GetKronosSessionAsync().GetAwaiter().GetResult();
+                setupDetails.KronosSession = await this.GetKronosSessionAsync().ConfigureAwait(false);
                 setupDetails.KronosUserName = this.appSettings.WfmSuperUsername;
                 setupDetails.KronosPassword = this.appSettings.WfmSuperUserPassword;
 
@@ -1047,7 +1035,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
 
             setupDetails.IsAllSetUpExists =
                 !string.IsNullOrEmpty(setupDetails.WFIId)
-                && !string.IsNullOrEmpty(setupDetails.GraphConfigurationDetails.ShiftsAccessToken)
                 && !string.IsNullOrEmpty(setupDetails.KronosSession)
                 && !string.IsNullOrEmpty(setupDetails.WfmEndPoint)
                 && !string.IsNullOrEmpty(setupDetails.KronosPassword)

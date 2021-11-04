@@ -61,13 +61,6 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         Task<HttpResponseMessage> SendHttpRequest(GraphConfigurationDetails graphConfigurationDetails, HttpClient httpClient, HttpMethod httpMethod, string requestUrl, string requestString = null);
 
         /// <summary>
-        /// Method that will get the Microsoft Graph token.
-        /// </summary>
-        /// <param name="graphConfigurationDetails">The graph configuration details.</param>
-        /// <returns>The string that represents the Microsoft Graph token.</returns>
-        Task<string> GetAccessTokenAsync(GraphConfigurationDetails graphConfigurationDetails);
-
-        /// <summary>
         /// Method that will remove the WorkforceIntegrationId from MS Graph.
         /// </summary>
         /// <param name="workforceIntegrationId">The Workforce Integration ID to delete.</param>

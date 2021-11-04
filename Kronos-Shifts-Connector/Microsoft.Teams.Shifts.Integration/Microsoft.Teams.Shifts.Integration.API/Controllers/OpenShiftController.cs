@@ -556,8 +556,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private async Task<GraphOpenShift> GetOpenShiftFromTeams(SetupDetails allRequiredConfigurations, TeamToDepartmentJobMappingEntity mappedOrgJobEntity, AllOpenShiftMappingEntity mappingEntityToDecrement)
         {
             var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfigurations.GraphConfigurationDetails.ShiftsAccessToken);
-
             var requestUrl = $"teams/{mappedOrgJobEntity.TeamId}/schedule/openShifts/{mappingEntityToDecrement.RowKey}";
 
             var response = await this.graphUtility.SendHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Get, requestUrl).ConfigureAwait(false);
@@ -603,7 +601,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 };
 
                 var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfiguration.GraphConfigurationDetails.ShiftsAccessToken);
                 httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", allRequiredConfiguration.WFIId);
 
                 var requestString = JsonConvert.SerializeObject(item);
@@ -654,7 +651,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private async Task<HttpResponseMessage> UpdateOpenShiftInTeams(SetupDetails allRequiredConfiguration, GraphOpenShift openShift, TeamToDepartmentJobMappingEntity mappedTeam)
         {
             var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfiguration.GraphConfigurationDetails.ShiftsAccessToken);
             httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", allRequiredConfiguration.WFIId);
 
             var requestString = JsonConvert.SerializeObject(openShift);
@@ -739,7 +735,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private async Task<HttpResponseMessage> DeleteOpenShiftInTeams(SetupDetails allRequiredConfiguration, AllOpenShiftMappingEntity openShiftMapping, TeamToDepartmentJobMappingEntity mappedTeam)
         {
             var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfiguration.GraphConfigurationDetails.ShiftsAccessToken);
             httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", allRequiredConfiguration.WFIId);
 
             var requestUrl = $"teams/{mappedTeam.TeamId}/schedule/openShifts/{openShiftMapping.RowKey}";
