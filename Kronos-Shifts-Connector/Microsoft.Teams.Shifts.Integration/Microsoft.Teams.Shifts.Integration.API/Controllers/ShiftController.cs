@@ -9,9 +9,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using System.Globalization;
     using System.Linq;
     using System.Net.Http;
-    using System.Net.Http.Headers;
     using System.Reflection;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights;
@@ -20,7 +18,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.Common;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts;
     using Microsoft.Teams.App.KronosWfc.Common;
-    using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.HyperFind;
     using Microsoft.Teams.Shifts.Integration.API.Common;
     using Microsoft.Teams.Shifts.Integration.API.Models.Request;
@@ -94,11 +91,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="shift">The shift received from Shifts.</param>
         /// <param name="uniqueId">The unique ID for the shift.</param>
         /// <param name="kronoUserId">The user id of the user in Kronos.</param>
+        /// <param name="teamId">The team id.</param>
         /// <returns>Returns a <see cref="TeamsShiftMappingEntity"/>.</returns>
         public TeamsShiftMappingEntity CreateNewShiftMappingEntity(
             Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Shift shift,
             string uniqueId,
-            string kronoUserId)
+            string kronoUserId,
+            string teamId)
         {
             var createNewShiftMappingEntityProps = new Dictionary<string, string>()
             {
@@ -117,6 +116,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 KronosPersonNumber = kronoUserId,
                 ShiftStartDate = startDateTime,
                 ShiftEndDate = endDateTime,
+                ShiftsTeamId = teamId,
             };
 
             this.telemetryClient.TrackTrace("Creating new shift mapping entity.", createNewShiftMappingEntityProps);
@@ -417,7 +417,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private async Task CreateAndStoreShiftMapping(ShiftsShift shift, AllUserMappingEntity user, TeamToDepartmentJobMappingEntity mappedTeam, List<string> monthPartitionKey)
         {
             var kronosUniqueId = this.utility.CreateShiftUniqueId(shift, mappedTeam.KronosTimeZone);
-            var shiftMappingEntity = this.CreateNewShiftMappingEntity(shift, kronosUniqueId, user.RowKey);
+            var shiftMappingEntity = this.CreateNewShiftMappingEntity(shift, kronosUniqueId, user.RowKey, mappedTeam.TeamId);
             await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(shiftMappingEntity, shift.Id, monthPartitionKey[0]).ConfigureAwait(false);
         }
 
@@ -766,7 +766,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
                 httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", configurationDetails.WFIId);
 
-                var requestUrl = $"teams/{user.ShiftTeamId}/schedule/shifts/{item.RowKey}";
+                // If the shift mapping doesnt have a teamId take the users teamId
+                var teamId = string.IsNullOrEmpty(item.ShiftsTeamId) ? user.ShiftTeamId : item.ShiftsTeamId;
+
+                var requestUrl = $"teams/{teamId}/schedule/shifts/{item.RowKey}";
 
                 var response = await this.graphUtility.SendHttpRequest(configurationDetails.GraphConfigurationDetails, httpClient, HttpMethod.Delete, requestUrl).ConfigureAwait(false);
                 if (response.IsSuccessStatusCode)
@@ -826,6 +829,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 KronosPersonNumber = user.KronosPersonNumber,
                 ShiftStartDate = startDateTime,
                 ShiftEndDate = endDateTime,
+                ShiftsTeamId = user.ShiftTeamId,
             };
 
             this.telemetryClient.TrackTrace("Creating new shift mapping entity.", createNewShiftMappingEntityProps);

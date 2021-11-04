@@ -212,21 +212,18 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// <summary>
         /// Having the ability to create a new TeamsShiftMappingEntity.
         /// </summary>
-        /// <param name="aadUserId">AAD user Id associated with the Shift.</param>
         /// <param name="kronosUniqueId">Kronos Unique Id fro that Shift.</param>
-        /// <param name="kronosPersonNumber">Kronos Person number for the user.</param>
+        /// <param name="user">The user details.</param>
         /// <returns>Mapping Entity associated with Team and Shift.</returns>
-        public static TeamsShiftMappingEntity CreateShiftMappingEntity(
-            string aadUserId,
-            string kronosUniqueId,
-            string kronosPersonNumber)
+        public static TeamsShiftMappingEntity CreateShiftMappingEntity(string kronosUniqueId, UserDetailsModel user)
         {
             TeamsShiftMappingEntity teamsShiftMappingEntity = new TeamsShiftMappingEntity
             {
-                AadUserId = aadUserId,
+                AadUserId = user.ShiftUserId,
                 KronosUniqueId = kronosUniqueId,
-                KronosPersonNumber = kronosPersonNumber,
+                KronosPersonNumber = user.KronosPersonNumber,
                 ShiftStartDate = DateTime.UtcNow,
+                ShiftsTeamId = user.ShiftTeamId,
             };
 
             return teamsShiftMappingEntity;
@@ -307,7 +304,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
                 sb.Append(this.CalculateStartDateTime(item.StartDateTime, kronosTimeZone));
             }
 
-            var stringToHash = $"{this.CalculateStartDateTime(shift.SharedShift.StartDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(shift.SharedShift.EndDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}{sb}{shift.SharedShift.Notes}{shift.UserId}";
+            var stringToHash = $"{this.CalculateStartDateTime(shift.SharedShift.StartDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(shift.SharedShift.EndDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}{sb}{shift.SharedShift.Notes}{shift.UserId}{shift.SchedulingGroupId}";
 
             this.telemetryClient.TrackTrace($"String to create hash - Shift: {stringToHash}");
 
@@ -581,7 +578,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
                 { "ExecutingAssembly", Assembly.GetExecutingAssembly().GetName().Name },
             };
 
-            var stringToHash = $"{this.CalculateStartDateTime(startDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(endDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}{sb}{shift.SharedShift.Notes}{shift.UserId}";
+            var stringToHash = $"{this.CalculateStartDateTime(startDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(endDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}{sb}{shift.SharedShift.Notes}{shift.UserId}{shift.SchedulingGroupId}";
 
             this.telemetryClient.TrackTrace($"String to create hash - Shift (IntegrationAPI Model): {stringToHash}");
 
@@ -907,11 +904,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// <param name="shift">The Shift model.</param>
         /// <param name="userMappingEntity">Details of user from User Mapping Entity table.</param>
         /// <param name="kronosUniqueId">Kronos Unique Id corresponds to the shift.</param>
+        /// <param name="teamId">The id of the team the request came from.</param>
         /// <returns>Mapping Entity associated with Team and Shift.</returns>
         public TeamsShiftMappingEntity CreateShiftMappingEntity(
            Models.IntegrationAPI.Shift shift,
            AllUserMappingEntity userMappingEntity,
-           string kronosUniqueId)
+           string kronosUniqueId,
+           string teamId)
         {
             var startDateTime = DateTime.SpecifyKind(shift.SharedShift.StartDateTime, DateTimeKind.Utc);
 
@@ -921,6 +920,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
                 KronosUniqueId = kronosUniqueId,
                 KronosPersonNumber = userMappingEntity?.RowKey,
                 ShiftStartDate = startDateTime,
+                ShiftsTeamId = teamId,
             };
         }
 

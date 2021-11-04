@@ -238,11 +238,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// This method processes an approval that happens in the Shifts app.
         /// </summary>
         /// <param name="jsonModel">The decrypted JSON payload.</param>
+        /// <param name="teamId">The team id the request belongs to.</param>
         /// <param name="updateProps">A dictionary of string, string that will be logged to ApplicationInsights.</param>
         /// <param name="kronosTimeZone">The time zone to use when converting the times.</param>
         /// <param name="approved">Whether the </param>
         /// <returns>A unit of execution.</returns>
-        public async Task<List<ShiftsIntegResponse>> ProcessOpenShiftRequestApprovalFromTeamsAsync(RequestModel jsonModel, Dictionary<string, string> updateProps, string kronosTimeZone, bool approved)
+        public async Task<List<ShiftsIntegResponse>> ProcessOpenShiftRequestApprovalFromTeamsAsync(RequestModel jsonModel, string teamId, Dictionary<string, string> updateProps, string kronosTimeZone, bool approved)
         {
             this.telemetryClient.TrackTrace("Processing approval of OpenShiftRequests received from Shifts app", updateProps);
 
@@ -301,7 +302,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                 var openShift = ControllerHelper.Get<OpenShiftIS>(jsonModel, "/openshifts/", approved);
                 var kronosUniqueId = this.utility.CreateShiftUniqueId(shift, kronosTimeZone);
-                var newShiftLinkEntity = this.shiftController.CreateNewShiftMappingEntity(shift, kronosUniqueId, kronosUserId);
+                var newShiftLinkEntity = this.shiftController.CreateNewShiftMappingEntity(shift, kronosUniqueId, kronosUserId, teamId);
 
                 await this.ApproveOpenShiftRequestInTables(openShiftRequest, openShift, responseModelList).ConfigureAwait(false);
                 await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(newShiftLinkEntity, shift.Id, openShiftRequestMapping.PartitionKey).ConfigureAwait(false);
@@ -327,10 +328,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// Processes an open shift request that has been created via the logic app sync.
         /// </summary>
         /// <param name="jsonModel">The decrypted JSON payload.</param>
+        /// <param name="teamId">The id of the team where the request came from.</param>
         /// <param name="updateProps">A dictionary of string, string that will be logged to ApplicationInsights.</param>
         /// <param name="kronosTimeZone">The time zone to use when converting the times.</param>
         /// <returns>A unit of execution.</returns>
-        public async Task<List<ShiftsIntegResponse>> ProcessOpenShiftRequestApprovalAsync(RequestModel jsonModel, Dictionary<string, string> updateProps, string kronosTimeZone)
+        public async Task<List<ShiftsIntegResponse>> ProcessOpenShiftRequestApprovalAsync(RequestModel jsonModel, string teamId, Dictionary<string, string> updateProps, string kronosTimeZone)
         {
             List<ShiftsIntegResponse> responseModelList = new List<ShiftsIntegResponse>();
             var finalShift = ControllerHelper.Get<Shift>(jsonModel, "/shifts/");
@@ -350,7 +352,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 this.telemetryClient.TrackTrace("Starting ProcessOpenShiftRequestApprovalAsync: " + DateTime.Now.ToString(CultureInfo.InvariantCulture), updateProps);
 
                 // Create a new shift from the temp shift and delete the temp shift.
-                await this.CreateShiftFromTempShift(finalOpenShiftRequest, finalShift, responseModelList).ConfigureAwait(false);
+                await this.CreateShiftFromTempShift(finalOpenShiftRequest, finalShift, responseModelList, teamId).ConfigureAwait(false);
 
                 // update the request and delete the old openshift.
                 await this.ApproveOpenShiftRequestInTables(finalOpenShiftRequest, finalOpenShift, responseModelList).ConfigureAwait(false);
@@ -482,7 +484,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var expectedShiftHash = this.utility.CreateUniqueId(openShiftObj, user.ShiftUserId, user.KronosTimeZone);
 
                 // Create a temp shift mapping from the open shift details, the user Id, and with a RowKey of SHFT_PENDING.
-                var expectedShift = Utility.CreateShiftMappingEntity(user.ShiftUserId, expectedShiftHash, user.KronosPersonNumber);
+                var expectedShift = Utility.CreateShiftMappingEntity(expectedShiftHash, user);
 
                 // Calculate the partition key for the shift entity mapping table.
                 var actualStartDateTimeStr = this.utility.CalculateStartDateTime(openShiftObj.SharedOpenShift.StartDateTime, user.KronosTimeZone).ToString("d", CultureInfo.InvariantCulture);
@@ -756,7 +758,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="openShiftRequest">An open shift request.</param>
         /// <param name="shift">A shift.</param>
         /// <param name="responseModelList">The list of responses.</param>
-        private async Task CreateShiftFromTempShift(OpenShiftRequestIS openShiftRequest, Shift shift, List<ShiftsIntegResponse> responseModelList)
+        /// <param name="teamId">The id of the team where the request came from.</param>
+        private async Task CreateShiftFromTempShift(OpenShiftRequestIS openShiftRequest, Shift shift, List<ShiftsIntegResponse> responseModelList, string teamId)
         {
             // Get the temp shift entity from storage
             var tempShiftRowKey = $"SHFT_PENDING_{openShiftRequest.Id}";
@@ -774,6 +777,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     PartitionKey = tempShiftEntity.PartitionKey,
                     AadUserId = tempShiftEntity.AadUserId,
                     ShiftStartDate = startDateTime,
+                    ShiftsTeamId = teamId,
                 };
 
                 // Save new shift and delete the temp shift
