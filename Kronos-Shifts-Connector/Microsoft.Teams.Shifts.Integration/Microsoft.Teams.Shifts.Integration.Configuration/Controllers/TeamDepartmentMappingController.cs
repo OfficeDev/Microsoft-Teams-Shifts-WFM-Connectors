@@ -133,14 +133,12 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
             graphConfigurationDetails.ShiftsAdminAadObjectId = this.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
             graphConfigurationDetails.TenantId = this.User.GetTenantId();
 
-            var graphAccessToken = await this.graphUtility.GetAccessTokenAsync(graphConfigurationDetails).ConfigureAwait(false);
-
             // Get JWT Token for API request
             TokenHelper tokenHelper = new TokenHelper(this.appSettings);
             string apiAccessToken = tokenHelper.GenerateToken();
 
             // Run sync Kronos to Shifts.
-            using (var request = this.PrepareHttpRequest("api/SyncKronosToShifts/StartSync/false", graphAccessToken, apiAccessToken))
+            using (var request = this.PrepareHttpRequest("api/SyncKronosToShifts/StartSync/false", apiAccessToken))
             {
                 var syncKronosToShiftsResponse = await client.SendAsync(request).ConfigureAwait(false);
 
@@ -216,8 +214,6 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                 var graphConfigurationDetails = this.utility.GetTenantDetails();
                 graphConfigurationDetails.ShiftsAdminAadObjectId = this.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
                 graphConfigurationDetails.TenantId = this.User.GetTenantId();
-
-                graphConfigurationDetails.ShiftsAccessToken = await this.graphUtility.GetAccessTokenAsync(graphConfigurationDetails).ConfigureAwait(false);
 
                 // Fetching the list of all distinct KronosOrgJobPaths
                 var kronosOrgJobPathList = await this.userMappingProvider.GetDistinctOrgJobPatAsync().ConfigureAwait(false);
@@ -334,8 +330,6 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                                 var graphConfigurationDetails = this.utility.GetTenantDetails();
                                 graphConfigurationDetails.ShiftsAdminAadObjectId = configEntity.AdminAadObjectId;
 
-                                graphConfigurationDetails.ShiftsAccessToken = await this.graphUtility.GetAccessTokenAsync(graphConfigurationDetails).ConfigureAwait(false);
-
                                 var isSuccess = await this.graphUtility.AddWFInScheduleAsync(entity.TeamId, configEntity.WorkforceIntegrationId, graphConfigurationDetails).ConfigureAwait(false);
                                 if (isSuccess)
                                 {
@@ -430,13 +424,11 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
         /// Method to generate the Http Request object with required headers.
         /// </summary>
         /// <param name="apiUrl">API Url to call.</param>
-        /// <param name="graphAccessToken">The Microsoft Graph access token.</param>
         /// <param name="apiAccessToken">The JWT Token for API calls.</param>
         /// <returns>HttpRequestMessage object.</returns>
-        private HttpRequestMessage PrepareHttpRequest(string apiUrl, string graphAccessToken, string apiAccessToken)
+        private HttpRequestMessage PrepareHttpRequest(string apiUrl, string apiAccessToken)
         {
             var request = new HttpRequestMessage(HttpMethod.Get, new Uri(this.appSettings.BaseAddressFirstTimeSync + apiUrl));
-            request.Headers.Add("Authorization", "Bearer " + graphAccessToken);
             request.Headers.Add("AccessToken", "Bearer " + apiAccessToken);
             return request;
         }

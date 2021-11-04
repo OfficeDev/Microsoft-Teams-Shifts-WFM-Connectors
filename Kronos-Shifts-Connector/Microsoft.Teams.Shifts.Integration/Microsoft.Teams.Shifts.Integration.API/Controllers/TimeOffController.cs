@@ -740,7 +740,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     };
 
                     var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", configurationDetails.GraphConfigurationDetails.ShiftsAccessToken);
 
                     // Send Passthrough header to indicate the sender of request in outbound call.
                     httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", configurationDetails.WFIId);
@@ -809,7 +808,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 };
 
                 var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", configurationDetails.GraphConfigurationDetails.ShiftsAccessToken);
 
                 // Send Passthrough header to indicate the sender of request in outbound call.
                 httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", configurationDetails.WFIId);
@@ -863,7 +861,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             this.telemetryClient.TrackTrace($"DeclineTimeOffRequestAsync started for time off id {timeOffId}.");
 
             var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", configurationDetails.GraphConfigurationDetails.ShiftsAccessToken);
 
             // Send Passthrough header to indicate the sender of request in outbound call.
             httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", configurationDetails.WFIId);

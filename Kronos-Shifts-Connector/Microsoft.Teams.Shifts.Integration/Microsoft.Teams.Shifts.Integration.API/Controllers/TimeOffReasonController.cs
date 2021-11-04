@@ -222,8 +222,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             this.telemetryClient.TrackTrace($"GetTimeOffReasonAsync for {teamsId}");
 
             var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfigurations.GraphConfigurationDetails.ShiftsAccessToken);
-
             var requestUrl = $"teams/{teamsId}/schedule/timeOffReasons?$search=\"isActive=true\"";
 
             var response = await this.graphUtility.SendHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Get, requestUrl).ConfigureAwait(false);
@@ -269,7 +267,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             };
 
             var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfigurations.GraphConfigurationDetails.ShiftsAccessToken);
 
             var requestUrl = $"teams/{teamsId}/schedule/timeOffReasons";
             var requestString = JsonConvert.SerializeObject(timeOffReason);
@@ -299,8 +296,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             this.telemetryClient.TrackTrace($"Deleting {timeOffId} for {teamsId}");
 
             var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", allRequiredConfigurations.GraphConfigurationDetails.ShiftsAccessToken);
-
             var requestUrl = $"teams/{teamsId}/schedule/timeOffReasons/{timeOffId}";
 
             var response = await this.graphUtility.SendHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Delete, requestUrl).ConfigureAwait(false);

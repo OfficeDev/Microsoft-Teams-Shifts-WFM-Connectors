@@ -707,7 +707,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             for (int i = 0; i < notFoundShifts.Count; i++)
             {
                 var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", configurationDetails.GraphConfigurationDetails.ShiftsAccessToken);
                 httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", configurationDetails.WFIId);
 
                 var requestUrl = $"teams/{userModelNotFoundList[i].ShiftTeamId}/schedule/shifts";
@@ -765,7 +764,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 }
 
                 var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", configurationDetails.GraphConfigurationDetails.ShiftsAccessToken);
                 httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", configurationDetails.WFIId);
 
                 var requestUrl = $"teams/{user.ShiftTeamId}/schedule/shifts/{item.RowKey}";
