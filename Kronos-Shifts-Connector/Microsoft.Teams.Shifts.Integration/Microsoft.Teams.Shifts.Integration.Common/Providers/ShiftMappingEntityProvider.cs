@@ -36,16 +36,8 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             this.initializeTask = new Lazy<Task>(() => this.InitializeAsync(connectionString));
         }
 
-        /// <summary>
-        /// This method returns the necessary row(s) that are to have their row key properly updated with
-        /// the actual shift ID from MS Graph APIs post-OpenShiftRequest Approval.
-        /// </summary>
-        /// <param name="monthPartition">The month partition.</param>
-        /// <param name="rowKey">A "temp" row key.</param>
-        /// <returns>A unit of execution.</returns>
-        public async Task<TeamsShiftMappingEntity> GetShiftEntityAsync(
-            string monthPartition,
-            string rowKey)
+        /// <inheritdoc/>
+        public async Task<List<TeamsShiftMappingEntity>> GetAllUsersShiftsByPartitionKeyAsync(string monthPartition, string aadUserId)
         {
             await this.EnsureInitializedAsync().ConfigureAwait(false);
 
@@ -57,12 +49,11 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, getEntitiesProps);
 
             string monthPartitionFilter = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, monthPartition);
-            string startDateFilter = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, monthPartition);
-            string rowKeyFilter = TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, rowKey);
+            string aadIdFilter = TableQuery.GenerateFilterCondition("AadUserId", QueryComparisons.Equal, aadUserId);
 
             // Table query
             TableQuery<TeamsShiftMappingEntity> query = new TableQuery<TeamsShiftMappingEntity>();
-            query.Where(TableQuery.CombineFilters(monthPartitionFilter, TableOperators.And, rowKeyFilter));
+            query.Where(TableQuery.CombineFilters(monthPartitionFilter, TableOperators.And, aadIdFilter));
 
             // Results list
             var results = new List<TeamsShiftMappingEntity>();
@@ -76,7 +67,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             }
             while (continuationToken != null);
 
-            return results.FirstOrDefault();
+            return results;
         }
 
         /// <summary>

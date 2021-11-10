@@ -61,6 +61,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI
         public DateTime RecipientActionDateTime { get; set; }
 
         /// <summary>
+        /// Gets or sets the managerActionMessage.
+        /// </summary>
+        [JsonProperty("managerActionMessage")]
+        public string ManagerActionMessage { get; set; }
+
+        /// <summary>
         /// Gets or sets the eTag.
         /// </summary>
         [JsonProperty("eTag")]

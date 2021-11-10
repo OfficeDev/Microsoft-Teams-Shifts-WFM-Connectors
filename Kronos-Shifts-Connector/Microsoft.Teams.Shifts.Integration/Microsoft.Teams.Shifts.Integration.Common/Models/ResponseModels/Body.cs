@@ -4,8 +4,8 @@
 
 namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels
 {
-    using Newtonsoft.Json;
     using System.Collections.Generic;
+    using Newtonsoft.Json;
 
     /// <summary>
     /// This class models the body of the Integration Service API response.

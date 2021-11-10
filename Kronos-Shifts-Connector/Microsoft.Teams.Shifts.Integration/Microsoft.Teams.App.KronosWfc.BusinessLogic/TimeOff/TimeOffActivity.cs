@@ -66,20 +66,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
         }
 
         /// <inheritdoc/>
-        public async Task<TimeOffResponse> GetTimeOffRequestDetailsAsync(Uri endPointUrl, string jSession, string queryDateSpan, string personNumber, string kronosRequestId)
-        {
-            var xmlTimeOffRequest = this.CreateRetrieveTimeOffRequest(queryDateSpan, personNumber, kronosRequestId);
-            var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
-                endPointUrl,
-                ApiConstants.SoapEnvOpen,
-                xmlTimeOffRequest,
-                ApiConstants.SoapEnvClose,
-                jSession).ConfigureAwait(false);
-
-            return tupleResponse.ProcessResponse<TimeOffResponse>(this.telemetryClient);
-        }
-
-        /// <inheritdoc/>
         public async Task<TimeOffAddResponse> CreateTimeOffRequestAsync(
             string jSession,
             DateTimeOffset startDateTime,
@@ -155,48 +141,16 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
             string queryDateSpan,
             string kronosPersonNumber,
             bool approved,
-            string kronosId)
+            string kronosId,
+            Comments comments)
         {
-            var xmlTimeOffApprovalRequest = this.CreateApproveOrDeclineTimeOffRequest(queryDateSpan, kronosPersonNumber, approved, kronosId);
+            var status = approved ? ApiConstants.ApprovedStatus : ApiConstants.Refused;
+            var xmlTimeOffApprovalRequest = CommonRequests.CreateUpdateStatusRequest(kronosPersonNumber, kronosId, status, queryDateSpan, comments);
 
             var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
                 endPointUrl,
                 ApiConstants.SoapEnvOpen,
                 xmlTimeOffApprovalRequest,
-                ApiConstants.SoapEnvClose,
-                jSession).ConfigureAwait(false);
-
-            this.telemetryClient.TrackTrace(
-                "TimeOffActivity - ApproveOrDenyTimeOffRequestAsync",
-                new Dictionary<string, string>()
-                {
-                    { "Response", tupleResponse.Item1 },
-                });
-
-            return tupleResponse.ProcessResponse<CommonResponse>(this.telemetryClient);
-        }
-
-        /// <inheritdoc/>
-        public async Task<CommonResponse> AddManagerCommentsToTimeOffRequestAsync(
-            Uri endPointUrl,
-            string jSession,
-            string kronosRequestId,
-            DateTimeOffset startDateTime,
-            DateTimeOffset endDateTime,
-            string queryDateSpan,
-            string personNumber,
-            string reason,
-            string managerMessage,
-            string managerCommentText,
-            Comments existingNotes)
-        {
-            var comments = this.AddTimeOffRequestNotes(managerMessage, managerCommentText, existingNotes.Comment);
-            var xmlTimeOffRequestUpdateRequest = this.CreateUpdateTimeOffRequest(kronosRequestId, startDateTime, endDateTime, queryDateSpan, personNumber, reason, comments);
-
-            var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
-                endPointUrl,
-                ApiConstants.SoapEnvOpen,
-                xmlTimeOffRequestUpdateRequest,
                 ApiConstants.SoapEnvClose,
                 jSession).ConfigureAwait(false);
 
@@ -223,20 +177,26 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
 
             // There is a bug in Teams when creating a TOR on mobile that does not span a full day
             // where seconds and miliseconds are being added to the start and end time.
-            var modifiedStartDateTime = startDateTime.TimeOfDay.Subtract(new TimeSpan(0, 0, 0, startDateTime.TimeOfDay.Seconds, startDateTime.TimeOfDay.Milliseconds));
-            var modifiedEndDateTime = endDateTime.TimeOfDay.Subtract(new TimeSpan(0, 0, 0, endDateTime.TimeOfDay.Seconds, endDateTime.TimeOfDay.Milliseconds));
+
+            DateTimeOffset modifiedStartDateTime = startDateTime.AddMilliseconds(-startDateTime.Millisecond).AddSeconds(-startDateTime.Second);
+            DateTimeOffset modifiedEndDateTime = endDateTime.AddMilliseconds(-endDateTime.Millisecond).AddSeconds(-endDateTime.Second);
 
             var length = (modifiedEndDateTime - modifiedStartDateTime).TotalHours;
-            DateTimeOffset modifiedEndDateTimeForKronos = endDateTime.AddDays(-1);
-            if (length % 24 == 0 || length > 24)
+
+            if (length >= 24)
             {
+                // Teams returns the next day as the end date of the TOR. For example:
+                // Request off the 15th-16th - startDate = 15, endDate = 17
+                // So we need to remove a day from the end date when creating the Kronos request.
+                DateTimeOffset modifiedEndDateTimeForKronos = modifiedEndDateTime.AddDays(-1);
                 duration = ApiConstants.FullDayDuration;
+
                 return new TimeOffPeriod()
                 {
                     Duration = duration,
                     EndDate = modifiedEndDateTimeForKronos.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
                     PayCodeName = reason,
-                    StartDate = startDateTime.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
+                    StartDate = modifiedStartDateTime.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
                 };
             }
             else
@@ -245,10 +205,10 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
                 return new TimeOffPeriod()
                 {
                     Duration = duration,
-                    EndDate = endDateTime.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
+                    EndDate = modifiedEndDateTime.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
                     PayCodeName = reason,
-                    StartDate = startDateTime.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
-                    StartTime = startDateTime.ToString("hh:mm tt", CultureInfo.InvariantCulture),
+                    StartDate = modifiedStartDateTime.ToString("M/d/yyyy", CultureInfo.InvariantCulture),
+                    StartTime = modifiedStartDateTime.ToString("hh:mm tt", CultureInfo.InvariantCulture),
                     Length = Convert.ToString(length, CultureInfo.InvariantCulture),
                 };
             }
@@ -280,42 +240,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
             rq.RequestMgmt.Employees.PersonIdentity.AddRange(timeOffEmployees);
 
             return rq.XmlSerialize();
-        }
-
-        /// <summary>
-        /// Creates a request to retrieve a time off request.
-        /// </summary>
-        /// <param name="queryDateSpan">The queryDateSpan string.</param>
-        /// <param name="personNumber">The Kronos Person Number.</param>
-        /// <param name="id">The Kronos id of the request.</param>
-        /// <returns>XML request string.</returns>
-        private string CreateRetrieveTimeOffRequest(string queryDateSpan, string personNumber, string id)
-        {
-            var request =
-                new CommonTimeOffRequest.Request
-                {
-                    Action = ApiConstants.RetrieveWithDetails,
-                    RequestMgmt = new CommonTimeOffRequest.RequestMgmt
-                    {
-                        Employees = new Employees
-                        {
-                            PersonIdentity = new List<PersonIdentity>
-                            {
-                                new PersonIdentity { PersonNumber = personNumber },
-                            },
-                        },
-                        QueryDateSpan = queryDateSpan,
-                        RequestIds = new CommonTimeOffRequest.RequestIds
-                        {
-                            RequestId = new CommonTimeOffRequest.RequestId[1]
-                            {
-                                new CommonTimeOffRequest.RequestId() { Id = id },
-                            },
-                        },
-                    },
-                };
-
-            return request.XmlSerialize();
         }
 
         /// <summary>
@@ -459,99 +383,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
                 };
 
             return request.XmlSerialize();
-        }
-
-        /// <summary>
-        /// Creates an update time off request.
-        /// </summary>
-        /// <param name="id">The Kronos id of the request.</param>
-        /// <param name="startDateTime">Start date.</param>
-        /// <param name="endDateTime">End Date.</param>
-        /// <param name="queryDateSpan">The queryDateSpan string.</param>
-        /// <param name="personNumber">The Kronos Person Number.</param>
-        /// <param name="reason">Reason string.</param>
-        /// <param name="comments">Any comments to be attached to the TOR.</param>
-        /// <returns>XML request string.</returns>
-        private string CreateUpdateTimeOffRequest(
-            string id,
-            DateTimeOffset startDateTime,
-            DateTimeOffset endDateTime,
-            string queryDateSpan,
-            string personNumber,
-            string reason,
-            Comments comments)
-        {
-            // Kronos API expects a collection of periods so first calculate the actual period
-            // before adding it to a list.
-            var timeOffPeriod = CalculateTimeOffPeriod(startDateTime, endDateTime, reason);
-            var timeOffPeriods = new List<TimeOffPeriod>() { timeOffPeriod };
-
-            var request =
-                new TimeOffRequest.Request
-                {
-                    Action = ApiConstants.Update,
-                    RequestMgmt = new TimeOffRequest.RequestMgmt
-                    {
-                        Employees = new Employees
-                        {
-                            PersonIdentity = new List<PersonIdentity>
-                            {
-                                new PersonIdentity { PersonNumber = personNumber },
-                            },
-                        },
-                        QueryDateSpan = queryDateSpan,
-                        RequestItems = new TimeOffRequest.RequestItems
-                        {
-                            GlobalTimeOffRequestItem = new TimeOffRequest.GlobalTimeOffRequestItem
-                            {
-                                Id = id,
-                                RequestFor = ApiConstants.TOR,
-                                TimeOffPeriods = new TimeOffPeriods() { TimeOffPeriod = timeOffPeriods },
-                                Comments = comments,
-                            },
-                        },
-                    },
-                };
-
-            return request.XmlSerialize();
-        }
-
-        /// <summary>
-        /// Adds a note to a time off request ensuring we retain all previous notes.
-        /// </summary>
-        /// <param name="noteMessage">The note to add.</param>
-        /// <param name="noteCommentText">The comment text value of the note to add.</param>
-        /// <param name="existingNotes">Existing notes already attached to a TOR.</param>
-        /// <returns>List of comments for a time off request.</returns>
-        private Comments AddTimeOffRequestNotes(string noteMessage, string noteCommentText, List<Comment> existingNotes = null)
-        {
-            var comments = new Comments
-            {
-                Comment = new List<Comment>(),
-            };
-
-            if (existingNotes != null)
-            {
-                comments.Comment.AddRange(existingNotes);
-            }
-
-            comments.Comment.Add(new Comment
-            {
-                CommentText = noteCommentText,
-                Notes = new Notes
-                {
-                    Note = new List<Note>
-                    {
-                        new Note
-                        {
-                            Text = noteMessage,
-                            Timestamp = DateTime.UtcNow.ToString(CultureInfo.InvariantCulture),
-                        },
-                    },
-                },
-            });
-
-            return comments;
         }
     }
 }

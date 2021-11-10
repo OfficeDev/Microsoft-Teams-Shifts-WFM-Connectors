@@ -202,6 +202,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         public string AuthTokenCacheLifetimeInSeconds => this.configuration["AuthTokenCacheLifetimeInSeconds"];
 
         /// <summary>
+        /// Gets whether manager CRUD within Teams is enabled.
+        /// </summary>
+        public string AllowManagersToModifyScheduleInTeams => this.configuration["AllowManagersToModifyScheduleInTeams"];
+
+        /// <summary>
         /// Gets the number of org job path section sto use as the activity display name.
         /// </summary>
         public string NumberOfOrgJobPathSectionsForActivityName => this.configuration["NumberOfOrgJobPathSectionsForActivityName"];
@@ -212,6 +217,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         public string TransferredShiftDisplayName => this.configuration["TransferredShiftDisplayName"];
 
         /// <summary>
+        /// Gets the shift notes comment text value.
+        /// </summary>
+        public string ShiftNotesCommentText => this.configuration["ShiftNotesCommentText"];
+
+        /// <summary>
         /// Gets the manager time off request comment text value.
         /// </summary>
         public string ManagerTimeOffRequestCommentText => this.configuration["ManagerTimeOffRequestCommentText"];
@@ -220,6 +230,26 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// Gets the sender time off request comment text value.
         /// </summary>
         public string SenderTimeOffRequestCommentText => this.configuration["SenderTimeOffRequestCommentText"];
+
+        /// <summary>
+        /// Gets the manager swap request comment text value.
+        /// </summary>
+        public string ManagerSwapRequestCommentText => this.configuration["ManagerSwapRequestCommentText"];
+
+        /// <summary>
+        /// Gets the sender swap request comment text value.
+        /// </summary>
+        public string SenderSwapRequestCommentText => this.configuration["SenderSwapRequestCommentText"];
+
+        /// <summary>
+        /// Gets the recipient swap request comment text value.
+        /// </summary>
+        public string RecipientSwapRequestCommentText => this.configuration["RecipientSwapRequestCommentText"];
+
+        /// <summary>
+        /// Gets the manager open shift request comment text value.
+        /// </summary>
+        public string ManagerOpenShiftRequestCommentText => this.configuration["ManagerOpenShiftRequestCommentText"];
 
         // **************************************CONFIGURATION PROJECT*********************************************
 
@@ -281,6 +311,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// Gets the configuration for the polling delay in the sync functionality.
         /// </summary>
         public string SyncDelayForPolling => this.configuration["SyncDelayForPolling"];
+
+        /// <summary>
+        /// Gets the configuration for the number of seconds to wait between deleting a shift in Teams
+        /// And auto sharing the schedule.
+        /// </summary>
+        public string AutoShareScheduleWaitTime => this.configuration["AutoShareScheduleWaitTime"];
 
         /// <summary>
         /// Gets security group name for managers.

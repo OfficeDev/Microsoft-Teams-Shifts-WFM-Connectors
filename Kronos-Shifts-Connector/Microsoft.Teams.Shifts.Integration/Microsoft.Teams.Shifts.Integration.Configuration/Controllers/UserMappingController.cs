@@ -337,26 +337,11 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
         /// <returns>A task.</returns>
         private async Task<List<ShiftUser>> GetAllShiftUsersAsync()
         {
-            var clientId = this.appSettings.ClientId;
-            var instance = this.appSettings.Instance;
-            var clientSecret = this.appSettings.ClientSecret;
+            var graphConfigurationDetails = this.utility.GetTenantDetails();
+            graphConfigurationDetails.ShiftsAdminAadObjectId = this.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
+            graphConfigurationDetails.TenantId = this.User.GetTenantId();
 
-            var userId = this.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
-            var tenantId = this.User.GetTenantId();
-
-            var graphAccessToken = await this.graphUtility.GetAccessTokenAsync(
-                tenantId,
-                instance,
-                clientId,
-                clientSecret,
-                userId).ConfigureAwait(false);
-
-            List<ShiftUser> teamsUserModels = new List<ShiftUser>();
-
-            teamsUserModels = await this.graphUtility.FetchShiftUserDetailsAsync(
-                graphAccessToken).ConfigureAwait(false);
-
-            return teamsUserModels;
+            return await this.graphUtility.FetchShiftUserDetailsAsync(graphConfigurationDetails).ConfigureAwait(false);
         }
 
         /// <summary>

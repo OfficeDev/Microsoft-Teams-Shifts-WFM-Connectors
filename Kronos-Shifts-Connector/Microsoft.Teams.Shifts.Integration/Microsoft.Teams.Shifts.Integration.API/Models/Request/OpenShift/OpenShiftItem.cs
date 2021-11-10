@@ -23,7 +23,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.RequestModels.
         /// Gets or sets the openSlotCount.
         /// </summary>
         [JsonProperty("openSlotCount")]
-        public long OpenSlotCount { get; set; }
+        public int OpenSlotCount { get; set; }
 
         /// <summary>
         /// Gets or sets the displayName.
@@ -55,6 +55,7 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.RequestModels.
         [JsonProperty("activities")]
 #pragma warning disable CA2227 // Collection properties should be read only
         public List<Activity> Activities { get; set; }
+
 #pragma warning restore CA2227 // Collection properties should be read only
     }
 }

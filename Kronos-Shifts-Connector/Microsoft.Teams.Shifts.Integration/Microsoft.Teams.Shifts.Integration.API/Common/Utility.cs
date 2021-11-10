@@ -16,10 +16,11 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
     using Microsoft.ApplicationInsights;
     using Microsoft.Extensions.Caching.Distributed;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.Logon;
-    using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.OpenShift.Batch;
+    using Microsoft.Teams.App.KronosWfc.Common;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests;
     using Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
+    using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models.Graph;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers;
     using Newtonsoft.Json;
     using Logon = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Logon;
@@ -211,21 +212,18 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// <summary>
         /// Having the ability to create a new TeamsShiftMappingEntity.
         /// </summary>
-        /// <param name="aadUserId">AAD user Id associated with the Shift.</param>
         /// <param name="kronosUniqueId">Kronos Unique Id fro that Shift.</param>
-        /// <param name="kronosPersonNumber">Kronos Person number for the user.</param>
+        /// <param name="user">The user details.</param>
         /// <returns>Mapping Entity associated with Team and Shift.</returns>
-        public static TeamsShiftMappingEntity CreateShiftMappingEntity(
-            string aadUserId,
-            string kronosUniqueId,
-            string kronosPersonNumber)
+        public static TeamsShiftMappingEntity CreateShiftMappingEntity(string kronosUniqueId, UserDetailsModel user)
         {
             TeamsShiftMappingEntity teamsShiftMappingEntity = new TeamsShiftMappingEntity
             {
-                AadUserId = aadUserId,
+                AadUserId = user.ShiftUserId,
                 KronosUniqueId = kronosUniqueId,
-                KronosPersonNumber = kronosPersonNumber,
+                KronosPersonNumber = user.KronosPersonNumber,
                 ShiftStartDate = DateTime.UtcNow,
+                ShiftsTeamId = user.ShiftTeamId,
             };
 
             return teamsShiftMappingEntity;
@@ -306,7 +304,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
                 sb.Append(this.CalculateStartDateTime(item.StartDateTime, kronosTimeZone));
             }
 
-            var stringToHash = $"{this.CalculateStartDateTime(shift.SharedShift.StartDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(shift.SharedShift.EndDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}{sb}{shift.SharedShift.Notes}{shift.UserId}";
+            var stringToHash = $"{this.CalculateStartDateTime(shift.SharedShift.StartDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(shift.SharedShift.EndDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}{sb}{shift.SharedShift.Notes}{shift.UserId}{shift.SchedulingGroupId}";
 
             this.telemetryClient.TrackTrace($"String to create hash - Shift: {stringToHash}");
 
@@ -338,13 +336,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         }
 
         /// <summary>
-        /// Having the method to construct the notes properly.
+        /// Generate a notes string for Teams from the Kronos comments.
         /// </summary>
         /// <param name="shift">The shift that contains the notes.</param>
-        /// <returns>A string.</returns>
+        /// <returns>A string containing the joined comments.</returns>
         public string GetShiftNotes(App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.ScheduleShift shift)
         {
-            string result, noteContents;
+            string result;
             this.telemetryClient.TrackTrace($"GetShiftNotes start at {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
 
             if (shift is null)
@@ -354,28 +352,23 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
 
             if (shift.ShiftComments != null)
             {
-                noteContents = string.Empty;
-                var notesStr = string.Empty;
-                foreach (var item in shift.ShiftComments.Comment)
+                var notesList = new List<string>();
+                foreach (var comment in shift.ShiftComments.Comment)
                 {
-                    foreach (var noteItem in item?.Notes)
+                    foreach (var note in comment.Notes.Note)
                     {
-                        notesStr += noteItem?.Note?.Text + ' ';
+                        notesList.Add(note.Text);
                     }
-
-                    noteContents += notesStr + Environment.NewLine;
                 }
 
-                result = noteContents;
+                result = string.Join(" * ", notesList.ToArray());
                 this.telemetryClient.TrackTrace($"Notes-ShiftEntity: {result}");
             }
             else
             {
                 result = string.Empty;
                 var noNotesStr = "There are no notes for this shift";
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
                 this.telemetryClient.TrackTrace($"Notes-ShiftEntity: {noNotesStr}");
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
             }
 
             this.telemetryClient.TrackTrace($"GetShiftNotes end at {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
@@ -390,7 +383,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         public string GetOpenShiftNotes(App.KronosWfc.Models.ResponseEntities.OpenShift.Batch.ScheduleShift openShift)
         {
             var provider = CultureInfo.InvariantCulture;
-            string result, noteContents;
+            string result;
             this.telemetryClient.TrackTrace($"GetOpenShiftNotes start at {DateTime.UtcNow.ToString("O", provider)}");
 
             if (openShift is null)
@@ -400,19 +393,16 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
 
             if (openShift.OpenShiftComments != null)
             {
-                noteContents = string.Empty;
-                var notesStr = string.Empty;
-                foreach (var item in openShift.OpenShiftComments.Comment)
+                var notesList = new List<string>();
+                foreach (var comment in openShift.OpenShiftComments.Comment)
                 {
-                    foreach (var noteItem in item?.Notes)
+                    foreach (var note in comment.Notes.Note)
                     {
-                        notesStr += noteItem?.Note?.Text + ' ';
+                        notesList.Add(note.Text);
                     }
-
-                    noteContents += notesStr + Environment.NewLine;
                 }
 
-                result = noteContents;
+                result = string.Join(" * ", notesList.ToArray());
                 this.telemetryClient.TrackTrace($"Notes-OpenShiftEntity: {result}");
             }
             else
@@ -491,40 +481,104 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         }
 
         /// <summary>
+        /// This method creates the expected shift hash in the event that a open shift is
+        /// created in Teams using the open shift details.
+        /// </summary>
+        /// <param name="openShift">The open shift from Graph.</param>
+        /// <param name="kronosTimeZone">The time zone to use when converting the times.</param>
+        /// <param name="orgJobPath">The org job path of the open shift.</param>
+        /// <returns>A string that represents the expected hash of the new shift that is to be created.</returns>
+        public string CreateOpenShiftInTeamsUniqueId(OpenShiftIS openShift, string kronosTimeZone, string orgJobPath)
+        {
+            if (openShift is null)
+            {
+                throw new ArgumentNullException(nameof(openShift));
+            }
+
+            var startDateTime = openShift.SharedOpenShift.StartDateTime;
+            var endDateTime = openShift.SharedOpenShift.EndDateTime;
+
+            // We do not allow activities to be edited/added in Teams but Kronos requires segments in requests.
+            // We need to track shift segments to know when a shift transfer occurs so we add these details to the hash
+            // using the 'Regular' segment type for the entire OS duration.
+            var sb = new StringBuilder();
+            sb.Append(ApiConstants.RegularSegmentType);
+            sb.Append(this.CalculateEndDateTime(endDateTime, kronosTimeZone));
+            sb.Append(this.CalculateStartDateTime(startDateTime, kronosTimeZone));
+
+            var stringToHash = $"{this.CalculateStartDateTime(startDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(endDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}{sb}{openShift.SharedOpenShift.Notes}{orgJobPath}";
+
+            // Utilizing the MD5 hash
+            using (MD5CryptoServiceProvider md5 = new MD5CryptoServiceProvider())
+            {
+                // Compute the hash from the stringToHash text.
+                md5.ComputeHash(Encoding.UTF8.GetBytes(stringToHash));
+
+                // Have the hash result in the byte array
+                byte[] hashResult = md5.Hash;
+
+                // Having the actual Hash.
+                StringBuilder strBuilder = new StringBuilder();
+                for (int i = 0; i < hashResult.Length; i++)
+                {
+                    // Changing the result into 2 hexadecimal digits for each byte in the byte array.
+                    strBuilder.Append(hashResult[i].ToString("x2", CultureInfo.InvariantCulture));
+                }
+
+                var outputHashResult = strBuilder.ToString();
+
+                return outputHashResult;
+            }
+        }
+
+        /// <summary>
         /// This method generates the Kronos Unique Id for the Shift Entity.
         /// </summary>
         /// <param name="shift">The shift entity that is coming from the response.</param>
         /// <param name="kronosTimeZone">The time zone to use when converting the times.</param>
         /// <returns>A string that represents the Kronos Unique Id.</returns>
-        public string CreateUniqueId(Models.IntegrationAPI.Shift shift, string kronosTimeZone)
+        public string CreateShiftUniqueId(Models.IntegrationAPI.Shift shift, string kronosTimeZone)
         {
             if (shift is null)
             {
                 throw new ArgumentNullException(nameof(shift));
             }
 
+            var sb = new StringBuilder();
+            var startDateTime = shift.SharedShift.StartDateTime;
+            var endDateTime = shift.SharedShift.EndDateTime;
+
+            // If there are no activities then this was an open shift created in Teams that has been claimed.
+            // To prevent excess notfications we want to add a single activity of Regular for the entire duration
+            // to the hash as this is what Kronos will do.
+            if (!shift.SharedShift.Activities.Any())
+            {
+                sb.Append(ApiConstants.RegularSegmentType);
+                sb.Append(this.CalculateEndDateTime(endDateTime, kronosTimeZone));
+                sb.Append(this.CalculateStartDateTime(startDateTime, kronosTimeZone));
+            }
+            else
+            {
+                var activities = shift.SharedShift?.Activities;
+
+                foreach (var item in activities)
+                {
+                    sb.Append(item.DisplayName);
+                    sb.Append(this.CalculateEndDateTime(item.EndDateTime, kronosTimeZone));
+                    sb.Append(this.CalculateStartDateTime(item.StartDateTime, kronosTimeZone));
+                }
+            }
+
             var createUniqueIdProps = new Dictionary<string, string>()
             {
-                { "StartDateTimeStamp", shift.SharedShift.StartDateTime.ToString(CultureInfo.InvariantCulture) },
-                { "EndDateTimeStamp", shift.SharedShift.EndDateTime.ToString(CultureInfo.InvariantCulture) },
+                { "StartDateTimeStamp", startDateTime.ToString(CultureInfo.InvariantCulture) },
+                { "EndDateTimeStamp", endDateTime.ToString(CultureInfo.InvariantCulture) },
                 { "UserId", shift.UserId },
                 { "CallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
                 { "ExecutingAssembly", Assembly.GetExecutingAssembly().GetName().Name },
             };
 
-            var sb = new StringBuilder();
-
-            foreach (var item in shift.SharedShift.Activities)
-            {
-                sb.Append(item.DisplayName);
-                sb.Append(this.CalculateEndDateTime(item.EndDateTime, kronosTimeZone));
-                sb.Append(this.CalculateStartDateTime(item.StartDateTime, kronosTimeZone));
-            }
-
-            // From Kronos to Shifts sync, the notes are passed as an empty string.
-            // Therefore, the notes are marked as empty while creating the unique ID from Shifts to Kronos.
-            shift.SharedShift.Notes = string.Empty;
-            var stringToHash = $"{this.CalculateStartDateTime(shift.SharedShift.StartDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(shift.SharedShift.EndDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}{sb}{shift.SharedShift.Notes}{shift.UserId}";
+            var stringToHash = $"{this.CalculateStartDateTime(startDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}-{this.CalculateEndDateTime(endDateTime, kronosTimeZone).ToString(CultureInfo.InvariantCulture)}{sb}{shift.SharedShift.Notes}{shift.UserId}{shift.SchedulingGroupId}";
 
             this.telemetryClient.TrackTrace($"String to create hash - Shift (IntegrationAPI Model): {stringToHash}");
 
@@ -850,11 +904,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// <param name="shift">The Shift model.</param>
         /// <param name="userMappingEntity">Details of user from User Mapping Entity table.</param>
         /// <param name="kronosUniqueId">Kronos Unique Id corresponds to the shift.</param>
+        /// <param name="teamId">The id of the team the request came from.</param>
         /// <returns>Mapping Entity associated with Team and Shift.</returns>
         public TeamsShiftMappingEntity CreateShiftMappingEntity(
            Models.IntegrationAPI.Shift shift,
            AllUserMappingEntity userMappingEntity,
-           string kronosUniqueId)
+           string kronosUniqueId,
+           string teamId)
         {
             var startDateTime = DateTime.SpecifyKind(shift.SharedShift.StartDateTime, DateTimeKind.Utc);
 
@@ -864,6 +920,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
                 KronosUniqueId = kronosUniqueId,
                 KronosPersonNumber = userMappingEntity?.RowKey,
                 ShiftStartDate = startDateTime,
+                ShiftsTeamId = teamId,
             };
         }
 
@@ -940,7 +997,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
                 { "CallingMethod", "UpdateTeam" },
             };
 
-            this.GetTenantDetails(out string tenantId, out string clientId, out string clientSecret, out string instance);
+            // Get config details necessary for graph operations from appSettings.
+            setupDetails.GraphConfigurationDetails = this.GetTenantDetails();
 
             // Get configuration info from table.
             var configurationEntity = (await this.configurationProvider.GetConfigurationsAsync().ConfigureAwait(false)).FirstOrDefault();
@@ -954,25 +1012,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
                 setupDetails.ErrorMessage += Resource.KronosURLNotPresent;
             }
 
-            if (!string.IsNullOrEmpty(configurationEntity?.AdminAadObjectId))
+            if (!string.IsNullOrEmpty(configurationEntity.AdminAadObjectId))
             {
                 setupDetails.WFIId = configurationEntity?.WorkforceIntegrationId;
-                var accessToken = this.graphUtility.GetAccessTokenAsync(tenantId, instance, clientId, clientSecret, configurationEntity?.AdminAadObjectId).GetAwaiter().GetResult();
+                setupDetails.GraphConfigurationDetails.ShiftsAdminAadObjectId = configurationEntity?.AdminAadObjectId;
 
-                setupDetails.ShiftsAdminAadObjectId = configurationEntity?.AdminAadObjectId;
-
-                if (!string.IsNullOrEmpty(accessToken))
-                {
-                    setupDetails.ShiftsAccessToken = accessToken;
-                    setupDetails.TenantId = tenantId;
-                }
-                else
-                {
-                    telemetryProps.Add("ShiftAccessToken", Resource.IssueShiftsAccessToken);
-                    setupDetails.ErrorMessage += Resource.IssueShiftsAccessToken;
-                }
-
-                setupDetails.KronosSession = this.GetKronosSessionAsync().GetAwaiter().GetResult();
+                setupDetails.KronosSession = await this.GetKronosSessionAsync().ConfigureAwait(false);
                 setupDetails.KronosUserName = this.appSettings.WfmSuperUsername;
                 setupDetails.KronosPassword = this.appSettings.WfmSuperUserPassword;
 
@@ -990,7 +1035,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
 
             setupDetails.IsAllSetUpExists =
                 !string.IsNullOrEmpty(setupDetails.WFIId)
-                && !string.IsNullOrEmpty(setupDetails.ShiftsAccessToken)
                 && !string.IsNullOrEmpty(setupDetails.KronosSession)
                 && !string.IsNullOrEmpty(setupDetails.WfmEndPoint)
                 && !string.IsNullOrEmpty(setupDetails.KronosPassword)
@@ -1026,25 +1070,21 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// <param name="date">A <see cref="DateTime"/>.</param>
         /// <returns>A string representation of the date for a kronos call.</returns>
         [SuppressMessage("Globalization", "CA1305:Specify IFormatProvider", Justification = "This format is needed for kronos calls.")]
-        public string ConvertToKronosDate(DateTime date) => date.ToString(this.appSettings.KronosQueryDateSpanFormat);
+        public string FormatDateForKronos(DateTime date) => date.ToString(this.appSettings.KronosQueryDateSpanFormat);
 
         /// <summary>
         /// Method to retrieve the necessary details from AppSettings.
         /// </summary>
-        /// <param name="tenantId">The tenant ID.</param>
-        /// <param name="clientId">The client ID.</param>
-        /// <param name="clientSecret">The client secret.</param>
-        /// <param name="instance">The instance URL.</param>
-        private void GetTenantDetails(
-            out string tenantId,
-            out string clientId,
-            out string clientSecret,
-            out string instance)
+        /// <returns>A GraphConfigurationDetails object.</returns>
+        public GraphConfigurationDetails GetTenantDetails()
         {
-            tenantId = this.appSettings.TenantId;
-            clientId = this.appSettings.ClientId;
-            clientSecret = this.appSettings.ClientSecret;
-            instance = this.appSettings.Instance;
+            return new GraphConfigurationDetails
+            {
+                TenantId = this.appSettings.TenantId,
+                ClientId = this.appSettings.ClientId,
+                ClientSecret = this.appSettings.ClientSecret,
+                Instance = this.appSettings.Instance,
+            };
         }
 
         /// <summary>

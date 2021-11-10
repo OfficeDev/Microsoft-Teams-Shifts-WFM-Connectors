@@ -4,8 +4,6 @@
 
 namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift.OpenShiftRequest
 {
-    using System.Collections.Generic;
-
     /// <summary>
     /// This class models the OpenShiftObj.
     /// </summary>

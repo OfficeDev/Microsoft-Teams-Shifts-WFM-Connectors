@@ -1,15 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
-   <PropertyGroup>
+  <PropertyGroup>
     <TargetFramework>netcoreapp2.2</TargetFramework>
     <AspNetCoreHostingModel>OutOfProcess</AspNetCoreHostingModel>
     <AspNetCoreModuleName>AspNetCoreModule</AspNetCoreModuleName>
     <UserSecretsId>32e67916-be01-49df-907a-63a14450988c</UserSecretsId>
- </PropertyGroup>
+  </PropertyGroup>
 
-   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-     <DocumentationFile>C:\TCS\Shifts-Kronos\msteams-shifts-kronos\Microsoft.Teams.Shifts.Integration\Microsoft.Teams.Shifts.Integration.API\Microsoft.Teams.Shifts.Integration.API.xml</DocumentationFile>
-   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>C:\TCS\Shifts-Kronos\msteams-shifts-kronos\Microsoft.Teams.Shifts.Integration\Microsoft.Teams.Shifts.Integration.API\Microsoft.Teams.Shifts.Integration.API.xml</DocumentationFile>
+  </PropertyGroup>
   <PropertyGroup>
     <!--
     Make sure any documentation comments which are included in code get checked for syntax during the build, but do
@@ -29,13 +29,13 @@
     <Content Remove="stylecop.json" />
   </ItemGroup>
 
-   <ItemGroup>
-     <None Remove=".editorconfig" />
-   </ItemGroup>
+  <ItemGroup>
+    <None Remove=".editorconfig" />
+  </ItemGroup>
 
-   <ItemGroup>
-     <AdditionalFiles Include="stylecop.json" />
-   </ItemGroup>
+  <ItemGroup>
+    <AdditionalFiles Include="stylecop.json" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.12.0" />
@@ -94,5 +94,4 @@
   <ItemGroup>
     <Folder Include="wwwroot\" />
   </ItemGroup>
-
 </Project>

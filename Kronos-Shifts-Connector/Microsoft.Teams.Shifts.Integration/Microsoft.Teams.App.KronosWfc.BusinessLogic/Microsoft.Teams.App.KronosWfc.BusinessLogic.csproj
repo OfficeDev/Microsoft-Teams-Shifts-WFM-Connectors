@@ -183,6 +183,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\CommonRequests.cs" />
     <Compile Include="Common\XmlHelper.cs" />
     <Compile Include="HyperFindLoadAll\HyperFindLoadAllActivity.cs" />
     <Compile Include="HyperFindLoadAll\IHyperFindLoadAllActivity.cs" />
@@ -203,8 +204,8 @@
     <Compile Include="SwapShift\SwapShiftActivity.cs" />
     <Compile Include="TimeOff\ITimeOffActivity.cs" />
     <Compile Include="TimeOff\TimeOffActivity.cs" />
-    <Compile Include="Shifts\IUpcomingShiftsActivity.cs" />
-    <Compile Include="Shifts\UpcomingShiftsActivity.cs" />
+    <Compile Include="Shifts\IShiftsActivity.cs" />
+    <Compile Include="Shifts\ShiftsActivity.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -237,6 +238,10 @@
     <ProjectReference Include="..\Microsoft.Teams.App.KronosWfc.Service\Microsoft.Teams.App.KronosWfc.Service.csproj">
       <Project>{eeee133b-08d5-4f99-901e-47ccd9e683bd}</Project>
       <Name>Microsoft.Teams.App.KronosWfc.Service</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Microsoft.Teams.Shifts.Integration.Common\Microsoft.Teams.Shifts.Integration.BusinessLogic.csproj">
+      <Project>{CD5E9375-3DC5-4134-A8A0-5B9CFF5BE9F7}</Project>
+      <Name>Microsoft.Teams.Shifts.Integration.BusinessLogic</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -9,22 +9,26 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using System.Globalization;
     using System.Linq;
     using System.Net.Http;
-    using System.Net.Http.Headers;
     using System.Reflection;
-    using System.Text;
+    using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.ApplicationInsights;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.Teams.App.KronosWfc.BusinessLogic.Common;
     using Microsoft.Teams.App.KronosWfc.BusinessLogic.Shifts;
+    using Microsoft.Teams.App.KronosWfc.Common;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.HyperFind;
     using Microsoft.Teams.Shifts.Integration.API.Common;
     using Microsoft.Teams.Shifts.Integration.API.Models.Request;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers;
+    using Microsoft.Teams.Shifts.Integration.BusinessLogic.ResponseModels;
     using Newtonsoft.Json;
+    using static Microsoft.Teams.App.KronosWfc.Common.ApiConstants;
     using IntegrationApi = Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI;
-    using App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts;
+    using ShiftsShift = Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Shift;
+    using UpcomingShiftsResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts;
 
     /// <summary>
     /// Shift controller.
@@ -34,9 +38,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     public class ShiftController : ControllerBase
     {
         private readonly IUserMappingProvider userMappingProvider;
-        private readonly IUpcomingShiftsActivity upcomingShiftsActivity;
+        private readonly IShiftsActivity shiftsActivity;
         private readonly TelemetryClient telemetryClient;
         private readonly Utility utility;
+        private readonly IGraphUtility graphUtility;
         private readonly IShiftMappingEntityProvider shiftMappingEntityProvider;
         private readonly AppSettings appSettings;
         private readonly ITeamDepartmentMappingProvider teamDepartmentMappingProvider;
@@ -50,6 +55,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="upcomingShiftsActivity">upcoming Shifts Activity.</param>
         /// <param name="telemetryClient">ApplicationInsights DI.</param>
         /// <param name="utility">UniqueId Utility DI.</param>
+        /// <param name="graphUtility">The graph utility.</param>
         /// <param name="shiftEntityMappingProvider">ShiftEntityMapper DI.</param>
         /// <param name="appSettings">app settings.</param>
         /// <param name="teamDepartmentMappingProvider">Team department mapping provider.</param>
@@ -57,9 +63,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="taskWrapper">Wrapper class instance for BackgroundTask.</param>
         public ShiftController(
             IUserMappingProvider userMappingProvider,
-            IUpcomingShiftsActivity upcomingShiftsActivity,
+            IShiftsActivity upcomingShiftsActivity,
             TelemetryClient telemetryClient,
             Utility utility,
+            IGraphUtility graphUtility,
             IShiftMappingEntityProvider shiftEntityMappingProvider,
             ITeamDepartmentMappingProvider teamDepartmentMappingProvider,
             AppSettings appSettings,
@@ -67,9 +74,10 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             BackgroundTaskWrapper taskWrapper)
         {
             this.userMappingProvider = userMappingProvider;
-            this.upcomingShiftsActivity = upcomingShiftsActivity;
+            this.shiftsActivity = upcomingShiftsActivity;
             this.telemetryClient = telemetryClient;
             this.utility = utility;
+            this.graphUtility = graphUtility;
             this.shiftMappingEntityProvider = shiftEntityMappingProvider;
             this.appSettings = appSettings;
             this.teamDepartmentMappingProvider = teamDepartmentMappingProvider;
@@ -83,11 +91,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="shift">The shift received from Shifts.</param>
         /// <param name="uniqueId">The unique ID for the shift.</param>
         /// <param name="kronoUserId">The user id of the user in Kronos.</param>
+        /// <param name="teamId">The team id.</param>
         /// <returns>Returns a <see cref="TeamsShiftMappingEntity"/>.</returns>
         public TeamsShiftMappingEntity CreateNewShiftMappingEntity(
             Microsoft.Teams.Shifts.Integration.API.Models.IntegrationAPI.Shift shift,
             string uniqueId,
-            string kronoUserId)
+            string kronoUserId,
+            string teamId)
         {
             var createNewShiftMappingEntityProps = new Dictionary<string, string>()
             {
@@ -96,8 +106,8 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 { "CallingAssembly", Assembly.GetCallingAssembly().GetName().Name },
             };
 
-            var startDateTime = DateTime.SpecifyKind(shift.SharedShift.StartDateTime, DateTimeKind.Utc);
-            var endDateTime = DateTime.SpecifyKind(shift.SharedShift.EndDateTime, DateTimeKind.Utc);
+            var startDateTime = DateTime.SpecifyKind((DateTime)(shift.DraftShift?.StartDateTime ?? shift.SharedShift?.StartDateTime), DateTimeKind.Utc);
+            var endDateTime = DateTime.SpecifyKind((DateTime)(shift.DraftShift?.EndDateTime ?? shift.SharedShift?.EndDateTime), DateTimeKind.Utc);
 
             TeamsShiftMappingEntity shiftMappingEntity = new TeamsShiftMappingEntity
             {
@@ -106,6 +116,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 KronosPersonNumber = kronoUserId,
                 ShiftStartDate = startDateTime,
                 ShiftEndDate = endDateTime,
+                ShiftsTeamId = teamId,
             };
 
             this.telemetryClient.TrackTrace("Creating new shift mapping entity.", createNewShiftMappingEntityProps);
@@ -142,7 +153,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         };
 
                 // Get shift response for a batch of users.
-                shiftsResponse = await this.upcomingShiftsActivity.ShowUpcomingShiftsInBatchAsync(
+                shiftsResponse = await this.shiftsActivity.ShowUpcomingShiftsInBatchAsync(
                         new Uri(allRequiredConfigurations.WfmEndPoint),
                         allRequiredConfigurations.KronosSession,
                         queryStartDate,
@@ -151,6 +162,263 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             }
 
             return shiftsResponse;
+        }
+
+        /// <summary>
+        /// Deletes the shift from Kronos and the database.
+        /// </summary>
+        /// <param name="shift">The shift to remove.</param>
+        /// <param name="user">The user the shift is for.</param>
+        /// <param name="mappedTeam">The team the user is in.</param>
+        /// <returns>A response for teams.</returns>
+        public async Task<ShiftsIntegResponse> DeleteShiftInKronosAsync(ShiftsShift shift, AllUserMappingEntity user, TeamToDepartmentJobMappingEntity mappedTeam)
+        {
+            if (shift.SharedShift == null)
+            {
+                return ResponseHelper.CreateBadResponse(shift.Id, error: "An unexpected error occured. Could not delete the shift.");
+            }
+
+            if (user.ErrorIfNull(shift.Id, "User could not be found.", out var response))
+            {
+                return response;
+            }
+
+            var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
+
+            if ((allRequiredConfigurations?.IsAllSetUpExists == false).ErrorIfNull(shift.Id, "App configuration incorrect.", out response))
+            {
+                return response;
+            }
+
+            // Convert to Kronos local time.
+            var kronosStartDateTime = this.utility.UTCToKronosTimeZone(shift.SharedShift.StartDateTime, mappedTeam.KronosTimeZone);
+            var kronosEndDateTime = this.utility.UTCToKronosTimeZone(shift.SharedShift.EndDateTime, mappedTeam.KronosTimeZone);
+
+            var deletionResponse = await this.shiftsActivity.DeleteShift(
+                new Uri(allRequiredConfigurations.WfmEndPoint),
+                allRequiredConfigurations.KronosSession,
+                this.utility.FormatDateForKronos(kronosStartDateTime),
+                this.utility.FormatDateForKronos(kronosEndDateTime),
+                kronosEndDateTime.Day > kronosStartDateTime.Day,
+                Utility.OrgJobPathKronosConversion(user.PartitionKey),
+                user.RowKey,
+                kronosStartDateTime.TimeOfDay.ToString(),
+                kronosEndDateTime.TimeOfDay.ToString()).ConfigureAwait(false);
+
+            if (deletionResponse.Status != Success)
+            {
+                return ResponseHelper.CreateBadResponse(shift.Id, error: "Shift was not successfully removed from Kronos.");
+            }
+
+            await this.DeleteShiftMapping(shift).ConfigureAwait(false);
+
+#pragma warning disable CS4014 // We do not want to await this call as we need the shift to be deleted in Teams before sharing the schedule.
+            Task.Run(() => this.ShareScheduleAfterShiftDeletion(shift, mappedTeam, allRequiredConfigurations));
+#pragma warning restore CS4014
+
+            return ResponseHelper.CreateSuccessfulResponse(shift.Id);
+        }
+
+        /// <summary>
+        /// Adds the shift to Kronos and the database.
+        /// </summary>
+        /// <param name="shift">The shift to add.</param>
+        /// <param name="user">The user the shift is for.</param>
+        /// <param name="mappedTeam">The team the user is in.</param>
+        /// <returns>A response for teams.</returns>
+        public async Task<ShiftsIntegResponse> CreateShiftInKronosAsync(ShiftsShift shift, AllUserMappingEntity user, TeamToDepartmentJobMappingEntity mappedTeam)
+        {
+            // The connector does not support drafting entities as it is not possible to draft shifts in Kronos.
+            // Likewise there is no share schedule WFI call.
+            if (shift.DraftShift != null)
+            {
+                return ResponseHelper.CreateBadResponse(shift.Id, error: "Creating a shift as a draft is not supported for your team in Teams. Please publish changes directly using the 'Share' button.");
+            }
+
+            if (shift.SharedShift == null)
+            {
+                return ResponseHelper.CreateBadResponse(shift.Id, error: "An unexpected error occured. Could not create the shift.");
+            }
+
+            if (shift.SharedShift.Activities.Any())
+            {
+                return ResponseHelper.CreateBadResponse(shift.Id, error: "Adding activities to shifts is not supported for your team in Teams. Remove all activities and try sharing again.");
+            }
+
+            if (user.ErrorIfNull(shift.Id, "User could not be found.", out var response))
+            {
+                return response;
+            }
+
+            var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
+
+            if ((allRequiredConfigurations?.IsAllSetUpExists).ErrorIfNull(shift.Id, "App configuration incorrect.", out response))
+            {
+                return response;
+            }
+
+            var kronosStartDateTime = this.utility.UTCToKronosTimeZone(shift.SharedShift.StartDateTime, mappedTeam.KronosTimeZone);
+            var kronosEndDateTime = this.utility.UTCToKronosTimeZone(shift.SharedShift.EndDateTime, mappedTeam.KronosTimeZone);
+
+            var commentTimeStamp = this.utility.UTCToKronosTimeZone(DateTime.UtcNow, mappedTeam.KronosTimeZone).ToString(CultureInfo.InvariantCulture);
+            var comments = XmlHelper.GenerateKronosComments(shift.SharedShift.Notes, this.appSettings.ShiftNotesCommentText, commentTimeStamp);
+
+            var creationResponse = await this.shiftsActivity.CreateShift(
+                new Uri(allRequiredConfigurations.WfmEndPoint),
+                allRequiredConfigurations.KronosSession,
+                this.utility.FormatDateForKronos(kronosStartDateTime),
+                this.utility.FormatDateForKronos(kronosEndDateTime),
+                kronosEndDateTime.Day > kronosStartDateTime.Day,
+                Utility.OrgJobPathKronosConversion(user.PartitionKey),
+                user.RowKey,
+                kronosStartDateTime.TimeOfDay.ToString(),
+                kronosEndDateTime.TimeOfDay.ToString(),
+                comments).ConfigureAwait(false);
+
+            if (creationResponse.Status != Success)
+            {
+                return ResponseHelper.CreateBadResponse(shift.Id, error: "Shift was not created successfully in Kronos.");
+            }
+
+            var monthPartitionKey = Utility.GetMonthPartition(this.utility.FormatDateForKronos(kronosStartDateTime), this.utility.FormatDateForKronos(kronosEndDateTime));
+
+            await this.CreateAndStoreShiftMapping(shift, user, mappedTeam, monthPartitionKey).ConfigureAwait(false);
+
+            return ResponseHelper.CreateSuccessfulResponse(shift.Id);
+        }
+
+        /// <summary>
+        /// Edits a shift in Kronos and updates the database.
+        /// </summary>
+        /// <param name="editedShift">The shift to edit.</param>
+        /// <param name="user">The user the shift is for.</param>
+        /// <param name="mappedTeam">The team the user is in.</param>
+        /// <returns>A response for teams.</returns>
+        public async Task<ShiftsIntegResponse> EditShiftInKronosAsync(ShiftsShift editedShift, AllUserMappingEntity user, TeamToDepartmentJobMappingEntity mappedTeam)
+        {
+            // The connector does not support drafting entities as it is not possible to draft shifts in Kronos.
+            // Likewise there is no share schedule WFI call.
+            if (editedShift.DraftShift != null)
+            {
+                return ResponseHelper.CreateBadResponse(editedShift.Id, error: "Editing a shift as a draft is not supported for your team in Teams. Please publish changes directly using the 'Share' button.");
+            }
+
+            if (editedShift.SharedShift == null)
+            {
+                return ResponseHelper.CreateBadResponse(editedShift.Id, error: "An unexpected error occured. Could not edit the shift.");
+            }
+
+            // We use the display name to indicate shift transfers. As we cannot support editing shifts
+            // with a transfer we block edits on shifts containing the transfer string.
+            if (editedShift.SharedShift.DisplayName.Contains(appSettings.TransferredShiftDisplayName))
+            {
+                return ResponseHelper.CreateBadResponse(editedShift.Id, error: "You can't edit a shift that includes a shift transfer. Please make your changes in Kronos");
+            }
+
+            // We do not support editing activities in Teamsand cannot support editing shift transfers
+            // therefore we only expect activities with the regular segment type. Anything else means the
+            // manager has modified or added an activity.
+            var invalidActivities = editedShift.SharedShift.Activities.Where(x => x.DisplayName != ApiConstants.RegularSegmentType);
+
+            if (invalidActivities.Any())
+            {
+                return ResponseHelper.CreateBadResponse(editedShift.Id, error: "Editing shift activities is not supported for your team in Teams.");
+            }
+
+            var allRequiredConfigurations = await this.utility.GetAllConfigurationsAsync().ConfigureAwait(false);
+
+            if ((allRequiredConfigurations?.IsAllSetUpExists).ErrorIfNull(editedShift.Id, "App configuration incorrect.", out var response))
+            {
+                return response;
+            }
+
+            // We need to get all other shifts the employee works that day.
+            var kronosStartDateTime = this.utility.UTCToKronosTimeZone(editedShift.SharedShift.StartDateTime, mappedTeam.KronosTimeZone);
+            var kronosEndDateTime = this.utility.UTCToKronosTimeZone(editedShift.SharedShift.EndDateTime, mappedTeam.KronosTimeZone);
+
+            var monthPartitionKey = Utility.GetMonthPartition(this.utility.FormatDateForKronos(kronosStartDateTime), this.utility.FormatDateForKronos(kronosEndDateTime));
+
+            var shiftToReplace = await this.shiftMappingEntityProvider.GetShiftMappingEntityByRowKeyAsync(editedShift.Id).ConfigureAwait(false);
+            var shiftToReplaceStartDateTime = this.utility.UTCToKronosTimeZone(shiftToReplace.ShiftStartDate, mappedTeam.KronosTimeZone);
+            var shiftToReplaceEndDateTime = this.utility.UTCToKronosTimeZone(shiftToReplace.ShiftEndDate, mappedTeam.KronosTimeZone);
+
+            var commentTimeStamp = this.utility.UTCToKronosTimeZone(DateTime.UtcNow, mappedTeam.KronosTimeZone).ToString(CultureInfo.InvariantCulture);
+            var shiftComments = XmlHelper.GenerateEditedShiftKronosComments(editedShift.SharedShift.Notes, this.appSettings.ShiftNotesCommentText, commentTimeStamp);
+
+            var editResponse = await this.shiftsActivity.EditShift(
+                new Uri(allRequiredConfigurations.WfmEndPoint),
+                allRequiredConfigurations.KronosSession,
+                this.utility.FormatDateForKronos(kronosStartDateTime),
+                this.utility.FormatDateForKronos(kronosEndDateTime),
+                kronosEndDateTime.Day > kronosStartDateTime.Day,
+                Utility.OrgJobPathKronosConversion(user.PartitionKey),
+                user.RowKey,
+                kronosStartDateTime.TimeOfDay.ToString(),
+                kronosEndDateTime.TimeOfDay.ToString(),
+                this.utility.FormatDateForKronos(shiftToReplaceStartDateTime),
+                this.utility.FormatDateForKronos(shiftToReplaceEndDateTime),
+                shiftToReplaceStartDateTime.TimeOfDay.ToString(),
+                shiftToReplaceEndDateTime.TimeOfDay.ToString(),
+                shiftComments).ConfigureAwait(false);
+
+            if (editResponse.Status != Success)
+            {
+                return ResponseHelper.CreateBadResponse(editedShift.Id, error: "Shift could not be edited in Kronos.");
+            }
+
+            await this.DeleteShiftMapping(editedShift).ConfigureAwait(false);
+            await this.CreateAndStoreShiftMapping(editedShift, user, mappedTeam, monthPartitionKey).ConfigureAwait(false);
+
+            return ResponseHelper.CreateSuccessfulResponse(editedShift.Id);
+        }
+
+        /// <summary>
+        /// This method will cause the thread to wait allowing us to retrun a success response
+        /// for the delete WFI request. It will then share the changes.
+        /// </summary>
+        /// <param name="shift">The shift we want to share.</param>
+        /// <param name="mappedTeam">The team details of the schedule we want to share.</param>
+        /// <param name="allRequiredConfigurations">The required configuration.</param>
+        /// <returns>A unit of execution.</returns>
+        private async Task ShareScheduleAfterShiftDeletion(ShiftsShift shift, TeamToDepartmentJobMappingEntity mappedTeam, IntegrationApi.SetupDetails allRequiredConfigurations)
+        {
+            // We want to wait so that there is time to respond a success to the WFI request
+            // meaning the shift will be deleted in Teams.
+            Thread.Sleep(int.Parse(appSettings.AutoShareScheduleWaitTime));
+
+            // We now want to share the schedule between the start and end time of the deleted shift.
+            await this.graphUtility.ShareSchedule(
+                            allRequiredConfigurations.GraphConfigurationDetails,
+                            mappedTeam.TeamId,
+                            shift.SharedShift.StartDateTime,
+                            shift.SharedShift.EndDateTime,
+                            false).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Removes a shift mapping entity.
+        /// </summary>
+        /// <param name="shift">A shift from Shifts.</param>
+        /// <returns>A task.</returns>
+        private async Task DeleteShiftMapping(ShiftsShift shift)
+        {
+            var shiftMappingEntity = await this.shiftMappingEntityProvider.GetShiftMappingEntityByRowKeyAsync(shift.Id).ConfigureAwait(false);
+            await this.shiftMappingEntityProvider.DeleteOrphanDataFromShiftMappingAsync(shiftMappingEntity).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Creates and stores a shift mapping entity.
+        /// </summary>
+        /// <param name="shift">A shift from Shifts.</param>
+        /// <param name="user">A user mapping entity.</param>
+        /// <param name="mappedTeam">A team mapping entity.</param>
+        /// <param name="monthPartitionKey">The partition key for the shift.</param>
+        /// <returns>A task.</returns>
+        private async Task CreateAndStoreShiftMapping(ShiftsShift shift, AllUserMappingEntity user, TeamToDepartmentJobMappingEntity mappedTeam, List<string> monthPartitionKey)
+        {
+            var kronosUniqueId = this.utility.CreateShiftUniqueId(shift, mappedTeam.KronosTimeZone);
+            var shiftMappingEntity = this.CreateNewShiftMappingEntity(shift, kronosUniqueId, user.RowKey, mappedTeam.TeamId);
+            await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(shiftMappingEntity, shift.Id, monthPartitionKey[0]).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -218,17 +486,16 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                     queryEndDate).ConfigureAwait(false);
 
                                 // Get shift response for a batch of users.
-                                var shiftsResponse = await this.upcomingShiftsActivity.ShowUpcomingShiftsInBatchAsync(
+                                var shiftsResponse = await this.shiftsActivity.ShowUpcomingShiftsInBatchAsync(
                                         new Uri(allRequiredConfigurations.WfmEndPoint),
                                         allRequiredConfigurations.KronosSession,
                                         DateTime.Now.ToString(queryStartDate, CultureInfo.InvariantCulture),
                                         DateTime.Now.ToString(queryEndDate, CultureInfo.InvariantCulture),
                                         processBatchUsersQueueInBatch.ToList()).ConfigureAwait(false);
 
-                                if (shiftsResponse?.Schedule?.ScheduleItems?.ScheduleShift is null)
-                                {
-                                    continue;
-                                }
+                                // Kronos api returns any shifts that occur in the date span provided.
+                                // We want only the entities that started within the query date span.
+                                var shifts = ControllerHelper.FilterEntitiesByQueryDateSpan(shiftsResponse?.Schedule?.ScheduleItems?.ScheduleShifts, queryStartDate, queryEndDate);
 
                                 var lookUpEntriesFoundList = new List<TeamsShiftMappingEntity>();
                                 var shiftsNotFoundList = new List<Shift>();
@@ -244,7 +511,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                                     userModelNotFoundList,
                                     lookUpData,
                                     processKronosUsersQueueInBatch,
-                                    shiftsResponse,
+                                    shifts,
                                     monthPartitionKey).ConfigureAwait(false);
                             }
                         }
@@ -269,7 +536,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         /// <param name="userModelNotFoundList">The list of users that have not been found.</param>
         /// <param name="lookUpData">The look up data from the Shift Entity Mapping table.</param>
         /// <param name="processKronosUsersQueueInBatch">The Kronos users in the queue.</param>
-        /// <param name="shiftsResponse">The Shifts Response from MS Graph.</param>
+        /// <param name="shifts">The Shifts Response from MS Graph.</param>
         /// <param name="monthPartitionKey">The monthwise partition.</param>
         /// <returns>A unit of execution.</returns>
         private async Task ProcessShiftEntitiesBatchAsync(
@@ -280,7 +547,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             List<UserDetailsModel> userModelNotFoundList,
             List<TeamsShiftMappingEntity> lookUpData,
             IEnumerable<UserDetailsModel> processKronosUsersQueueInBatch,
-            App.KronosWfc.Models.ResponseEntities.Shifts.UpcomingShifts.Response shiftsResponse,
+            List<UpcomingShiftsResponse.ScheduleShift> shifts,
             string monthPartitionKey)
         {
             this.telemetryClient.TrackTrace($"ShiftController - ProcessShiftEntitiesBatchAsync started at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
@@ -290,7 +557,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             foreach (var user in processKronosUsersQueueInBatch)
             {
                 // This foreach loop will process the shift(s) that belong to each user.
-                foreach (var kronosShift in shiftsResponse?.Schedule?.ScheduleItems?.ScheduleShift)
+                foreach (var kronosShift in shifts)
                 {
                     if (user.KronosPersonNumber == kronosShift.Employee.FirstOrDefault().PersonNumber)
                     {
@@ -338,12 +605,12 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         }
 
         /// <summary>
-        /// Creates a Teams shift object for each shift
+        /// Creates a Teams shift object for each shift.
         /// </summary>
         /// <param name="user">the user details the shift is assigned to.</param>
         /// <param name="kronosShift">The shift to create a Teams shift from.</param>
         /// <returns>A Teams shift object.</returns>
-        private Shift GenerateTeamsShiftObject(UserDetailsModel user, ScheduleShift kronosShift)
+        private Shift GenerateTeamsShiftObject(UserDetailsModel user, UpcomingShiftsResponse.ScheduleShift kronosShift)
         {
             List<ShiftActivity> shiftActivity = new List<ShiftActivity>();
             var shiftDisplayName = string.Empty;
@@ -439,38 +706,32 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             // create entries from not found list
             for (int i = 0; i < notFoundShifts.Count; i++)
             {
+                var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
+                httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", configurationDetails.WFIId);
+
+                var requestUrl = $"teams/{userModelNotFoundList[i].ShiftTeamId}/schedule/shifts";
                 var requestString = JsonConvert.SerializeObject(notFoundShifts[i]);
 
-                var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", configurationDetails.ShiftsAccessToken);
-                httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-                using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, "teams/" + userModelNotFoundList[i].ShiftTeamId + "/schedule/shifts")
+                var response = await this.graphUtility.SendHttpRequest(configurationDetails.GraphConfigurationDetails, httpClient, HttpMethod.Post, requestUrl, requestString).ConfigureAwait(false);
+                if (response.IsSuccessStatusCode)
                 {
-                    Content = new StringContent(requestString, Encoding.UTF8, "application/json"),
-                })
+                    var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var shiftResponse = JsonConvert.DeserializeObject<Models.Response.Shifts.Shift>(responseContent);
+                    var shiftId = shiftResponse.Id;
+                    var shiftMappingEntity = this.CreateNewShiftMappingEntity(shiftResponse, notFoundShifts[i].KronosUniqueId, userModelNotFoundList[i]);
+                    await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(shiftMappingEntity, shiftId, monthPartitionKey).ConfigureAwait(false);
+                    continue;
+                }
+                else
                 {
-                    var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                        var shiftResponse = JsonConvert.DeserializeObject<Models.Response.Shifts.Shift>(responseContent);
-                        var shiftId = shiftResponse.Id;
-                        var shiftMappingEntity = this.CreateNewShiftMappingEntity(shiftResponse, notFoundShifts[i].KronosUniqueId, userModelNotFoundList[i]);
-                        await this.shiftMappingEntityProvider.SaveOrUpdateShiftMappingEntityAsync(shiftMappingEntity, shiftId, monthPartitionKey).ConfigureAwait(false);
-                        continue;
-                    }
-                    else
-                    {
-                        var errorProps = new Dictionary<string, string>()
+                    var errorProps = new Dictionary<string, string>()
                         {
                             { "ResultCode", response.StatusCode.ToString() },
                             { "IntegerResult", Convert.ToInt32(response.StatusCode, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture) },
                         };
 
-                        // Have the log to capture the 403.
-                        this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, errorProps);
-                    }
+                    // Have the log to capture the 403.
+                    this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, errorProps);
                 }
             }
         }
@@ -496,38 +757,42 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             foreach (var item in orphanList)
             {
                 var user = userModelList.FirstOrDefault(u => u.KronosPersonNumber == item.KronosPersonNumber);
-                var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", configurationDetails.ShiftsAccessToken);
-                httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-                if (user != null)
+                if (user == null)
                 {
-                    using (var httpRequestMessage = new HttpRequestMessage(HttpMethod.Delete, $"teams/{user.ShiftTeamId}/schedule/shifts/{item.RowKey}"))
-                    {
-                        var response = await httpClient.SendAsync(httpRequestMessage).ConfigureAwait(false);
-                        if (response.IsSuccessStatusCode)
-                        {
-                            var successfulDeleteProps = new Dictionary<string, string>()
+                    return;
+                }
+
+                var httpClient = this.httpClientFactory.CreateClient("ShiftsAPI");
+                httpClient.DefaultRequestHeaders.Add("X-MS-WFMPassthrough", configurationDetails.WFIId);
+
+                // If the shift mapping doesnt have a teamId take the users teamId
+                var teamId = string.IsNullOrEmpty(item.ShiftsTeamId) ? user.ShiftTeamId : item.ShiftsTeamId;
+
+                var requestUrl = $"teams/{teamId}/schedule/shifts/{item.RowKey}";
+
+                var response = await this.graphUtility.SendHttpRequest(configurationDetails.GraphConfigurationDetails, httpClient, HttpMethod.Delete, requestUrl).ConfigureAwait(false);
+                if (response.IsSuccessStatusCode)
+                {
+                    var successfulDeleteProps = new Dictionary<string, string>()
                             {
                                 { "ResponseCode", response.StatusCode.ToString() },
                                 { "ResponseHeader", response.Headers.ToString() },
                             };
 
-                            this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, successfulDeleteProps);
+                    this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, successfulDeleteProps);
 
-                            await this.shiftMappingEntityProvider.DeleteOrphanDataFromShiftMappingAsync(item).ConfigureAwait(false);
-                        }
-                        else
-                        {
-                            var errorDeleteProps = new Dictionary<string, string>()
+                    await this.shiftMappingEntityProvider.DeleteOrphanDataFromShiftMappingAsync(item).ConfigureAwait(false);
+                }
+                else
+                {
+                    var errorDeleteProps = new Dictionary<string, string>()
                             {
                                 { "ResponseCode", response.StatusCode.ToString() },
                                 { "ResponseHeader", response.Headers.ToString() },
                             };
 
-                            this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, errorDeleteProps);
-                        }
-                    }
+                    this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, errorDeleteProps);
                 }
             }
         }
@@ -564,6 +829,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 KronosPersonNumber = user.KronosPersonNumber,
                 ShiftStartDate = startDateTime,
                 ShiftEndDate = endDateTime,
+                ShiftsTeamId = user.ShiftTeamId,
             };
 
             this.telemetryClient.TrackTrace("Creating new shift mapping entity.", createNewShiftMappingEntityProps);

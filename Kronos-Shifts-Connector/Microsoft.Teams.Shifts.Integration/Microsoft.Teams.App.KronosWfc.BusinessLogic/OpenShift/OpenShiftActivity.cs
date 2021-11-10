@@ -11,11 +11,16 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
     using System.Threading.Tasks;
     using System.Xml.Linq;
     using Microsoft.ApplicationInsights;
+    using Microsoft.Teams.App.KronosWfc.BusinessLogic.Common;
     using Microsoft.Teams.App.KronosWfc.Common;
     using Microsoft.Teams.App.KronosWfc.Models.CommonEntities;
+    using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift.OpenShiftRequest;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift.OpenShiftRequest.RequestManagement;
+    using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Schedule;
     using Microsoft.Teams.App.KronosWfc.Service;
+    using CommonSegments = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common.ShiftSegments;
+    using CreateOpenShiftRequest = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift.CreateOpenShift;
     using OpenShiftApproveDecline = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift.ApproveDecline;
     using OpenShiftSubmitReq = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift.OpenShiftRequest;
     using Request = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.OpenShift.OpenShiftRequest.RequestManagement.Request;
@@ -37,6 +42,41 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
         {
             this.telemetryClient = telemetryClient;
             this.apiHelper = apiHelper;
+        }
+
+        /// <inheritdoc/>
+        public async Task<Models.ResponseEntities.OpenShift.Batch.Response> CreateOpenShiftAsync(
+            Uri endpoint,
+            string jSession,
+            string shiftStartDate,
+            string shiftEndDate,
+            bool overADateBorder,
+            string jobPath,
+            string openShiftLabel,
+            string startTime,
+            string endTime,
+            int slotCount,
+            Comments comments)
+        {
+            var createOpenShiftRequest = this.CreateOpenShiftRequest(
+                shiftStartDate,
+                shiftEndDate,
+                overADateBorder,
+                jobPath,
+                openShiftLabel,
+                startTime,
+                endTime,
+                slotCount,
+                comments);
+
+            var response = await this.apiHelper.SendSoapPostRequestAsync(
+                endpoint,
+                ApiConstants.SoapEnvOpen,
+                createOpenShiftRequest,
+                ApiConstants.SoapEnvClose,
+                jSession).ConfigureAwait(false);
+
+            return response.ProcessResponse<Models.ResponseEntities.OpenShift.Batch.Response>(this.telemetryClient);
         }
 
         /// <summary>
@@ -68,25 +108,19 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
             return response;
         }
 
-        /// <summary>
-        /// Approves or Denies the request.
-        /// </summary>
-        /// <param name="endPointUrl">The Kronos WFC endpoint URL.</param>
-        /// <param name="jSession">JSession.</param>
-        /// <param name="queryDateSpan">QueryDateSpan string.</param>
-        /// <param name="kronosPersonNumber">The Kronos Person Number.</param>
-        /// <param name="approved">Whether the request needs to be approved or denied.</param>
-        /// <param name="kronosId">The Kronos id of the request.</param>
-        /// <returns>Request details response object.</returns>
+        /// <inheritdoc/>
         public async Task<Models.ResponseEntities.OpenShiftRequest.ApproveDecline.Response> ApproveOrDenyOpenShiftRequestsForUserAsync(
             Uri endPointUrl,
             string jSession,
             string queryDateSpan,
             string kronosPersonNumber,
             bool approved,
-            string kronosId)
+            string kronosId,
+            Comments comments)
         {
-            var xmlOpenShiftApprovalRequest = this.CreateApproveOrDeclineRequest(queryDateSpan, kronosPersonNumber, approved, kronosId);
+            var status = approved ? ApiConstants.ApprovedStatus : ApiConstants.Refused;
+            var xmlOpenShiftApprovalRequest = CommonRequests.CreateUpdateStatusRequest(kronosPersonNumber, kronosId, status, queryDateSpan, comments);
+
             var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
                 endPointUrl,
                 ApiConstants.SoapEnvOpen,
@@ -244,6 +278,54 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.OpenShift
             XDocument xDoc = XDocument.Parse(strResponse);
             var xResponse = xDoc.Root.Descendants().FirstOrDefault(d => d.Name.LocalName.Equals(ApiConstants.Response, StringComparison.Ordinal));
             return XmlConvertHelper.DeserializeObject<Models.ResponseEntities.OpenShift.Batch.Response>(xResponse.ToString());
+        }
+
+        private string CreateOpenShiftRequest(
+            string openShiftStartDate,
+            string openShiftEndDate,
+            bool overADateBorder,
+            string jobPath,
+            string openShiftLabel,
+            string startTime,
+            string endTime,
+            int slotCount,
+            Comments comments)
+        {
+            // If the open shift spans across 2 days then secondDayNumber needs to be 2.
+            var secondDayNumber = overADateBorder ? 2 : 1;
+
+            // Kronos does not have slots for open shifts so we just create multiple identical open shifts
+            // and map them to the same entity in Teams.
+            var scheduleShifts = new List<ScheduleShift>();
+
+            for (int i = 0; i < slotCount; i++)
+            {
+                scheduleShifts.Add(new ScheduleShift
+                {
+                    StartDate = openShiftStartDate,
+                    IsOpenShift = true,
+                    ShiftLabel = openShiftLabel,
+                    ShiftSegments = new CommonSegments().Create(startTime, endTime, 1, secondDayNumber, jobPath),
+                    Comments = comments,
+                });
+            }
+
+            var req = new CreateOpenShiftRequest
+            {
+                Action = ApiConstants.AddScheduleItems,
+                Schedule = new OpenShiftSchedule
+                {
+                    OrgJobPath = jobPath,
+                    QueryDateSpan = $"{openShiftStartDate}-{openShiftEndDate}",
+                    IsOpenShift = true,
+                    ScheduleItems = new ScheduleItems
+                    {
+                        ScheduleShift = scheduleShifts,
+                    },
+                },
+            };
+
+            return req.XmlSerialize();
         }
 
         /// <summary>
