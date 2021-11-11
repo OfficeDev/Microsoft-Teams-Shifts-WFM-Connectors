@@ -202,7 +202,7 @@ It is  now necessary to configure the application storage account and add any ti
 
 Now you need to populate the **timezones** table with all time zones relevant to your organisation. The table is necessary as some WFM providers allow for custom timezone names to be provided, therefore this table allows us to map what is returned by the WFM system to a time zone understood by the adapter.
 
-Supported time zone standard names can be found here: [Supported Time Zone Names](../TimeZones.md)
+Supported time zone standard names can be found here: [Supported Time Zone Names](../docs/TimeZones.md)
 
 1. You first need to find a list of all time zones that must be mapped within the table. This will be the full list of time zones that your stores or teams reside in.
 
