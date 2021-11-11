@@ -77,7 +77,7 @@ The src folder contains a WfmTeams.Adapter.Infrastructure project which contains
 
 3. After saving the change, reopen this file from your repo and click the button to start the deployment process which will display the following screen:
 
-![Azure Custom Deployment](images/11-AzureCustomDeployment.PNG)
+![Azure Custom Deployment](images/11-AzureCustomDeployment.png)
 
 4. Select the subscription that you wish to deploy to and an existing resource group, or create a new one and then provide values for the following template parameters:
 
@@ -202,7 +202,7 @@ It is  now necessary to configure the application storage account and add any ti
 
 Now you need to populate the **timezones** table with all time zones relevant to your organisation. The table is necessary as some WFM providers allow for custom timezone names to be provided, therefore this table allows us to map what is returned by the WFM system to a time zone understood by the adapter.
 
-Supported time zone standard names can be found here: [Supported Time Zone Names](docs/TimeZones.md)
+Supported time zone standard names can be found here: [Supported Time Zone Names](../TimeZones.md)
 
 1. You first need to find a list of all time zones that must be mapped within the table. This will be the full list of time zones that your stores or teams reside in.
 
@@ -322,7 +322,7 @@ Zip the following files to create the tab app package to upload to the app store
 
 To upload the tab application click the **Apps** button in Teams followed by the **Upload a custom app** (if you cannot see this option then you will need a tenant admin to upload the package for you).
 
-![Deploy Tab App](images/24-DeployTabApp.PNG)
+![Deploy Tab App](images/24-DeployTabApp.png)
 
 To connect a team please navigate to the **General** channel of the team and add the newly uploaded tab app.
 
