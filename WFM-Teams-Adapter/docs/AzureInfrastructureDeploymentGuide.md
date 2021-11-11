@@ -133,11 +133,11 @@ This completes the deployment of the infrastructure elements, however, there are
 
 The following actions are required to complete the deployment and configuration of the adapter application:
 
-1. [Configure Azure Key Vault](#configure-azure-keyvault)
+1. [Configure Azure Key Vault](#configure-azure-key-vault)
 2. [Set up the redirect URIs](#set-up-the-redirect-uris)
 3. [Configure Azure Storage](#configure-azure-storage)
 4. [Populate the timezones table](#populate-the-timezones-table)
-5. [Compile and upload the Index.html page](#compile-and-upload-the-index\.html-page)
+5. [Compile and upload the web page](#compile-and-upload-the-web-page)
 6. [Deploy the Functions application](#deploy-the-functions-application)
 7. [Create and Upload the Tab App Manifest](#create-and-upload-the-tab-app-manifest)
 
@@ -167,7 +167,7 @@ In order that the Functions application can access the secrets in Key Vault, it 
 
 6. If you wish to be able to view the Secrets stored by the application you will need to create an access policy for your own account by following steps 3-5, entering the name or email address you want to add access for.
 
-#### Setup Redirect URI's
+#### Setup Redirect URIs
 
 You will now need to setup the 4 redirect URI's.
 
@@ -214,7 +214,7 @@ Supported time zone standard names can be found here: [Supported Time Zone Names
 
 4. The **TimeZoneInfoId** should be the standard name that you want the **RowKey** to map to, please refer to the Supported Time Zone Names above. 
 
-#### Compile And Upload The Index.html Page
+#### Compile And Upload The Web Page
 
 Open the web folder in VS Code, open a terminal in the root and do the following:
 
@@ -237,7 +237,7 @@ The functions application code is not currently deployed as part of the ARM temp
 
 4. Select your account, Subscription, Resource Group and the Functions App created by the ARM template. Ensure Run from package file (recommended) is ticked and click Finish.
 
-   ![Select Functions Instance](images/21-FunctionsInstance.PNG)
+   ![Select Functions Instance](images/21-FunctionsInstance.png)
 
 5. Check the details on the summary screen and then click Publish to commence the deployment
 
