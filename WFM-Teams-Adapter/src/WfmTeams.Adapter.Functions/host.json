@@ -1,0 +1,20 @@
+{
+  "version": "2.0",
+  "functionTimeout": "00:10:00",
+  "extensions": {
+    "durableTask": {
+      "hubName": "%TaskHubName%"
+    },
+    "http": {
+      "routePrefix": ""
+    }
+  },
+  "logging": {
+    "logLevel": { "default": "Information" },
+    "applicationInsights": {
+      "samplingSettings": {
+        "isEnabled": false
+      }
+    }
+  }
+}

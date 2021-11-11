@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Configurations>Debug;Release;Trace</Configurations>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>PRIVATEAPI</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Trace|AnyCPU'">
+    <DefineConstants>PRIVATEAPI</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Flurl" Version="2.8.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Localization" Version="3.1.8" />
+    <PackageReference Include="Microsoft.Net.Http.Headers" Version="2.2.8" />
+    <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.22" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.7.1" />
+    <PackageReference Include="System.Interactive" Version="4.1.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\Services\BlueYonderConfigService.en.resx">
+      <DependentUpon>BlueYonderConfigService.en.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\Services\BlueYonderConfigService.fr.resx">
+      <DependentUpon>BlueYonderConfigService.fr.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WfmTeams.Adapter\WfmTeams.Adapter.csproj" />
+  </ItemGroup>
+
+</Project>

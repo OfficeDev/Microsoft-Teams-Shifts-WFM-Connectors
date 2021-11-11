@@ -1,0 +1,3493 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "MicrosoftGraphOpenApi",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/teams/{teamId}/schedule": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "If successful, this method returns a 200 OK response code and a schedule object in the response body.",
+            "schema": {
+              "$ref": "#/definitions/ScheduleResponse"
+            }
+          }
+        },
+        "operationId": "GetSchedule",
+        "summary": "Get Schedule",
+        "description": "Retrieve the properties and relationships of a schedule object."
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/ScheduleRequest"
+            },
+            "in": "body",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "If successful, this method returns a 200 OK response code and a schedule object in the response body.",
+            "schema": {
+              "$ref": "#/definitions/ScheduleResponse"
+            }
+          },
+          "204": {
+            "description": "This method is supposed to return a 200 OK according to the documentation, however, it actually returns a 204 No Content"
+          }
+        },
+        "operationId": "CreateReplaceSchedule",
+        "summary": "Create or Replace Schedule",
+        "description": "Create or replace a schedule object."
+      },
+      "parameters": [
+        {
+          "name": "teamId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/teams/{teamId}/schedule/schedulingGroups": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "If successful, this method returns a 200 OK response code and a collection of schedulingGroup objects in the response body.",
+            "schema": {
+              "$ref": "#/definitions/SchedulingGroupCollectionResponse"
+            }
+          }
+        },
+        "operationId": "ListSchedulingGroups",
+        "summary": "List Scheduling Groups",
+        "description": "Get the list of schedulingGroups in this schedule."
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/SchedulingGroupRequest"
+            },
+            "in": "body",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "If successful, this method returns a 201 Created response code and a schedulingGroup object in the response body.",
+            "schema": {
+              "$ref": "#/definitions/SchedulingGroupResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GraphErrorContainer"
+            }
+          }
+        },
+        "operationId": "CreateSchedulingGroup",
+        "summary": "Create Scheduling Group",
+        "description": "Create a new schedulingGroup."
+      },
+      "parameters": [
+        {
+          "name": "teamId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/teams/{teamId}/schedule/schedulingGroups/{schedulingGroupId}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "If successful, this method returns a 200 OK response code and a schedulingGroup object in the response body.",
+            "schema": {
+              "$ref": "#/definitions/SchedulingGroupResponse"
+            }
+          }
+        },
+        "operationId": "GetSchedulingGroup",
+        "summary": "Get Scheduling Group",
+        "description": "Retrieves the properties and relationships of a schedulingGroup by ID."
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/SchedulingGroupResponse"
+            },
+            "in": "body",
+            "required": true
+          },
+          {
+            "name": "If-Match",
+            "description": "The etag for concurrency control",
+            "in": "header",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "If successful, this method returns a 200 OK response code and a schedulingGroup object in the response body.",
+            "schema": {
+              "$ref": "#/definitions/SchedulingGroupResponse"
+            }
+          },
+          "204": {
+            "description": "This method is supposed to return a 200 OK according to the documentation, however, it actually returns a 204 No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GraphErrorContainer"
+            }
+          }
+        },
+        "operationId": "ReplaceSchedulingGroup",
+        "summary": "Replace Scheduling Group",
+        "description": "Replace an existing schedulingGroup."
+      },
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "responses": {
+          "204": {
+            "description": "If successful, this method returns a 204 No Content response code. It does not return anything in the response body."
+          }
+        },
+        "operationId": "DeleteSchedulingGroup",
+        "summary": "Delete Scheduling Group",
+        "description": "Mark a schedulingGroup as inactive by setting its isActive property. This method does not remove the schedulingGroup from the schedule. Existing shift instances assigned to the scheduling group remain part of the group."
+      },
+      "parameters": [
+        {
+          "name": "teamId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "schedulingGroupId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/teams/{teamId}/schedule/shifts": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "$filter",
+            "description": "ODATA filter parameter to limit the shifts returned.",
+            "in": "query",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "$top",
+            "description": "The number of shifts to fetch (if not specified this defaults to 100) ",
+            "in": "query",
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "If successful, this method returns a 200 OK response code and a collection of shift objects in the response body.",
+            "schema": {
+              "$ref": "#/definitions/ShiftCollectionResponse"
+            }
+          }
+        },
+        "operationId": "ListShifts",
+        "summary": "List Shifts",
+        "description": "Get the list of shift instances in a schedule."
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/ShiftRequest"
+            },
+            "in": "body",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "If successful, this method returns a 201 Created response code and a shift object in the response body.",
+            "schema": {
+              "$ref": "#/definitions/ShiftResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GraphErrorContainer"
+            }
+          }
+        },
+        "operationId": "CreateShift",
+        "summary": "Create Shift",
+        "description": "Create a new shift instance in a schedule."
+      },
+      "parameters": [
+        {
+          "name": "teamId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/teams/{teamId}/schedule/shifts/{shiftId}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "If successful, this method returns a 200 OK response code and a shift object in the response body.",
+            "schema": {
+              "$ref": "#/definitions/ShiftResponse"
+            }
+          }
+        },
+        "operationId": "GetShift",
+        "summary": "Get Shift",
+        "description": "Retrieve the properties and relationships of a shift object by ID."
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/ShiftResponse"
+            },
+            "in": "body",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "If successful, this method returns a 200 OK response code and a shift object in the response body.",
+            "schema": {
+              "$ref": "#/definitions/ShiftResponse"
+            }
+          },
+          "204": {
+            "description": "According to the documentation, this method should return a 200 OK response code, however, we have observed it returning a 204 No Content instead."
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GraphErrorContainer"
+            }
+          }
+        },
+        "operationId": "ReplaceShift",
+        "summary": "Replace Shift",
+        "description": "Replace an existing shift."
+      },
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "This method is supposed to return a 204 No Content according to the website, however, it actually returns a 200 OK"
+          },
+          "204": {
+            "description": "If successful, this method returns a 204 No Content response code. It does not return anything in the response body."
+          }
+        },
+        "operationId": "DeleteShift",
+        "summary": "Delete Shift",
+        "description": "Deletes a shift from the schedule."
+      },
+      "parameters": [
+        {
+          "name": "teamId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "shiftId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/users/{upn}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "If successful, this method returns a 200 OK response code and user object in the response body.",
+            "schema": {
+              "$ref": "#/definitions/IdentityResponse"
+            }
+          }
+        },
+        "operationId": "GetUserByUpn",
+        "summary": "Get User",
+        "description": "Retrieve the properties and relationships of user object."
+      },
+      "parameters": [
+        {
+          "name": "upn",
+          "description": "The user principle name e.g. frank.sinatra@replappsource.onmicrosoft.com",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "$select",
+          "description": "To map the Get result to an IdentityResponse, this should be set to id,displayName",
+          "in": "query",
+          "type": "string"
+        }
+      ]
+    },
+    "/teams/{teamId}/schedule/share": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/ShareRequest"
+            },
+            "in": "body",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The documentation states this method will return a 204 No Content on success, however, we have observed that it returns a 200 OK instead"
+          },
+          "204": {
+            "description": "If successful, this method returns a 204 No Content response code. It does not return anything in the response body."
+          }
+        },
+        "operationId": "ShareSchedule",
+        "summary": "Share Schedule",
+        "description": "Shares a schedule time range with schedule members. Make the collections of shift and timeOff items in the specified time range of the schedule viewable by the specified team members, including employees and managers. Each shift and timeOff instance in a schedule supports a draft version and a shared version of the item. The draft version is viewable by only managers, and the shared version is viewable by employees and managers. For each shift and timeOff instance in the specified time range, the share action updates the shared version from the draft version, so that in addition to managers, employees can also view the most current information about the item. The notifyTeam parameter further specifies which employees can view the item."
+      },
+      "parameters": [
+        {
+          "name": "teamId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/groups/{teamId}/members": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "If successful, this method returns a 200 OK response code and collection of identityResponse objects in the response body.",
+            "schema": {
+              "$ref": "#/definitions/MembersResponse"
+            }
+          }
+        },
+        "operationId": "GetMembers",
+        "summary": "Get Members",
+        "description": "Get a list of the group's direct members. A group can have users, contacts, devices, service principals, and other groups as members. This operation is not transitive."
+      },
+      "parameters": [
+        {
+          "name": "teamId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "$select",
+          "description": "To map the Get result to an IdentityResponse, this should be set to id,displayName",
+          "in": "query",
+          "type": "string"
+        },
+        {
+          "name": "$top",
+          "description": "The number of users to return (max supported 999)",
+          "in": "query",
+          "type": "integer"
+        }
+      ]
+    },
+    "/groups/{teamId}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "$select",
+            "description": "To map to a TeamResponse object, this should be set to id,displayName,createdDateTime,deletedDateTime",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The team with the specified id",
+            "schema": {
+              "$ref": "#/definitions/TeamResponse"
+            }
+          },
+          "404": {
+            "description": "The team was not found",
+            "schema": {
+              "$ref": "#/definitions/GraphErrorContainer"
+            }
+          }
+        },
+        "operationId": "GetTeam",
+        "summary": "Get Team",
+        "description": "Gets the team with the specified ID"
+      },
+      "parameters": [
+        {
+          "name": "teamId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/teamwork/workforceintegrations": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "The collection of workforce integrations",
+            "schema": {
+              "$ref": "#/definitions/WorkforceIntegrationCollectionResponse"
+            }
+          }
+        },
+        "operationId": "ListWorkforceIntegrations",
+        "summary": "List Workforce Integrations"
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/WorkforceIntegrationRequest"
+            },
+            "in": "body",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "The registration response",
+            "schema": {
+              "$ref": "#/definitions/WorkforceIntegrationResponse"
+            }
+          }
+        },
+        "operationId": "CreateWorkforceIntegration",
+        "summary": "Create Workforce Integration"
+      }
+    },
+    "/teamwork/workforceintegrations/{workforceIntegrationId}": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "The workforce integration",
+            "schema": {
+              "$ref": "#/definitions/WorkforceIntegrationResponse"
+            }
+          }
+        },
+        "operationId": "GetWorkforceIntegration",
+        "summary": "Get Workforce Integration"
+      },
+      "delete": {
+        "responses": {
+          "204": {
+            "description": "Workforce integration deleted successfully"
+          }
+        },
+        "operationId": "DeleteWorkforceIntegration",
+        "summary": "Delete Workforce Integration"
+      },
+      "parameters": [
+        {
+          "name": "workforceIntegrationId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/teams/{teamId}/schedule/timesOff": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "$filter",
+            "description": "ODATA filter parameter to limit the time off requests returned.",
+            "in": "query",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "$top",
+            "description": "",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "If successful, this method returns a 200 OK response code and a collection of timeOff objects in the response body.",
+            "schema": {
+              "$ref": "#/definitions/TimeOffCollectionResponse"
+            }
+          }
+        },
+        "operationId": "ListTimeOff",
+        "summary": "List Time Off",
+        "description": "Get the list of timeOff instances in a schedule."
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/TimeOffRequest"
+            },
+            "in": "body",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "If successful, this method returns a 201 Created response code and a timeOff object in the response body.",
+            "schema": {
+              "$ref": "#/definitions/TimeOffResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GraphErrorContainer"
+            }
+          }
+        },
+        "operationId": "CreateTimeOff",
+        "summary": "Create Time Off",
+        "description": "Create a new timeOff instance in a schedule."
+      },
+      "parameters": [
+        {
+          "name": "teamId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/teams/{teamId}/schedule/timeOffReasons": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "If successful, this method returns a 200 OK response code and a collection of timeOffReason objects in the response body.",
+            "schema": {
+              "$ref": "#/definitions/TimeOffReasonCollectionResponse"
+            }
+          }
+        },
+        "operationId": "ListTimeOffReasons",
+        "summary": "List Time Off Reasons",
+        "description": "Get the list of timeOffReasons in a schedule."
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/TimeOffReasonRequest"
+            },
+            "in": "body",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "The newly created time off reason.",
+            "schema": {
+              "$ref": "#/definitions/TimeOffReasonResponse"
+            }
+          },
+          "204": {
+            "description": "No response"
+          }
+        },
+        "operationId": "CreateTimeOffReason",
+        "summary": "Create Time Off Reason",
+        "description": "Create a new timeOffReason."
+      },
+      "parameters": [
+        {
+          "name": "teamId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/teams/{teamId}/schedule/timeOffReasons/{timeOffReasonId}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "If successful, this method returns a 200 OK response code and a timeOffReason object in the response body.",
+            "schema": {
+              "$ref": "#/definitions/TimeOffReasonResponse"
+            }
+          }
+        },
+        "operationId": "GetTimeOffReason",
+        "summary": "Get Time Off Reason",
+        "description": "Retrieve the properties and relationships of a timeOffReason object by ID."
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/TimeOffReasonRequest"
+            },
+            "in": "body",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The updated time off reason",
+            "schema": {
+              "$ref": "#/definitions/TimeOffReasonResponse"
+            }
+          },
+          "204": {
+            "description": "No content"
+          }
+        },
+        "operationId": "ReplaceTimeOffReason",
+        "summary": "Replace Time Off Reason",
+        "description": "Replace an existing timeOffReason."
+      },
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "204": {
+            "description": "If successful, this method returns a 204 No Content response code. It does not return anything in the response body."
+          }
+        },
+        "operationId": "DeactivateTimeOffReason",
+        "summary": "Deactivate Time Off Reason",
+        "description": "Mark a timeOffReason as inactive by setting the isActive property."
+      },
+      "parameters": [
+        {
+          "name": "teamId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "timeOffReasonId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/teams/{teamId}/schedule/timesOff/{timeOffId}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "If successful, this method returns a 200 OK response code and a timeOff object in the response body.",
+            "schema": {
+              "$ref": "#/definitions/TimeOffResponse"
+            }
+          }
+        },
+        "operationId": "GetTimeOff",
+        "summary": "Get Time Off",
+        "description": "Retrieve the properties and relationships of a timeOff object by ID."
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/TimeOffResponse"
+            },
+            "in": "body",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "If successful, this method returns a 200 OK response code and a timeOff object in the response body.",
+            "schema": {
+              "$ref": "#/definitions/TimeOffResponse"
+            }
+          },
+          "204": {
+            "description": "No content"
+          }
+        },
+        "operationId": "ReplaceTimeOff",
+        "summary": "Replace Time Off",
+        "description": "Replace an existing timeOff."
+      },
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "204": {
+            "description": "No content"
+          }
+        },
+        "operationId": "DeleteTimeOff",
+        "summary": "Delete Time Off",
+        "description": "Delete a timeOff instance from a schedule."
+      },
+      "parameters": [
+        {
+          "name": "teamId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "timeOffId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/teams/{teamId}/schedule/openshifts": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "$filter",
+            "description": "ODATA filter parameter to limit the open shifts returned.",
+            "in": "query",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "$top",
+            "description": "The number of open shifts to fetch (if not specified this defaults to 100) ",
+            "in": "query",
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "If successful, this method returns a 200 OK response code and a collection of open shift objects in the response body.",
+            "schema": {
+              "$ref": "#/definitions/OpenShiftCollectionResponse"
+            }
+          }
+        },
+        "operationId": "ListOpenShifts",
+        "summary": "List Open Shifts",
+        "description": "Get the list of open shift instances in a schedule."
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/OpenShiftRequest"
+            },
+            "in": "body",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "If successful, this method returns a 201 Created response code and a shift object in the response body.",
+            "schema": {
+              "$ref": "#/definitions/OpenShiftResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GraphErrorContainer"
+            }
+          }
+        },
+        "operationId": "CreateOpenShift",
+        "summary": "Create Open Shift",
+        "description": "Create a new open shift instance in a schedule."
+      },
+      "parameters": [
+        {
+          "name": "teamId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/teams/{teamId}/schedule/openshifts/{openShiftId}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "If successful, this method returns a 200 OK response code and a shift object in the response body.",
+            "schema": {
+              "$ref": "#/definitions/OpenShiftResponse"
+            }
+          }
+        },
+        "operationId": "GetOpenShift",
+        "summary": "Get Open Shift",
+        "description": "Retrieve the properties and relationships of an open shift object by ID."
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/OpenShiftResponse"
+            },
+            "in": "body",
+            "required": true
+          },
+          {
+            "name": "Prefer",
+            "description": "",
+            "in": "header",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "If successful, this method returns a 200 OK response code and a shift object in the response body.",
+            "schema": {
+              "$ref": "#/definitions/OpenShiftResponse"
+            }
+          },
+          "204": {
+            "description": "According to the documentation, this method should return a 200 OK response code, however, we have observed it returning a 204 No Content instead."
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/GraphErrorContainer"
+            }
+          }
+        },
+        "operationId": "ReplaceOpenShift",
+        "summary": "Replace Open Shift",
+        "description": "Replace an existing open shift."
+      },
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "This method is supposed to return a 204 No Content according to the website, however, it actually returns a 200 OK"
+          },
+          "204": {
+            "description": "If successful, this method returns a 204 No Content response code. It does not return anything in the response body."
+          }
+        },
+        "operationId": "DeleteOpenShift",
+        "summary": "Delete Open Shift",
+        "description": "Deletes an open shift from the schedule."
+      },
+      "parameters": [
+        {
+          "name": "teamId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "openShiftId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/teams/{teamId}/schedule/openshiftchangerequests/{shiftRequestId}/{action}": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/MessageItem"
+            },
+            "in": "body",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The request was approved successfully"
+          }
+        },
+        "operationId": "ReviewOpenShiftRequest",
+        "summary": "Review Open Shift Request"
+      },
+      "parameters": [
+        {
+          "name": "teamId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "shiftRequestId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "action",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/users/{userId}/settings/shiftPreferences": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Gets the user's shift preference",
+            "schema": {
+              "$ref": "#/definitions/ShiftPreferenceResponse"
+            }
+          }
+        },
+        "operationId": "GetUserShiftPreference",
+        "summary": "Get User Shift Preference"
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/ShiftPreferenceResponse"
+            },
+            "in": "body",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Shift preference updated successfully"
+          }
+        },
+        "operationId": "UpdateUserShiftPreference",
+        "summary": "Update User Shift Preference"
+      },
+      "delete": {
+        "responses": {
+          "204": {
+            "description": "User shift preference deleted successfully"
+          }
+        },
+        "operationId": "DeleteUserShiftPreference",
+        "summary": "Delete User Shift Preference"
+      },
+      "parameters": [
+        {
+          "name": "userId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/teams/{teamId}/schedule/openshifts/{openShiftId}/stageForDeletion": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "204": {
+            "description": "The open shift was successfully staged for deletion."
+          }
+        },
+        "operationId": "StageDeleteOpenShift",
+        "summary": "Stage Delete Open Shift",
+        "description": "Stages the open shift for delete."
+      },
+      "parameters": [
+        {
+          "name": "teamId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "openShiftId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/teams/{teamId}/schedule/shifts/{shiftId}/stageForDeletion": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "204": {
+            "description": "The shift was successfully staged for deletion."
+          }
+        },
+        "operationId": "StageDeleteShift",
+        "summary": "Stage Delete Shift",
+        "description": "Stages the shift for delete."
+      },
+      "parameters": [
+        {
+          "name": "teamId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "shiftId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/teams/{teamId}/schedule/timesOff/{timeOffId}/stageForDeletion": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "204": {
+            "description": "The time off was successfully staged for deletion."
+          }
+        },
+        "operationId": "StageDeleteTimeOff",
+        "summary": "Stage Delete Time Off",
+        "description": "Stages the time off for delete."
+      },
+      "parameters": [
+        {
+          "name": "teamId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "timeOffId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    },
+    "/teams/{teamId}/schedule/swapShiftsChangeRequests/{swapShiftChangeRequestId}/approve": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/SwapShiftsChangeRequest"
+            },
+            "in": "body",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The request was approved successfully"
+          }
+        },
+        "operationId": "ApproveSwapShiftRequest",
+        "summary": "Approve Swap Shift Request"
+      },
+      "parameters": [
+        {
+          "name": "teamId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "swapShiftChangeRequestId",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }
+      ]
+    }
+  },
+  "definitions": {
+    "ScheduleResponse": {
+      "title": "Root Type for Schedule",
+      "description": "A collection of schedulingGroup objects, shift objects, timeOffReason objects, and timeOff objects within a team.",
+      "required": [
+        "id",
+        "enabled",
+        "timeZone"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "ID of the schedule.",
+          "type": "string"
+        },
+        "enabled": {
+          "description": "Indicates whether the schedule is enabled for the team. Required.",
+          "type": "boolean",
+          "x-nullable": false
+        },
+        "timeZone": {
+          "description": "Indicates the time zone of the schedule team using tz database format. Required.",
+          "type": "string"
+        },
+        "provisionStatus": {
+          "description": "The status of the schedule provisioning. The possible values are notStarted, running, completed, failed.",
+          "type": "string"
+        },
+        "provisionStatusCode": {
+          "description": "Additional information about why schedule provisioning failed.",
+          "type": "string"
+        },
+        "workforceIntegrationIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "timeClockEnabled": {
+          "description": "Indicates whether time clock is enabled for the schedule.",
+          "type": "boolean"
+        },
+        "openShiftsEnabled": {
+          "description": "Indicates whether open shifts are enabled for the schedule.",
+          "type": "boolean"
+        },
+        "swapShiftsRequestsEnabled": {
+          "description": "Indicates whether swap shifts requests are enabled for the schedule.",
+          "type": "boolean"
+        },
+        "offerShiftRequestsEnabled": {
+          "description": "Indicates whether offer shift requests are enabled for the schedule.",
+          "type": "boolean"
+        },
+        "timeOffRequestsEnabled": {
+          "description": "Indicates whether time off requests are enabled for the schedule.",
+          "type": "boolean"
+        }
+      },
+      "example": "{\n  \"id\": \"833fc4df-c88b-4398-992f-d8afcfe41df2\",\n  \"enabled\": true,\n  \"timeZone\": \"America/Chicago\",\n  \"provisionStatus\": \"Completed\",\n  \"provisionStatusCode\": null\n}"
+    },
+    "SchedulingGroupResponse": {
+      "title": "Root Type for SchedulingGroup",
+      "description": "A logical grouping of users in a schedule (usually by role).",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "createdDateTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "lastModifiedDateTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "isActive": {
+          "type": "boolean",
+          "x-nullable": false
+        },
+        "userIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "lastModifiedBy": {
+          "$ref": "#/definitions/IdentitySetResponse",
+          "properties": {
+            "application": {
+              "type": "object"
+            },
+            "device": {
+              "type": "object"
+            },
+            "conversation": {
+              "type": "object"
+            },
+            "user": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "displayName": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "example": "{\n    \"id\": \"TAG_f914d037-00a3-4ba4-b712-ef178cbea263\",\n    \"createdDateTime\": \"2019-03-12T22:10:38.242Z\",\n    \"lastModifiedDateTime\": \"2019-03-12T22:10:38.242Z\",\n    \"displayName\": \"Cashiers\",\n    \"isActive\": true,\n    \"userIds\": [\n        \"c5d0c76b-80c4-481c-be50-923cd8d680a1\",\n        \"2a4296b3-a28a-44ba-bc66-0274b9b95851\"\n    ],\n    \"lastModifiedBy\": {\n        \"application\": null,\n        \"device\": null,\n        \"conversation\": null,\n        \"user\": {\n            \"id\": \"366c0b19-49b1-41b5-a03f-9f3887bd0ed8\",\n            \"displayName\": \"John Doe\"\n        }\n    }\n}"
+    },
+    "SchedulingGroupCollectionResponse": {
+      "title": "Root Type for SchedulingGroupCollection",
+      "description": "Collection of scheduling groups",
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SchedulingGroupResponse"
+          }
+        }
+      },
+      "example": "{\n    \"value\": [\n        {\n            \"id\": \"TAG_f914d037-00a3-4ba4-b712-ef178cbea263\",\n            \"createdDateTime\": \"2019-03-12T22:10:38.242Z\",\n            \"lastModifiedDateTime\": \"2019-03-12T22:10:38.242Z\",\n            \"displayName\": \"Cashiers\",\n            \"isActive\": true,\n            \"userIds\": [\n                \"c5d0c76b-80c4-481c-be50-923cd8d680a1\",\n                \"2a4296b3-a28a-44ba-bc66-0274b9b95851\"\n            ],\n            \"lastModifiedBy\": {\n                \"application\": null,\n                \"device\": null,\n                \"conversation\": null,\n                \"user\": {\n                    \"id\": \"366c0b19-49b1-41b5-a03f-9f3887bd0ed8\",\n                    \"displayName\": \"John Doe\"\n                }\n            }\n        }\n    ]\n}"
+    },
+    "SchedulingGroupRequest": {
+      "title": "Root Type for SchedulingGroupRequest",
+      "description": "The data required for creating/updating scheduling groups",
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "type": "string"
+        },
+        "isActive": {
+          "type": "boolean"
+        },
+        "userIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "example": "{\n    \"displayName\": \"AAM Test\",\n    \"isActive\": true,\n    \"userIds\": [\n        \"87c34653-9653-4ea8-9265-edca7a8932c5\",\n        \"dd906b70-fd0d-4aee-9786-dcec064eb3d4\",\n        \"d1009c17-2ccb-44d4-a85a-9e25d61b5bc1\",\n        \"9a5c1414-9123-4815-8579-55d98f4e74e0\"\n    ]\n}"
+    },
+    "IdentityResponse": {
+      "title": "Root Type for IdentityResponse",
+      "description": "The root of the IdentityResponse type's schema.",
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "userPrincipalName": {
+          "type": "string"
+        }
+      },
+      "example": "{\n    \"displayName\": \"string\",\n    \"id\": \"string\"\n}"
+    },
+    "IdentitySetResponse": {
+      "title": "Root Type for IdentitySetResponse",
+      "description": "The root of the IdentitySetResponse type's schema.",
+      "type": "object",
+      "properties": {
+        "application": {
+          "$ref": "#/definitions/IdentityResponse",
+          "properties": {
+            "@odata.type": {
+              "type": "string"
+            }
+          }
+        },
+        "applicationInstance": {
+          "$ref": "#/definitions/IdentityResponse",
+          "properties": {
+            "@odata.type": {
+              "type": "string"
+            }
+          }
+        },
+        "device": {
+          "$ref": "#/definitions/IdentityResponse",
+          "properties": {
+            "@odata.type": {
+              "type": "string"
+            }
+          }
+        },
+        "encrypted": {
+          "$ref": "#/definitions/IdentityResponse",
+          "properties": {
+            "@odata.type": {
+              "type": "string"
+            }
+          }
+        },
+        "guest": {
+          "$ref": "#/definitions/IdentityResponse",
+          "properties": {
+            "@odata.type": {
+              "type": "string"
+            }
+          }
+        },
+        "phone": {
+          "$ref": "#/definitions/IdentityResponse",
+          "properties": {
+            "@odata.type": {
+              "type": "string"
+            }
+          }
+        },
+        "user": {
+          "$ref": "#/definitions/IdentityResponse",
+          "properties": {
+            "@odata.type": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "example": {
+        "application": {
+          "displayName": "some text",
+          "id": "some text"
+        },
+        "applicationInstance": {
+          "displayName": "some text",
+          "id": "some text"
+        },
+        "device": {
+          "displayName": "some text",
+          "id": "some text"
+        },
+        "encrypted": {
+          "displayName": "some text",
+          "id": "some text"
+        },
+        "guest": {
+          "displayName": "some text",
+          "id": "some text"
+        },
+        "phone": {
+          "displayName": "some text",
+          "id": "some text"
+        },
+        "user": {
+          "displayName": "some text",
+          "id": "some text"
+        }
+      }
+    },
+    "ShiftCollectionResponse": {
+      "title": "Root Type for ShiftCollectionResponse",
+      "description": "The root of the ShiftCollectionResponse type's schema.",
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ShiftResponse"
+          }
+        }
+      },
+      "example": "{\n    \"value\": [\n        {\n            \"id\": \"SHFT_577b75d2-a927-48c0-a5d1-dc984894e7b8\",\n            \"createdDateTime\": \"2019-03-14T04:32:51.451Z\",\n            \"lastModifiedDateTime\": \"2019-03-14T05:32:51.451Z\",\n            \"userId\": \"c5d0c76b-80c4-481c-be50-923cd8d680a1\",\n            \"schedulingGroupId\": \"TAG_228940ed-ff84-4e25-b129-1b395cf78be0\",\n            \"lastModifiedBy\": {\n                \"application\": null,\n                \"device\": null,\n                \"conversation\": null,\n                \"user\": {\n                    \"id\": \"366c0b19-49b1-41b5-a03f-9f3887bd0ed8\",\n                    \"displayName\": \"John Doe\"\n                }\n            },\n            \"sharedShift\": {\n                \"displayName\": \"Day shift\",\n                \"notes\": \"Please do inventory as part of your shift.\",\n                \"startDateTime\": \"2019-03-11T15:00:00Z\",\n                \"endDateTime\": \"2019-03-12T00:00:00Z\",\n                \"theme\": \"blue\",\n                \"activities\": [\n                    {\n                        \"isPaid\": true,\n                        \"startDateTime\": \"2019-03-11T15:00:00Z\",\n                        \"endDateTime\": \"2019-03-11T15:15:00Z\",\n                        \"code\": \"\",\n                        \"displayName\": \"Lunch\"\n                    }\n                ]\n            },\n            \"draftShift\": {\n                \"displayName\": \"Day shift\",\n                \"notes\": \"Please do inventory as part of your shift.\",\n                \"startDateTime\": \"2019-03-11T15:00:00Z\",\n                \"endDateTime\": \"2019-03-12T00:00:00Z\",\n                \"theme\": \"blue\",\n                \"activities\": [\n                    {\n                        \"isPaid\": true,\n                        \"startDateTime\": \"2019-03-11T15:00:00Z\",\n                        \"endDateTime\": \"2019-03-11T15:30:00Z\",\n                        \"code\": \"\",\n                        \"displayName\": \"Lunch\"\n                    }\n                ]\n            }\n        }\n    ]\n}"
+    },
+    "ShiftItem": {
+      "title": "Root Type for ShiftItemResponse",
+      "description": "The root of the ShiftItemResponse type's schema.",
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "startDateTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "endDateTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "theme": {
+          "type": "string"
+        },
+        "activities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ShiftActivity"
+          }
+        }
+      },
+      "example": "{\n    \"displayName\": \"Day shift\",\n    \"notes\": \"Please do inventory as part of your shift.\",\n    \"startDateTime\": \"2019-03-11T15:00:00Z\",\n    \"endDateTime\": \"2019-03-12T00:00:00Z\",\n    \"theme\": \"blue\",\n    \"activities\": [\n        {\n            \"isPaid\": true,\n            \"startDateTime\": \"2019-03-11T15:00:00Z\",\n            \"endDateTime\": \"2019-03-11T15:15:00Z\",\n            \"code\": \"\",\n            \"displayName\": \"Lunch\"\n        }\n    ]\n}"
+    },
+    "ShiftActivity": {
+      "title": "Root Type for ShiftActivityResponse",
+      "description": "The root of the ShiftActivityResponse type's schema.",
+      "type": "object",
+      "properties": {
+        "isPaid": {
+          "type": "boolean",
+          "x-nullable": false
+        },
+        "startDateTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "endDateTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "theme": {
+          "type": "string"
+        }
+      },
+      "example": "{\n    \"isPaid\": true,\n    \"startDateTime\": \"2019-03-11T15:00:00Z\",\n    \"endDateTime\": \"2019-03-11T15:15:00Z\",\n    \"code\": \"\",\n    \"displayName\": \"Lunch\"\n}"
+    },
+    "ShiftRequest": {
+      "title": "Root Type for ShiftRequest",
+      "description": "The root of the ShiftRequest type's schema.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "schedulingGroupId": {
+          "type": "string"
+        },
+        "sharedShift": {
+          "$ref": "#/definitions/ShiftItem",
+          "properties": {
+            "displayName": {
+              "type": "string"
+            },
+            "notes": {
+              "type": "string"
+            },
+            "startDateTime": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "endDateTime": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "theme": {
+              "type": "string"
+            },
+            "activities": {
+              "type": "array",
+              "items": {
+              }
+            }
+          }
+        },
+        "draftShift": {
+          "$ref": "#/definitions/ShiftItem",
+          "properties": {
+            "displayName": {
+              "type": "string"
+            },
+            "notes": {
+              "type": "string"
+            },
+            "startDateTime": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "endDateTime": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "theme": {
+              "type": "string"
+            },
+            "activities": {
+              "type": "array",
+              "items": {
+              }
+            }
+          }
+        }
+      },
+      "example": {
+        "userId": "c5d0c76b-80c4-481c-be50-923cd8d680a1",
+        "schedulingGroupId": "TAG_228940ed-ff84-4e25-b129-1b395cf78be0",
+        "sharedShift": {
+          "displayName": "Day shift",
+          "notes": "Please do inventory as part of your shift.",
+          "startDateTime": "2019-03-11T15:00:00Z",
+          "endDateTime": "2019-03-12T00:00:00Z",
+          "theme": "blue",
+          "activities": [
+            {
+              "isPaid": true,
+              "startDateTime": "2019-03-11T15:00:00Z",
+              "endDateTime": "2019-03-11T15:15:00Z",
+              "code": "",
+              "displayName": "Lunch"
+            }
+          ]
+        },
+        "draftShift": {
+          "displayName": "Day shift",
+          "notes": "Please do inventory as part of your shift.",
+          "startDateTime": "2019-03-11T15:00:00Z",
+          "endDateTime": "2019-03-12T00:00:00Z",
+          "theme": "blue",
+          "activities": [
+            {
+              "isPaid": true,
+              "startDateTime": "2019-03-11T15:00:00Z",
+              "endDateTime": "2019-03-11T15:30:00Z",
+              "code": "",
+              "displayName": "Lunch"
+            }
+          ]
+        }
+      }
+    },
+    "UserResponse": {
+      "title": "Root Type for UserResponse",
+      "description": "The root of the UserResponse type's schema.",
+      "type": "object",
+      "properties": {
+        "accountEnabled": {
+          "type": "boolean"
+        },
+        "ageGroup": {
+          "type": "string"
+        },
+        "assignedLicenses": {
+          "type": "array",
+          "items": {
+          }
+        },
+        "assignedPlans": {
+          "type": "array",
+          "items": {
+          }
+        },
+        "birthday": {
+          "type": "string"
+        },
+        "businessPhones": {
+          "type": "array",
+          "items": {
+          }
+        },
+        "city": {
+          "type": "string"
+        },
+        "companyName": {
+          "type": "string"
+        },
+        "consentProvidedForMinor": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        },
+        "deletedDateTime": {
+          "type": "string"
+        },
+        "department": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "externalUserState": {
+          "type": "string"
+        },
+        "externalUserStateChangeDateTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "givenName": {
+          "type": "string"
+        },
+        "hireDate": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "interests": {
+          "type": "array",
+          "items": {
+          }
+        },
+        "isResourceAccount": {
+          "type": "boolean"
+        },
+        "jobTitle": {
+          "type": "string"
+        },
+        "legalAgeGroupClassification": {
+          "type": "string"
+        },
+        "licenseAssignmentStates": {
+          "type": "array",
+          "items": {
+          }
+        },
+        "mail": {
+          "type": "string"
+        },
+        "mailboxSettings": {
+          "type": "object",
+          "properties": {
+            "@odata.type": {
+              "type": "string"
+            }
+          }
+        },
+        "mailNickname": {
+          "type": "string"
+        },
+        "mobilePhone": {
+          "type": "string"
+        },
+        "mySite": {
+          "type": "string"
+        },
+        "officeLocation": {
+          "type": "string"
+        },
+        "onPremisesExtensionAttributes": {
+          "type": "object",
+          "properties": {
+            "@odata.type": {
+              "type": "string"
+            }
+          }
+        },
+        "onPremisesImmutableId": {
+          "type": "string"
+        },
+        "onPremisesLastSyncDateTime": {
+          "type": "string"
+        },
+        "onPremisesProvisioningErrors": {
+          "type": "array",
+          "items": {
+          }
+        },
+        "onPremisesSecurityIdentifier": {
+          "type": "string"
+        },
+        "onPremisesSyncEnabled": {
+          "type": "boolean"
+        },
+        "passwordPolicies": {
+          "type": "string"
+        },
+        "passwordProfile": {
+          "type": "object",
+          "properties": {
+            "@odata.type": {
+              "type": "string"
+            }
+          }
+        },
+        "pastProjects": {
+          "type": "array",
+          "items": {
+          }
+        },
+        "postalCode": {
+          "type": "string"
+        },
+        "preferredDataLocation": {
+          "type": "string"
+        },
+        "preferredLanguage": {
+          "type": "string"
+        },
+        "preferredName": {
+          "type": "string"
+        },
+        "provisionedPlans": {
+          "type": "array",
+          "items": {
+          }
+        },
+        "proxyAddresses": {
+          "type": "array",
+          "items": {
+          }
+        },
+        "responsibilities": {
+          "type": "array",
+          "items": {
+          }
+        },
+        "schools": {
+          "type": "array",
+          "items": {
+          }
+        },
+        "skills": {
+          "type": "array",
+          "items": {
+          }
+        },
+        "state": {
+          "type": "string"
+        },
+        "streetAddress": {
+          "type": "string"
+        },
+        "surname": {
+          "type": "string"
+        },
+        "usageLocation": {
+          "type": "string"
+        },
+        "userPrincipalName": {
+          "type": "string"
+        },
+        "userType": {
+          "type": "string"
+        },
+        "calendar": {
+          "type": "object",
+          "properties": {
+            "@odata.type": {
+              "type": "string"
+            }
+          }
+        },
+        "calendarGroups": {
+          "type": "array",
+          "items": {
+          }
+        },
+        "calendarView": {
+          "type": "array",
+          "items": {
+          }
+        },
+        "calendars": {
+          "type": "array",
+          "items": {
+          }
+        },
+        "contacts": {
+          "type": "array",
+          "items": {
+          }
+        },
+        "contactFolders": {
+          "type": "array",
+          "items": {
+          }
+        },
+        "createdObjects": {
+          "type": "array",
+          "items": {
+          }
+        },
+        "directReports": {
+          "type": "array",
+          "items": {
+          }
+        },
+        "drive": {
+          "type": "object",
+          "properties": {
+            "@odata.type": {
+              "type": "string"
+            }
+          }
+        },
+        "insights": {
+          "type": "object",
+          "properties": {
+            "@odata.type": {
+              "type": "string"
+            }
+          }
+        },
+        "settings": {
+          "type": "object",
+          "properties": {
+            "@odata.type": {
+              "type": "string"
+            }
+          }
+        },
+        "events": {
+          "type": "array",
+          "items": {
+          }
+        },
+        "extensions": {
+          "type": "array",
+          "items": {
+          }
+        },
+        "inferenceClassification": {
+          "type": "object",
+          "properties": {
+            "@odata.type": {
+              "type": "string"
+            }
+          }
+        },
+        "mailFolders": {
+          "type": "array",
+          "items": {
+          }
+        },
+        "manager": {
+          "type": "object",
+          "properties": {
+            "@odata.type": {
+              "type": "string"
+            }
+          }
+        },
+        "memberOf": {
+          "type": "array",
+          "items": {
+          }
+        },
+        "joinedTeams": {
+          "type": "array",
+          "items": {
+          }
+        },
+        "messages": {
+          "type": "array",
+          "items": {
+          }
+        },
+        "outlook": {
+          "type": "object",
+          "properties": {
+            "@odata.type": {
+              "type": "string"
+            }
+          }
+        },
+        "ownedDevices": {
+          "type": "array",
+          "items": {
+          }
+        },
+        "photo": {
+          "type": "object",
+          "properties": {
+            "@odata.type": {
+              "type": "string"
+            }
+          }
+        },
+        "registeredDevices": {
+          "type": "array",
+          "items": {
+          }
+        }
+      },
+      "example": "{\n    \"aboutMe\": \"string\",\n    \"accountEnabled\": true,\n    \"ageGroup\": \"string\",\n    \"assignedLicenses\": [\n        {\n            \"@odata.type\": \"microsoft.graph.assignedLicense\"\n        }\n    ],\n    \"assignedPlans\": [\n        {\n            \"@odata.type\": \"microsoft.graph.assignedPlan\"\n        }\n    ],\n    \"birthday\": \"String (timestamp)\",\n    \"businessPhones\": [\n        \"string\"\n    ],\n    \"city\": \"string\",\n    \"companyName\": \"string\",\n    \"consentProvidedForMinor\": \"string\",\n    \"country\": \"string\",\n    \"deletedDateTime\": \"String (timestamp)\",\n    \"department\": \"string\",\n    \"displayName\": \"string\",\n    \"externalUserState\": \"PendingAcceptance\",\n    \"externalUserStateChangeDateTime\": \"2018-11-12T01:13:13Z\",\n    \"givenName\": \"string\",\n    \"hireDate\": \"String (timestamp)\",\n    \"id\": \"string (identifier)\",\n    \"interests\": [\n        \"string\"\n    ],\n    \"isResourceAccount\": false,\n    \"jobTitle\": \"string\",\n    \"legalAgeGroupClassification\": \"string\",\n    \"licenseAssignmentStates\": [\n        {\n            \"@odata.type\": \"microsoft.graph.licenseAssignmentState\"\n        }\n    ],\n    \"mail\": \"string\",\n    \"mailboxSettings\": {\n        \"@odata.type\": \"microsoft.graph.mailboxSettings\"\n    },\n    \"mailNickname\": \"string\",\n    \"mobilePhone\": \"string\",\n    \"mySite\": \"string\",\n    \"officeLocation\": \"string\",\n    \"onPremisesExtensionAttributes\": {\n        \"@odata.type\": \"microsoft.graph.onPremisesExtensionAttributes\"\n    },\n    \"onPremisesImmutableId\": \"string\",\n    \"onPremisesLastSyncDateTime\": \"String (timestamp)\",\n    \"onPremisesProvisioningErrors\": [\n        {\n            \"@odata.type\": \"microsoft.graph.onPremisesProvisioningError\"\n        }\n    ],\n    \"onPremisesSecurityIdentifier\": \"string\",\n    \"onPremisesSyncEnabled\": true,\n    \"passwordPolicies\": \"string\",\n    \"passwordProfile\": {\n        \"@odata.type\": \"microsoft.graph.passwordProfile\"\n    },\n    \"pastProjects\": [\n        \"string\"\n    ],\n    \"postalCode\": \"string\",\n    \"preferredDataLocation\": \"string\",\n    \"preferredLanguage\": \"string\",\n    \"preferredName\": \"string\",\n    \"provisionedPlans\": [\n        {\n            \"@odata.type\": \"microsoft.graph.provisionedPlan\"\n        }\n    ],\n    \"proxyAddresses\": [\n        \"string\"\n    ],\n    \"responsibilities\": [\n        \"string\"\n    ],\n    \"schools\": [\n        \"string\"\n    ],\n    \"skills\": [\n        \"string\"\n    ],\n    \"state\": \"string\",\n    \"streetAddress\": \"string\",\n    \"surname\": \"string\",\n    \"usageLocation\": \"string\",\n    \"userPrincipalName\": \"string\",\n    \"userType\": \"string\",\n    \"calendar\": {\n        \"@odata.type\": \"microsoft.graph.calendar\"\n    },\n    \"calendarGroups\": [\n        {\n            \"@odata.type\": \"microsoft.graph.calendarGroup\"\n        }\n    ],\n    \"calendarView\": [\n        {\n            \"@odata.type\": \"microsoft.graph.event\"\n        }\n    ],\n    \"calendars\": [\n        {\n            \"@odata.type\": \"microsoft.graph.calendar\"\n        }\n    ],\n    \"contacts\": [\n        {\n            \"@odata.type\": \"microsoft.graph.contact\"\n        }\n    ],\n    \"contactFolders\": [\n        {\n            \"@odata.type\": \"microsoft.graph.contactFolder\"\n        }\n    ],\n    \"createdObjects\": [\n        {\n            \"@odata.type\": \"microsoft.graph.directoryObject\"\n        }\n    ],\n    \"directReports\": [\n        {\n            \"@odata.type\": \"microsoft.graph.directoryObject\"\n        }\n    ],\n    \"drive\": {\n        \"@odata.type\": \"microsoft.graph.drive\"\n    },\n    \"insights\": {\n        \"@odata.type\": \"microsoft.graph.officeGraphInsights\"\n    },\n    \"settings\": {\n        \"@odata.type\": \"microsoft.graph.userSettings\"\n    },\n    \"events\": [\n        {\n            \"@odata.type\": \"microsoft.graph.event\"\n        }\n    ],\n    \"extensions\": [\n        {\n            \"@odata.type\": \"microsoft.graph.extension\"\n        }\n    ],\n    \"inferenceClassification\": {\n        \"@odata.type\": \"microsoft.graph.inferenceClassification\"\n    },\n    \"mailFolders\": [\n        {\n            \"@odata.type\": \"microsoft.graph.mailFolder\"\n        }\n    ],\n    \"manager\": {\n        \"@odata.type\": \"microsoft.graph.directoryObject\"\n    },\n    \"memberOf\": [\n        {\n            \"@odata.type\": \"microsoft.graph.directoryObject\"\n        }\n    ],\n    \"joinedTeams\": [\n        {\n            \"@odata.type\": \"microsoft.graph.group\"\n        }\n    ],\n    \"messages\": [\n        {\n            \"@odata.type\": \"microsoft.graph.message\"\n        }\n    ],\n    \"outlook\": {\n        \"@odata.type\": \"microsoft.graph.outlookUser\"\n    },\n    \"ownedDevices\": [\n        {\n            \"@odata.type\": \"microsoft.graph.directoryObject\"\n        }\n    ],\n    \"photo\": {\n        \"@odata.type\": \"microsoft.graph.profilePhoto\"\n    },\n    \"registeredDevices\": [\n        {\n            \"@odata.type\": \"microsoft.graph.directoryObject\"\n        }\n    ]\n}"
+    },
+    "ScheduleRequest": {
+      "title": "Root Type for ScheduleRequest",
+      "description": "The root of the ScheduleRequest type's schema.",
+      "required": [
+        "timeZone",
+        "enabled"
+      ],
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "description": "Indicates whether the schedule is enabled for the team. Required.",
+          "type": "boolean",
+          "x-nullable": false
+        },
+        "timeZone": {
+          "description": "Indicates the time zone of the schedule team using tz database format. Required.",
+          "type": "string"
+        },
+        "workforceIntegrationIds": {
+          "description": "An instance of a workforce integration per team with outbound data flow on synchronous change notifications (for supported entities).",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "timeClockEnabled": {
+          "description": "Indicates whether time clock is enabled for the schedule.",
+          "type": "boolean"
+        },
+        "openShiftsEnabled": {
+          "description": "Indicates whether open shifts are enabled for the schedule.",
+          "type": "boolean"
+        },
+        "swapShiftsRequestsEnabled": {
+          "description": "Indicates whether swap shifts requests are enabled for the schedule.",
+          "type": "boolean"
+        },
+        "offerShiftRequestsEnabled": {
+          "description": "Indicates whether offer shift requests are enabled for the schedule.",
+          "type": "boolean"
+        },
+        "timeOffRequestsEnabled": {
+          "description": "Indicates whether time off requests are enabled for the schedule.",
+          "type": "boolean"
+        },
+        "id": {
+          "description": "ID of the schedule.",
+          "type": "string"
+        }
+      },
+      "example": "{\n    \"enabled\": true,\n    \"timeZone\": \"America/Chicago\"\n}"
+    },
+    "ShareRequest": {
+      "title": "Root Type for ShareRequest",
+      "description": "The root of the ShareRequest type's schema.",
+      "type": "object",
+      "properties": {
+        "notifyTeam": {
+          "type": "boolean"
+        },
+        "startDateTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "endDateTime": {
+          "format": "date-time",
+          "type": "string"
+        }
+      },
+      "example": "{\n    \"notifyTeam\": true,\n    \"startDateTime\": \"2018-10-08T00:00:00.000Z\",\n    \"endDateTime\": \"2018-10-15T00:00:00.000Z\"\n}"
+    },
+    "MembersResponse": {
+      "title": "Root Type for MembersResponse",
+      "description": "The root of the MembersResponse type's schema.",
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/IdentityResponse"
+          }
+        }
+      },
+      "example": "{\n    \"value\": [\n        {\n            \"businessPhones\": [\n                \"businessPhones-value\"\n            ],\n            \"displayName\": \"displayName-value\",\n            \"givenName\": \"givenName-value\",\n            \"jobTitle\": \"jobTitle-value\",\n            \"mail\": \"mail-value\",\n            \"mobilePhone\": \"mobilePhone-value\",\n            \"officeLocation\": \"officeLocation-value\",\n            \"preferredLanguage\": \"preferredLanguage-value\",\n            \"surname\": \"surname-value\",\n            \"userPrincipalName\": \"userPrincipalName-value\",\n            \"id\": \"id-value\"\n        }\n    ]\n}"
+    },
+    "TeamResponse": {
+      "title": "Root Type for TeamResponse",
+      "description": "The details of a single team.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "deletedDateTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "createdDateTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        }
+      },
+      "example": "{\n    \"id\": \"852dc91d-a9cd-4332-95c0-e18cb5a61229\",\n    \"deletedDateTime\": \"2019-05-01T10:27:56Z\",\n    \"createdDateTime\": \"2019-05-01T09:27:56Z\",\n    \"displayName\": \"AAM Dev2 - REPL\"\n}"
+    },
+    "WorkforceIntegrationRequest": {
+      "title": "Root Type for WorkforceIntegrationRequest",
+      "description": "The root of the WorkforceIntegrationRequest type's schema.",
+      "required": [
+        "displayName",
+        "apiVersion",
+        "isActive",
+        "supportedEntities",
+        "url",
+        "encryption",
+        "eligibilityFilteringEnabledEntities"
+      ],
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "apiVersion": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "isActive": {
+          "type": "boolean"
+        },
+        "encryption": {
+          "$ref": "#/definitions/Encryption",
+          "properties": {
+            "protocol": {
+              "type": "string"
+            },
+            "secret": {
+              "type": "string"
+            }
+          }
+        },
+        "supportedEntities": {
+          "type": "string"
+        },
+        "eligibilityFilteringEnabledEntities": {
+          "description": "",
+          "type": "string"
+        }
+      },
+      "example": {
+        "displayName": "WfmWorkforceIntegration",
+        "url": "https://WfmWorkforceIntegration.com/Contoso/",
+        "apiVersion": 1,
+        "isActive": true,
+        "supportedEntities": "shift",
+        "eligibilityFilteringEnabledEntities": "SwapRequest",
+        "encryption": {
+          "protocol": "sharedSecret",
+          "secret": "My Secret"
+        }
+      }
+    },
+    "Encryption": {
+      "title": "Root Type for Encryption",
+      "description": "The root of the Encryption type's schema.",
+      "required": [
+        "protocol",
+        "secret"
+      ],
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "type": "string"
+        },
+        "secret": {
+          "type": "string"
+        }
+      },
+      "example": "{\n    \"protocol\": \"sharedSecret\",\n    \"secret\": \"My Secret\"\n}"
+    },
+    "WorkforceIntegrationResponse": {
+      "title": "Root Type for WorkforceIntegrationResponse",
+      "description": "The root of the WorkforceIntegrationResponse type's schema.",
+      "required": [
+        "encryption",
+        "apiVersion",
+        "createdDateTime",
+        "displayName",
+        "id",
+        "isActive",
+        "supports",
+        "url"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "createdDateTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "lastModifiedDateTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "apiVersion": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "isActive": {
+          "type": "boolean"
+        },
+        "supports": {
+          "type": "string"
+        },
+        "lastModifiedBy": {
+          "$ref": "#/definitions/IdentitySetResponse"
+        },
+        "encryption": {
+          "$ref": "#/definitions/Encryption",
+          "properties": {
+            "protocol": {
+              "type": "string"
+            },
+            "secret": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "example": "{\n    \"id\": \"WFI_e7571ddd-8fd9-41cf-a84d-1e148aad6f56\",\n    \"createdDateTime\": \"201905-31T00:32:20.816Z\",\n    \"lastModifiedDateTime\": \"201905-31T00:32:20.816Z\",\n    \"displayName\": \"WfmWorkforceIntegration\",\n    \"url\": \"https://WfmWorkforceIntegration.com/Contoso/\",\n    \"apiVersion\": 1,\n    \"isActive\": true,\n    \"supports\": \"shift\",\n    \"lastModifiedBy\": {},\n    \"encryption\": {\n        \"protocol\": \"sharedSecret\",\n        \"secret\": \"My Secret\"\n    }\n}"
+    },
+    "WorkforceIntegrationCollectionResponse": {
+      "title": "Root Type for WorkforceIntegrationCollectionResponse",
+      "description": "The root of the WorkforceIntegrationCollectionResponse type's schema.",
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/WorkforceIntegrationResponse"
+          }
+        }
+      },
+      "example": "{\n    \"value\": [\n        {\n            \"id\": \"WFI_e7571ddd-8fd9-41cf-a84d-1e148aad6f56\",\n            \"createdDateTime\": \"201905-31T00:32:20.816Z\",\n            \"lastModifiedDateTime\": \"201905-31T00:32:20.816Z\",\n            \"displayName\": \"WfmWorkforceIntegration\",\n            \"url\": \"https://WfmWorkforceIntegration.com/Contoso/\",\n            \"apiVersion\": 1,\n            \"isActive\": true,\n            \"supports\": \"shift\",\n            \"lastModifiedBy\": {},\n            \"encryption\": {\n                \"protocol\": \"sharedSecret\",\n                \"secret\": \"My Secret\"\n            }\n        }\n    ]\n}"
+    },
+    "SwapRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "senderShiftId": {
+          "type": "string"
+        },
+        "assignedTo": {
+          "type": "string"
+        },
+        "senderUserId": {
+          "type": "string"
+        },
+        "senderDateTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "senderMessage": {
+          "type": "string"
+        },
+        "managerUserId": {
+          "type": "string"
+        },
+        "managerActionDateTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "managerActionMessage": {
+          "type": "string"
+        },
+        "recipientActionDateTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "recipientUserId": {
+          "type": "string"
+        },
+        "recipientShiftId": {
+          "type": "string"
+        },
+        "recipientActionMessage": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "createdDateTime": {
+          "format": "date-time",
+          "description": "",
+          "type": "string"
+        },
+        "lastModifiedDateTime": {
+          "format": "date-time",
+          "description": "",
+          "type": "string"
+        }
+      }
+    },
+    "GraphErrorContainer": {
+      "title": "Root Type for ErrorContainer",
+      "description": "The root of the ErrorContainer type's schema.",
+      "required": [
+        "error"
+      ],
+      "type": "object",
+      "properties": {
+        "error": {
+          "$ref": "#/definitions/GraphError",
+          "properties": {
+            "code": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            },
+            "innerError": {
+              "type": "object",
+              "properties": {
+                "requestId": {
+                  "type": "string"
+                },
+                "date": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "example": "{\n    \"error\": {\n        \"code\": \"invalidRange\",\n        \"message\": \"Uploaded fragment overlaps with existing data.\",\n        \"innerError\": {\n            \"requestId\": \"request-id\",\n            \"date\": \"date-time\"\n        }\n    }\n}"
+    },
+    "GraphError": {
+      "title": "Root Type for Error",
+      "description": "The root of the Error type's schema.",
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "innerError": {
+          "$ref": "#/definitions/GraphInnerError",
+          "properties": {
+            "requestId": {
+              "type": "string"
+            },
+            "date": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "example": "{\n    \"code\": \"invalidRange\",\n    \"message\": \"Uploaded fragment overlaps with existing data.\",\n    \"innerError\": {\n        \"requestId\": \"request-id\",\n        \"date\": \"date-time\"\n    }\n}"
+    },
+    "GraphInnerError": {
+      "title": "Root Type for InnerError",
+      "description": "The root of the InnerError type's schema.",
+      "type": "object",
+      "properties": {
+        "requestId": {
+          "type": "string"
+        },
+        "date": {
+          "format": "date-time",
+          "type": "string"
+        }
+      },
+      "example": "{\n    \"requestId\": \"request-id\",\n    \"date\": \"date-time\"\n}"
+    },
+    "TimeOffCollectionResponse": {
+      "title": "Root Type for TimeOffCollectionResponse",
+      "description": "",
+      "required": [
+        "value"
+      ],
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TimeOffResponse"
+          }
+        }
+      },
+      "example": {
+        "value": [
+        ]
+      }
+    },
+    "TimeOffResponse": {
+      "description": "",
+      "required": [
+        "lastModifiedDateTime",
+        "id",
+        "userId"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "",
+          "type": "string"
+        },
+        "createdDateTime": {
+          "format": "date-time",
+          "description": "",
+          "type": "string"
+        },
+        "lastModifiedDateTime": {
+          "format": "date-time",
+          "description": "",
+          "type": "string"
+        },
+        "userId": {
+          "description": "",
+          "type": "string"
+        },
+        "draftTimeOff": {
+          "$ref": "#/definitions/TimeOffItem",
+          "description": ""
+        },
+        "lastModifiedBy": {
+          "$ref": "#/definitions/IdentitySetResponse",
+          "description": ""
+        },
+        "sharedTimeOff": {
+          "$ref": "#/definitions/TimeOffItem",
+          "description": ""
+        }
+      },
+      "example": {
+        "id": "SHFT_63f67e77-0d6f-4468-9fc2-4014b46c4702",
+        "lastModifiedDateTime": "2019-08-19T09:04:50.747Z",
+        "userId": "9a5c1414-9123-4815-8579-55d98f4e74e0",
+        "lastModifiedBy": {
+          "user": {
+            "id": "d1009c17-2ccb-44d4-a85a-9e25d61b5bc1",
+            "displayName": "Andrew Maggs"
+          }
+        },
+        "sharedTimeOff": {
+          "timeOffReasonId": "TOR_7abd7d54-95c6-4e21-9e18-d9b7958c0cea",
+          "startDateTime": "2019-08-20T23:00:00Z",
+          "endDateTime": "2019-08-21T23:00:00Z",
+          "theme": "blue"
+        }
+      }
+    },
+    "TimeOffItem": {
+      "description": "",
+      "required": [
+        "timeOffReasonId",
+        "theme",
+        "startDateTime",
+        "endDateTime"
+      ],
+      "type": "object",
+      "properties": {
+        "timeOffReasonId": {
+          "description": "",
+          "type": "string"
+        },
+        "startDateTime": {
+          "format": "date-time",
+          "description": "",
+          "type": "string"
+        },
+        "endDateTime": {
+          "format": "date-time",
+          "description": "",
+          "type": "string"
+        },
+        "theme": {
+          "description": "",
+          "type": "string"
+        }
+      },
+      "example": {
+        "timeOffReasonId": "TOR_7abd7d54-95c6-4e21-9e18-d9b7958c0cea",
+        "startDateTime": "2019-08-20T23:00:00Z",
+        "endDateTime": "2019-08-21T23:00:00Z",
+        "theme": "blue"
+      }
+    },
+    "TimeOffReasonCollectionResponse": {
+      "title": "Root Type for TimeOffCollectionResponse",
+      "description": "",
+      "required": [
+        "value"
+      ],
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TimeOffReasonResponse"
+          }
+        }
+      },
+      "example": {
+        "value": [
+        ]
+      }
+    },
+    "TimeOffReasonResponse": {
+      "description": "",
+      "required": [
+        "id",
+        "displayName",
+        "isActive"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "",
+          "type": "string"
+        },
+        "displayName": {
+          "description": "",
+          "type": "string"
+        },
+        "iconType": {
+          "description": "",
+          "type": "string"
+        },
+        "isActive": {
+          "description": "",
+          "type": "boolean"
+        }
+      },
+      "example": {
+        "@odata.etag": "\"0900229f-0000-0d00-0000-5d4a81190000\"",
+        "id": "TOR_3510e15d-dcba-4dfb-9977-0614df6cc487",
+        "displayName": "Sick Day",
+        "iconType": "doctor",
+        "isActive": true
+      }
+    },
+    "TimeOffReasonRequest": {
+      "description": "",
+      "required": [
+        "displayName",
+        "isActive"
+      ],
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "description": "",
+          "type": "string"
+        },
+        "iconType": {
+          "description": "",
+          "type": "string"
+        },
+        "isActive": {
+          "description": "",
+          "type": "boolean"
+        }
+      },
+      "example": {
+        "displayName": "Vacation",
+        "iconType": "plane",
+        "isActive": true
+      }
+    },
+    "TimeOffRequest": {
+      "description": "",
+      "required": [
+        "userId"
+      ],
+      "type": "object",
+      "properties": {
+        "userId": {
+          "description": "",
+          "type": "string"
+        },
+        "sharedTimeOff": {
+          "$ref": "#/definitions/TimeOffItem",
+          "description": ""
+        },
+        "draftTimeOff": {
+          "$ref": "#/definitions/TimeOffItem",
+          "description": ""
+        }
+      },
+      "example": {
+        "userId": "c5d0c76b-80c4-481c-be50-923cd8d680a1",
+        "sharedTimeOff": {
+          "timeOffReasonId": "TOR_891045ca-b5d2-406b-aa06-a3c8921245d7",
+          "startDateTime": "2019-03-11T07:00:00Z",
+          "endDateTime": "2019-03-12T07:00:00Z",
+          "theme": "white"
+        },
+        "draftTimeOff": {
+          "timeOffReasonId": "TOR_891045ca-b5d2-406b-aa06-a3c8921245d7",
+          "startDateTime": "2019-03-11T07:00:00Z",
+          "endDateTime": "2019-03-12T07:00:00Z",
+          "theme": "pink"
+        }
+      }
+    },
+    "ShiftResponse": {
+      "title": "Root Type for ShiftResponse",
+      "description": "The root of the ShiftResponse type's schema.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "createdDateTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "lastModifiedDateTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "schedulingGroupId": {
+          "type": "string"
+        },
+        "lastModifiedBy": {
+          "$ref": "#/definitions/IdentitySetResponse",
+          "properties": {
+            "application": {
+              "type": "object"
+            },
+            "device": {
+              "type": "object"
+            },
+            "conversation": {
+              "type": "object"
+            },
+            "user": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "displayName": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "sharedShift": {
+          "$ref": "#/definitions/ShiftItem",
+          "properties": {
+            "displayName": {
+              "type": "string"
+            },
+            "notes": {
+              "type": "string"
+            },
+            "startDateTime": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "endDateTime": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "theme": {
+              "type": "string"
+            },
+            "activities": {
+              "type": "array",
+              "items": {
+              }
+            }
+          }
+        },
+        "draftShift": {
+          "$ref": "#/definitions/ShiftItem",
+          "properties": {
+            "displayName": {
+              "type": "string"
+            },
+            "notes": {
+              "type": "string"
+            },
+            "startDateTime": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "endDateTime": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "theme": {
+              "type": "string"
+            },
+            "activities": {
+              "type": "array",
+              "items": {
+              }
+            }
+          }
+        }
+      },
+      "example": "{\n    \"id\": \"SHFT_577b75d2-a927-48c0-a5d1-dc984894e7b8\",\n    \"createdDateTime\": \"2019-03-14T04:32:51.451Z\",\n    \"lastModifiedDateTime\": \"2019-03-14T05:32:51.451Z\",\n    \"userId\": \"c5d0c76b-80c4-481c-be50-923cd8d680a1\",\n    \"schedulingGroupId\": \"TAG_228940ed-ff84-4e25-b129-1b395cf78be0\",\n    \"lastModifiedBy\": {\n        \"application\": null,\n        \"device\": null,\n        \"conversation\": null,\n        \"user\": {\n            \"id\": \"366c0b19-49b1-41b5-a03f-9f3887bd0ed8\",\n            \"displayName\": \"John Doe\"\n        }\n    },\n    \"sharedShift\": {\n        \"displayName\": \"Day shift\",\n        \"notes\": \"Please do inventory as part of your shift.\",\n        \"startDateTime\": \"2019-03-11T15:00:00Z\",\n        \"endDateTime\": \"2019-03-12T00:00:00Z\",\n        \"theme\": \"blue\",\n        \"activities\": [\n            {\n                \"isPaid\": true,\n                \"startDateTime\": \"2019-03-11T15:00:00Z\",\n                \"endDateTime\": \"2019-03-11T15:15:00Z\",\n                \"code\": \"\",\n                \"displayName\": \"Lunch\"\n            }\n        ]\n    },\n    \"draftShift\": {\n        \"displayName\": \"Day shift\",\n        \"notes\": \"Please do inventory as part of your shift.\",\n        \"startDateTime\": \"2019-03-11T15:00:00Z\",\n        \"endDateTime\": \"2019-03-12T00:00:00Z\",\n        \"theme\": \"blue\",\n        \"activities\": [\n            {\n                \"isPaid\": true,\n                \"startDateTime\": \"2019-03-11T15:00:00Z\",\n                \"endDateTime\": \"2019-03-11T15:30:00Z\",\n                \"code\": \"\",\n                \"displayName\": \"Lunch\"\n            }\n        ]\n    }\n}"
+    },
+    "OpenShiftItem": {
+      "title": "Root Type for ShiftItemResponse",
+      "description": "",
+      "required": [
+        "openSlotCount",
+        "startDateTime",
+        "endDateTime"
+      ],
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "startDateTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "endDateTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "theme": {
+          "type": "string"
+        },
+        "activities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ShiftActivity"
+          }
+        },
+        "openSlotCount": {
+          "format": "int32",
+          "description": "",
+          "type": "integer"
+        }
+      }
+    },
+    "OpenShiftRequest": {
+      "title": "Root Type for ShiftRequest",
+      "description": "",
+      "type": "object",
+      "properties": {
+        "schedulingGroupId": {
+          "type": "string"
+        },
+        "draftOpenShift": {
+          "$ref": "#/definitions/OpenShiftItem",
+          "properties": {
+            "displayName": {
+              "type": "string"
+            },
+            "notes": {
+              "type": "string"
+            },
+            "startDateTime": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "endDateTime": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "theme": {
+              "type": "string"
+            },
+            "activities": {
+              "type": "array",
+              "items": {
+              }
+            }
+          }
+        },
+        "sharedOpenShift": {
+          "$ref": "#/definitions/OpenShiftItem",
+          "properties": {
+            "displayName": {
+              "type": "string"
+            },
+            "notes": {
+              "type": "string"
+            },
+            "startDateTime": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "endDateTime": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "theme": {
+              "type": "string"
+            },
+            "activities": {
+              "type": "array",
+              "items": {
+              }
+            }
+          }
+        }
+      }
+    },
+    "OpenShiftResponse": {
+      "title": "Root Type for ShiftResponse",
+      "description": "",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "createdDateTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "lastModifiedDateTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "schedulingGroupId": {
+          "type": "string"
+        },
+        "lastModifiedBy": {
+          "$ref": "#/definitions/IdentitySetResponse",
+          "properties": {
+            "application": {
+              "type": "object"
+            },
+            "device": {
+              "type": "object"
+            },
+            "conversation": {
+              "type": "object"
+            },
+            "user": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "displayName": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "draftOpenShift": {
+          "$ref": "#/definitions/OpenShiftItem",
+          "properties": {
+            "displayName": {
+              "type": "string"
+            },
+            "notes": {
+              "type": "string"
+            },
+            "startDateTime": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "endDateTime": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "theme": {
+              "type": "string"
+            },
+            "activities": {
+              "type": "array",
+              "items": {
+              }
+            }
+          }
+        },
+        "sharedOpenShift": {
+          "$ref": "#/definitions/OpenShiftItem",
+          "properties": {
+            "displayName": {
+              "type": "string"
+            },
+            "notes": {
+              "type": "string"
+            },
+            "startDateTime": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "endDateTime": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "theme": {
+              "type": "string"
+            },
+            "activities": {
+              "type": "array",
+              "items": {
+              }
+            }
+          }
+        }
+      }
+    },
+    "RequestOpenShift": {
+      "required": [
+        "id",
+        "openShiftId",
+        "senderUserId"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "assignedTo": {
+          "type": "string"
+        },
+        "senderUserId": {
+          "type": "string"
+        },
+        "senderDateTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "senderMessage": {
+          "type": "string"
+        },
+        "managerUserId": {
+          "type": "string"
+        },
+        "managerActionDateTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "managerActionMessage": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "createdDateTime": {
+          "format": "date-time",
+          "description": "",
+          "type": "string"
+        },
+        "lastModifiedDateTime": {
+          "format": "date-time",
+          "description": "",
+          "type": "string"
+        },
+        "openShiftId": {
+          "type": "string"
+        },
+        "lastModifiedBy": {
+          "$ref": "#/definitions/IdentitySetResponse",
+          "description": ""
+        }
+      }
+    },
+    "OpenShiftCollectionResponse": {
+      "title": "Root Type for ShiftCollectionResponse",
+      "description": "",
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OpenShiftResponse"
+          }
+        }
+      }
+    },
+    "OpenShiftsChangeRequest": {
+      "required": [
+        "openShiftId",
+        "id",
+        "senderUserId"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "assignedTo": {
+          "type": "string"
+        },
+        "senderUserId": {
+          "type": "string"
+        },
+        "senderDateTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "senderMessage": {
+          "type": "string"
+        },
+        "managerUserId": {
+          "type": "string"
+        },
+        "managerActionDateTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "managerActionMessage": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "createdDateTime": {
+          "format": "date-time",
+          "description": "",
+          "type": "string"
+        },
+        "lastModifiedDateTime": {
+          "format": "date-time",
+          "description": "",
+          "type": "string"
+        },
+        "openShiftId": {
+          "type": "string"
+        },
+        "lastModifiedBy": {
+          "$ref": "#/definitions/IdentitySetResponse",
+          "description": ""
+        }
+      }
+    },
+    "MessageItem": {
+      "description": "",
+      "type": "object",
+      "properties": {
+        "message": {
+          "description": "",
+          "type": "string"
+        }
+      }
+    },
+    "PatternItem": {
+      "description": "",
+      "required": [
+        "type",
+        "daysOfWeek",
+        "interval"
+      ],
+      "type": "object",
+      "properties": {
+        "type": {
+          "description": "",
+          "type": "string"
+        },
+        "daysOfWeek": {
+          "description": "",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "interval": {
+          "format": "int32",
+          "description": "",
+          "type": "integer"
+        }
+      }
+    },
+    "RangeItem": {
+      "description": "",
+      "required": [
+        "type"
+      ],
+      "type": "object",
+      "properties": {
+        "type": {
+          "description": "",
+          "type": "string"
+        }
+      }
+    },
+    "RecurrenceItem": {
+      "description": "",
+      "required": [
+        "pattern",
+        "range"
+      ],
+      "type": "object",
+      "properties": {
+        "pattern": {
+          "$ref": "#/definitions/PatternItem",
+          "description": ""
+        },
+        "range": {
+          "$ref": "#/definitions/RangeItem",
+          "description": ""
+        }
+      }
+    },
+    "TimeSlotItem": {
+      "description": "",
+      "required": [
+        "startTime",
+        "endTime"
+      ],
+      "type": "object",
+      "properties": {
+        "startTime": {
+          "description": "",
+          "type": "string"
+        },
+        "endTime": {
+          "description": "",
+          "type": "string"
+        }
+      }
+    },
+    "AvailabilityItem": {
+      "description": "",
+      "required": [
+        "recurrence",
+        "timeZone",
+        "timeSlots"
+      ],
+      "type": "object",
+      "properties": {
+        "recurrence": {
+          "$ref": "#/definitions/RecurrenceItem",
+          "description": ""
+        },
+        "timeZone": {
+          "description": "",
+          "type": "string"
+        },
+        "timeSlots": {
+          "description": "",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TimeSlotItem"
+          }
+        }
+      }
+    },
+    "ShiftPreferenceRequest": {
+      "description": "",
+      "required": [
+        "availability"
+      ],
+      "type": "object",
+      "properties": {
+        "availability": {
+          "description": "",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AvailabilityItem"
+          }
+        }
+      }
+    },
+    "ShiftPreferenceResponse": {
+      "description": "",
+      "required": [
+        "id",
+        "availability"
+      ],
+      "type": "object",
+      "properties": {
+        "id": {
+          "description": "",
+          "type": "string"
+        },
+        "availability": {
+          "description": "",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AvailabilityItem"
+          }
+        }
+      }
+    },
+    "SwapShiftsChangeRequest": {
+      "title": "Root Type for swapShiftsChangeRequest",
+      "description": "",
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      },
+      "example": {
+        "message": "message-value"
+      }
+    },
+    "ShiftChangeRequest": {
+      "title": "Root Type for ShiftChangeRequest",
+      "description": "",
+      "type": "object",
+      "properties": {
+        "draftShift": {
+          "$ref": "#/definitions/ShiftChangeItem",
+          "properties": {
+            "displayName": {
+              "type": "string"
+            },
+            "activities": {
+              "type": "array",
+              "items": {
+              }
+            },
+            "isActive": {
+              "type": "boolean"
+            },
+            "startDateTime": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "endDateTime": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "theme": {
+              "type": "string"
+            }
+          }
+        },
+        "sharedShift": {
+          "$ref": "#/definitions/ShiftChangeItem",
+          "properties": {
+            "displayName": {
+              "type": "string"
+            },
+            "activities": {
+              "type": "array",
+              "items": {
+              }
+            },
+            "isActive": {
+              "type": "boolean"
+            },
+            "startDateTime": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "endDateTime": {
+              "format": "date-time",
+              "type": "string"
+            },
+            "theme": {
+              "type": "string"
+            }
+          }
+        },
+        "schedulingGroupId": {
+          "type": "string"
+        },
+        "lastModifiedDateTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "example": {
+        "draftShift": {
+          "displayName": "S20",
+          "activities": [
+          ],
+          "isActive": true,
+          "startDateTime": "2019-07-12T15:00:00.000Z",
+          "endDateTime": "2019-07-13T00:00:00.000Z",
+          "theme": "Blue"
+        },
+        "sharedShift": {
+          "displayName": "S20",
+          "activities": [
+          ],
+          "isActive": true,
+          "startDateTime": "2019-07-12T15:00:00.000Z",
+          "endDateTime": "2019-07-13T00:00:00.000Z",
+          "theme": "Blue"
+        },
+        "schedulingGroupId": "TAG_642c89b0-e478-453d-9430-19fdb8a931b5",
+        "lastModifiedDateTime": "2019-07-11T22:30:31.713Z",
+        "id": "SHFT_b3bd54a3-f825-494f-bc22-96b66cc0e0d7"
+      }
+    },
+    "ShiftChangeItem": {
+      "title": "Root Type for ShiftChangeItem",
+      "description": "",
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "type": "string"
+        },
+        "activities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ShiftActivity"
+          }
+        },
+        "isActive": {
+          "type": "boolean"
+        },
+        "startDateTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "endDateTime": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "theme": {
+          "type": "string"
+        }
+      },
+      "example": {
+        "displayName": "S20",
+        "activities": [
+        ],
+        "isActive": true,
+        "startDateTime": "2019-07-12T15:00:00.000Z",
+        "endDateTime": "2019-07-13T00:00:00.000Z",
+        "theme": "Blue"
+      }
+    }
+  }
+}

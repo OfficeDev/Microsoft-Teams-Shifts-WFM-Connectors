@@ -1,0 +1,73 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <AzureFunctionsVersion>v3</AzureFunctionsVersion>
+    <Configurations>Debug;Release;Trace</Configurations>
+    <_FunctionsSkipCleanOutput>true</_FunctionsSkipCleanOutput>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="Encryption\AesCbcHmacEncryptor.bond" />
+    <None Remove="Encryption\EncryptionManager.bond" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Bond.CSharp" Version="9.0.3" />
+    <PackageReference Include="Flurl" Version="2.8.2" />
+    <PackageReference Include="IdentityModel" Version="4.4.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Localization" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.1.0" />
+    <PackageReference Include="Microsoft.Azure.Services.AppAuthentication" Version="1.6.0" />
+    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.Storage" Version="4.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Localization" Version="3.1.8" />
+    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="2.3.0" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.19.0" />
+    <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="3.0.9" />
+    <PackageReference Include="Microsoft.VisualStudio.SlowCheetah" Version="3.2.26">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Tavis.UriTemplates" Version="1.1.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\WfmTeams.Adapter.AzureKeyVault\WfmTeams.Adapter.AzureKeyVault.csproj" />
+    <ProjectReference Include="..\WfmTeams.Adapter.AzureRedis\WfmTeams.Adapter.AzureRedis.csproj" />
+    <ProjectReference Include="..\WfmTeams.Adapter.AzureStorage\WfmTeams.Adapter.AzureStorage.csproj" />
+    <ProjectReference Include="..\WfmTeams.Adapter.MicrosoftGraph\WfmTeams.Adapter.MicrosoftGraph.csproj" />
+    <ProjectReference Include="..\WfmTeams.Adapter\WfmTeams.Adapter.csproj" />
+    <ProjectReference Include="..\WfmTeams.Connector.BlueYonder\WfmTeams.Connector.BlueYonder.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\Triggers\ChangeRequestTrigger.en.resx">
+      <DependentUpon>ChangeRequestTrigger.en.cs</DependentUpon>      
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\Triggers\ChangeRequestTrigger.fr.resx">
+      <DependentUpon>ChangeRequestTrigger.fr.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="host.Debug.json">
+      <IsTransformFile>true</IsTransformFile>
+      <DependentUpon>host.json</DependentUpon>
+    </None>
+    <None Update="host.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TransformOnBuild>true</TransformOnBuild>
+    </None>
+    <None Update="host.Release.json">
+      <IsTransformFile>true</IsTransformFile>
+      <DependentUpon>host.json</DependentUpon>
+    </None>
+    <None Update="host.Trace.json">
+      <IsTransformFile>true</IsTransformFile>
+      <DependentUpon>host.json</DependentUpon>
+    </None>
+    <None Update="local.settings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+</Project>
