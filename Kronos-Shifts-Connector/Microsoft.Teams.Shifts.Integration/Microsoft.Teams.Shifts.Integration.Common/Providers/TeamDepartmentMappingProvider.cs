@@ -91,6 +91,22 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
             return results;
         }
 
+        /// <inheritdoc/>
+        public async Task<List<TeamToDepartmentJobMappingEntity>> GetMappedTeamDetailsBySchedulingGroupAsync(string teamId, string schedulingGroupId)
+        {
+            await this.EnsureInitializedAsync().ConfigureAwait(false);
+
+            // Table query
+            TableQuery<TeamToDepartmentJobMappingEntity> query = new TableQuery<TeamToDepartmentJobMappingEntity>()
+                .Where(TableQuery.CombineFilters(
+                    TableQuery.GenerateFilterCondition("TeamId", QueryComparisons.Equal, teamId),
+                    TableOperators.And,
+                    TableQuery.GenerateFilterCondition("TeamsScheduleGroupId", QueryComparisons.Equal, schedulingGroupId)));
+
+            // Results list
+            return await this.GetQueryResultsAsync(query).ConfigureAwait(false);
+        }
+
         /// <summary>
         /// This method is to make sure to get all the records from the TeamToDepartmentJobMappingEntity table.
         /// </summary>

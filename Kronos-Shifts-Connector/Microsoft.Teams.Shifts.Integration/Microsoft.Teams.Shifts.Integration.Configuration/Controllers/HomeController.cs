@@ -33,6 +33,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
     {
         private readonly IConfigurationProvider configurationProvider;
         private readonly TelemetryClient telemetryClient;
+        private readonly Utility utility;
         private readonly IGraphUtility graphUtility;
         private readonly ILogonActivity logonActivity;
         private readonly AppSettings appSettings;
@@ -43,6 +44,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
         /// </summary>
         /// <param name="configurationProvider">configurationProvider DI.</param>
         /// <param name="telemetryClient">The logging mechanism through Application Insights.</param>
+        /// <param name="utility">Utility DI.</param>
         /// <param name="graphUtility">Having the ability to DI the mechanism to get the token from MS Graph.</param>
         /// <param name="logonActivity">Logon activity.</param>
         /// <param name="appSettings">app settings.</param>
@@ -50,6 +52,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
         public HomeController(
             BusinessLogic.Providers.IConfigurationProvider configurationProvider,
             TelemetryClient telemetryClient,
+            Utility utility,
             IGraphUtility graphUtility,
             ILogonActivity logonActivity,
             AppSettings appSettings,
@@ -57,6 +60,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
         {
             this.configurationProvider = configurationProvider;
             this.telemetryClient = telemetryClient;
+            this.utility = utility;
             this.graphUtility = graphUtility;
             this.logonActivity = logonActivity;
             this.appSettings = appSettings;
@@ -255,17 +259,8 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                 var workforceIntegrationRequest = this.CreateWorkforceIntegrationRequest(wfiDisplayName);
                 workforceIntegrationRegProps.Add("workforceIntegrationDisplayName", wfiDisplayName);
 
-                var clientId = this.appSettings.ClientId;
-                var instance = this.appSettings.Instance;
-                var clientSecret = this.appSettings.ClientSecret;
-
-                var userId = this.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
-                var graphAccessToken = await this.graphUtility.GetAccessTokenAsync(
-                    tenantId,
-                    instance,
-                    clientId,
-                    clientSecret,
-                    userId).ConfigureAwait(false);
+                var graphConfigurationDetails = this.utility.GetTenantDetails();
+                graphConfigurationDetails.ShiftsAdminAadObjectId = this.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
 
                 configurationEntity.WorkforceIntegrationSecret = workforceIntegrationRequest.Encryption.Secret;
                 configurationEntity.AdminAadObjectId = this.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
@@ -275,7 +270,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                 // Call the Graph API to register the workforce integration
                 var workforceIntegrationResponse = await this.graphUtility.RegisterWorkforceIntegrationAsync(
                     workforceIntegrationRequest,
-                    graphAccessToken).ConfigureAwait(false);
+                    graphConfigurationDetails).ConfigureAwait(false);
 
                 if (workforceIntegrationResponse.IsSuccessStatusCode)
                 {
@@ -284,7 +279,8 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                     var workforceIntegrationResponseObj = JsonConvert.DeserializeObject<WorkforceIntegrationEntity>(workforceResponse);
                     configurationEntity.WorkforceIntegrationId = workforceIntegrationResponseObj.Id;
                     configurationEntity.WorkforceIntegrationSecret = workforceIntegrationRequest.Encryption.Secret;
-                    configurationEntity.AdminAadObjectId = this.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
+                    configurationEntity.AdminAadObjectId = graphConfigurationDetails.ShiftsAdminAadObjectId;
+
                     await this.configurationProvider.SaveOrUpdateConfigurationAsync(configurationEntity).ConfigureAwait(false);
 
                     return this.RedirectToAction("Index", "Home").WithSuccess(Resources.WFIRegSuccessHeaderText, string.Format(CultureInfo.InvariantCulture, Resources.WFIRegSuccessContentText, workforceIntegrationResponseObj.DisplayName));
@@ -333,16 +329,12 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
                         configurationEntity?.WorkforceIntegrationId));
                 }
 
-                var clientId = this.appSettings.ClientId;
-                var instance = this.appSettings.Instance;
-                var clientSecret = this.appSettings.ClientSecret;
-                var userId = this.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
-
-                var graphAccessToken = await this.graphUtility.GetAccessTokenAsync(tenantId, instance, clientId, clientSecret, userId).ConfigureAwait(false);
+                var graphConfigurationDetails = this.utility.GetTenantDetails();
+                graphConfigurationDetails.ShiftsAdminAadObjectId = this.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
 
                 var wfiDeletionResponse = await this.graphUtility.DeleteWorkforceIntegrationAsync(
                     configurationEntity?.WorkforceIntegrationId,
-                    graphAccessToken).ConfigureAwait(false);
+                    graphConfigurationDetails).ConfigureAwait(false);
 
                 if (!string.IsNullOrEmpty(wfiDeletionResponse))
                 {

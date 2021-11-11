@@ -27,7 +27,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     /// </summary>
     [Authorize(Policy = "AppID")]
     [Route("api/[controller]")]
-    [ApiController]
     public class SwapShiftEligibilityController : Controller
     {
         private readonly AppSettings appSettings;
@@ -87,14 +86,14 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
             var offeredStartTime = startDate.TimeOfDay.ToString();
             var offeredEndTime = endDate.TimeOfDay.ToString();
-            var offeredShiftDate = this.utility.ConvertToKronosDate(startDate);
-            var swapShiftDate = this.utility.ConvertToKronosDate(endDate);
+            var offeredShiftDate = this.utility.FormatDateForKronos(startDate);
+            var swapShiftDate = this.utility.FormatDateForKronos(endDate);
             var days = this.GetDateList();
             List<TeamsShiftMappingEntity> eligibleShifts = new List<TeamsShiftMappingEntity>();
 
             foreach (var day in days)
             {
-                var kronosDate = this.utility.ConvertToKronosDate(day);
+                var kronosDate = this.utility.FormatDateForKronos(day);
                 var eligibleEmployees = await this.swapShiftEligibilityActivity.SendEligibilityRequestAsync(
                     new Uri(configuration.WfmEndPoint),
                     configuration.KronosSession,

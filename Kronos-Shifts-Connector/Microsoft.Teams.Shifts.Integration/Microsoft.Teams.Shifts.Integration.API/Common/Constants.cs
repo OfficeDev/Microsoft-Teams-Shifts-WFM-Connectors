@@ -60,11 +60,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         public const string WFISupportedEligibilityFiltering = "SwapRequest";
 
         /// <summary>
-        /// Number of open slots from Kronos.
-        /// </summary>
-        public const string KronosOpenShiftsSlotCount = "1";
-
-        /// <summary>
         /// Number of open slots for creating a new Open Shift in Shifts.
         /// </summary>
         public const int ShiftsOpenSlotCount = 1;

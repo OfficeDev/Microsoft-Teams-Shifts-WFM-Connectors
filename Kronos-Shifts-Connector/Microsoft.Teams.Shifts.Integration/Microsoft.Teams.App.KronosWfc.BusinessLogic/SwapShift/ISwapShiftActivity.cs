@@ -7,6 +7,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
     using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using Microsoft.Teams.App.KronosWfc.Models.CommonEntities;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.SwapShift;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.SwapShift;
     using CommonResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Common.Response;
@@ -19,7 +20,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
     public interface ISwapShiftActivity
     {
         /// <summary>
-        /// Fecth time off request details for displaying history.
+        /// Fecth all swap shifts that have either been 'approved', 'refused' or 'retracted'.
         /// </summary>
         /// <param name="endPointUrl">The Kronos WFC endpoint URL.</param>
         /// <param name="jSession">JSession.</param>
@@ -27,7 +28,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
         /// <param name="personNumbers">Person number who created request.</param>
         /// <param name="statusName">Status of request.</param>
         /// <returns>Request details response object.</returns>
-        Task<FetchApprove.SwapShiftData.Response> GetSwapShiftRequestDetailsAsync(
+        Task<FetchApprove.SwapShiftData.Response> GetAllSwapShiftRequestDetailsAsync(
            Uri endPointUrl,
            string jSession,
            string queryDateSpan,
@@ -53,7 +54,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
         /// <param name="personNumber">The person number.</param>
         /// <param name="reqId">The SwapShift request ID.</param>
         /// <param name="querySpan">The query date span for the swap shift request.</param>
-        /// <param name="comment">The comment to apply for the submission - if there is any comment.</param>
         /// <param name="endpointUrl">The Kronos WFC API Endpoint URL.</param>
         /// <returns>A unit of execution that contains a response object.</returns>
         Task<SubmitResponse> SubmitSwapShiftAsync(
@@ -61,7 +61,6 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
             string personNumber,
             string reqId,
             string querySpan,
-            string comment,
             Uri endpointUrl);
 
         /// <summary>
@@ -72,7 +71,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
         /// <param name="personNumber">The Kronos person number.</param>
         /// <param name="status">The status of the SwapShift request.</param>
         /// <param name="querySpan">The query date span.</param>
-        /// <param name="comment">The comment to apply, if any comment is applicable.</param>
+        /// <param name="comments">The comment to apply, if any comment is applicable.</param>
         /// <param name="endpointUrl">The Kronos WFC API Endpoint URL.</param>
         /// <returns>A unit of execution that contains a response.</returns>
         Task<Response> SubmitApprovalAsync(
@@ -81,7 +80,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
             string personNumber,
             string status,
             string querySpan,
-            string comment,
+            Comments comments,
             Uri endpointUrl);
 
         /// <summary>
@@ -92,6 +91,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
         /// <param name="queryDateSpan">The query date span.</param>
         /// <param name="kronosPersonNumber">The Kronos person number.</param>
         /// <param name="approved">Whether the request is being accepted or denied.</param>
+        /// <param name="comments">The manager comments to add to the request.</param>
         /// <param name="kronosId">The id of the swap shift in Kronos.</param>
         /// <returns>A response.</returns>
         Task<FetchApprove.SwapShiftData.Response> ApproveOrDenySwapShiftRequestsForUserAsync(
@@ -100,6 +100,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
             string queryDateSpan,
             string kronosPersonNumber,
             bool approved,
+            Comments comments,
             string kronosId);
 
         /// <summary>

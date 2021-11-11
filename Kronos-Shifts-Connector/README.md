@@ -73,9 +73,14 @@ Review and ensure AAD users, Teams, and Scheduling Groups are properly setup in 
 #### Configuration to Enable Syncing of Notes
 Kronos requires a **Comment Text** value to be assigned to any comments or notes. This requires you to firstly configure each comment text before adding the chosen values in to the connector appSettings - this will be done when we deploy using the ARM template.
 
-The following settings you must configure are:
+You must configure the following settings:
+   - **ShiftNotesCommentText** - Used for syncing shift notes and open shift notes.
    - **SenderTimeOffRequestCommentText** - Used for syncing time off request notes added by the requestor.
-   - **ManagerTimeOffRequestCommentText** - Used for syncing time off request notes added by the manager. (Please note we do not currently support manager TOR note syncing, however plan to in the near future).
+   - **ManagerTimeOffRequestCommentText** - Used for syncing time off request notes added by the manager. 
+   - **SenderSwapRequestCommentText** - Used for syncing swap request notes added by the requestor.
+   - **RecipientSwapRequestCommentText** - Used for syncing swap request notes added by the recipient.
+   - **ManagerSwapRequestCommentText** - Used for syncing swap request notes added by the manager. 
+   - **ManagerOpenShiftRequestCommentText** - Used for syncing open shift request notes added by the manager. 
 
 1. First Log in to Kronos as an admin and navigate to the Comments section under Setup -> CommonSetup.
 ![Comment Setup Screen](images/figure53.PNG)
@@ -143,6 +148,7 @@ Here are the following requirements to correctly deploy the **Shifts-Kronos Inte
 4. You will be prompted to click on the *Deploy to Azure* button below, and when prompted log in to your Azure subscription
 
 [![Deploy to Azure](https://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAndy65%2FMicrosoft-Teams-Shifts-WFM-Connectors%2Fmaster%2FKronos-Shifts-Connector%2FDeployment%2Fazuredeploy.json)  
+
 5. It will navigate to the form for filling the template parameters  
 6. The figure below shows the form once the *Deploy to Azure* button is clicked
 
@@ -172,11 +178,18 @@ Here are the following requirements to correctly deploy the **Shifts-Kronos Inte
 |futureSwapEligibilityDays|The number of days in the future to query when checking swap shift eligibility|
 |correctDateSpanForOutboundCalls|The number of days in the past and future when it comes to having outbound calls for the Open Shift and Swap Shift Requests|
 |numberOfOrgJobPathSectionsForActivityName|This is the number of org job path sections you want to appear as a Teams shift activity name (this is only used when syncing a shift transfer). <br /> Example: ./Contoso/UK/Stores/London/Checkout/Checkout Operator <br /> - A value of 2 would lead to shift transfer activities having a title of: _Checkout - Checkout Operator_ <br /> - A value of 1 would lead to shift transfer activities having a title of: _Checkout Operator_|
-|managerTimeOffRequestCommentText|Used for syncing time off request notes added by the manager. (Please note we do not currently support manager TOR note syncing, however plan to in the near future)|
+|transferredShiftDisplayName|This is the word or phrase you want to appear before the shift hours in the display name of a shift in the event that the shift contains a transfer. There is a 16 character limit. The default value is TRANSFER.|
+|shiftNotesCommentText|Used for syncing shift notes and open shift notes|
+|managerTimeOffRequestCommentText|Used for syncing time off request notes added by the manager.|
 |senderTimeOffRequestCommentText|Used for syncing time off request notes added by the requestor|
+|managerSwapRequestCommentText|Used for syncing swap request notes added by the manager.|
+|senderSwapRequestCommentText|Used for syncing swap request notes added by the requestor|
+|recipientSwapRequestCommentText|Used for syncing swap request notes added by the recipient|
+|managerOpenShiftRequestCommentText|Used for syncing open shift request notes added by the manager|
 |kronosUserName|The Kronos WFC SuperUser name|
 |kronosPassword|The Kronos WFC SuperUser password|
 |authTokenCacheLifetimeInSeconds|The number of seconds to set the time to live when caching the Kronos session auth token. You should set this to less than or equal to you **global.webserver.session.timeout**. <br/>To find this value please login to Kronos as an admin and navigate to Setup -> System Configuration -> System Settings. <br/>Select **Global Values** and find the value assigned to global.webserver.session.timeout|
+|allowManagersToModifyScheduleInTeams|Setting this to true will enable managers to create shifts and open shifts as well as edit and delete shifts within the Teams client.<br/>This setting does not affect manager approvals.|
 |gitRepoUrl|The public GitHub repository URL|
 |gitBranch|The specific branch from which the code can be deployed. The recommended value is master, however, at the time of deployment this value can be changed|
 
@@ -536,7 +549,6 @@ In the current version of the connector, it is necessary to make the following C
    	1. **Shift Swap Request** (for Shift Swap Requests)
     	2. **Open Shift - Request** (for Open Shift Requests)
     	3. **TOR** (for Time Off Requests)
-3. When submitting shift swap requests the connector uses a specific comment type which must be created in Kronos with the name **Other reason**
 
 ### Step 5: Perform first time sync
 

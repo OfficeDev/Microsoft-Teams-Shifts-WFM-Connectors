@@ -23,7 +23,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     /// This controller will be responsible for listening for a request from Shifts.
     /// </summary>
     [Route("/v1/connect")]
-    [ApiController]
     public class ConnectController : ControllerBase
     {
         private readonly TelemetryClient telemetryClient;

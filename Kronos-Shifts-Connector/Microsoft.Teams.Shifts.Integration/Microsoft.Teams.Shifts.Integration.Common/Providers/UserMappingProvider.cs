@@ -37,7 +37,32 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
         }
 
         /// <summary>
-        /// Function that will return all of the Users that are mapped in Azure Table storage.
+        /// Function that will return all of the users that are mapped in Azure Table storage.
+        /// </summary>
+        /// <returns>A list of the mapped Users.</returns>
+        public async Task<List<AllUserMappingEntity>> GetAllMappedUserDetailsAsync()
+        {
+            await this.EnsureInitializedAsync().ConfigureAwait(false);
+
+            // Table query
+            TableQuery<AllUserMappingEntity> query = new TableQuery<AllUserMappingEntity>();
+
+            // Results list
+            List<AllUserMappingEntity> results = new List<AllUserMappingEntity>();
+            TableContinuationToken continuationToken = null;
+            do
+            {
+                TableQuerySegment<AllUserMappingEntity> queryResults = await this.userMappingCloudTable.ExecuteQuerySegmentedAsync(query, continuationToken).ConfigureAwait(false);
+                continuationToken = queryResults.ContinuationToken;
+                results.AddRange(queryResults.Results);
+            }
+            while (continuationToken != null);
+
+            return results;
+        }
+
+        /// <summary>
+        /// Function that will return all of the active users that are mapped in Azure Table storage.
         /// </summary>
         /// <returns>A list of the mapped Users.</returns>
         public async Task<List<AllUserMappingEntity>> GetAllActiveMappedUserDetailsAsync()

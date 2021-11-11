@@ -7,10 +7,9 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
     using System;
     using System.Collections.Generic;
     using System.Globalization;
-    using System.Linq;
     using System.Threading.Tasks;
-    using System.Xml.Linq;
     using Microsoft.ApplicationInsights;
+    using Microsoft.Teams.App.KronosWfc.BusinessLogic.Common;
     using Microsoft.Teams.App.KronosWfc.Common;
     using Microsoft.Teams.App.KronosWfc.Models.CommonEntities;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities;
@@ -45,16 +44,8 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
             this.apiHelper = apiHelper;
         }
 
-        /// <summary>
-        /// Fecth swap shift request details for displaying history.
-        /// </summary>
-        /// <param name="endPointUrl">The Kronos WFC endpoint URL.</param>
-        /// <param name="jSession">JSession.</param>
-        /// <param name="queryDateSpan">QueryDateSpan string.</param>
-        /// <param name="personNumbers">List of person numbers whose request is approved.</param>
-        /// <param name="statusName">Request status name.</param>
-        /// <returns>Request details response object.</returns>
-        public async Task<FetchApprovalResponse> GetSwapShiftRequestDetailsAsync(
+        /// <inheritdoc/>
+        public async Task<FetchApprovalResponse> GetAllSwapShiftRequestDetailsAsync(
             Uri endPointUrl,
             string jSession,
             string queryDateSpan,
@@ -81,13 +72,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
             return tupleResponse.ProcessResponse<FetchApprovalResponse>(this.telemetryClient);
         }
 
-        /// <summary>
-        /// The method to create the Swap Shift Request in Draft state.
-        /// </summary>
-        /// <param name="jSession">The jSession.</param>
-        /// <param name="obj">The input SwapShiftObj.</param>
-        /// <param name="apiEndpoint">The Kronos API Endpoint.</param>
-        /// <returns>A unit of execution that contains the response object.</returns>
+        /// <inheritdoc/>
         public async Task<SubmitResponse> DraftSwapShiftAsync(
             string jSession,
             SwapShiftObj obj,
@@ -126,22 +111,12 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
             }
         }
 
-        /// <summary>
-        /// The method to post a SwapShift request in a offered state.
-        /// </summary>
-        /// <param name="jSession">Kronos session.</param>
-        /// <param name="personNumber">The Kronos personNumber.</param>
-        /// <param name="reqId">The reqId of swap shift request.</param>
-        /// <param name="querySpan">The querySpan.</param>
-        /// <param name="comment">The comment for request.</param>
-        /// <param name="endpointUrl">Endpoint Kronos URL.</param>
-        /// <returns>request to send to Kronos.</returns>
+        /// <inheritdoc/>
         public async Task<SubmitResponse> SubmitSwapShiftAsync(
             string jSession,
             string personNumber,
             string reqId,
             string querySpan,
-            string comment,
             Uri endpointUrl)
         {
             var telemetryProps = new Dictionary<string, string>()
@@ -155,11 +130,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
 
             try
             {
-                string xmlRequest = this.CreateSwapShiftSubmitRequest(
-                    personNumber,
-                    reqId,
-                    querySpan,
-                    comment);
+                string xmlRequest = this.CreateSwapShiftSubmitRequest(personNumber, reqId, querySpan);
 
                 var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
                     endpointUrl,
@@ -182,24 +153,14 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
             }
         }
 
-        /// <summary>
-        /// The method to post a SwapShift request in an offered state.
-        /// </summary>
-        /// <param name="jSession">The JSession (Kronos "token").</param>
-        /// <param name="reqId">The SwapShift Request ID.</param>
-        /// <param name="personNumber">The Kronos Person Number.</param>
-        /// <param name="status">The status to update.</param>
-        /// <param name="querySpan">The query date span.</param>
-        /// <param name="comment">The comment to be applied wherever applicable.</param>
-        /// <param name="endpointUrl">The Kronos WFC API Endpoint URL.</param>
-        /// <returns>A unit of execution that contains the response object.</returns>
+        /// <inheritdoc/>
         public async Task<SwapShiftResponse> SubmitApprovalAsync(
             string jSession,
             string reqId,
             string personNumber,
             string status,
             string querySpan,
-            string comment,
+            Comments comments,
             Uri endpointUrl)
         {
             var telemetryProps = new Dictionary<string, string>()
@@ -211,12 +172,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
 
             this.telemetryClient.TrackTrace($"SwapShiftActivity - SubmitApprovalAsync starts: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}", telemetryProps);
 
-            string xmlRequest = this.CreateApprovalRequest(
-                personNumber,
-                reqId,
-                status,
-                querySpan,
-                comment);
+            string xmlRequest = CommonRequests.CreateUpdateStatusRequest(personNumber, reqId, status, querySpan, comments);
 
             var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
                 endpointUrl,
@@ -229,15 +185,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
             return tupleResponse.ProcessResponse<SwapShiftResponse>(this.telemetryClient);
         }
 
-        /// <summary>
-        /// The method to retract a given swap request.
-        /// </summary>
-        /// <param name="jSession">The JSession (Kronos "token").</param>
-        /// <param name="reqId">The SwapShift Request ID.</param>
-        /// <param name="personNumber">The Kronos Person Number.</param>
-        /// <param name="querySpan">The query date span.</param>
-        /// <param name="endpointUrl">The Kronos WFC API Endpoint URL.</param>
-        /// <returns>A unit of execution that contains the response object.</returns>
+        /// <inheritdoc/>
         public async Task<CommonResponse> SubmitRetractionRequest(
             string jSession,
             string reqId,
@@ -250,25 +198,19 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
             return response.ProcessResponse<CommonResponse>(this.telemetryClient);
         }
 
-        /// <summary>
-        /// Approves or Denies the request.
-        /// </summary>
-        /// <param name="endPointUrl">The Kronos WFC endpoint URL.</param>
-        /// <param name="jSession">JSession.</param>
-        /// <param name="queryDateSpan">QueryDateSpan string.</param>
-        /// <param name="kronosPersonNumber">The Kronos Person Number.</param>
-        /// <param name="approved">Whether the request needs to be approved or denied.</param>
-        /// <param name="kronosId">The Kronos id of the request.</param>
-        /// <returns>Request details response object.</returns>
+        /// <inheritdoc/>
         public async Task<FetchApprovalResponse> ApproveOrDenySwapShiftRequestsForUserAsync(
             Uri endPointUrl,
             string jSession,
             string queryDateSpan,
             string kronosPersonNumber,
             bool approved,
+            Comments comments,
             string kronosId)
         {
-            var swapShiftApprovalRequest = this.CreateApprovalRequest(queryDateSpan, kronosPersonNumber, approved, kronosId);
+            var status = approved ? ApiConstants.ApprovedStatus : ApiConstants.Refused;
+
+            var swapShiftApprovalRequest = CommonRequests.CreateUpdateStatusRequest(kronosPersonNumber, kronosId, status, queryDateSpan, comments);
             var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
                 endPointUrl,
                 SoapEnvOpen,
@@ -347,14 +289,16 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
                                     StartDateTime = swapShiftObj.Emp2FromDateTime.ToString(ApiConstants.KronosAcceptableDateFormat, CultureInfo.InvariantCulture),
                                 },
                             },
+                            Comments = swapShiftObj.Comments,
                         },
                     },
                 },
             };
 
-            this.telemetryClient.TrackTrace($"SwapShiftActivity - CreateSwapShiftDraftRequest: {rq.XmlSerialize().ToString(CultureInfo.InvariantCulture)}");
+            var request = rq.XmlSerialize();
+            this.telemetryClient.TrackTrace($"SwapShiftActivity - CreateSwapShiftDraftRequest: {request.ToString(CultureInfo.InvariantCulture)}");
             this.telemetryClient.TrackTrace($"SwapShiftActivity - CreateSwapShiftDraftRequest ends: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
-            return rq.XmlSerialize();
+            return request;
         }
 
         /// <summary>
@@ -363,13 +307,8 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
         /// <param name="personNumber">The Kronos personNumber.</param>
         /// <param name="reqId">The reqId of swap shift request.</param>
         /// <param name="querySpan">The querySpan.</param>
-        /// <param name="comment">The comment for request.</param>
         /// <returns>Request to send to Kronos.</returns>
-        private string CreateSwapShiftSubmitRequest(
-            string personNumber,
-            string reqId,
-            string querySpan,
-            string comment)
+        private string CreateSwapShiftSubmitRequest(string personNumber, string reqId, string querySpan)
         {
             this.telemetryClient.TrackTrace($"SwapShiftActivity - CreateSwapShiftSubmitRequest starts: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
 
@@ -386,42 +325,24 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
                         },
                     },
                     QueryDateSpan = querySpan,
-                    RequestStatusChanges = new RequestManagementSwap.RequestStatusChanges(),
-                },
-            };
-
-            rq.RequestMgmt.RequestStatusChanges.RequestStatusChange = new RequestManagementSwap.RequestStatusChange[]
-            {
-                new RequestManagementSwap.RequestStatusChange
-                {
-                    Comments = comment == null ? null : new Comments
+                    RequestStatusChanges = new RequestManagementSwap.RequestStatusChanges()
                     {
-                        Comment = new List<Comment>
+                        RequestStatusChange = new RequestManagementSwap.RequestStatusChange[]
                         {
-                            new Comment
+                            new RequestManagementSwap.RequestStatusChange
                             {
-                                CommentText = ApiConstants.SwapShiftComment,
-                                Notes = new Notes
-                                {
-                                    Note = new Note
-                                    {
-#pragma warning disable CA1303 // Do not pass literals as localized parameters
-                                        Text = ApiConstants.SwapShiftNoteText,
-#pragma warning restore CA1303 // Do not pass literals as localized parameters
-                                    },
-                                },
+                                RequestId = reqId,
+                                ToStatusName = ApiConstants.Offered,
                             },
                         },
                     },
-                    RequestId = reqId,
-                    ToStatusName = ApiConstants.Offered,
                 },
             };
 
-            this.telemetryClient.TrackTrace($"SwapShiftActivity - CreateSwapShiftSubmitRequest: {rq.XmlSerialize().ToString(CultureInfo.InvariantCulture)}");
+            var request = rq.XmlSerialize();
+            this.telemetryClient.TrackTrace($"SwapShiftActivity - CreateSwapShiftSubmitRequest: {request.ToString(CultureInfo.InvariantCulture)}");
             this.telemetryClient.TrackTrace($"SwapShiftActivity - CreateSwapShiftSubmitRequest ends: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
-
-            return rq.XmlSerialize();
+            return request;
         }
 
         /// <summary>
@@ -455,10 +376,10 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
                 personIdentities.Add(personIdentity);
             }
 
-            GetDetailsRequest rq = new GetDetailsRequest
+            var rq = new Models.RequestEntities.SwapShift.GetAllApprovedRequests.GetAllApprovedRequest
             {
                 Action = RetrieveWithDetails,
-                RequestMgmt = new RequestMgmt
+                RequestMgmt = new Models.RequestEntities.Common.RequestMgmt
                 {
                     QueryDateSpan = $"{queryDateSpan}",
                     RequestFor = SwapShiftRequest,
@@ -470,115 +391,10 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.SwapShift
                 },
             };
 
-            this.telemetryClient.TrackTrace($"SwapShiftActivity - CreateApproveSwapShiftRequests: {rq.XmlSerialize().ToString(CultureInfo.InvariantCulture)}", telemetryProps);
+            var request = rq.XmlSerialize();
+            this.telemetryClient.TrackTrace($"SwapShiftActivity - CreateApproveSwapShiftRequests: {request.ToString(CultureInfo.InvariantCulture)}", telemetryProps);
             this.telemetryClient.TrackTrace($"SwapShiftActivity - CreateApproveSwapShiftRequests ends: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}", telemetryProps);
-            return rq.XmlSerialize();
-        }
-
-        /// <summary>
-        /// This method creates the approval request.
-        /// </summary>
-        /// <param name="personNumber">The Kronos Person Number.</param>
-        /// <param name="reqId">The SwapShift Request ID.</param>
-        /// <param name="status">The incoming status.</param>
-        /// <param name="querySpan">The query date span.</param>
-        /// <param name="comment">The comment to apply if applicable.</param>
-        /// <returns>A string that represents the request XML.</returns>
-        private string CreateApprovalRequest(
-            string personNumber,
-            string reqId,
-            string status,
-            string querySpan,
-            string comment)
-        {
-            this.telemetryClient.TrackTrace($"SwapShiftActivity - CreateApprovalRequest starts at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
-
-            RequestManagementSwap.Request rq = new RequestManagementSwap.Request()
-            {
-                Action = ApiConstants.UpdateStatus,
-                RequestMgmt = new RequestManagementSwap.RequestMgmt()
-                {
-                    Employees = new RequestManagementSwap.Employee()
-                    {
-                        PersonIdentity = new RequestManagementSwap.PersonIdentity()
-                        {
-                            PersonNumber = personNumber,
-                        },
-                    },
-                    QueryDateSpan = querySpan,
-                    RequestStatusChanges = new RequestManagementSwap.RequestStatusChanges(),
-                },
-            };
-
-            rq.RequestMgmt.RequestStatusChanges.RequestStatusChange = new RequestManagementSwap.RequestStatusChange[]
-            {
-                new RequestManagementSwap.RequestStatusChange
-                {
-                    Comments = comment == null ? null : new Comments
-                    {
-                        Comment = new List<Comment>
-                        {
-                            new Comment
-                            {
-                                CommentText = ApiConstants.SwapShiftComment,
-                                Notes = new Notes
-                                {
-                                    Note = new Note
-                                    {
-                                        Text = comment,
-                                    },
-                                },
-                            },
-                        },
-                    },
-                    RequestId = reqId,
-                    ToStatusName = status,
-                },
-            };
-
-            this.telemetryClient.TrackTrace($"SwapShiftActivity - CreateApprovalRequest: {rq.XmlSerialize().ToString(CultureInfo.InvariantCulture)}");
-            this.telemetryClient.TrackTrace($"SwapShiftActivity - CreateApprovalRequest starts at: {DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture)}");
-            return rq.XmlSerialize();
-        }
-
-        /// <summary>
-        /// Approval/Denial request.
-        /// </summary>
-        /// <param name="queryDateSpan">The queryDateSpan string.</param>
-        /// <param name="personNumber">The Kronos Person Number.</param>
-        /// <param name="approved">Whether the request needs to be approved or denied.</param>
-        /// <param name="id">The Kronos id of the request.</param>
-        /// <returns>XML request string.</returns>
-        private string CreateApprovalRequest(
-            string queryDateSpan,
-            string personNumber,
-            bool approved,
-            string id)
-        {
-            var request =
-                new RequestManagementSwap.Request
-                {
-                    Action = approved ? ApiConstants.ApproveRequests : ApiConstants.RefuseRequests,
-                    RequestMgmt = new RequestManagementSwap.RequestMgmt
-                    {
-                        Employees = new RequestManagementSwap.Employee
-                        {
-                            PersonIdentity = new RequestManagementSwap.PersonIdentity
-                            {
-                                PersonNumber = personNumber,
-                            },
-                        },
-                        QueryDateSpan = queryDateSpan,
-                        RequestIds = new RequestManagementSwap.RequestIds
-                        {
-                            RequestId = new RequestManagementSwap.RequestId[1]
-                            {
-                                new RequestManagementSwap.RequestId() { Id = id },
-                            },
-                        },
-                    },
-                };
-            return request.XmlSerialize();
+            return request;
         }
 
         /// <summary>

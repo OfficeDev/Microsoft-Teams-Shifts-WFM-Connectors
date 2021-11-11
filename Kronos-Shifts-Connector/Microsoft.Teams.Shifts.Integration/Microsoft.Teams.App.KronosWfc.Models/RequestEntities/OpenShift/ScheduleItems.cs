@@ -15,9 +15,10 @@ namespace Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Schedule
         /// <summary>
         /// Gets or sets the necessary items.
         /// </summary>
-        [XmlElement("ScheduleShift", typeof(ScheduleShift))]
+        [XmlElement("ScheduleShift")]
 #pragma warning disable CA2227 // Collection properties should be read only
-        public List<ScheduleShift> ScheduleShifts { get; set; }
+        public List<ScheduleShift> ScheduleShift { get; set; }
+
 #pragma warning restore CA2227 // Collection properties should be read only
     }
 }

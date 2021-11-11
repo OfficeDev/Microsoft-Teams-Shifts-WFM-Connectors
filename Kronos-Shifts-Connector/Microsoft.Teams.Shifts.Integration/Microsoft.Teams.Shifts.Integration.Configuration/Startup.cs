@@ -248,6 +248,7 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration
                 provider.GetRequiredService<ILogonActivity>(),
                 provider.GetRequiredService<IHyperFindLoadAllActivity>(),
                 provider.GetRequiredService<ShiftsTeamKronosDepartmentViewModel>(),
+                provider.GetRequiredService<Utility>(),
                 provider.GetRequiredService<IGraphUtility>(),
                 provider.GetRequiredService<AppSettings>(),
                 provider.GetRequiredService<BusinessLogic.Providers.IConfigurationProvider>(),

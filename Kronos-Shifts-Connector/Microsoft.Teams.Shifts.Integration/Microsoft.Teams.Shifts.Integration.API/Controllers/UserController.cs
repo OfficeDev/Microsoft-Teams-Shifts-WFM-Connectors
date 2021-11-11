@@ -21,7 +21,6 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     /// </summary>
     [Route("api/Users")]
     [Authorize(Policy = "AppID")]
-    [ApiController]
     public class UserController : Controller
     {
         private readonly AppSettings appSettings;
@@ -80,16 +79,23 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             }
 
             // Get the mapped user details from user to user mapping table.
-            var mappedUsersResult = await this.userMappingProvider.GetAllActiveMappedUserDetailsAsync().ConfigureAwait(false);
+            var mappedUsersResult = await this.userMappingProvider.GetAllMappedUserDetailsAsync().ConfigureAwait(false);
 
             foreach (var mappedUser in mappedUsersResult)
             {
                 var isUserActive = response.HyperFindResult.Any(h => h.PersonNumber == mappedUser.RowKey);
 
-                if (isUserActive == false)
+                if (!isUserActive && mappedUser.IsActive)
                 {
-                    // User is either inactive or terminated in Kronos
+                    // User is either inactive or terminated in Kronos but appears as active in cache.
                     mappedUser.IsActive = false;
+                    await this.userMappingProvider.SaveOrUpdateUserMappingEntityAsync(mappedUser).ConfigureAwait(false);
+                }
+
+                if (isUserActive && !mappedUser.IsActive)
+                {
+                    // User is active in Kronos but has previosuly been marked as inactive in cache.
+                    mappedUser.IsActive = true;
                     await this.userMappingProvider.SaveOrUpdateUserMappingEntityAsync(mappedUser).ConfigureAwait(false);
                 }
             }

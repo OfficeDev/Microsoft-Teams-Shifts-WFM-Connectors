@@ -150,6 +150,20 @@
         "description": "This is the number of org job path sections you want to appear as a Teams shift activity name (this is only used when syncing a shift transfer)."
       }
     },
+    "transferredShiftDisplayName": {
+      "type": "string",
+      "maxLength": 16,
+      "defaultValue": "TRANSFER",
+      "metadata": {
+        "description": "This is the word or phrase you want to appear in the shift display name of a transferred shift."
+      }
+    },
+    "shiftNotesCommentText": {
+      "type": "string",
+      "metadata": {
+        "description": "This is the Kronos 'comment text' value to assign to shift notes. This will need to be configured in Kronos beforehand."
+      }
+    },
     "managerTimeOffRequestCommentText": {
       "type": "string",
       "metadata": {
@@ -160,6 +174,30 @@
       "type": "string",
       "metadata": {
         "description": "This is the Kronos 'comment text' value to assign to sender time off request notes. This will need to be configured in Kronos beforehand."
+      }
+    },
+    "managerSwapRequestCommentText": {
+      "type": "string",
+      "metadata": {
+        "description": "This is the Kronos 'comment text' value to assign to manager swap request notes. This will need to be configured in Kronos beforehand."
+      }
+    },
+    "senderSwapRequestCommentText": {
+      "type": "string",
+      "metadata": {
+        "description": "This is the Kronos 'comment text' value to assign to sender swap request notes. This will need to be configured in Kronos beforehand."
+      }
+    },
+    "recipientSwapRequestCommentText": {
+      "type": "string",
+      "metadata": {
+        "description": "This is the Kronos 'comment text' value to assign to recipient swap request notes. This will need to be configured in Kronos beforehand."
+      }
+    },
+    "managerOpenShiftRequestCommentText": {
+      "type": "string",
+      "metadata": {
+        "description": "This is the Kronos 'comment text' value to assign to manager open shift request notes. This will need to be configured in Kronos beforehand."
       }
     },
     "kronosUserName": {
@@ -178,6 +216,13 @@
       "type": "int",
       "metadata": {
         "description": "Please enter the Kronos session timeout value in seconds. This will be used when caching the token."
+      }
+    },
+    "allowManagersToModifyScheduleInTeams": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Setting this to true will enable managers to create shifts and open shifts as well as edit and delete shifts within the Teams client."
       }
     },
     "gitRepoUrl": {
@@ -516,6 +561,10 @@
               "value": "blue"
             },
             {
+              "name": "TransferredShiftTheme",
+              "value": "darkPink"
+            },
+            {
               "name": "OpenShiftTheme",
               "value": "green"
             },
@@ -568,6 +617,10 @@
               "value": "[parameters('authTokenCacheLifetimeInSeconds')]"
             },
             {
+              "name": "AllowManagersToModifyScheduleInTeams",
+              "value": "[parameters('allowManagersToModifyScheduleInTeams')]"
+            },
+            {
               "name": "ClientSecret",
               "value": "ClientSecret"
             },
@@ -608,12 +661,36 @@
               "value": "[parameters('numberOfOrgJobPathSectionsForActivityName')]"
             },
             {
+              "name": "TransferredShiftDisplayName",
+              "value": "[parameters('transferredShiftDisplayName')]"
+            },
+            {
+              "name": "ShiftNotesCommentText",
+              "value": "[parameters('shiftNotesCommentText')]"
+            },
+            {
               "name": "ManagerTimeOffRequestCommentText",
               "value": "[parameters('managerTimeOffRequestCommentText')]"
             },
             {
               "name": "SenderTimeOffRequestCommentText",
               "value": "[parameters('senderTimeOffRequestCommentText')]"
+            },
+            {
+              "name": "ManagerSwapRequestCommentText",
+              "value": "[parameters('managerSwapRequestCommentText')]"
+            },
+            {
+              "name": "SenderSwapRequestCommentText",
+              "value": "[parameters('senderSwapRequestCommentText')]"
+            },
+            {
+              "name": "RecipientSwapRequestCommentText",
+              "value": "[parameters('recipientSwapRequestCommentText')]"
+            },
+            {
+              "name": "ManagerOpenShiftRequestCommentText",
+              "value": "[parameters('managerOpenShiftRequestCommentText')]"
             },
             {
               "name": "BaseAddressFirstTimeSync",

@@ -1,13 +1,15 @@
-﻿using Microsoft.ApplicationInsights;
-using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
-using Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿// <copyright file="UsersHelper.cs" company="Microsoft">
+// Copyright (c) Microsoft. All rights reserved.
+// </copyright>
 
 namespace Microsoft.Teams.Shifts.Integration.API.Common
 {
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
+    using Microsoft.ApplicationInsights;
+    using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
+    using Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers;
+
     /// <summary>
     /// Provides utility methods for working with users.
     /// </summary>

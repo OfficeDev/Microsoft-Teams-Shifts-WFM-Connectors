@@ -15,6 +15,12 @@ namespace Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers
     public interface IUserMappingProvider
     {
         /// <summary>
+        /// Function that will return all of the users that are mapped in Azure Table storage.
+        /// </summary>
+        /// <returns>A list of the mapped Users.</returns>
+        Task<List<AllUserMappingEntity>> GetAllMappedUserDetailsAsync();
+
+        /// <summary>
         /// Function that will return all of the active Users that are mapped in Azure Table storage.
         /// </summary>
         /// <returns>A list of the mapped Users.</returns>
