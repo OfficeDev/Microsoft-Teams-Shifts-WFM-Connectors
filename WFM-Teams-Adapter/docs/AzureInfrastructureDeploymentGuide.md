@@ -54,7 +54,7 @@ This integration uses the Microsoft Graph APIs to access information about users
 
 11. Under Microsoft APIs find and select Microsoft Graph
 
-    ![Add Microsoft API Permissions](images/12-AddApiPermissions.png)
+    ![Add Microsoft API Permissions](images/12-AddApiPermissions.PNG)
 
 12. Select **Application permissions** and add the following permissions:
 
@@ -77,7 +77,7 @@ The src folder contains a WfmTeams.Adapter.Infrastructure project which contains
 
 3. After saving the change, reopen this file from your repo and click the button to start the deployment process which will display the following screen:
 
-![Azure Custom Deployment](images/11-AzureCustomDeployment.png)
+![Azure Custom Deployment](images/11-AzureCustomDeployment.PNG)
 
 4. Select the subscription that you wish to deploy to and an existing resource group, or create a new one and then provide values for the following template parameters:
 
@@ -151,17 +151,17 @@ In order that the Functions application can access the secrets in Key Vault, it 
 
 1. Navigate to the Functions application created by the ARM template deployment. Select **Identity** under **Settings** in the left-hand panel.
 
-   ![System Assigned Identity](images/13-SystemAssignedIdentity.png)
+   ![System Assigned Identity](images/13-SystemAssignedIdentity.PNG)
 
 2. With the **System Assigned** tab selected switch the Status to **On** and Save followed by Yes. Copy the Object ID once the identity has been created in Azure. 
 
 3. Next navigate to the **Azure Key Vault** resource and select **Access policies** under **Settings**
 
-   ![Key Vault Access Policies](images/14-KeyVaultAccessPolicies.png)
+   ![Key Vault Access Policies](images/14-KeyVaultAccessPolicies.PNG)
 
 4. Click **Add Access Policy** and in the **Configure from template** field, choose **Secret Management**. Click the **None selected** link next to **Select principle** and paste the Object ID copied from step 2. Click Select and then click Add to add the new policy.
 
-   ![Add Access Policy](images/15-AddAccessPolicy.png)
+   ![Add Access Policy](images/15-AddAccessPolicy.PNG)
 
 5. Ensure that you click the **Save** button before leaving this screen to save your changes.
 
@@ -173,7 +173,7 @@ You will now need to setup the 4 redirect URI's.
 
 1. Navigate to the Functions App resource and in the Overview screen copy the URL value.
 
-   ![Copy Function App Url](images/16-CopyFunctionAppUrl.png)
+   ![Copy Function App Url](images/16-CopyFunctionAppUrl.PNG)
 
 2. In Azure Active Directory navigate to the App Registration created earlier and select Authentication under Manage. Replace the dummy https://updatemelater.com with the URL copied from the functions app and add three more uris based on it as follows:
 
@@ -181,7 +181,7 @@ You will now need to setup the 4 redirect URI's.
    2. {copied url}/consent
    3. {copied url}/app
 
-   ![Add Redirect URIs](images/17-AddRedirectUris.png)
+   ![Add Redirect URIs](images/17-AddRedirectUris.PNG)
 
 3. Ensure that you save your changes before leaving the page.
 
@@ -196,7 +196,7 @@ It is  now necessary to configure the application storage account and add any ti
    1. teams
    2. timezones
 
-   ![Create Tables](images/18-CreateTables.png)
+   ![Create Tables](images/18-CreateTables.PNG)
 
 #### Populate the Timezones Table
 
@@ -208,7 +208,7 @@ Supported time zone standard names can be found here: [Supported Time Zone Names
 
 2. Next you need to enter a row for each unique time zone within the **timezones** table using the following schema:
 
-   ![Time Zone Table](images/19-TimeZoneTable.png)
+   ![Time Zone Table](images/19-TimeZoneTable.PNG)
 
 3. The **RowKey** should be the value that the WFM system returns when retrieving time zone information for a site or store. 
 
@@ -231,13 +231,13 @@ The functions application code is not currently deployed as part of the ARM temp
 
 2. Select Azure and click Next
 
-   ![Publish Functions App](images/20-PublishFunctionApp.png)
+   ![Publish Functions App](images/20-PublishFunctionApp.PNG)
 
 3. Select **Azure Function App (Windows)** and click Next
 
 4. Select your account, Subscription, Resource Group and the Functions App created by the ARM template. Ensure Run from package file (recommended) is ticked and click Finish.
 
-   ![Select Functions Instance](images/21-FunctionsInstance.png)
+   ![Select Functions Instance](images/21-FunctionsInstance.PNG)
 
 5. Check the details on the summary screen and then click Publish to commence the deployment
 
@@ -306,11 +306,11 @@ To get the configurationUrl:
 
 3. Find and select **App trigger**
 
-   ![Select App Trigger](images/22-SelectAppTriggerFunction.png)
+   ![Select App Trigger](images/22-SelectAppTriggerFunction.PNG)
 
 4. Next select **Get Function Url** and copy the value
 
-   ![Get Function Url](images/23-GetFunctionUrl.png)
+   ![Get Function Url](images/23-GetFunctionUrl.PNG)
 
 5. Add *?theme={theme}* to the end of the URL so it looks similar to the example JSON above
 
@@ -322,7 +322,7 @@ Zip the following files to create the tab app package to upload to the app store
 
 To upload the tab application click the **Apps** button in Teams followed by the **Upload a custom app** (if you cannot see this option then you will need a tenant admin to upload the package for you).
 
-![Deploy Tab App](images/24-DeployTabApp.png)
+![Deploy Tab App](images/24-DeployTabApp.PNG)
 
 To connect a team please navigate to the **General** channel of the team and add the newly uploaded tab app.
 

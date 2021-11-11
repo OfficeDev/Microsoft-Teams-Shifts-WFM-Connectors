@@ -49,12 +49,3 @@ Prior to deploying anything to your Azure environment, you should first Fork the
 
 Full details of how to deploy the required infrastructure to Microsoft Azure using the included Azure Resource Manager template are provided in: [Azure Infrastructure Deployment Guide](docs/AzureInfrastructureDeploymentGuide.md)
 
-Full details on how to build and deploy the Azure Functions application to Microsoft Azure are provided in: [Azure Functions Application Deployment Guide](docs/FunctionsAppBuildAndDeploy.md)
-
-Full details on how to build and deploy the single page REACT web application required to support the UI elements of the Teams integration are provided in: [Web Application Build and Deployment Guide](docs/WebAppBuildAndDeployGuide.md)
-
-Full details on how to build and deploy the Teams Tab Application required to initiate a connection between a Team in Microsoft Teams and a business unit in the WFM Provider are provided in: [Teams Tab Application Build and Deployment Guide](docs/TeamsTabAppBuildAndDeploy.md)
-
-# Operational Guide
-Once you have the infrastructure and code deployed and running in your Microsoft Azure tenant, you will need to monitor it and that is the purpose of this operational guide.
-
