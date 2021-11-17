@@ -30,7 +30,6 @@ using WfmTeams.Adapter.MicrosoftGraph.Services;
 using WfmTeams.Adapter.Models;
 using WfmTeams.Adapter.Options;
 using WfmTeams.Adapter.Services;
-using WfmTeams.Connector.BlueYonder.Services;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 
@@ -96,26 +95,12 @@ namespace WfmTeams.Adapter.Functions
             IWfmConfigService configService = null;
             switch (connectorOptions.WfmProvider)
             {
-                case ProviderType.BlueYonder:
-                {
-                    configService = ConfigureForBlueYonder(builder.Services);
-                    break;
-                }
             }
 
             configService.ConfigureServices(builder.Services, config);
 
             builder.UseHttpOptions(config.Get<HttpOptions>())
                 .UseTracingOptions(config.Get<TracingOptions>());
-        }
-
-        private IWfmConfigService ConfigureForBlueYonder(IServiceCollection services)
-        {
-            services.AddTransient<IWfmDataService, BlueYonderDataService>()
-                .AddTransient<IWfmActionService, BlueYonderActionService>()
-                .AddTransient<IWfmAuthService, BlueYonderAuthService>();
-
-            return new BlueYonderConfigService();
         }
     }
 }

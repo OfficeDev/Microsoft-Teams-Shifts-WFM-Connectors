@@ -22,8 +22,6 @@ Project("{151D2E53-A2C4-4D7D-83FE-D05416EBD58E}") = "WfmTeams.Adapter.Infrastruc
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WfmTeams.Adapter.MicrosoftGraph", "WfmTeams.Adapter.MicrosoftGraph\WfmTeams.Adapter.MicrosoftGraph.csproj", "{B62B4C3D-C25D-4C4C-85A2-8DF2B202862D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WfmTeams.Connector.BlueYonder", "WfmTeams.Connector.BlueYonder\WfmTeams.Connector.BlueYonder.csproj", "{E6A16FE4-42E2-4F58-B976-A5CCDE9A9FAD}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WfmTeams.Connector.MockWfmProvider", "WfmTeams.Connector.MockWfmProvider\WfmTeams.Connector.MockWfmProvider.csproj", "{7D451211-FFEC-4FD5-8827-342C44CB6E93}"
 EndProject
 Global
@@ -75,12 +73,6 @@ Global
 		{B62B4C3D-C25D-4C4C-85A2-8DF2B202862D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B62B4C3D-C25D-4C4C-85A2-8DF2B202862D}.Trace|Any CPU.ActiveCfg = Trace|Any CPU
 		{B62B4C3D-C25D-4C4C-85A2-8DF2B202862D}.Trace|Any CPU.Build.0 = Trace|Any CPU
-		{E6A16FE4-42E2-4F58-B976-A5CCDE9A9FAD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E6A16FE4-42E2-4F58-B976-A5CCDE9A9FAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E6A16FE4-42E2-4F58-B976-A5CCDE9A9FAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E6A16FE4-42E2-4F58-B976-A5CCDE9A9FAD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E6A16FE4-42E2-4F58-B976-A5CCDE9A9FAD}.Trace|Any CPU.ActiveCfg = Trace|Any CPU
-		{E6A16FE4-42E2-4F58-B976-A5CCDE9A9FAD}.Trace|Any CPU.Build.0 = Trace|Any CPU
 		{7D451211-FFEC-4FD5-8827-342C44CB6E93}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7D451211-FFEC-4FD5-8827-342C44CB6E93}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7D451211-FFEC-4FD5-8827-342C44CB6E93}.Release|Any CPU.ActiveCfg = Release|Any CPU
