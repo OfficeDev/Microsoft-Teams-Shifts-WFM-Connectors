@@ -10,10 +10,6 @@ The connector you develop will be required to implement the following interfaces
 - **IWfmActionService** - this interface contains a number of methods used to push changes from the Teams Shifts Application to the WFM Provider
 - **IWfmConfigService** - this interface has a single ConfigureServices method that passes the services collection and configuration root object from the functions app and allows the provider implementation to register its own dependencies and access its specific settings from the collection of functions app settings.
 
-One of the interfaces is not a requirement for all connectors. Please ensure the following interface is implemented if your WFM system requires a separate token for each employee, like the case with BlueYonder:
-
-- **IWfmAuthService** - this interface has two methods HandleFederatedAuthRequest which handles the federated authentication request from the WFM Provider and RefreshEmployeeTokenAsync which is used to refresh the employee token in Redis
-
 ### WFM Action Service Return Values
 
 All action service requests must return an WfmResponse object so that the adapter can generate the correct response to return in the event of a WFI call. 
@@ -28,13 +24,11 @@ IWfmDataService methods handle the retrieval of data from the WFM system. Some o
 
 ### Exceptions
 
-The WfmException class models the only supported type of exception. If your connector is going to throw an exception it must be of this type. 
-
-Please be aware that many of the handlers do not currently catch exceptions - if you expect to throw an exception in one of these handlers they will need to be updated within the adapter project.
+The WfmException class models the only supported type of exception. If your connector is going to throw an exception it must be of this type. Ideally you would just return information about the exception in the WfmResponse object however.
 
 ### Modifications to Startup.cs
 
-Once your connector implements the four interfaces you will need to modify the Startup.cs file for the WfmTeamsAdapter.Functions project to ensure that the application is registering the required dependencies for your new WFM connector.  
+Once your connector implements the necessary interfaces you will need to modify the Startup.cs file for the WfmTeamsAdapter.Functions project to ensure that the application is registering the required dependencies for your new WFM connector.  
 
 Firstly, navigate to the ProviderType.cs file and create a new enum value for your new WFM provider. You will then need to update the connector options to use this new value.
 
@@ -45,7 +39,6 @@ private IWfmConfigService ConfigureForYourWfmProvider(IServiceCollection service
 {
 	services.AddTransient<IWfmDataService, YourWfmProviderDataService>()
     	.AddTransient<IWfmActionService, YourWfmProviderActionService>()
-        .AddTransient<IWfmAuthService, YourWfmProviderAuthService>();
 
 	return new YourWfmProviderConfigService();
 }

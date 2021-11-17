@@ -8,6 +8,5 @@ namespace WfmTeams.Adapter
 {
     public enum ProviderType
     {
-        BlueYonder = 1
     }
 }

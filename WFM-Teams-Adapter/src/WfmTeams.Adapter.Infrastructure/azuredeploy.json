@@ -18,7 +18,7 @@
       "type": "int",
       "defaultValue": 1440
     },
-    "blueYonderBaseAddress": {
+    "wfmBaseAddress": {
       "type": "string",
       "defaultValue": "https://yoururl.com",
       "minLength": 19
@@ -51,19 +51,6 @@
     "employeeCacheFrequencyMinutes": {
       "type": "int",
       "defaultValue": 30
-    },
-    "employeeTokenRefreshFrequencyMinutes": {
-      "type": "int",
-      "defaultValue": 31
-    },
-    "federatedAuthBaseAddress": {
-      "type": "string",
-      "defaultValue": "https://yoururl.com",
-      "minLength": 19
-    },
-    "federatedAuthTokenSigningSecret": {
-      "type": "string",
-      "defaultValue": ""
     },
     "functionsAppName": {
       "type": "string",
@@ -314,8 +301,8 @@
               "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('functionsStorageAccountName'), ';AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('functionsStorageAccountName')), providers('Microsoft.Storage', 'storageAccounts').apiVersions[0]).keys[0].value, ';EndpointSuffix=core.windows.net')]"
             },
             {
-              "name": "BlueYonderBaseAddress",
-              "value": "[parameters('blueYonderBaseAddress')]"
+              "name": "WfmBaseAddress",
+              "value": "[parameters('wfmBaseAddress')]"
             },
             {
               "name": "ClearScheduleEnabled",
@@ -354,10 +341,6 @@
               "value": "[parameters('employeeCacheFrequencyMinutes')]"
             },
             {
-              "name": "EmployeeTokenRefreshFrequencyMinutes",
-              "value": "[parameters('employeeTokenRefreshFrequencyMinutes')]"
-            },
-            {
               "name": "EnableAvailability",
               "value": "false"
             },
@@ -368,14 +351,6 @@
             {
               "name": "EnableTimeOff",
               "value": "true"
-            },
-            {
-              "name": "FederatedAuthBaseAddress",
-              "value": "[parameters('federatedAuthBaseAddress')]"
-            },
-            {
-              "name": "FederatedAuthTokenSigningSecret",
-              "value": "[parameters('federatedAuthTokenSigningSecret')]"
             },
             {
               "name": "ShiftsFrequencyMinutes",
@@ -428,10 +403,6 @@
             {
               "name": "StartDayOfWeek",
               "value": "[parameters('startDayOfWeek')]"
-            },
-            {
-              "name": "StoreManagerSecurityGroupId",
-              "value": "[parameters('storeManagerSecurityGroupId')]"
             },
             {
               "name": "SwapShiftsRequestsEnabled",

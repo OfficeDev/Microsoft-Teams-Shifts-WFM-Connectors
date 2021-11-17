@@ -30,7 +30,7 @@ namespace WfmTeams.Adapter.Options
         public string TenantId { get; set; }
         public bool TimeClockEnabled { get; set; }
         public bool TimeOffRequestsEnabled { get; set; } = true;
-        public ProviderType WfmProvider { get; set; } = ProviderType.BlueYonder;
+        public ProviderType WfmProvider { get; set; }
         public string GraphApiUserId { get; set; }
     }
 }

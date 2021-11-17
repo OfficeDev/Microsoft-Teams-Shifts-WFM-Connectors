@@ -62,7 +62,7 @@ namespace WfmTeams.Adapter.MicrosoftGraph.Models
         public string EvaluateTargetLoginName()
         {
             // regardless of whether this is the sender or manager stage of the open shift request
-            // process, Blue Yonder has no concept of manager approval and therefore this method
+            // process, our test WFM has no concept of manager approval and therefore this method
             // should always return the target login name of the sender TODO : is this valid for
             // other WFM providers?
             return WfmSenderLoginName;
@@ -71,7 +71,7 @@ namespace WfmTeams.Adapter.MicrosoftGraph.Models
         public string EvaluateUserId()
         {
             // regardless of whether this is the sender or manager stage of the open shift request
-            // process, Blue Yonder has no concept of manager approval and therefore this method
+            // process, our test WFM  has no concept of manager approval and therefore this method
             // should always return the sender user ID TODO : is this valid for other WFM providers?
             return SenderUserId;
         }

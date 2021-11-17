@@ -12,14 +12,6 @@ The architecture and operation of the WFM Teams Universal Adapter and WFM Connec
 
 
 
-## Available Connectors
-
-At the time of writing, this repository contains only a single WFM Connector for the Blue Yonder WFM System at version 2020.3 or higher (earlier versions of the Blue Yonder API's do not support all of the functionality required by the connector).
-
-The adapter has been designed to support any other connectors that implement the required IWfm interfaces defined in the adapter and if you are interested in developing other connectors, details are supplied in: [New WFM Connector Instructions](docs/NewWfmConnectorInstructions.md)
-
- 
-
 ## Supported Shifts App Features
 
 At the current time, the adapter does not support all of the features available in the Shifts App and the following table details the what is and what is not supported:

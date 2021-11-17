@@ -139,7 +139,7 @@
     <value>Availability time ranges should be in15 minute increments.</value>
   </data>
   <data name="AvailabilityUnknownErrorCode" xml:space="preserve">
-    <value>Unknown Blue Yonder error code.</value>
+    <value>Unknown WFM error code.</value>
   </data>
   <data name="AvailabilityWeekNumberGreaterThanCycleLength" xml:space="preserve">
     <value>Availability week number exceeds rotation cycle weeks.</value>

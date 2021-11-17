@@ -35,7 +35,6 @@
     <ProjectReference Include="..\WfmTeams.Adapter.AzureStorage\WfmTeams.Adapter.AzureStorage.csproj" />
     <ProjectReference Include="..\WfmTeams.Adapter.MicrosoftGraph\WfmTeams.Adapter.MicrosoftGraph.csproj" />
     <ProjectReference Include="..\WfmTeams.Adapter\WfmTeams.Adapter.csproj" />
-    <ProjectReference Include="..\WfmTeams.Connector.BlueYonder\WfmTeams.Connector.BlueYonder.csproj" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Update="Resources\Triggers\ChangeRequestTrigger.en.resx">
