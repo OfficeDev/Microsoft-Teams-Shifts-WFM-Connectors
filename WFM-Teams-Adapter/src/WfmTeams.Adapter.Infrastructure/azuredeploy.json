@@ -52,15 +52,6 @@
       "type": "int",
       "defaultValue": 30
     },
-    "federatedAuthBaseAddress": {
-      "type": "string",
-      "defaultValue": "https://yoururl.com",
-      "minLength": 19
-    },
-    "federatedAuthTokenSigningSecret": {
-      "type": "string",
-      "defaultValue": ""
-    },
     "functionsAppName": {
       "type": "string",
       "defaultValue": ""
