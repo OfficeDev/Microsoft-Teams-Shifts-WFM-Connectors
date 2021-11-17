@@ -77,7 +77,6 @@ In order for the adapter to be able to communicate with the WFM Provider in an a
 - **IWfmDataService** - this interface contains a number of methods used to request data required by the Adapter from the WFM Provider
 - **IWfmActionService** - this interface contains a number of methods used to push changes from the Teams Shifts Application to the WFM Provider
 - **IWfmConfigService** - this interface has a single ConfigureServices method that passes the services collection and configuration root object from the functions app and allows the provider implementation to register its own dependencies and access its specific settings from the collection of functions app settings.
-- **IWfmAuthService** - this interface has two methods HandleFederatedAuthRequest which handles the federated authentication request from the WFM Provider and RefreshEmployeeTokenAsync which is used to refresh the employee token in Redis (for the Blue Yonder implementation this method calls the SessionKeepAlive  endpoint in Blue Yonder and if the user token has expired causes a new one to be requested and stored in the cache).
 
 ## Orchestrations
 
@@ -166,29 +165,6 @@ Users.ReadAll
 UserShiftPreferences.ReadWriteAll
 
 The ClientId and ClientSecret from the App Registration are used to obtain an access token which is retained until it expires whereupon a new one is requested.
-
-### Blue Yonder Authentication
-
-The authentication used depends upon the API's being called.  Blue Yonder (BY) divide the APIs into:
-
-1. Retail Web API
-2. Employee Self-Service (ESS) API
-3. Site Manager API
-
-When calling the Retail Web API, a single super-user account can be used and the credentials for this account are collected at configuration time and stored in Azure KeyVault.
-
-When calling the ESS and Site Manager API's it is necessary to use an authentication token for the actual user, thus when creating a shift swap it must be created in BY as the user who is creating the shift swap in Teams. It would not be practical to collect and maintain the credentials for every single user in Teams in a backend service and BY solve this problem by providing a federated authentication mechanism whereby one or more servers are configured as federated authentication servers. The mechanism for obtaining a token is as follows:
-
-1. A login request is made to the BY federated authentication server passing a self-signed JWT token containing a payload of the login name of the user a token is being requested for.
-2. BY passes this token to the adapter's federated authentication endpoint
-3. The endpoint validates the token and extracts and returns the login name of the user in xml format in the response body
-4. BY logs in the requested user and returns the required token
-
-![07-Federated Authentication](images/07-Federated%20Authentication.png)
-
-Image: courtesy of Blue Yonder
-
-To improve the performance of the adapter user tokens are stored in the Redis cache and are refreshed periodically by an orchestrator dedicated to the task.
 
 ## Logging
 
