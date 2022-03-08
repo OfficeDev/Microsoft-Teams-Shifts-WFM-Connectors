@@ -5,6 +5,11 @@
     <UserSecretsId>73370532-ec58-48a4-9ab9-6c91e655aa81</UserSecretsId>
     <NeutralLanguage>en-US</NeutralLanguage>
   </PropertyGroup>
+
+  <PropertyGroup>
+    <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
+  </PropertyGroup>
+
   <ItemGroup>
     <Content Remove="stylecop.json" />
   </ItemGroup>
