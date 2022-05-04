@@ -610,7 +610,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     responseModelList.Add(integrationResponseSwap);
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 this.telemetryClient.TrackTrace("Teams Controller swapRequests responseModelList Exception" + JsonConvert.SerializeObject(responseModelList));
                 throw;
