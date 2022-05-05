@@ -910,21 +910,18 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// <param name="teamId">The id of the team the request came from.</param>
         /// <returns>Mapping Entity associated with Team and Shift.</returns>
         public TeamsShiftMappingEntity CreateShiftMappingEntity(
-           Models.IntegrationAPI.Shift shift,
+           Shift shift,
            AllUserMappingEntity userMappingEntity,
            string kronosUniqueId,
            string teamId)
         {
-            var startDateTime = DateTime.SpecifyKind(shift.SharedShift.StartDateTime, DateTimeKind.Utc);
-            var endDateTime = DateTime.SpecifyKind(shift.SharedShift.EndDateTime, DateTimeKind.Utc);
-
             return new TeamsShiftMappingEntity
             {
                 AadUserId = shift?.UserId,
                 KronosUniqueId = kronosUniqueId,
                 KronosPersonNumber = userMappingEntity?.RowKey,
-                ShiftStartDate = startDateTime,
-                ShiftEndDate = endDateTime,
+                ShiftStartDate = DateTime.SpecifyKind(shift.SharedShift.StartDateTime, DateTimeKind.Utc),
+                ShiftEndDate = DateTime.SpecifyKind(shift.SharedShift.EndDateTime, DateTimeKind.Utc),
                 ShiftsTeamId = teamId,
             };
         }
