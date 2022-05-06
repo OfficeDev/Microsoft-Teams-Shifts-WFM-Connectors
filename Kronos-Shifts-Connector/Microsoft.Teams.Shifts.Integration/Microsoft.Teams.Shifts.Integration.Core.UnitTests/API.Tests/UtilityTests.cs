@@ -18,7 +18,7 @@ namespace Microsoft.Teams.Shifts.Integration.Core.UnitTests.API.Tests
         [Theory]
         [InlineAutoNSubstituteData("2022-04-30", "2022-05-01", true)]
         [InlineAutoNSubstituteData("2022-05-01", "2022-04-30", false)]
-        public void CreateShiftMappingEntityTest_StartAndEndDatesPresentAndEndDateGreaterThanStartDate
+        public void CreateShiftMappingEntityTest_StartAndEndDatesPresent_EndDateGreaterThanStart
         (
             string startDate,
             string endDate,
@@ -41,9 +41,9 @@ namespace Microsoft.Teams.Shifts.Integration.Core.UnitTests.API.Tests
             var actual = utility.CreateShiftMappingEntity(shift, userMappingEntity, kronosUniqueId, teamId);
 
             //  Assert
-            Assert.Equal(dtmStart,shift.SharedShift.StartDateTime);  
-            Assert.Equal(dtmEnd, shift.SharedShift.EndDateTime);
-            Assert.Equal(expected, (shift.SharedShift.StartDateTime < shift.SharedShift.EndDateTime));
+            Assert.Equal(dtmStart,actual.ShiftStartDate);  
+            Assert.Equal(dtmEnd, actual.ShiftEndDate);
+            Assert.Equal(expected, (actual.ShiftStartDate < actual.ShiftEndDate));
         }
     }
 }
