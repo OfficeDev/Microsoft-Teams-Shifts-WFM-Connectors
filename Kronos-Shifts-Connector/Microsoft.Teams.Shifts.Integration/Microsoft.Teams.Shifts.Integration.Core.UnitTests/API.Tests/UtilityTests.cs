@@ -41,9 +41,9 @@ namespace Microsoft.Teams.Shifts.Integration.Core.UnitTests.API.Tests
             var actual = utility.CreateShiftMappingEntity(shift, userMappingEntity, kronosUniqueId, teamId);
 
             //  Assert
-            Assert.Equal(dtmStart,actual.ShiftStartDate);  
+            Assert.Equal(dtmStart, actual.ShiftStartDate);  
             Assert.Equal(dtmEnd, actual.ShiftEndDate);
-            Assert.Equal(expected, (actual.ShiftStartDate < actual.ShiftEndDate));
+            Assert.Equal(expected, actual.ShiftStartDate < actual.ShiftEndDate);
         }
     }
 }
