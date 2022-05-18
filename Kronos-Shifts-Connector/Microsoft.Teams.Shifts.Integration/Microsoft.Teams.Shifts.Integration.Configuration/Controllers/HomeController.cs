@@ -121,17 +121,6 @@ namespace Microsoft.Teams.Shifts.Integration.Configuration.Controllers
 
                 if (newConfiguration != null)
                 {
-                    var saveConfigurationProps = new Dictionary<string, string>()
-                    {
-                        { "TenantId", dataToSave.TenantId },
-                        { "WorkforceProvider", dataToSave.WfmProviderName },
-                        { "WorkforceSuperUserName", dataToSave.WfmSuperUsername },
-                        { "WorkforceSuperUserPassword", dataToSave.WfmSuperUserPassword },
-                        { "WorkforceAPIEndpoint", dataToSave.WfmApiEndpoint },
-                    };
-
-                    this.telemetryClient.TrackTrace(MethodBase.GetCurrentMethod().Name, saveConfigurationProps);
-
                     var loginKronos = await this.logonActivity.LogonAsync(
                         dataToSave.WfmSuperUsername,
                         dataToSave.WfmSuperUserPassword,
