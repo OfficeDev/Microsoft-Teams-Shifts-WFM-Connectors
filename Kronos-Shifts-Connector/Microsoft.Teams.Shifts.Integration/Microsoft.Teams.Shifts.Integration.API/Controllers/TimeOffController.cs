@@ -391,7 +391,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                 data.Add("ResponseStatus", $"{response.Status}");
 
-                if (response.Status == "Success" && approved)
+                if (response.Status == ApiConstants.Success && approved)
                 {
                     this.telemetryClient.TrackTrace($"Update table for approval of time off request: {kronosReqId}", data);
                     timeOffRequestMapping.KronosStatus = ApiConstants.ApprovedStatus;
@@ -399,7 +399,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     return true;
                 }
 
-                if (response.Status == "Success" && !approved)
+                if (response.Status == ApiConstants.Success && !approved)
                 {
                     this.telemetryClient.TrackTrace($"Update table for refusal of time off request: {kronosReqId}", data);
                     timeOffRequestMapping.KronosStatus = ApiConstants.Refused;
@@ -411,7 +411,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                         .FirstOrDefault(err => err.Message
                             .Contains(timeOffRequestMapping.PayCodeName, StringComparison.OrdinalIgnoreCase));
 
-                if (response.Status == "Failure"
+                if (response.Status == ApiConstants.Failure
                     && approved
                     && kronosTORSubmissionError != null)
                 {
