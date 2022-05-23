@@ -406,6 +406,17 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     await this.timeOffMappingEntityProvider.SaveOrUpdateTimeOffMappingEntityAsync(timeOffRequestMapping).ConfigureAwait(false);
                     return true;
                 }
+
+                var kronosTORSubmissionError = response.Error?.DetailErrors?.Error
+                        .FirstOrDefault(err => err.Message
+                            .Contains(timeOffRequestMapping.PayCodeName, StringComparison.OrdinalIgnoreCase));
+
+                if (response.Status == "Failure"
+                    && approved
+                    && kronosTORSubmissionError != null)
+                {
+                    throw new Exception(kronosTORSubmissionError.Message);
+                }
             }
 
             this.telemetryClient.TrackTrace("ApproveOrDenyTimeOffRequestInKronos - Configuration incorrect", data);

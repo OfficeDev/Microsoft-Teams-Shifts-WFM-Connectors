@@ -919,22 +919,31 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
 
                 this.telemetryClient.TrackTrace($"Process approval of {timeOffRequest.Id}", updateProps);
 
-                // approve in kronos
-                success = await this.timeOffController.ApproveOrDenyTimeOffRequestInKronos(
-                        kronosReqId,
-                        kronosUserId,
-                        timeOffRequest,
-                        timeOffRequestMapping,
-                        timeOffRequest.ManagerActionMessage,
-                        approved,
-                        kronosTimeZone).ConfigureAwait(false);
-
-                updateProps.Add("SuccessfullyApprovedInKronos", $"{success}");
-
-                if (!success)
+                try
                 {
-                    this.telemetryClient.TrackTrace($"Process failure to approve time off request: {timeOffRequest.Id}", updateProps);
-                    responseModelList.AddRange(CreateMultipleBadResponses(jsonModel, Resource.TimeOffRequestApproveFailed));
+                    // approve in kronos
+                    success = await this.timeOffController.ApproveOrDenyTimeOffRequestInKronos(
+                            kronosReqId,
+                            kronosUserId,
+                            timeOffRequest,
+                            timeOffRequestMapping,
+                            timeOffRequest.ManagerActionMessage,
+                            approved,
+                            kronosTimeZone).ConfigureAwait(false);
+
+                    updateProps.Add("SuccessfullyApprovedInKronos", $"{success}");
+
+                    if (!success)
+                    {
+                        this.telemetryClient.TrackTrace($"Process failure to approve time off request: {timeOffRequest.Id}", updateProps);
+                        responseModelList.AddRange(CreateMultipleBadResponses(jsonModel, Resource.TimeOffRequestApproveFailed));
+                        return responseModelList;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    this.telemetryClient.TrackTrace($"Process failure to approve time off request: {timeOffRequest.Id}.  {ex.Message}.", updateProps);
+                    responseModelList.AddRange(CreateMultipleBadResponses(jsonModel, $"{Resource.TimeOffRequestApproveFailed}  {ex.Message}"));
                     return responseModelList;
                 }
 
