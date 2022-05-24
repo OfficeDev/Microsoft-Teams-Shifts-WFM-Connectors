@@ -14,6 +14,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
     using Microsoft.Teams.App.KronosWfc.Models.CommonEntities;
     using Microsoft.Teams.App.KronosWfc.Models.RequestEntities.Common;
     using Microsoft.Teams.App.KronosWfc.Service;
+    using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
     using CommonResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Common.Response;
     using CommonTimeOffRequest = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.TimeOffRequests.CommonTimeOffRequests;
     using TimeOffAddRequest = Microsoft.Teams.App.KronosWfc.Models.RequestEntities.ShiftsToKronos.AddRequest;
@@ -162,6 +163,45 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
                 });
 
             return tupleResponse.ProcessResponse<CommonResponse>(this.telemetryClient);
+        }
+
+        /// <inheritdoc/>
+        public async Task<Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Accrual.Response> GetAccrualBalances(
+            Uri endPointUrl,
+            string jSession,
+            UserDetailsModel employee,
+            DateTime balanceDate
+        )
+        {
+            if (employee == null)
+            {
+                throw new ArgumentNullException(nameof(employee));
+            }
+
+            var xmlAccrualBalances = new Models.RequestEntities.Accrual.Request
+            {
+                Action = ApiConstants.LoadAction,
+                AccrualData = new Models.RequestEntities.Accrual.AccrualData
+                {
+                    BalanceDate = balanceDate.ToString(ApiConstants.KronosAcceptableDateFormat, CultureInfo.InvariantCulture),
+                    Employee = new Employee
+                    {
+                        PersonIdentity = new PersonIdentity
+                        {
+                            PersonNumber = employee.KronosPersonNumber,
+                        },
+                    },
+                },
+            }.XmlSerialize();
+
+            var tupleResponse = await this.apiHelper.SendSoapPostRequestAsync(
+                    endPointUrl,
+                    ApiConstants.SoapEnvOpen,
+                    xmlAccrualBalances,
+                    ApiConstants.SoapEnvClose,
+                    jSession).ConfigureAwait(false);
+
+            return tupleResponse.ProcessResponse<Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Accrual.Response>(this.telemetryClient);
         }
 
         /// <summary>

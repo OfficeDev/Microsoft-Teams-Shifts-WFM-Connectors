@@ -1,0 +1,13 @@
+#  Get Accrual Info for Employee
+GET {{baseUrl}}
+Content-Type: application/xml
+
+<Kronos_WFC version="1.0">
+    <Request Action="Load">
+        <AccrualData BalanceDate="5/11/2022">
+            <Employee>
+                <PersonIdentity PersonNumber="COG02"/>
+            </Employee>
+        </AccrualData>
+    </Request>
+</Kronos_WFC>

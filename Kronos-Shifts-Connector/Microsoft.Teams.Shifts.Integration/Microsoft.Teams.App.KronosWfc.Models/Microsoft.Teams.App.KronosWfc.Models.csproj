@@ -190,6 +190,8 @@
     <Compile Include="CommonEntities\Notes.cs" />
     <Compile Include="LoginResponse.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RequestEntities\Accrual\AccrualData.cs" />
+    <Compile Include="RequestEntities\Accrual\Request.cs" />
     <Compile Include="RequestEntities\Common\Employee.cs" />
     <Compile Include="RequestEntities\Common\ScheduleShift.cs" />
     <Compile Include="RequestEntities\Common\ShiftSegments.cs" />
@@ -289,6 +291,10 @@
     <Compile Include="RequestEntities\UpdateStatus\RequestMgmt.cs" />
     <Compile Include="RequestEntities\UpdateStatus\RequestStatusChange.cs" />
     <Compile Include="RequestEntities\UpdateStatus\RequestStatusChanges.cs" />
+    <Compile Include="ResponseEntities\Accrual\AccrualBalances.cs" />
+    <Compile Include="ResponseEntities\Accrual\AccrualBalanceSummary.cs" />
+    <Compile Include="ResponseEntities\Accrual\AccrualData.cs" />
+    <Compile Include="ResponseEntities\Accrual\Response.cs" />
     <Compile Include="ResponseEntities\Common\Person.cs" />
     <Compile Include="ResponseEntities\Common\Response.cs" />
     <Compile Include="ResponseEntities\Error.cs" />

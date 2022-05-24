@@ -9,6 +9,7 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
     using System.Threading.Tasks;
     using Microsoft.Teams.App.KronosWfc.Models.CommonEntities;
     using Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests;
+    using Microsoft.Teams.Shifts.Integration.BusinessLogic.Models;
     using CommonResponse = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Common.Response;
 
     /// <summary>
@@ -104,5 +105,19 @@ namespace Microsoft.Teams.App.KronosWfc.BusinessLogic.TimeOff
             bool approved,
             string kronosId,
             Comments comments);
+
+        /// <summary>
+        /// Retrieves a list of Accrual Balances assigned to the Employee (FLW).
+        /// </summary>
+        /// <param name="endPointUrl">Kronos API Endpoint.</param>
+        /// <param name="jSession">The jSession.</param>
+        /// <param name="employee">The Employee (FLW) who created the request.</param>
+        /// <param name="balanceDate">The Balance Date (As Of Date) to retrieve the accrual balances for.</param>
+        /// <returns>A list of Accrual Balances assigned to the Employee (FLW).</returns>
+        Task<Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.Accrual.Response> GetAccrualBalances(
+            Uri endPointUrl,
+            string jSession,
+            UserDetailsModel employee,
+            DateTime balanceDate);
     }
 }
