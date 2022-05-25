@@ -22,7 +22,6 @@ namespace Microsoft.Teams.Shifts.Integration.Core.UnitTests.API.Tests
 {
     public class TimeOffControllerTests
     {
-        // Date Format:  yyyy/mm/dd
         [Theory]
         [InlineAutoNSubstituteData(true, "Success", "Pacific Standard Time", true, "")]
         [InlineAutoNSubstituteData(false, "Success", "Pacific Standard Time", true, "")]
