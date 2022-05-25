@@ -29,7 +29,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
     /// <summary>
     /// This is the utility class to perform several common operations such as Unique Id creation, Date Time operations, tokens fetch, session fecth, conditions checks etc.
     /// </summary>
-    public class Utility
+    public class Utility : IUtility
     {
         private readonly TelemetryClient telemetryClient;
         private readonly AppSettings appSettings;

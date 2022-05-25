@@ -29,6 +29,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
     using Microsoft.Teams.Shifts.Integration.BusinessLogic.Providers;
     using Newtonsoft.Json;
     using TimeOffReq = Microsoft.Teams.App.KronosWfc.Models.ResponseEntities.TimeOffRequests;
+  
 
     /// <summary>
     /// Time off controller.
@@ -44,7 +45,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
         private readonly ITimeOffReasonProvider timeOffReasonProvider;
         private readonly IAzureTableStorageHelper azureTableStorageHelper;
         private readonly ITimeOffMappingEntityProvider timeOffMappingEntityProvider;
-        private readonly Utility utility;
+        private readonly IUtility utility;
         private readonly IGraphUtility graphUtility;
         private readonly ITeamDepartmentMappingProvider teamDepartmentMappingProvider;
         private readonly IHttpClientFactory httpClientFactory;
@@ -73,7 +74,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             ITimeOffReasonProvider timeOffReasonProvider,
             IAzureTableStorageHelper azureTableStorageHelper,
             ITimeOffMappingEntityProvider timeOffMappingEntityProvider,
-            Utility utility,
+            IUtility utility,
             IGraphUtility graphUtility,
             ITeamDepartmentMappingProvider teamDepartmentMappingProvider,
             IHttpClientFactory httpClientFactory,
@@ -408,14 +409,15 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 }
 
                 var kronosTORSubmissionError = response.Error?.DetailErrors?.Error
-                        .FirstOrDefault(err => err.Message
-                            .Contains(timeOffRequestMapping.PayCodeName, StringComparison.OrdinalIgnoreCase));
+                        .FirstOrDefault(err => err.ErrorCode == ApiConstants.InsufficientAccrualBalanceErrorCode
+                            && err.Message
+                                .Contains(timeOffRequestMapping.PayCodeName, StringComparison.OrdinalIgnoreCase));
 
                 if (response.Status == ApiConstants.Failure
                     && approved
                     && kronosTORSubmissionError != null)
                 {
-                    throw new Exception(kronosTORSubmissionError.Message);
+                    throw new Exception($"{kronosTORSubmissionError.ErrorCode}:  {kronosTORSubmissionError.Message}");
                 }
             }
 

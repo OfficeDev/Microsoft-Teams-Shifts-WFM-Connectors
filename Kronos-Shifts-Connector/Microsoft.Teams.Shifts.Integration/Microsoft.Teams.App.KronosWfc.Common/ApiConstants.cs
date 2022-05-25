@@ -268,5 +268,11 @@ namespace Microsoft.Teams.App.KronosWfc.Common
         /// Defines the segment type that represents a users main job.
         /// </summary>
         public const string RegularSegmentType = "REGULAR";
+
+        /// <summary>
+        /// Defines the Error Code returned by Kronos WFC when an requested TOR has an
+        /// insufficient accrual balance for the specified Reason/Paycode.
+        /// </summary>
+        public const string InsufficientAccrualBalanceErrorCode = "36015";
     }
 }
