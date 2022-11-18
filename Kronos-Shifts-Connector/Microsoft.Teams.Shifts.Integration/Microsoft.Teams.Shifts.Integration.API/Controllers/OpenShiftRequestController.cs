@@ -484,12 +484,13 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var expectedShiftHash = this.utility.CreateUniqueId(openShiftObj, user.ShiftUserId, user.KronosTimeZone);
 
                 // Create a temp shift mapping from the open shift details, the user Id, and with a RowKey of SHFT_PENDING.
-                var expectedShift = Utility.CreateShiftMappingEntity(expectedShiftHash, user);
+                var startDateTime = this.utility.CalculateStartDateTime(openShiftObj.SharedOpenShift.StartDateTime, user.KronosTimeZone);
+                var endDateTime = this.utility.CalculateEndDateTime(openShiftObj.SharedOpenShift.EndDateTime, user.KronosTimeZone);
+
+                var expectedShift = Utility.CreateShiftMappingEntity(expectedShiftHash, user, startDateTime, endDateTime);
 
                 // Calculate the partition key for the shift entity mapping table.
-                var actualStartDateTimeStr = this.utility.CalculateStartDateTime(openShiftObj.SharedOpenShift.StartDateTime, user.KronosTimeZone).ToString("d", CultureInfo.InvariantCulture);
-                var actualEndDateTimeStr = this.utility.CalculateEndDateTime(openShiftObj.SharedOpenShift.EndDateTime, user.KronosTimeZone).ToString("d", CultureInfo.InvariantCulture);
-                var monthPartitions = Utility.GetMonthPartition(actualStartDateTimeStr, actualEndDateTimeStr);
+                var monthPartitions = Utility.GetMonthPartition(startDateTime.ToString("d", CultureInfo.InvariantCulture), endDateTime.ToString("d", CultureInfo.InvariantCulture));
                 var monthPartition = monthPartitions?.FirstOrDefault();
 
                 var rowKey = $"SHFT_PENDING_{entityToUpdate.RowKey}";
@@ -510,7 +511,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                 var approvalRequestUrl = $"teams/{user.ShiftTeamId}/schedule/openshiftchangerequests/{entityToUpdate.RowKey}/approve";
                 var approvalString = JsonConvert.SerializeObject(approvalMessageModel);
 
-                var approvalResponse = await this.graphUtility.SendHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, httpClient, HttpMethod.Post, approvalRequestUrl, approvalString).ConfigureAwait(false);
+                var approvalResponse = await this.graphUtility.SendHttpRequest(allRequiredConfigurations.GraphConfigurationDetails, approvalHttpClient, HttpMethod.Post, approvalRequestUrl, approvalString).ConfigureAwait(false);
                 if (approvalResponse.IsSuccessStatusCode)
                 {
                     this.telemetryClient.TrackTrace($"{Resource.ProcessOpenShiftRequestsAsync} ShiftRequestId: {entityToUpdate.RowKey} KronosRequestId: {openShiftRequest.Id}");
@@ -768,6 +769,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
             if (tempShiftEntity != null)
             {
                 var startDateTime = DateTime.SpecifyKind(shift.SharedShift.StartDateTime, DateTimeKind.Utc);
+                var endDateTime = DateTime.SpecifyKind(shift.SharedShift.EndDateTime, DateTimeKind.Utc);
 
                 var shiftToInsert = new TeamsShiftMappingEntity()
                 {
@@ -777,6 +779,7 @@ namespace Microsoft.Teams.Shifts.Integration.API.Controllers
                     PartitionKey = tempShiftEntity.PartitionKey,
                     AadUserId = tempShiftEntity.AadUserId,
                     ShiftStartDate = startDateTime,
+                    ShiftEndDate = endDateTime,
                     ShiftsTeamId = teamId,
                 };
 

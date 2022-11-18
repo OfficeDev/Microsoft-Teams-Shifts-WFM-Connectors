@@ -214,15 +214,18 @@ namespace Microsoft.Teams.Shifts.Integration.API.Common
         /// </summary>
         /// <param name="kronosUniqueId">Kronos Unique Id fro that Shift.</param>
         /// <param name="user">The user details.</param>
+        /// <param name="startDateTime">The start date time of the temporary open shift.</param>
+        /// <param name="endDateTime">The end date time of the temporary open shift.</param>
         /// <returns>Mapping Entity associated with Team and Shift.</returns>
-        public static TeamsShiftMappingEntity CreateShiftMappingEntity(string kronosUniqueId, UserDetailsModel user)
+        public static TeamsShiftMappingEntity CreateShiftMappingEntity(string kronosUniqueId, UserDetailsModel user, DateTime startDateTime, DateTime endDateTime)
         {
             TeamsShiftMappingEntity teamsShiftMappingEntity = new TeamsShiftMappingEntity
             {
                 AadUserId = user.ShiftUserId,
                 KronosUniqueId = kronosUniqueId,
                 KronosPersonNumber = user.KronosPersonNumber,
-                ShiftStartDate = DateTime.UtcNow,
+                ShiftStartDate = startDateTime,
+                ShiftEndDate = endDateTime,
                 ShiftsTeamId = user.ShiftTeamId,
             };
 
