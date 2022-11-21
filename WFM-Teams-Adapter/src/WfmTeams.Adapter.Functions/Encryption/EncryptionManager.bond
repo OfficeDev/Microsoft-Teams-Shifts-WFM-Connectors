@@ -1,7 +1,0 @@
-﻿namespace Microsoft.Teams.Shifts.Encryption
-
-struct EncryptionManagerPayload
-{
-	0: required int32 KeyID;		// ID of the key used to obtain Ciphertext. Encryption algortihm is implicitly defined by this.
-	1: required blob  Ciphertext;	// Encrypted data. Opaque to EncryptionManager and passed to Encryptor determined by KeyID.
-}
